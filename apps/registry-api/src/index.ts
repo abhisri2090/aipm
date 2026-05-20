@@ -3,14 +3,13 @@ import { join } from "node:path";
 import Fastify from "fastify";
 import multipart from "@fastify/multipart";
 import { isValidScopeName } from "@aipm/schemas";
+import { createMetadataStore } from "./create-metadata-store.js";
+import { DuplicateVersionError } from "./metadata-store.js";
 import { blobKeyForPackage, createFilesystemStorage } from "./storage.js";
-import { createPool, ensureSchema, getPackageVersion, insertPackageVersion } from "./db.js";
 import { extractManifestFromTarball } from "./publish.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const DATA_DIR = process.env.AIPM_DATA_DIR ?? join(process.cwd(), "data");
-const DATABASE_URL =
-  process.env.DATABASE_URL ?? "postgresql://aipm:aipm@localhost:5432/aipm";
 
 function decodePackageName(encoded: string): string {
   return decodeURIComponent(encoded);
@@ -19,18 +18,15 @@ function decodePackageName(encoded: string): string {
 async function main(): Promise<void> {
   await mkdir(DATA_DIR, { recursive: true });
   const storage = createFilesystemStorage(join(DATA_DIR, "packages"));
-  const pool = createPool(DATABASE_URL);
-
-  try {
-    await ensureSchema(pool);
-  } catch (err) {
-    console.warn("Database not available; some routes will fail:", (err as Error).message);
-  }
+  const metadata = await createMetadataStore(DATA_DIR);
 
   const app = Fastify({ logger: true });
   await app.register(multipart, { limits: { fileSize: 50 * 1024 * 1024 } });
 
-  app.get("/health", async () => ({ status: "ok" }));
+  app.get("/health", async () => ({
+    status: "ok",
+    metadata: metadata.backend,
+  }));
 
   app.post<{ Params: { name: string } }>(
     "/v1/packages/:name/versions",
@@ -62,7 +58,7 @@ async function main(): Promise<void> {
 
       const blobPath = blobKeyForPackage(name, manifest.version);
       try {
-        await insertPackageVersion(pool, {
+        await metadata.insert({
           name,
           version: manifest.version,
           manifest,
@@ -70,12 +66,17 @@ async function main(): Promise<void> {
           blob_path: blobPath,
           size_bytes: tarball.length,
         });
-      } catch (e: unknown) {
-        const pgErr = e as { code?: string };
-        if (pgErr.code === "23505") {
-          return reply.status(409).send({ error: "Version already published" });
+      } catch (e) {
+        if (e instanceof DuplicateVersionError) {
+          return reply.status(409).send({ error: e.message });
         }
-        throw e;
+        request.log.error(e);
+        return reply.status(500).send({
+          error:
+            e instanceof Error
+              ? e.message
+              : "Failed to save package metadata",
+        });
       }
 
       await storage.put(blobPath, tarball);
@@ -87,7 +88,7 @@ async function main(): Promise<void> {
     "/v1/packages/:name/versions/:version",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
-      const row = await getPackageVersion(pool, name, request.params.version);
+      const row = await metadata.get(name, request.params.version);
       if (!row) return reply.status(404).send({ error: "Not found" });
       return {
         name: row.name,
@@ -104,7 +105,7 @@ async function main(): Promise<void> {
     "/v1/packages/:name/versions/:version/tarball",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
-      const row = await getPackageVersion(pool, name, request.params.version);
+      const row = await metadata.get(name, request.params.version);
       if (!row) return reply.status(404).send({ error: "Not found" });
       const buf = await storage.get(row.blob_path);
       return reply

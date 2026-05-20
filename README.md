@@ -24,7 +24,7 @@ Design docs: `InitialDesignPlan/` and `docs/adr/`.
 
 - Node.js 20+
 - pnpm 9 (`corepack enable`)
-- Docker (for local Postgres)
+- Docker (optional — for Postgres; registry falls back to file metadata if Postgres is down)
 - `tar` (macOS/Linux built-in)
 
 ## Quick start (local)
@@ -33,11 +33,8 @@ Design docs: `InitialDesignPlan/` and `docs/adr/`.
 pnpm install
 pnpm build
 
-# Database
-docker compose up -d
-
-# Registry API
-export DATABASE_URL=postgresql://aipm:aipm@localhost:5432/aipm
+# Registry API (Postgres optional — uses ./data/package-index.json if DB is down)
+# docker compose up -d   # optional Postgres
 pnpm --filter @aipm/registry-api build
 pnpm --filter @aipm/registry-api start
 

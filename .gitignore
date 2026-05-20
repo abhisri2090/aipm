@@ -6,6 +6,7 @@ dist/
 .env.*
 !.env.example
 data/
+apps/registry-api/data/
 coverage/
 .DS_Store
 *.log
