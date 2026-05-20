@@ -2,6 +2,7 @@ import { installSkillPackage } from "@aipm/engine";
 import type { AiTool, Lockfile, LockfilePackageEntry } from "@aipm/schemas";
 import { unpackTarballToBuffer } from "./pack.js";
 import {
+  assertRegistryReachable,
   fetchPackageMetadata,
   fetchPackageTarball,
 } from "./registry-client.js";
@@ -24,6 +25,7 @@ export interface InstallOneOptions {
 }
 
 export async function installOnePackage(options: InstallOneOptions): Promise<void> {
+  await assertRegistryReachable(options.registry);
   const { manifest, integrity: remoteIntegrity } = await fetchPackageMetadata(
     options.registry,
     options.name,

@@ -40,7 +40,7 @@ program
     const registry =
       opts.registry ??
       process.env.AIPM_REGISTRY ??
-      "http://localhost:8080";
+      "http://127.0.0.1:8080";
     await writeProjectPackageJson(root, {
       schemaVersion: "0.1",
       registry,

@@ -33,10 +33,9 @@ Design docs: `InitialDesignPlan/` and `docs/adr/`.
 pnpm install
 pnpm build
 
-# Registry API (Postgres optional — uses ./data/package-index.json if DB is down)
-# docker compose up -d   # optional Postgres
-pnpm --filter @aipm/registry-api build
-pnpm --filter @aipm/registry-api start
+# Registry API — keep this terminal open (Postgres optional; file metadata fallback)
+pnpm registry
+# or: pnpm --filter @aipm/registry-api build && pnpm --filter @aipm/registry-api start
 
 # Publish sample skill (another terminal)
 node apps/cli/dist/bin.js publish examples/skills/@team/sample-skill \
@@ -45,15 +44,45 @@ node apps/cli/dist/bin.js publish examples/skills/@team/sample-skill \
 # Install into a project
 mkdir -p /tmp/my-app/.cursor
 cd /tmp/my-app
-node /path/to/aipm/apps/cli/dist/bin.js init --registry http://localhost:8080
+node /path/to/aipm/apps/cli/dist/bin.js init --registry http://127.0.0.1:8080
 node /path/to/aipm/apps/cli/dist/bin.js add @team/sample-skill@1.0.0
 ```
 
-Or link CLI globally after build:
+### Install the `aipm` command (no full path)
+
+**Option A — global `aipm` command (recommended)**
 
 ```bash
-pnpm --filter @aipm/cli build
-npm link --global --prefix apps/cli   # or: node apps/cli/dist/bin.js
+cd /path/to/aipm
+pnpm cli:link
+```
+
+Uses `npm link` so `aipm` is on your PATH (works with nvm: `~/.nvm/.../bin/aipm`).  
+After you change CLI code, run `pnpm build` again (link stays valid).
+
+Then from any folder:
+
+```bash
+aipm init --registry http://localhost:8080
+aipm publish ./my-skill --registry http://localhost:8080
+aipm add @team/sample-skill@1.0.0
+```
+
+To remove: `pnpm cli:unlink`
+
+**pnpm global instead:** run `pnpm setup` once, then `pnpm -C apps/cli link --global`.
+
+**Option B — from repo root only**
+
+```bash
+pnpm build
+pnpm aipm init --registry http://localhost:8080
+```
+
+**Option C — after npm publish (later)**
+
+```bash
+npm install -g @aipm/cli
 ```
 
 ## Scripts

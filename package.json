@@ -18,7 +18,11 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean && rm -rf node_modules .turbo"
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "aipm": "node apps/cli/dist/bin.js",
+    "registry": "pnpm --filter @aipm/registry-api build && pnpm --filter @aipm/registry-api start",
+    "cli:link": "pnpm build && npm link --prefix apps/cli",
+    "cli:unlink": "npm unlink -g @aipm/cli"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
