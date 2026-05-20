@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "references": [
+    { "path": "../schemas" },
+    { "path": "../adapter-sdk" },
+    { "path": "../adapter-cursor" },
+    { "path": "../adapter-claude" }
+  ],
+  "include": ["src/**/*"]
+}

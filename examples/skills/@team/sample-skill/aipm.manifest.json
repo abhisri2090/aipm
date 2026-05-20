@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@team/sample-skill",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Sample skill for local development and tests",
+  "entry": "skill.md",
+  "targets": ["cursor", "claude"],
+  "license": "Apache-2.0"
+}
