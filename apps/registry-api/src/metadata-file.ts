@@ -73,4 +73,53 @@ export class FileMetadataStore implements MetadataStore {
       created_at: new Date(entry.created_at),
     };
   }
+
+  async list(
+    query = "",
+    options: { limit?: number; cursor?: string } = {},
+  ): Promise<PackageVersionRow[]> {
+    const normalizedQuery = query.trim().toLowerCase();
+    const limit = options.limit ?? 100;
+    const cursorTime = options.cursor ? new Date(options.cursor).getTime() : null;
+    const index = await this.readIndex();
+    const rows: PackageVersionRow[] = [];
+
+    for (const [name, versions] of Object.entries(index.packages)) {
+      for (const [version, entry] of Object.entries(versions)) {
+        const manifest = PackageManifestSchema.parse(entry.manifest);
+        const haystack = [
+          name,
+          version,
+          manifest.description,
+          manifest.type,
+          ...manifest.targets,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const createdAt = new Date(entry.created_at);
+        if (normalizedQuery && !haystack.includes(normalizedQuery)) continue;
+        if (cursorTime && createdAt.getTime() >= cursorTime) continue;
+
+        rows.push({
+          id: randomUUID(),
+          name,
+          version,
+          manifest,
+          integrity: entry.integrity,
+          blob_path: entry.blob_path,
+          size_bytes: entry.size_bytes,
+          created_at: createdAt,
+        });
+      }
+    }
+
+    return rows
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
+      .slice(0, limit);
+  }
+
+  async health(): Promise<void> {
+    await this.readIndex();
+  }
 }

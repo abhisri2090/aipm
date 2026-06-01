@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AIPM Registry</title>
+    <meta
+      name="description"
+      content="AIPM helps teams install and manage project-ready AI skills, prompts, and tool files."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/">Registry</a>
+        <a href="/publish/">Publish</a>
+        <a href="/use/">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">AI Package Manager</p>
+        <h1 id="hero-title">Install the right AI setup into every project.</h1>
+        <p class="lede">
+          AIPM keeps project-ready AI skills, prompts, and tool files in one
+          registry. Search what exists, install it into Cursor or Claude, and
+          keep teams from copying AI files by hand.
+        </p>
+        <div class="actions">
+          <a class="button" href="/registry/">Browse registry</a>
+          <a class="button secondary" href="/publish/">Publish a skill</a>
+        </div>
+      </section>
+
+      <section class="panel-section" aria-labelledby="home-search-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Live registry</p>
+            <h2 id="home-search-title">Find a skill</h2>
+          </div>
+          <a class="text-link" href="/registry/">Open full registry</a>
+        </div>
+
+        <form class="search-form" id="home-search-form" role="search">
+          <label for="home-search-input">Package, target, or description</label>
+          <div class="search-row">
+            <input
+              id="home-search-input"
+              name="q"
+              type="search"
+              autocomplete="off"
+              placeholder="@team/sample-skill, cursor, claude..."
+            />
+            <button type="submit">Search</button>
+          </div>
+        </form>
+
+        <p class="muted" id="home-result-count">Loading registry entries</p>
+        <div class="results compact" id="home-results" aria-live="polite"></div>
+      </section>
+
+      <section class="guide-grid" aria-label="AIPM basics">
+        <a class="guide-card" href="/use/">
+          <h2>Use skills</h2>
+          <p>Initialize a project, install a skill, and see what files AIPM writes.</p>
+        </a>
+        <a class="guide-card" href="/publish/">
+          <h2>Publish skills</h2>
+          <p>Create a manifest, target one or more AI tools, and version updates cleanly.</p>
+        </a>
+        <a class="guide-card" href="/faq/">
+          <h2>Troubleshoot</h2>
+          <p>Fix registry, package, target, version, and install problems quickly.</p>
+        </a>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

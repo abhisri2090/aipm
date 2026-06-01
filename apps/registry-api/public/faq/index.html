@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FAQ | AIPM</title>
+    <meta name="description" content="AIPM troubleshooting and frequently asked questions." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/">Registry</a>
+        <a href="/publish/">Publish</a>
+        <a href="/use/">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/" aria-current="page">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <p class="eyebrow">FAQ</p>
+        <h1>Common questions and fixes.</h1>
+        <p class="lede">Short answers for the problems users hit while publishing and installing skills.</p>
+      </section>
+
+      <section class="faq-list">
+        <article>
+          <h2>The registry is not reachable.</h2>
+          <p>Check the registry URL and run <code>curl &lt;registry-url&gt;/health</code>. If it fails, the server or network route is down.</p>
+        </article>
+        <article>
+          <h2>Package not found.</h2>
+          <p>Confirm the exact scoped name and version. AIPM package names use the format <code>@scope/name</code>.</p>
+        </article>
+        <article>
+          <h2>Version already published.</h2>
+          <p>Published versions are immutable. Increase the manifest version and publish again.</p>
+        </article>
+        <article>
+          <h2>The skill installed but does not appear in my tool.</h2>
+          <p>Check that you installed with the right <code>--target</code>, then restart or reload the AI tool if it caches project files.</p>
+        </article>
+        <article>
+          <h2>Can I publish private skills?</h2>
+          <p>The current staging registry has no auth. Use it for internal testing only until authentication and HTTPS are added.</p>
+        </article>
+        <article>
+          <h2>Where are package files stored?</h2>
+          <p>Metadata is stored by the registry backend. Package tarballs are stored in the configured blob storage backend.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

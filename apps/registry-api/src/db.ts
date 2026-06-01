@@ -21,7 +21,7 @@ export function createPool(connectionString: string): pg.Pool {
 export async function ensureSchema(pool: pg.Pool): Promise<void> {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS package_versions (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
       name TEXT NOT NULL,
       version TEXT NOT NULL,
       manifest JSONB NOT NULL,
@@ -64,4 +64,47 @@ export async function getPackageVersion(
     [name, version],
   );
   return result.rows[0] ?? null;
+}
+
+export async function listPackageVersions(
+  pool: pg.Pool,
+  query = "",
+  options: { limit?: number; cursor?: string } = {},
+): Promise<PackageVersionRow[]> {
+  const normalizedQuery = query.trim();
+  const limit = Math.min(Math.max(options.limit ?? 100, 1), 101);
+  const values: Array<string | number> = [];
+  let where = "";
+
+  if (normalizedQuery) {
+    values.push(`%${normalizedQuery}%`);
+    where = `
+      WHERE name ILIKE $1
+        OR version ILIKE $1
+        OR manifest->>'description' ILIKE $1
+        OR manifest->>'type' ILIKE $1
+        OR (manifest->'targets')::text ILIKE $1
+    `;
+  }
+
+  if (options.cursor) {
+    values.push(options.cursor);
+    where += where ? ` AND created_at < $${values.length}` : ` WHERE created_at < $${values.length}`;
+  }
+
+  values.push(limit);
+  const result = await pool.query<PackageVersionRow>(
+    `SELECT id, name, version, manifest, integrity, blob_path, size_bytes, created_at
+     FROM package_versions
+     ${where}
+     ORDER BY created_at DESC
+     LIMIT $${values.length}`,
+    values,
+  );
+
+  return result.rows;
+}
+
+export async function checkDatabase(pool: pg.Pool): Promise<void> {
+  await pool.query("SELECT 1");
 }

@@ -12,6 +12,10 @@ export interface PackageVersionRow {
 }
 
 export type PackageVersionInsert = Omit<PackageVersionRow, "id" | "created_at">;
+export type PackageVersionSummary = Pick<
+  PackageVersionRow,
+  "name" | "version" | "manifest" | "integrity" | "size_bytes" | "created_at"
+>;
 
 export class DuplicateVersionError extends Error {
   readonly code = "23505";
@@ -26,4 +30,6 @@ export interface MetadataStore {
   init(): Promise<void>;
   insert(row: PackageVersionInsert): Promise<void>;
   get(name: string, version: string): Promise<PackageVersionRow | null>;
+  list(query?: string, options?: { limit?: number; cursor?: string }): Promise<PackageVersionSummary[]>;
+  health(): Promise<void>;
 }

@@ -2,7 +2,7 @@
 import { Command } from "commander";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { cwd } from "node:process";
+import { cwd, env } from "node:process";
 import { PackageManifestSchema, isValidScopeName } from "@aipm/schemas";
 import { detectToolsInProject } from "@aipm/engine";
 import { packDirectory } from "./pack.js";
@@ -17,8 +17,9 @@ import {
 import { promptForTool } from "./prompt.js";
 
 const program = new Command();
+const DEFAULT_REGISTRY = "https://aipm-registry.com";
 
-program.name("aipm").description("AI package manager").version("0.0.0");
+program.name("aipm").description("AI package manager").version("0.1.0");
 
 program
   .command("init")
@@ -40,7 +41,7 @@ program
     const registry =
       opts.registry ??
       process.env.AIPM_REGISTRY ??
-      "http://127.0.0.1:8080";
+      DEFAULT_REGISTRY;
     await writeProjectPackageJson(root, {
       schemaVersion: "0.1",
       registry,
@@ -116,12 +117,18 @@ program
   .command("publish <dir>")
   .description("Publish a skill folder to the registry")
   .requiredOption("--registry <url>", "Registry base URL")
-  .action(async (dir: string, opts: { registry: string }) => {
+  .option("--token <token>", "Publish token")
+  .action(async (dir: string, opts: { registry: string; token?: string }) => {
     const abs = resolve(dir);
     const manifestRaw = await readFile(join(abs, "aipm.manifest.json"), "utf8");
     const manifest = PackageManifestSchema.parse(JSON.parse(manifestRaw));
     const tarball = await packDirectory(abs);
-    const result = await publishPackage(opts.registry, manifest.name, tarball);
+    const result = await publishPackage(
+      opts.registry,
+      manifest.name,
+      tarball,
+      opts.token ?? env.AIPM_TOKEN,
+    );
     console.log(`Published ${manifest.name}@${result.version}`);
   });
 

@@ -20,6 +20,8 @@ packages/
 
 Design docs: `InitialDesignPlan/` and `docs/adr/`.
 
+Launch checklist (step-by-step, `[Abhishek]` = your tasks): [`docs/step-by-step-launch-checklist.md`](docs/step-by-step-launch-checklist.md).
+
 ## Prerequisites
 
 - Node.js 20+
@@ -48,6 +50,19 @@ node /path/to/aipm/apps/cli/dist/bin.js init --registry http://127.0.0.1:8080
 node /path/to/aipm/apps/cli/dist/bin.js add @team/sample-skill@1.0.0
 ```
 
+## Install AIPM
+
+After the CLI is published to npm:
+
+```bash
+npm install -g @aipm/cli
+aipm init
+aipm add @team/sample-skill@0.0.1780307807
+```
+
+The installed CLI uses `https://aipm-registry.com` by default. For local
+development, pass `--registry http://127.0.0.1:8080` or set `AIPM_REGISTRY`.
+
 ### Install the `aipm` command (no full path)
 
 **Option A — global `aipm` command (recommended)**
@@ -63,8 +78,8 @@ After you change CLI code, run `pnpm build` again (link stays valid).
 Then from any folder:
 
 ```bash
-aipm init --registry http://localhost:8080
-aipm publish ./my-skill --registry http://localhost:8080
+aipm init --registry https://aipm-registry.com
+AIPM_TOKEN=<admin-token> aipm publish ./my-skill --registry https://aipm-registry.com
 aipm add @team/sample-skill@1.0.0
 ```
 
@@ -76,10 +91,14 @@ To remove: `pnpm cli:unlink`
 
 ```bash
 pnpm build
-pnpm aipm init --registry http://localhost:8080
+pnpm aipm init --registry https://aipm-registry.com
 ```
 
-**Option C — after npm publish (later)**
+Production publishing is currently approval-only. Public registry reads and
+installs do not need a token; publishing requires an admin token passed as
+`--token` or `AIPM_TOKEN`.
+
+**Option C — npm package**
 
 ```bash
 npm install -g @aipm/cli
@@ -99,7 +118,7 @@ npm install -g @aipm/cli
 ## Current scope (shipped in repo)
 
 - Skill packages only (`type: skill`)
-- Registry: publish + fetch (**no auth yet**)
+- Registry: public read/search/install APIs and admin-token-gated publish
 - CLI: `init`, `add`, `install`, `publish`, `list`
 - Tools: `cursor`, `claude` (auto-detect or prompt)
 - Monorepo + CI + local Postgres dev stack

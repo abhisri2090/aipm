@@ -1,11 +1,31 @@
 {
   "name": "@aipm/cli",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Command line tool for installing AIPM AI skills into supported editors and assistants.",
   "license": "Apache-2.0",
   "type": "module",
+  "homepage": "https://aipm-registry.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abhisri2090/aipm.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/abhisri2090/aipm/issues"
+  },
   "bin": {
     "aipm": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

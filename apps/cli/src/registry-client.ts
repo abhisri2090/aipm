@@ -8,7 +8,7 @@ function registryFetchError(registry: string, cause: unknown): Error {
   const msg = cause instanceof Error ? cause.message : String(cause);
   if (msg === "fetch failed" || msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND")) {
     return new Error(
-      `Cannot reach registry at ${registry}. In the aipm repo run: pnpm registry (leave that terminal open)`,
+      `Cannot reach registry at ${registry}. Check your connection or pass --registry <url>.`,
     );
   }
   return new Error(`Registry request failed (${registry}): ${msg}`);
@@ -35,13 +35,15 @@ export async function publishPackage(
   registry: string,
   name: string,
   tarball: Buffer,
+  token?: string,
 ): Promise<{ version: string; integrity: string }> {
   const base = registry.replace(/\/$/, "");
   const url = `${base}/v1/packages/${encodePackageName(name)}/versions`;
   const form = new FormData();
   form.append("tarball", new Blob([tarball]), "package.tgz");
+  const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-  const res = await registryFetch(url, base, { method: "POST", body: form });
+  const res = await registryFetch(url, base, { method: "POST", body: form, headers });
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(err.error ?? `Publish failed: ${res.status}`);

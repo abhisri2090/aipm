@@ -21,6 +21,8 @@
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "aipm": "node apps/cli/dist/bin.js",
     "registry": "pnpm --filter @aipm/registry-api build && pnpm --filter @aipm/registry-api start",
+    "release:cli:dry-run": "pnpm build && pnpm -r --filter @aipm/schemas --filter @aipm/adapter-sdk --filter @aipm/adapter-cursor --filter @aipm/adapter-claude --filter @aipm/engine --filter @aipm/cli publish --dry-run --access public --no-git-checks",
+    "release:cli:publish": "pnpm build && pnpm -r --filter @aipm/schemas --filter @aipm/adapter-sdk --filter @aipm/adapter-cursor --filter @aipm/adapter-claude --filter @aipm/engine --filter @aipm/cli publish --access public",
     "cli:link": "pnpm build && npm link --prefix apps/cli",
     "cli:unlink": "npm unlink -g @aipm/cli"
   },

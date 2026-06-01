@@ -1,9 +1,11 @@
 import type pg from "pg";
 import {
   createPool,
+  checkDatabase,
   ensureSchema,
   getPackageVersion,
   insertPackageVersion,
+  listPackageVersions,
 } from "./db.js";
 import {
   DuplicateVersionError,
@@ -38,6 +40,17 @@ export class PostgresMetadataStore implements MetadataStore {
 
   async get(name: string, version: string): Promise<PackageVersionRow | null> {
     return getPackageVersion(this.pool, name, version);
+  }
+
+  async list(
+    query = "",
+    options: { limit?: number; cursor?: string } = {},
+  ): Promise<PackageVersionRow[]> {
+    return listPackageVersions(this.pool, query, options);
+  }
+
+  async health(): Promise<void> {
+    await checkDatabase(this.pool);
   }
 }
 
