@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { detectToolsInProject, resolveInstallTools } from "./detect-tools.js";
-import type { PackageManifest } from "@aipm/schemas";
+import type { PackageManifest } from "@aipm-registry/schemas";
 
 const baseManifest: PackageManifest = {
   schemaVersion: "0.1",

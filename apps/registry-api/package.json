@@ -1,5 +1,5 @@
 {
-  "name": "@aipm/registry-api",
+  "name": "@aipm-registry/registry-api",
   "version": "0.0.0",
   "private": true,
   "license": "Apache-2.0",
@@ -14,7 +14,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aipm/schemas": "workspace:*",
+    "@aipm-registry/schemas": "workspace:*",
     "@azure/storage-blob": "^12.31.0",
     "@fastify/helmet": "^13.0.2",
     "@fastify/multipart": "^9.0.1",

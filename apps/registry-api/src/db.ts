@@ -1,5 +1,5 @@
 import pg from "pg";
-import type { PackageManifest } from "@aipm/schemas";
+import type { PackageManifest } from "@aipm-registry/schemas";
 
 const { Pool } = pg;
 

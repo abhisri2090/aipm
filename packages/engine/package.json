@@ -1,5 +1,5 @@
 {
-  "name": "@aipm/engine",
+  "name": "@aipm-registry/engine",
   "version": "0.1.0",
   "description": "Core AIPM install engine for project-ready AI skills.",
   "license": "Apache-2.0",
@@ -40,10 +40,10 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aipm/adapter-claude": "workspace:*",
-    "@aipm/adapter-cursor": "workspace:*",
-    "@aipm/adapter-sdk": "workspace:*",
-    "@aipm/schemas": "workspace:*"
+    "@aipm-registry/adapter-claude": "workspace:*",
+    "@aipm-registry/adapter-cursor": "workspace:*",
+    "@aipm-registry/adapter-sdk": "workspace:*",
+    "@aipm-registry/schemas": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8"

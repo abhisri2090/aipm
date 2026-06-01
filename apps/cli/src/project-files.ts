@@ -7,7 +7,7 @@ import {
   type Lockfile,
   type LockfilePackageEntry,
   type ProjectPackageJson,
-} from "@aipm/schemas";
+} from "@aipm-registry/schemas";
 
 export type { ProjectPackageJson };
 

@@ -1,7 +1,7 @@
 import { access } from "node:fs/promises";
 import { join } from "node:path";
-import type { AiTool } from "@aipm/schemas";
-import type { PackageManifest } from "@aipm/schemas";
+import type { AiTool } from "@aipm-registry/schemas";
+import type { PackageManifest } from "@aipm-registry/schemas";
 
 async function pathExists(path: string): Promise<boolean> {
   try {

@@ -32,10 +32,10 @@ importers:
 
   apps/cli:
     dependencies:
-      '@aipm/engine':
+      '@aipm-registry/engine':
         specifier: workspace:*
         version: link:../../packages/engine
-      '@aipm/schemas':
+      '@aipm-registry/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
       commander:
@@ -44,7 +44,7 @@ importers:
 
   apps/registry-api:
     dependencies:
-      '@aipm/schemas':
+      '@aipm-registry/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
       '@azure/storage-blob':
@@ -75,10 +75,10 @@ importers:
 
   packages/adapter-claude:
     dependencies:
-      '@aipm/adapter-sdk':
+      '@aipm-registry/adapter-sdk':
         specifier: workspace:*
         version: link:../adapter-sdk
-      '@aipm/schemas':
+      '@aipm-registry/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
@@ -88,10 +88,10 @@ importers:
 
   packages/adapter-cursor:
     dependencies:
-      '@aipm/adapter-sdk':
+      '@aipm-registry/adapter-sdk':
         specifier: workspace:*
         version: link:../adapter-sdk
-      '@aipm/schemas':
+      '@aipm-registry/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:
@@ -101,22 +101,22 @@ importers:
 
   packages/adapter-sdk:
     dependencies:
-      '@aipm/schemas':
+      '@aipm-registry/schemas':
         specifier: workspace:*
         version: link:../schemas
 
   packages/engine:
     dependencies:
-      '@aipm/adapter-claude':
+      '@aipm-registry/adapter-claude':
         specifier: workspace:*
         version: link:../adapter-claude
-      '@aipm/adapter-cursor':
+      '@aipm-registry/adapter-cursor':
         specifier: workspace:*
         version: link:../adapter-cursor
-      '@aipm/adapter-sdk':
+      '@aipm-registry/adapter-sdk':
         specifier: workspace:*
         version: link:../adapter-sdk
-      '@aipm/schemas':
+      '@aipm-registry/schemas':
         specifier: workspace:*
         version: link:../schemas
     devDependencies:

@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { SkillAdapter, SkillInstallInput, SkillInstallResult } from "@aipm/adapter-sdk";
-import { shortNameFromScopeName } from "@aipm/schemas";
+import type { SkillAdapter, SkillInstallInput, SkillInstallResult } from "@aipm-registry/adapter-sdk";
+import { shortNameFromScopeName } from "@aipm-registry/schemas";
 
 export class CursorSkillAdapter implements SkillAdapter {
   readonly tool = "cursor" as const;

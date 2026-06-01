@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { PackageManifestSchema } from "@aipm/schemas";
+import { PackageManifestSchema } from "@aipm-registry/schemas";
 
 const execFileAsync = promisify(execFile);
 const MAX_TARBALL_BYTES = 50 * 1024 * 1024;

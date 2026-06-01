@@ -1,5 +1,5 @@
-import { installSkillPackage } from "@aipm/engine";
-import type { AiTool, Lockfile, LockfilePackageEntry } from "@aipm/schemas";
+import { installSkillPackage } from "@aipm-registry/engine";
+import type { AiTool, Lockfile, LockfilePackageEntry } from "@aipm-registry/schemas";
 import { unpackTarballToBuffer } from "./pack.js";
 import {
   assertRegistryReachable,
@@ -35,7 +35,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
   let explicitTarget = options.explicitTarget;
   let preferredTools = options.project.preferredTools;
 
-  const { resolveInstallTools } = await import("@aipm/engine");
+  const { resolveInstallTools } = await import("@aipm-registry/engine");
   let tools = await resolveInstallTools({
     projectRoot: options.projectRoot,
     manifest,

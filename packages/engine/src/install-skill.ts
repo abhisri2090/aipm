@@ -1,7 +1,7 @@
-import type { SkillAdapter } from "@aipm/adapter-sdk";
-import { claudeSkillAdapter } from "@aipm/adapter-claude";
-import { cursorSkillAdapter } from "@aipm/adapter-cursor";
-import type { AiTool, PackageManifest } from "@aipm/schemas";
+import type { SkillAdapter } from "@aipm-registry/adapter-sdk";
+import { claudeSkillAdapter } from "@aipm-registry/adapter-claude";
+import { cursorSkillAdapter } from "@aipm-registry/adapter-cursor";
+import type { AiTool, PackageManifest } from "@aipm-registry/schemas";
 import { resolveInstallTools } from "./detect-tools.js";
 
 const adapters: Record<AiTool, SkillAdapter> = {

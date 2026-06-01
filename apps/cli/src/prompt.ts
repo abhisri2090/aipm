@@ -1,6 +1,6 @@
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import type { AiTool } from "@aipm/schemas";
+import type { AiTool } from "@aipm-registry/schemas";
 
 export async function promptForTool(): Promise<AiTool> {
   const rl = readline.createInterface({ input, output });

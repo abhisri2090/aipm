@@ -1,4 +1,4 @@
-import type { PackageManifest } from "@aipm/schemas";
+import type { PackageManifest } from "@aipm-registry/schemas";
 
 export interface PackageVersionRow {
   id: string;

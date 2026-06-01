@@ -1,5 +1,5 @@
 {
-  "name": "@aipm/cli",
+  "name": "@aipm-registry/cli",
   "version": "0.1.0",
   "description": "Command line tool for installing AIPM AI skills into supported editors and assistants.",
   "license": "Apache-2.0",
@@ -35,8 +35,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aipm/engine": "workspace:*",
-    "@aipm/schemas": "workspace:*",
+    "@aipm-registry/engine": "workspace:*",
+    "@aipm-registry/schemas": "workspace:*",
     "commander": "^12.1.0"
   }
 }

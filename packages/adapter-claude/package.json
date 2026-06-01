@@ -1,5 +1,5 @@
 {
-  "name": "@aipm/adapter-claude",
+  "name": "@aipm-registry/adapter-claude",
   "version": "0.1.0",
   "description": "Claude adapter for installing AIPM skill packages.",
   "license": "Apache-2.0",
@@ -39,8 +39,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aipm/adapter-sdk": "workspace:*",
-    "@aipm/schemas": "workspace:*"
+    "@aipm-registry/adapter-sdk": "workspace:*",
+    "@aipm-registry/schemas": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8"

@@ -1,4 +1,4 @@
-import type { AiTool } from "@aipm/schemas";
+import type { AiTool } from "@aipm-registry/schemas";
 
 export interface SkillInstallInput {
   packageName: string;

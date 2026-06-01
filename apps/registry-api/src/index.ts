@@ -7,7 +7,7 @@ import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
-import { isValidScopeName } from "@aipm/schemas";
+import { isValidScopeName } from "@aipm-registry/schemas";
 import { resolvePublishAuthConfig, verifyPublishAuth } from "./auth.js";
 import { createMetadataStore } from "./create-metadata-store.js";
 import { DuplicateVersionError } from "./metadata-store.js";

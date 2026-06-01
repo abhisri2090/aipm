@@ -1,5 +1,5 @@
 {
-  "name": "@aipm/adapter-cursor",
+  "name": "@aipm-registry/adapter-cursor",
   "version": "0.1.0",
   "description": "Cursor adapter for installing AIPM skill packages.",
   "license": "Apache-2.0",
@@ -39,8 +39,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aipm/adapter-sdk": "workspace:*",
-    "@aipm/schemas": "workspace:*"
+    "@aipm-registry/adapter-sdk": "workspace:*",
+    "@aipm-registry/schemas": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^2.1.8"

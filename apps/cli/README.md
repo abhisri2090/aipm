@@ -6,7 +6,7 @@ Claude.
 ## Install
 
 ```bash
-npm install -g @aipm/cli
+npm install -g @aipm-registry/cli
 ```
 
 ## Use

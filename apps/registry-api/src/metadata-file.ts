@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
-import { PackageManifestSchema } from "@aipm/schemas";
+import { PackageManifestSchema } from "@aipm-registry/schemas";
 import {
   DuplicateVersionError,
   type MetadataStore,

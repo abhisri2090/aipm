@@ -1,5 +1,5 @@
 {
-  "name": "@aipm/schemas",
+  "name": "@aipm-registry/schemas",
   "version": "0.1.0",
   "description": "Shared schemas and validation helpers for AIPM packages.",
   "license": "Apache-2.0",

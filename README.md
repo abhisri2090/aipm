@@ -37,7 +37,7 @@ pnpm build
 
 # Registry API — keep this terminal open (Postgres optional; file metadata fallback)
 pnpm registry
-# or: pnpm --filter @aipm/registry-api build && pnpm --filter @aipm/registry-api start
+# or: pnpm --filter @aipm-registry/registry-api build && pnpm --filter @aipm-registry/registry-api start
 
 # Publish sample skill (another terminal)
 node apps/cli/dist/bin.js publish examples/skills/@team/sample-skill \
@@ -55,7 +55,7 @@ node /path/to/aipm/apps/cli/dist/bin.js add @team/sample-skill@1.0.0
 After the CLI is published to npm:
 
 ```bash
-npm install -g @aipm/cli
+npm install -g @aipm-registry/cli
 aipm init
 aipm add @team/sample-skill@0.0.1780307807
 ```
@@ -101,7 +101,7 @@ installs do not need a token; publishing requires an admin token passed as
 **Option C — npm package**
 
 ```bash
-npm install -g @aipm/cli
+npm install -g @aipm-registry/cli
 ```
 
 ## Scripts
