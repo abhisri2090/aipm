@@ -1,6 +1,10 @@
 import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { promisify } from "node:util";
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { copyStagedFiles } from "./publish-state.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -10,6 +14,16 @@ export async function packDirectory(dir: string): Promise<Buffer> {
     encoding: "buffer",
   });
   return Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
+}
+
+export async function packStagedFiles(root: string): Promise<Buffer> {
+  const tempDir = await mkdtemp(join(tmpdir(), "aipm-publish-stage-"));
+  try {
+    await copyStagedFiles(root, tempDir);
+    return packDirectory(tempDir);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 export async function unpackTarballToBuffer(tarball: Buffer, entry: string): Promise<string> {

@@ -263,6 +263,21 @@ Required secret names:
 aipm-storage-connection-string
 aipm-database-url
 aipm-publish-token-sha256
+aipm-github-client-id
+aipm-github-client-secret
+aipm-session-secret
+```
+
+The GitHub OAuth app callback URL must be:
+
+```txt
+https://api.aipm-registry.com/v1/auth/github/callback
+```
+
+Generate `aipm-session-secret` with at least 32 random bytes, for example:
+
+```bash
+openssl rand -base64 32
 ```
 
 Deploy using Key Vault:

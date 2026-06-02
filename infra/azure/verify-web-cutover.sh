@@ -13,16 +13,16 @@ if [[ "${WEB_URL}" != https://* || "${API_URL}" != https://* ]]; then
 fi
 
 echo "Checking website headers: ${WEB_URL}/"
-WEB_HEADERS="$(curl -fsSI "${WEB_URL}/")"
+WEB_HEADERS="$(curl -fsSLI "${WEB_URL}/")"
 printf "%s\n" "${WEB_HEADERS}" | grep -qi "^strict-transport-security:"
 printf "%s\n" "${WEB_HEADERS}" | grep -qi "^x-content-type-options:"
 printf "%s\n" "${WEB_HEADERS}" | grep -qi "^referrer-policy:"
 printf "%s\n" "${WEB_HEADERS}" | grep -qi "^content-security-policy:"
 
 echo "Checking website SEO routes"
-curl -fsS "${WEB_URL}/robots.txt" | grep -q "Sitemap: ${WEB_URL}/sitemap.xml"
-curl -fsS "${WEB_URL}/sitemap.xml" | grep -q "<loc>${WEB_URL}/registry</loc>"
-curl -fsS "${WEB_URL}/registry" | grep -q "<title>AI Skills Registry | AIPM"
+curl -fsSL "${WEB_URL}/robots.txt" | grep -q "Sitemap: ${WEB_URL}/sitemap.xml"
+curl -fsSL "${WEB_URL}/sitemap.xml" | grep -q "<loc>${WEB_URL}/registry</loc>"
+curl -fsSL "${WEB_URL}/registry" | grep -q "<title>AI Skills Registry | AIPM"
 
 echo "Checking direct API health: ${API_URL}/health"
 curl -fsS "${API_URL}/health"
@@ -32,7 +32,7 @@ echo "Checking direct API readiness: ${API_URL}/ready"
 curl -fsS "${API_URL}/ready"
 echo
 
-echo "Checking API package search"
+echo "Checking direct API package search"
 curl -fsS "${API_URL}/v1/packages?limit=1" | node -e '
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
@@ -42,8 +42,8 @@ process.stdin.on("end", () => {
 });
 '
 
-echo "Checking Vercel rewrite to API"
-curl -fsS "${WEB_URL}/v1/packages?limit=1" | node -e '
+echo "Checking website rewrite to API"
+curl -fsSL "${WEB_URL}/v1/packages?limit=1" | node -e '
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {

@@ -6,6 +6,7 @@ const links = [
   { href: "/use", label: "Use" },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
+  { href: "/dashboard", label: "Dashboard" },
 ];
 
 export function Header() {

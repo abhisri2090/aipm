@@ -17,6 +17,9 @@ AIPM_PUBLISH_TOKEN_SHA256="${AIPM_PUBLISH_TOKEN_SHA256:-}"
 DATABASE_URL="${DATABASE_URL:-}"
 AIPM_METADATA_BACKEND="${AIPM_METADATA_BACKEND:-}"
 KEY_VAULT_NAME="${KEY_VAULT_NAME:-}"
+AIPM_PUBLIC_SITE_URL="${AIPM_PUBLIC_SITE_URL:-https://aipm-registry.com}"
+AIPM_API_URL="${AIPM_API_URL:-https://api.aipm-registry.com}"
+AIPM_COOKIE_DOMAIN="${AIPM_COOKIE_DOMAIN:-.aipm-registry.com}"
 EXPECTED_TENANT_ID="${EXPECTED_TENANT_ID:-}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEPLOY_DIR="${REPO_ROOT}/deploy/registry-api"
@@ -103,6 +106,9 @@ PUBLISH_TOKEN_SHA_B64="$(printf "%s" "${AIPM_PUBLISH_TOKEN_SHA256}" | base64 | t
 DATABASE_URL_B64="$(printf "%s" "${DATABASE_URL}" | base64 | tr -d "\n")"
 METADATA_BACKEND_B64="$(printf "%s" "${AIPM_METADATA_BACKEND}" | base64 | tr -d "\n")"
 KEY_VAULT_NAME_B64="$(printf "%s" "${KEY_VAULT_NAME}" | base64 | tr -d "\n")"
+PUBLIC_SITE_URL_B64="$(printf "%s" "${AIPM_PUBLIC_SITE_URL}" | base64 | tr -d "\n")"
+API_URL_B64="$(printf "%s" "${AIPM_API_URL}" | base64 | tr -d "\n")"
+COOKIE_DOMAIN_B64="$(printf "%s" "${AIPM_COOKIE_DOMAIN}" | base64 | tr -d "\n")"
 
 RUN_COMMAND_SCRIPT="${REPO_ROOT}/deploy/registry-run-command.sh"
 umask 077
@@ -116,6 +122,9 @@ PUBLISH_TOKEN_SHA256="\$(printf '%s' '${PUBLISH_TOKEN_SHA_B64}' | base64 -d)"
 DATABASE_URL_INPUT="\$(printf '%s' '${DATABASE_URL_B64}' | base64 -d)"
 METADATA_BACKEND_INPUT="\$(printf '%s' '${METADATA_BACKEND_B64}' | base64 -d)"
 KEY_VAULT_NAME="\$(printf '%s' '${KEY_VAULT_NAME_B64}' | base64 -d)"
+PUBLIC_SITE_URL="\$(printf '%s' '${PUBLIC_SITE_URL_B64}' | base64 -d)"
+API_URL="\$(printf '%s' '${API_URL_B64}' | base64 -d)"
+COOKIE_DOMAIN="\$(printf '%s' '${COOKIE_DOMAIN_B64}' | base64 -d)"
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
 sudo apt-get install -y ca-certificates certbot curl nginx python3-certbot-nginx tar
@@ -182,6 +191,9 @@ PORT=${REGISTRY_PORT}
 AIPM_METADATA_BACKEND=\$EFFECTIVE_METADATA_BACKEND
 AIPM_DATA_DIR=/var/lib/aipm
 KEY_VAULT_NAME=\$KEY_VAULT_NAME
+AIPM_PUBLIC_SITE_URL=\$PUBLIC_SITE_URL
+AIPM_API_URL=\$API_URL
+AIPM_COOKIE_DOMAIN=\$COOKIE_DOMAIN
 AZURE_STORAGE_CONTAINER=${PACKAGE_CONTAINER}
 AIPM_REQUIRE_PUBLISH_TOKEN=true
 EOF
@@ -194,6 +206,9 @@ AIPM_METADATA_BACKEND=\$EFFECTIVE_METADATA_BACKEND
 AIPM_DATA_DIR=/var/lib/aipm
 DATABASE_URL=\$EFFECTIVE_DATABASE_URL
 KEY_VAULT_NAME=
+AIPM_PUBLIC_SITE_URL=\$PUBLIC_SITE_URL
+AIPM_API_URL=\$API_URL
+AIPM_COOKIE_DOMAIN=\$COOKIE_DOMAIN
 AZURE_STORAGE_CONNECTION_STRING=\$STORAGE_CONNECTION_STRING
 AZURE_STORAGE_CONTAINER=${PACKAGE_CONTAINER}
 AIPM_REQUIRE_PUBLISH_TOKEN=true
@@ -221,12 +236,23 @@ fetch_secret() {
   curl -fsS -H "Authorization: Bearer \$token" "https://\${KEY_VAULT_NAME}.vault.azure.net/secrets/\${secret_name}?api-version=7.4" | node -e 'let data=""; process.stdin.on("data", c => data += c); process.stdin.on("end", () => process.stdout.write(JSON.parse(data).value));'
 }
 
+fetch_secret_optional() {
+  local secret_name="\$1"
+  fetch_secret "\$secret_name" 2>/dev/null || true
+}
+
 umask 077
 tmp="\$(mktemp /run/aipm-registry-secrets.env.XXXXXX)"
 {
   printf 'DATABASE_URL=%s\n' "\$(fetch_secret aipm-database-url)"
   printf 'AZURE_STORAGE_CONNECTION_STRING=%s\n' "\$(fetch_secret aipm-storage-connection-string)"
   printf 'AIPM_PUBLISH_TOKEN_SHA256=%s\n' "\$(fetch_secret aipm-publish-token-sha256)"
+  github_client_id="\$(fetch_secret_optional aipm-github-client-id)"
+  github_client_secret="\$(fetch_secret_optional aipm-github-client-secret)"
+  session_secret="\$(fetch_secret_optional aipm-session-secret)"
+  if [ -n "\$github_client_id" ]; then printf 'GITHUB_CLIENT_ID=%s\n' "\$github_client_id"; fi
+  if [ -n "\$github_client_secret" ]; then printf 'GITHUB_CLIENT_SECRET=%s\n' "\$github_client_secret"; fi
+  if [ -n "\$session_secret" ]; then printf 'AIPM_SESSION_SECRET=%s\n' "\$session_secret"; fi
   printf 'AIPM_METADATA_BACKEND=postgres\n'
 } > "\$tmp"
 mv "\$tmp" /run/aipm-registry-secrets.env

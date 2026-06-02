@@ -14,6 +14,41 @@ export interface PackageVersionRow {
   created_at: Date;
 }
 
+export interface UserRow {
+  id: string;
+  github_id: string;
+  github_login: string;
+  name: string | null;
+  avatar_url: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OrgRow {
+  id: string;
+  slug: string;
+  name: string;
+  owner_user_id: string;
+  created_at: Date;
+}
+
+export interface PackageReservationRow {
+  id: string;
+  name: string;
+  org_id: string;
+  owner_user_id: string;
+  created_at: Date;
+}
+
+export interface PublishTokenRow {
+  id: string;
+  package_name: string;
+  user_id: string;
+  token_hash: string;
+  expires_at: Date;
+  created_at: Date;
+}
+
 export function createPool(connectionString: string): pg.Pool {
   return new Pool({ connectionString });
 }
@@ -32,6 +67,62 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
       UNIQUE (name, version)
     );
     CREATE INDEX IF NOT EXISTS idx_package_versions_name ON package_versions (name);
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      github_id TEXT NOT NULL UNIQUE,
+      github_login TEXT NOT NULL,
+      name TEXT,
+      avatar_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions (user_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions (expires_at);
+
+    CREATE TABLE IF NOT EXISTS orgs (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      slug TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS org_memberships (
+      org_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT NOT NULL DEFAULT 'owner',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (org_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_org_memberships_user_id ON org_memberships (user_id);
+
+    CREATE TABLE IF NOT EXISTS package_reservations (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      name TEXT NOT NULL UNIQUE,
+      org_id TEXT NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+      owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_package_reservations_org_id ON package_reservations (org_id);
+
+    CREATE TABLE IF NOT EXISTS publish_tokens (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      package_name TEXT NOT NULL REFERENCES package_reservations(name) ON DELETE CASCADE,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_publish_tokens_hash ON publish_tokens (token_hash);
+    CREATE INDEX IF NOT EXISTS idx_publish_tokens_expires_at ON publish_tokens (expires_at);
   `);
 }
 
@@ -107,4 +198,171 @@ export async function listPackageVersions(
 
 export async function checkDatabase(pool: pg.Pool): Promise<void> {
   await pool.query("SELECT 1");
+}
+
+export async function upsertGithubUser(
+  pool: pg.Pool,
+  user: { githubId: string; githubLogin: string; name?: string | null; avatarUrl?: string | null },
+): Promise<UserRow> {
+  const result = await pool.query<UserRow>(
+    `INSERT INTO users (github_id, github_login, name, avatar_url)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (github_id) DO UPDATE
+     SET github_login = EXCLUDED.github_login,
+         name = EXCLUDED.name,
+         avatar_url = EXCLUDED.avatar_url,
+         updated_at = NOW()
+     RETURNING id, github_id, github_login, name, avatar_url, created_at, updated_at`,
+    [user.githubId, user.githubLogin, user.name ?? null, user.avatarUrl ?? null],
+  );
+  return result.rows[0]!;
+}
+
+export async function createSession(
+  pool: pg.Pool,
+  session: { id: string; userId: string; expiresAt: Date },
+): Promise<void> {
+  await pool.query(`INSERT INTO sessions (id, user_id, expires_at) VALUES ($1, $2, $3)`, [
+    session.id,
+    session.userId,
+    session.expiresAt,
+  ]);
+}
+
+export async function deleteSession(pool: pg.Pool, sessionId: string): Promise<void> {
+  await pool.query(`DELETE FROM sessions WHERE id = $1`, [sessionId]);
+}
+
+export async function getUserBySession(pool: pg.Pool, sessionId: string): Promise<UserRow | null> {
+  const result = await pool.query<UserRow>(
+    `SELECT users.id, users.github_id, users.github_login, users.name, users.avatar_url,
+            users.created_at, users.updated_at
+     FROM sessions
+     JOIN users ON users.id = sessions.user_id
+     WHERE sessions.id = $1 AND sessions.expires_at > NOW()`,
+    [sessionId],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function createOrg(
+  pool: pg.Pool,
+  org: { slug: string; name: string; ownerUserId: string },
+): Promise<OrgRow> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query<OrgRow>(
+      `INSERT INTO orgs (slug, name, owner_user_id)
+       VALUES ($1, $2, $3)
+       RETURNING id, slug, name, owner_user_id, created_at`,
+      [org.slug, org.name, org.ownerUserId],
+    );
+    const created = result.rows[0]!;
+    await client.query(
+      `INSERT INTO org_memberships (org_id, user_id, role) VALUES ($1, $2, 'owner')`,
+      [created.id, org.ownerUserId],
+    );
+    await client.query("COMMIT");
+    return created;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function listUserOrgs(pool: pg.Pool, userId: string): Promise<OrgRow[]> {
+  const result = await pool.query<OrgRow>(
+    `SELECT orgs.id, orgs.slug, orgs.name, orgs.owner_user_id, orgs.created_at
+     FROM org_memberships
+     JOIN orgs ON orgs.id = org_memberships.org_id
+     WHERE org_memberships.user_id = $1
+     ORDER BY orgs.created_at DESC`,
+    [userId],
+  );
+  return result.rows;
+}
+
+export async function getOwnedOrg(
+  pool: pg.Pool,
+  slug: string,
+  userId: string,
+): Promise<OrgRow | null> {
+  const result = await pool.query<OrgRow>(
+    `SELECT id, slug, name, owner_user_id, created_at
+     FROM orgs
+     WHERE slug = $1 AND owner_user_id = $2`,
+    [slug, userId],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function reservePackageName(
+  pool: pg.Pool,
+  reservation: { name: string; orgId: string; ownerUserId: string },
+): Promise<PackageReservationRow> {
+  const result = await pool.query<PackageReservationRow>(
+    `INSERT INTO package_reservations (name, org_id, owner_user_id)
+     VALUES ($1, $2, $3)
+     RETURNING id, name, org_id, owner_user_id, created_at`,
+    [reservation.name, reservation.orgId, reservation.ownerUserId],
+  );
+  return result.rows[0]!;
+}
+
+export async function listOrgPackageReservations(
+  pool: pg.Pool,
+  orgId: string,
+): Promise<PackageReservationRow[]> {
+  const result = await pool.query<PackageReservationRow>(
+    `SELECT id, name, org_id, owner_user_id, created_at
+     FROM package_reservations
+     WHERE org_id = $1
+     ORDER BY created_at DESC`,
+    [orgId],
+  );
+  return result.rows;
+}
+
+export async function getOwnedPackageReservation(
+  pool: pg.Pool,
+  name: string,
+  userId: string,
+): Promise<PackageReservationRow | null> {
+  const result = await pool.query<PackageReservationRow>(
+    `SELECT id, name, org_id, owner_user_id, created_at
+     FROM package_reservations
+     WHERE name = $1 AND owner_user_id = $2`,
+    [name, userId],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function createPublishToken(
+  pool: pg.Pool,
+  token: { packageName: string; userId: string; tokenHash: string; expiresAt: Date },
+): Promise<PublishTokenRow> {
+  const result = await pool.query<PublishTokenRow>(
+    `INSERT INTO publish_tokens (package_name, user_id, token_hash, expires_at)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, package_name, user_id, token_hash, expires_at, created_at`,
+    [token.packageName, token.userId, token.tokenHash, token.expiresAt],
+  );
+  return result.rows[0]!;
+}
+
+export async function getValidPublishToken(
+  pool: pg.Pool,
+  tokenHash: string,
+  packageName: string,
+): Promise<PublishTokenRow | null> {
+  const result = await pool.query<PublishTokenRow>(
+    `SELECT id, package_name, user_id, token_hash, expires_at, created_at
+     FROM publish_tokens
+     WHERE token_hash = $1 AND package_name = $2 AND expires_at > NOW()`,
+    [tokenHash, packageName],
+  );
+  return result.rows[0] ?? null;
 }

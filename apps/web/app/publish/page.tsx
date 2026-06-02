@@ -17,10 +17,14 @@ export default function PublishPage() {
           A published AIPM skill is a versioned folder with a manifest and the files your AI tool
           needs. Publish through the CLI; the website helps users discover and install packages.
         </p>
-        <p className="notice">
-          Production publishing is currently approval-only. Public users can browse and install
-          packages while self-service publisher accounts are designed.
-        </p>
+        <div className="actions">
+          <a className="button" href="/login">
+            Sign in to publish
+          </a>
+          <a className="button secondary" href="/dashboard">
+            Publisher dashboard
+          </a>
+        </div>
       </section>
 
       <article className="doc">
@@ -44,12 +48,23 @@ export default function PublishPage() {
 }`}</code>
         </pre>
 
-        <h2>2. Publish the folder</h2>
+        <h2>2. Create an account and reserve a name</h2>
+        <ol className="flow-list">
+          <li>Sign in with GitHub.</li>
+          <li>Create an org namespace.</li>
+          <li>Reserve a package name such as @team/review-helper.</li>
+          <li>Generate a 5-minute publish token.</li>
+        </ol>
+
+        <h2>3. Stage and publish from the CLI</h2>
         <pre>
-          <code>AIPM_TOKEN=&lt;5-minute-token&gt; aipm publish ./skills/review-helper --registry https://aipm-registry.com</code>
+          <code>{`aipm publish add .
+aipm publish status
+aipm publish validate
+AIPM_TOKEN=<5-minute-token> aipm publish push`}</code>
         </pre>
 
-        <h2>Planned self-service publishing</h2>
+        <h2>Self-service publishing flow</h2>
         <ol className="flow-list">
           <li>Create an AIPM account.</li>
           <li>Register an organization and reserve a skill name such as @team/review-helper.</li>

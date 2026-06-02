@@ -7,12 +7,33 @@ import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
-import { isValidScopeName } from "@aipm-registry/schemas";
+import { isValidScopeName, parseScopeName } from "@aipm-registry/schemas";
 import { resolvePublishAuthConfig, verifyPublishAuth } from "./auth.js";
 import { createMetadataStore } from "./create-metadata-store.js";
 import { DuplicateVersionError } from "./metadata-store.js";
 import { blobKeyForPackage, createStorage } from "./storage.js";
 import { extractManifestFromTarball } from "./publish.js";
+import {
+  createOrg,
+  createPool,
+  ensureSchema,
+  getOwnedOrg,
+  getOwnedPackageReservation,
+  listOrgPackageReservations,
+  listUserOrgs,
+  reservePackageName,
+} from "./db.js";
+import {
+  createScopedPublishToken,
+  finishGithubLogin,
+  getCurrentUser,
+  logout,
+  requireCurrentUser,
+  resolveUserAuthConfig,
+  startGithubLogin,
+  verifyScopedPublishToken,
+  type AccountAuth,
+} from "./user-auth.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const APP_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -40,12 +61,31 @@ function isHiddenPublicPackage(name: string): boolean {
   return HIDDEN_PUBLIC_PACKAGE_NAMES.has(name);
 }
 
+const ORG_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+function normalizeOrgSlug(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function normalizePackageNameForOrg(org: string, value: string): string {
+  const normalized = value.trim().toLowerCase();
+  return normalized.startsWith("@") ? normalized : `@${org}/${normalized}`;
+}
+
+async function createAccountAuth(): Promise<AccountAuth | null> {
+  if (!process.env.DATABASE_URL) return null;
+  const pool = createPool(process.env.DATABASE_URL);
+  await ensureSchema(pool);
+  return { pool, config: resolveUserAuthConfig() };
+}
+
 export async function createApp(): Promise<FastifyInstance> {
   const dataDir = process.env.AIPM_DATA_DIR ?? join(process.cwd(), "data");
   await mkdir(dataDir, { recursive: true });
   const storage = await createStorage(dataDir);
   const metadata = await createMetadataStore(dataDir);
   const publishAuth = resolvePublishAuthConfig();
+  const accountAuth = await createAccountAuth();
 
   const app = Fastify({
     logger: true,
@@ -85,6 +125,137 @@ export async function createApp(): Promise<FastifyInstance> {
     }
   });
 
+  app.get("/v1/auth/github/start", async (_request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    try {
+      startGithubLogin(accountAuth, reply);
+    } catch (error) {
+      return reply.status(500).send({ error: publicError(error, "GitHub login is not configured") });
+    }
+  });
+
+  app.get<{ Querystring: { code?: string; state?: string } }>(
+    "/v1/auth/github/callback",
+    async (request, reply) => {
+      if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+      return finishGithubLogin(accountAuth, request, reply);
+    },
+  );
+
+  app.post("/v1/auth/logout", async (request, reply) => logout(accountAuth, request, reply));
+
+  app.get("/v1/me", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const user = await getCurrentUser(accountAuth, request);
+    if (!user) return reply.status(401).send({ error: "Login required" });
+    return {
+      id: user.id,
+      githubLogin: user.github_login,
+      name: user.name,
+      avatarUrl: user.avatar_url,
+    };
+  });
+
+  app.get("/v1/orgs", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const orgs = await listUserOrgs(accountAuth.pool, user.id);
+    return {
+      orgs: orgs.map((org) => ({
+        slug: org.slug,
+        name: org.name,
+        createdAt: org.created_at,
+      })),
+    };
+  });
+
+  app.post<{ Body: { slug?: string; name?: string } }>("/v1/orgs", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const slug = normalizeOrgSlug(request.body?.slug ?? "");
+    const name = request.body?.name?.trim() || slug;
+    if (!ORG_SLUG_REGEX.test(slug)) {
+      return reply.status(400).send({ error: "Invalid org slug; use lowercase letters, numbers, and hyphens" });
+    }
+    try {
+      const org = await createOrg(accountAuth.pool, { slug, name, ownerUserId: user.id });
+      return reply.status(201).send({ slug: org.slug, name: org.name, createdAt: org.created_at });
+    } catch (error) {
+      const pgErr = error as { code?: string };
+      if (pgErr.code === "23505") return reply.status(409).send({ error: "Org slug is already taken" });
+      throw error;
+    }
+  });
+
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOwnedOrg(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    return { slug: org.slug, name: org.name, createdAt: org.created_at };
+  });
+
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/packages", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOwnedOrg(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    const packages = await listOrgPackageReservations(accountAuth.pool, org.id);
+    return {
+      packages: packages.map((pkg) => ({
+        name: pkg.name,
+        createdAt: pkg.created_at,
+      })),
+    };
+  });
+
+  app.post<{ Params: { org: string }; Body: { name?: string } }>(
+    "/v1/orgs/:org/packages",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const orgSlug = normalizeOrgSlug(request.params.org);
+      const org = await getOwnedOrg(accountAuth.pool, orgSlug, user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      const name = normalizePackageNameForOrg(orgSlug, request.body?.name ?? "");
+      if (!isValidScopeName(name)) {
+        return reply.status(400).send({ error: "Invalid package name; use @org/name" });
+      }
+      const parsed = parseScopeName(name);
+      if (parsed.scope !== orgSlug) {
+        return reply.status(400).send({ error: `Package name must use @${orgSlug}/...` });
+      }
+      try {
+        const pkg = await reservePackageName(accountAuth.pool, {
+          name,
+          orgId: org.id,
+          ownerUserId: user.id,
+        });
+        return reply.status(201).send({ name: pkg.name, createdAt: pkg.created_at });
+      } catch (error) {
+        const pgErr = error as { code?: string };
+        if (pgErr.code === "23505") return reply.status(409).send({ error: "Package name is already reserved" });
+        throw error;
+      }
+    },
+  );
+
+  app.post<{ Params: { name: string } }>(
+    "/v1/packages/:name/publish-tokens",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const name = decodePackageName(request.params.name);
+      const reservation = await getOwnedPackageReservation(accountAuth.pool, name, user.id);
+      if (!reservation) return reply.status(404).send({ error: "Reserved package not found" });
+      const token = await createScopedPublishToken(accountAuth, { packageName: name, userId: user.id });
+      return {
+        token: token.token,
+        expiresAt: token.expiresAt,
+      };
+    },
+  );
+
   app.post<{ Params: { name: string } }>(
     "/v1/packages/:name/versions",
     {
@@ -96,12 +267,15 @@ export async function createApp(): Promise<FastifyInstance> {
       },
     },
     async (request, reply) => {
-      const auth = verifyPublishAuth(request, publishAuth);
-      if (!auth.ok) return reply.status(auth.status).send({ error: auth.error });
-
       const name = decodePackageName(request.params.name);
       if (!isValidScopeName(name)) {
         return reply.status(400).send({ error: "Invalid package name; use @scope/name" });
+      }
+
+      const adminAuth = verifyPublishAuth(request, publishAuth);
+      if (!adminAuth.ok) {
+        const scopedAuth = await verifyScopedPublishToken(accountAuth, request, name);
+        if (!scopedAuth) return reply.status(adminAuth.status).send({ error: adminAuth.error });
       }
 
       const data = await request.file();
