@@ -85,8 +85,8 @@ if [[ -n "${SAMPLE_VERSION}" ]]; then
   PROJECT_DIR="${TMP_ROOT}/project"
   mkdir -p "${PROJECT_DIR}/.cursor"
   pushd "${PROJECT_DIR}" >/dev/null
-  node "${REPO_ROOT}/apps/cli/dist/bin.js" init --registry "${REGISTRY_URL}"
-  node "${REPO_ROOT}/apps/cli/dist/bin.js" add "@team/sample-skill@${SAMPLE_VERSION}" --target cursor --ci
+  node "${REPO_ROOT}/apps/cli/dist/bin.cjs" init --registry "${REGISTRY_URL}"
+  node "${REPO_ROOT}/apps/cli/dist/bin.cjs" add "@team/sample-skill@${SAMPLE_VERSION}" --target cursor --ci
   popd >/dev/null
 fi
 

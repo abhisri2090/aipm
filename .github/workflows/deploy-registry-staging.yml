@@ -46,7 +46,7 @@ jobs:
       - run: pnpm lint
 
       - name: Create deploy package
-        run: pnpm --filter @aipm/registry-api deploy --prod deploy/registry-api
+        run: pnpm --filter @aipm-registry/registry-api deploy --prod deploy/registry-api
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3

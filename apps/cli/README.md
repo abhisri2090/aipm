@@ -20,7 +20,7 @@ aipm init
 Install a skill from the public registry:
 
 ```bash
-aipm add @team/sample-skill@0.0.1780307807
+aipm add @scope/name@1.0.0 --target cursor --ci
 ```
 
 List installed skills:
@@ -28,6 +28,9 @@ List installed skills:
 ```bash
 aipm list
 ```
+
+This package is bundled. Installing `@aipm-registry/cli` gives you the `aipm`
+command without needing to install any other AIPM npm packages manually.
 
 Publishing is currently approval-only:
 

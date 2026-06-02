@@ -33,16 +33,20 @@
       </section>
 
       <article class="doc">
+        <h2>Install the CLI</h2>
+        <p>Install the bundled AIPM command once on your machine.</p>
+        <pre><code data-template="install-cli">npm install -g @aipm-registry/cli</code></pre>
+
         <h2>Initialize a project</h2>
-        <p>This writes an <code>aipm.package.json</code> file with the registry URL.</p>
-        <pre><code data-template="init">node apps/cli/dist/bin.js init --registry &lt;registry-url&gt;</code></pre>
+        <p>This writes an <code>aipm.package.json</code> file with the public registry URL.</p>
+        <pre><code data-template="init">aipm init</code></pre>
 
         <h2>Install a skill</h2>
         <p>Choose a package from the registry and install it for the target tool.</p>
-        <pre><code>node apps/cli/dist/bin.js add @team/sample-skill@1.0.0 --target cursor --ci</code></pre>
+        <pre><code data-template="add">aipm add @scope/name@1.0.0 --target cursor --ci</code></pre>
 
         <h2>List installed skills</h2>
-        <pre><code>node apps/cli/dist/bin.js list</code></pre>
+        <pre><code data-template="list">aipm list</code></pre>
 
         <h2>Where files go</h2>
         <p>

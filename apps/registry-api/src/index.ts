@@ -19,6 +19,7 @@ const APP_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const MAX_PACKAGE_BYTES = 50 * 1024 * 1024;
 const MAX_LIST_LIMIT = 100;
 const DEFAULT_LIST_LIMIT = 50;
+const HIDDEN_PUBLIC_PACKAGE_NAMES = new Set(["@team/sample-skill"]);
 
 function decodePackageName(encoded: string): string {
   return decodeURIComponent(encoded);
@@ -33,6 +34,10 @@ function normalizeListLimit(value: unknown): number {
 function publicError(error: unknown, fallback: string): string {
   if (process.env.NODE_ENV === "production") return fallback;
   return error instanceof Error ? error.message : fallback;
+}
+
+function isHiddenPublicPackage(name: string): boolean {
+  return HIDDEN_PUBLIC_PACKAGE_NAMES.has(name);
 }
 
 export async function createApp(): Promise<FastifyInstance> {
@@ -167,7 +172,7 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string } }>(
+  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string; includeDemo?: string } }>(
     "/v1/packages",
     {
       config: {
@@ -179,13 +184,17 @@ export async function createApp(): Promise<FastifyInstance> {
     },
     async (request) => {
       const limit = normalizeListLimit(request.query.limit);
+      const includeDemo = request.query.includeDemo === "true";
       const rows = await metadata.list(request.query.q, {
-        limit: limit + 1,
+        limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT,
         cursor: request.query.cursor,
       });
-      const page = rows.slice(0, limit);
+      const visibleRows = includeDemo
+        ? rows
+        : rows.filter((row) => !isHiddenPublicPackage(row.name));
+      const page = visibleRows.slice(0, limit);
       const nextCursor =
-        rows.length > limit ? page[page.length - 1]?.created_at.toISOString() : null;
+        visibleRows.length > limit ? page[page.length - 1]?.created_at.toISOString() : null;
       return {
         packages: page.map((row) => ({
           name: row.name,

@@ -19,7 +19,7 @@ import { promptForTool } from "./prompt.js";
 const program = new Command();
 const DEFAULT_REGISTRY = "https://aipm-registry.com";
 
-program.name("aipm").description("AI package manager").version("0.1.0");
+program.name("aipm").description("AI package manager").version("0.1.1");
 
 program
   .command("init")

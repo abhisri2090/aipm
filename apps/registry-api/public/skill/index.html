@@ -32,9 +32,10 @@
       <section class="two-column">
         <article class="panel">
           <h2>Install</h2>
-          <p class="muted">Initialize your project once, then add the package.</p>
-          <pre><code id="skill-init-command">node apps/cli/dist/bin.js init --registry &lt;registry-url&gt;</code></pre>
-          <pre><code id="skill-install-command">node apps/cli/dist/bin.js add @scope/name@version --target cursor --ci</code></pre>
+          <p class="muted">Install the CLI, initialize your project once, then add the package.</p>
+          <pre><code id="skill-init-command">npm install -g @aipm-registry/cli
+aipm init</code></pre>
+          <pre><code id="skill-install-command">aipm add @scope/name@version --target cursor --ci</code></pre>
           <button class="copy inline" type="button" data-copy-source="skill-install-command">
             Copy install command
           </button>

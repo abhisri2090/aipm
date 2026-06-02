@@ -40,14 +40,14 @@ pnpm registry
 # or: pnpm --filter @aipm-registry/registry-api build && pnpm --filter @aipm-registry/registry-api start
 
 # Publish sample skill (another terminal)
-node apps/cli/dist/bin.js publish examples/skills/@team/sample-skill \
+node apps/cli/dist/bin.cjs publish examples/skills/@team/sample-skill \
   --registry http://localhost:8080
 
 # Install into a project
 mkdir -p /tmp/my-app/.cursor
 cd /tmp/my-app
-node /path/to/aipm/apps/cli/dist/bin.js init --registry http://127.0.0.1:8080
-node /path/to/aipm/apps/cli/dist/bin.js add @team/sample-skill@1.0.0
+node /path/to/aipm/apps/cli/dist/bin.cjs init --registry http://127.0.0.1:8080
+node /path/to/aipm/apps/cli/dist/bin.cjs add @team/sample-skill@1.0.0
 ```
 
 ## Install AIPM

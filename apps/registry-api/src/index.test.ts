@@ -17,7 +17,7 @@ function tokenHash(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-async function createTarball(version: string): Promise<Buffer> {
+async function createTarball(version: string, name = "@team/api-skill"): Promise<Buffer> {
   const dir = await mkdtemp(join(tmpdir(), "aipm-api-skill-"));
   tempDirs.push(dir);
   await writeFile(join(dir, "SKILL.md"), "Skill body\n");
@@ -25,7 +25,7 @@ async function createTarball(version: string): Promise<Buffer> {
     join(dir, "aipm.manifest.json"),
     JSON.stringify({
       schemaVersion: "0.1",
-      name: "@team/api-skill",
+      name,
       version,
       type: "skill",
       description: "API skill",
@@ -118,5 +118,33 @@ describe("registry API production behavior", () => {
       url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/versions/1.0.1`,
     });
     expect(detail.statusCode).toBe(200);
+  });
+
+  it("hides demo packages from public listing by default", async () => {
+    const tarball = await createTarball("1.0.2", "@team/sample-skill");
+    const payload = multipartPayload(tarball);
+    const publish = await app!.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent("@team/sample-skill")}/versions`,
+      headers: {
+        "content-type": payload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: payload.body,
+    });
+    expect(publish.statusCode).toBe(201);
+
+    const publicList = await app!.inject({ method: "GET", url: "/v1/packages?q=sample" });
+    expect(publicList.statusCode).toBe(200);
+    expect(publicList.json()).toMatchObject({ packages: [] });
+
+    const demoList = await app!.inject({
+      method: "GET",
+      url: "/v1/packages?q=sample&includeDemo=true",
+    });
+    expect(demoList.statusCode).toBe(200);
+    expect(demoList.json()).toMatchObject({
+      packages: [{ name: "@team/sample-skill", version: "1.0.2" }],
+    });
   });
 });

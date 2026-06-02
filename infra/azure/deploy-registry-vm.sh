@@ -55,7 +55,7 @@ fi
 cd "${REPO_ROOT}"
 pnpm build
 rm -rf "${DEPLOY_DIR}" "${ARCHIVE_PATH}"
-pnpm --filter @aipm/registry-api deploy --prod "${DEPLOY_DIR}"
+pnpm --filter @aipm-registry/registry-api deploy --prod "${DEPLOY_DIR}"
 COPYFILE_DISABLE=1 tar -czf "${ARCHIVE_PATH}" -C "${DEPLOY_DIR}" .
 
 STORAGE_CONNECTION_STRING="$(az storage account show-connection-string \

@@ -55,7 +55,7 @@ echo "Deploying registry API to ${WEBAPP_NAME} in ${RESOURCE_GROUP}..."
 cd "${REPO_ROOT}"
 pnpm build
 rm -rf "${DEPLOY_DIR}" "${ZIP_PATH}"
-pnpm --filter @aipm/registry-api deploy --prod "${DEPLOY_DIR}"
+pnpm --filter @aipm-registry/registry-api deploy --prod "${DEPLOY_DIR}"
 
 (
   cd "${DEPLOY_DIR}"

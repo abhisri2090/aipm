@@ -42,14 +42,14 @@ PUBLISH_ARGS=(publish "${SKILL_DIR}" --registry "${REGISTRY_URL}")
 if [[ -n "${AIPM_TOKEN:-}" ]]; then
   PUBLISH_ARGS+=(--token "${AIPM_TOKEN}")
 fi
-node "${REPO_ROOT}/apps/cli/dist/bin.js" "${PUBLISH_ARGS[@]}"
+node "${REPO_ROOT}/apps/cli/dist/bin.cjs" "${PUBLISH_ARGS[@]}"
 
 echo "Installing into ${PROJECT_DIR}"
 (
   cd "${PROJECT_DIR}"
-  node "${REPO_ROOT}/apps/cli/dist/bin.js" init --registry "${REGISTRY_URL}"
-  node "${REPO_ROOT}/apps/cli/dist/bin.js" add "@team/sample-skill@${VERSION}" --target cursor --ci
-  node "${REPO_ROOT}/apps/cli/dist/bin.js" list
+  node "${REPO_ROOT}/apps/cli/dist/bin.cjs" init --registry "${REGISTRY_URL}"
+  node "${REPO_ROOT}/apps/cli/dist/bin.cjs" add "@team/sample-skill@${VERSION}" --target cursor --ci
+  node "${REPO_ROOT}/apps/cli/dist/bin.cjs" list
 )
 
 INSTALLED_FILE="${PROJECT_DIR}/.cursor/aipm/skills/sample-skill.md"

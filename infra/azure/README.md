@@ -4,7 +4,7 @@ This is the staging path for the MVP registry API.
 
 ## Targets
 
-- Azure App Service: runs `@aipm/registry-api`
+- Azure App Service: runs `@aipm-registry/registry-api`
 - Azure Database for PostgreSQL Flexible Server: package metadata
 - Azure Blob Storage: package tarballs
 

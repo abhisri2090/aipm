@@ -1,4 +1,5 @@
 const registryBase = window.location.origin;
+const cliInstallCommand = "npm install -g @aipm-registry/cli";
 
 function qs(selector, root = document) {
   return root.querySelector(selector);
@@ -33,7 +34,7 @@ function encodePackageName(name) {
 }
 
 function installCommand(pkg, target = pkg.targets?.[0] ?? "cursor") {
-  return `node apps/cli/dist/bin.js add ${pkg.name}@${pkg.version} --target ${target} --ci`;
+  return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
 }
 
 function detailUrl(pkg) {
@@ -70,7 +71,7 @@ function renderPackages(container, countEl, packages, options = {}) {
   }
 
   if (packages.length === 0) {
-    renderEmpty(container, "No matching skills found.");
+    renderEmpty(container, options.emptyMessage ?? "No matching skills found.");
     return;
   }
 
@@ -94,11 +95,20 @@ async function fetchPackages(query = "") {
 function fillRegistryCommands() {
   qsa("[data-template]").forEach((node) => {
     const type = node.dataset.template;
+    if (type === "install-cli") {
+      node.textContent = cliInstallCommand;
+    }
     if (type === "init") {
-      node.textContent = `node apps/cli/dist/bin.js init --registry ${registryBase}`;
+      node.textContent = "aipm init";
+    }
+    if (type === "add") {
+      node.textContent = "aipm add @scope/name@1.0.0 --target cursor --ci";
+    }
+    if (type === "list") {
+      node.textContent = "aipm list";
     }
     if (type === "publish") {
-      node.textContent = `AIPM_TOKEN=<admin-token> node apps/cli/dist/bin.js publish ./path/to/skill --registry ${registryBase}`;
+      node.textContent = `AIPM_TOKEN=<5-minute-token> aipm publish ./path/to/skill --registry ${registryBase}`;
     }
   });
 }
@@ -134,7 +144,12 @@ function setupHomeSearch() {
     renderEmpty(results, "Loading skills...");
     try {
       const packages = await fetchPackages(query);
-      renderPackages(results, count, packages, { compact: true, limit: 3 });
+      renderPackages(results, count, packages, {
+        compact: true,
+        limit: 3,
+        emptyMessage:
+          "No public skills are listed yet. Demo packages are hidden while the first useful starter skills are prepared.",
+      });
     } catch {
       count.textContent = "Search unavailable";
       renderEmpty(results, "The registry search API is not available right now.");
@@ -165,7 +180,10 @@ function setupRegistryPage() {
       activeTarget === "all"
         ? currentPackages
         : currentPackages.filter((pkg) => pkg.targets.includes(activeTarget));
-    renderPackages(results, count, filtered);
+    renderPackages(results, count, filtered, {
+      emptyMessage:
+        "No public skills are listed yet. Demo packages are hidden while starter skills are prepared.",
+    });
   }
 
   async function load(query = "") {
@@ -235,7 +253,7 @@ async function setupSkillPage() {
 
     title.textContent = `${summary.name}@${summary.version}`;
     description.textContent = summary.description;
-    initCommand.textContent = `node apps/cli/dist/bin.js init --registry ${registryBase}`;
+    initCommand.textContent = `${cliInstallCommand}\naipm init`;
     installCommandEl.textContent = installCommand(summary);
     metadata.innerHTML = `
       <div><dt>Package</dt><dd>${escapeHtml(summary.name)}</dd></div>

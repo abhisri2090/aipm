@@ -33,11 +33,15 @@
         </p>
         <p class="notice">
           Production publishing is currently approval-only. Public users can
-          browse and install packages, but publishing requires an admin token.
+          browse and install packages while self-service publisher accounts are
+          designed.
         </p>
       </section>
 
       <article class="doc">
+        <h2>Install the CLI</h2>
+        <pre><code data-template="install-cli">npm install -g @aipm-registry/cli</code></pre>
+
         <h2>1. Create a skill folder</h2>
         <p>Each skill needs an <code>aipm.manifest.json</code> file and an entry file.</p>
         <pre><code>{
@@ -52,7 +56,15 @@
 }</code></pre>
 
         <h2>2. Publish the folder</h2>
-        <pre><code data-template="publish">AIPM_TOKEN=&lt;admin-token&gt; node apps/cli/dist/bin.js publish ./skills/review-helper --registry &lt;registry-url&gt;</code></pre>
+        <pre><code data-template="publish">AIPM_TOKEN=&lt;5-minute-token&gt; aipm publish ./skills/review-helper --registry &lt;registry-url&gt;</code></pre>
+
+        <h2>Planned self-service publishing</h2>
+        <ol class="flow-list">
+          <li>Create an AIPM account.</li>
+          <li>Register an organization and reserve a skill name such as <code>@team/review-helper</code>.</li>
+          <li>Generate a publish token that is valid for 5 minutes.</li>
+          <li>Use the CLI to validate, stage, and push the skill files to the registry.</li>
+        </ol>
 
         <h2>Target examples</h2>
         <div class="example-grid">
