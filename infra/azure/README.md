@@ -217,6 +217,37 @@ A     @     <vm-public-ip>
 CNAME www   aipm-registry.com
 ```
 
+## Vercel Website Cutover
+
+When the Next.js website is hosted on Vercel, keep the registry API on the VM
+under a dedicated API hostname:
+
+```txt
+A     api   <vm-public-ip>
+```
+
+After creating the DNS record, configure Nginx and Let's Encrypt for the API
+hostname:
+
+```bash
+API_DOMAIN=api.aipm-registry.com \
+LETSENCRYPT_EMAIL=<email> \
+./infra/azure/configure-api-domain-vm.sh
+```
+
+Then configure the Vercel app with these environment variables:
+
+```txt
+AIPM_API_BASE_URL=https://api.aipm-registry.com
+AIPM_API_PROXY_ORIGIN=https://api.aipm-registry.com
+NEXT_PUBLIC_SITE_URL=https://aipm-registry.com
+```
+
+Vercel should serve `aipm-registry.com` and `www.aipm-registry.com`. The VM
+should serve `api.aipm-registry.com`. Keep `/v1/*`, `/health`, and `/ready`
+rewritten from Vercel to the API hostname so the CLI can continue using
+`https://aipm-registry.com` as the registry URL.
+
 Publishing is closed by default. Pass `AIPM_PUBLISH_TOKEN=<raw-token>` or
 `AIPM_PUBLISH_TOKEN_SHA256=<sha256-hex>` to the deploy script to set the admin
 publish token. If neither is set on the first production deploy, the VM script

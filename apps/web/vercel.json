@@ -1,4 +1,7 @@
 {
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @aipm-registry/web build",
   "headers": [
     {
       "source": "/(.*)",

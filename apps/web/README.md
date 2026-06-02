@@ -28,3 +28,19 @@ while registry APIs remain on the Azure VM:
 
 Before moving the apex domain to Vercel, create `api.aipm-registry.com` on the
 VM and verify the API is healthy over HTTPS.
+
+## Vercel project settings
+
+Use these settings in the Vercel dashboard:
+
+```txt
+Framework Preset: Next.js
+Root Directory: apps/web
+Install Command: cd ../.. && pnpm install --frozen-lockfile
+Build Command: cd ../.. && pnpm --filter @aipm-registry/web build
+Output Directory: leave empty
+```
+
+If Vercel reports `No Output Directory named "public" found`, the project is
+configured like a static site. Clear the Output Directory field and set the
+Framework Preset to Next.js.
