@@ -15,10 +15,19 @@ export type PublishState = {
 };
 
 const STATE_PATH = join(".aipm", "publish-state.json");
+const IGNORE_FILE = ".aipmignore";
 const MAX_PACKAGE_BYTES = 50 * 1024 * 1024;
 const EXCLUDED_SEGMENTS = new Set([".aipm", ".git", "node_modules", "dist", ".next"]);
 const EXCLUDED_SUFFIXES = [".log", ".pem", ".key", ".pfx", ".p12", ".publishsettings"];
 const EXCLUDED_NAMES = new Set([".env", ".env.local", ".env.production", ".env.development"]);
+const SECRET_PATTERNS = [
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+  /DefaultEndpointsProtocol=/,
+  /AccountKey=/,
+  /AZURE_STORAGE_CONNECTION_STRING/,
+  /client_secret=/i,
+  /<publishData/i,
+];
 
 export function publishStatePath(root: string): string {
   return join(root, STATE_PATH);
@@ -41,6 +50,46 @@ export function isExcludedPublishPath(rel: string): boolean {
   const name = segments[segments.length - 1] ?? rel;
   if (EXCLUDED_NAMES.has(name) || name.startsWith(".env.")) return true;
   return EXCLUDED_SUFFIXES.some((suffix) => name.endsWith(suffix));
+}
+
+async function readAipmIgnore(root: string): Promise<string[]> {
+  try {
+    const raw = await readFile(join(root, IGNORE_FILE), "utf8");
+    return raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"));
+  } catch {
+    return [];
+  }
+}
+
+function globToRegExp(pattern: string): RegExp {
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*");
+  return new RegExp(`^${escaped}$`);
+}
+
+function matchesIgnoreRule(rel: string, rule: string): boolean {
+  const normalized = rule.replace(/^\.\//, "").replace(/\/$/, "");
+  if (!normalized) return false;
+  if (normalized.includes("*")) return globToRegExp(normalized).test(rel);
+  return rel === normalized || rel.startsWith(`${normalized}/`);
+}
+
+async function isIgnoredByAipmIgnore(root: string, rel: string): Promise<boolean> {
+  const rules = await readAipmIgnore(root);
+  return rules.some((rule) => matchesIgnoreRule(rel, rule));
+}
+
+async function assertNoObviousSecrets(path: string, rel: string): Promise<void> {
+  const data = await readFile(path);
+  if (data.includes(0)) return;
+  const text = data.toString("utf8");
+  if (SECRET_PATTERNS.some((pattern) => pattern.test(text))) {
+    throw new Error(`Refusing to publish file that looks like it contains a secret: ${rel}`);
+  }
 }
 
 async function fileHash(path: string): Promise<{ hash: string; size: number }> {
@@ -73,6 +122,7 @@ export async function writePublishState(root: string, state: PublishState): Prom
 
 async function expandPublishPath(root: string, rel: string): Promise<string[]> {
   if (isExcludedPublishPath(rel)) return [];
+  if (await isIgnoredByAipmIgnore(root, rel)) return [];
   const abs = join(root, rel);
   const info = await stat(abs);
   if (info.isFile()) return [rel];
@@ -94,6 +144,7 @@ export async function addPublishFiles(root: string, paths: string[]): Promise<Pu
     const files = await expandPublishPath(root, normalized);
     for (const rel of files) {
       if (isExcludedPublishPath(rel)) continue;
+      if (await isIgnoredByAipmIgnore(root, rel)) continue;
       const hashed = await fileHash(join(root, rel));
       byPath.set(rel, { path: rel, ...hashed });
     }
@@ -120,8 +171,15 @@ export async function resetPublishState(root: string): Promise<void> {
 }
 
 export async function readManifest(root: string): Promise<PackageManifest> {
-  const raw = await readFile(join(root, "aipm.manifest.json"), "utf8");
-  return PackageManifestSchema.parse(JSON.parse(raw));
+  try {
+    const raw = await readFile(join(root, "aipm.manifest.json"), "utf8");
+    return PackageManifestSchema.parse(JSON.parse(raw));
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      throw new Error("No aipm.manifest.json found. Run aipm publish init --name @org/skill.");
+    }
+    throw error;
+  }
 }
 
 export async function validatePublishState(root: string): Promise<{ manifest: PackageManifest; size: number }> {
@@ -135,10 +193,17 @@ export async function validatePublishState(root: string): Promise<{ manifest: Pa
   let size = 0;
   for (const entry of state.files) {
     if (isExcludedPublishPath(entry.path)) throw new Error(`Refusing to publish excluded path: ${entry.path}`);
+    if (await isIgnoredByAipmIgnore(root, entry.path)) {
+      throw new Error(`Refusing to publish ignored path: ${entry.path}`);
+    }
     const abs = join(root, entry.path);
     const info = await stat(abs).catch(() => null);
     if (!info?.isFile()) throw new Error(`Staged file is missing: ${entry.path}`);
     const hashed = await fileHash(abs);
+    if (hashed.hash !== entry.hash) {
+      throw new Error(`Staged file changed after add: ${entry.path}. Run aipm publish add ${entry.path}`);
+    }
+    await assertNoObviousSecrets(abs, entry.path);
     size += hashed.size;
   }
   if (size > MAX_PACKAGE_BYTES) throw new Error("Package exceeds 50 MB limit.");

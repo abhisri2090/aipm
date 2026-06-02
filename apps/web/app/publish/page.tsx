@@ -30,7 +30,9 @@ export default function PublishPage() {
       <article className="doc">
         <h2>Install the CLI</h2>
         <pre>
-          <code>{CLI_INSTALL_COMMAND}</code>
+          <code>{`${CLI_INSTALL_COMMAND}
+aipm --version
+aipm doctor`}</code>
         </pre>
 
         <h2>1. Create a skill folder</h2>
@@ -58,10 +60,14 @@ export default function PublishPage() {
 
         <h2>3. Stage and publish from the CLI</h2>
         <pre>
-          <code>{`aipm publish add .
+          <code>{`aipm publish init --name @team/review-helper
+aipm publish explain
+aipm publish add .
 aipm publish status
+aipm publish preview
 aipm publish validate
-AIPM_TOKEN=<5-minute-token> aipm publish push`}</code>
+aipm publish token --package @team/review-helper
+AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}</code>
         </pre>
 
         <h2>Self-service publishing flow</h2>

@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -56,6 +56,28 @@ describe("publish state", () => {
 
     const rows = await statusPublishState(root);
     expect(rows.find((row) => row.path === "SKILL.md")?.changed).toBe(true);
+    await expect(validatePublishState(root)).rejects.toThrow(/changed after add/);
+  });
+
+  it("honors .aipmignore patterns", async () => {
+    const root = await createSkillFixture();
+    await writeFile(join(root, ".aipmignore"), "notes/\n*.tmp\n", "utf8");
+    await mkdir(join(root, "notes"));
+    await writeFile(join(root, "notes", "draft.md"), "draft\n", "utf8");
+    await writeFile(join(root, "scratch.tmp"), "temporary\n", "utf8");
+
+    const state = await addPublishFiles(root, ["."]);
+
+    expect(state.files.some((entry) => entry.path === "notes/draft.md")).toBe(false);
+    expect(state.files.some((entry) => entry.path === "scratch.tmp")).toBe(false);
+  });
+
+  it("rejects files that look like secrets", async () => {
+    const root = await createSkillFixture();
+    await writeFile(join(root, "SKILL.md"), "DefaultEndpointsProtocol=https;AccountKey=abc\n");
+    await addPublishFiles(root, ["."]);
+
+    await expect(validatePublishState(root)).rejects.toThrow(/looks like it contains a secret/);
   });
 
   it("removes and resets staged files", async () => {

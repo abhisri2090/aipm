@@ -259,10 +259,17 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
       <article className="doc">
         <h2>Publish from CLI</h2>
         <pre>
-          <code>{`aipm publish init --name ${packageName}
+          <code>{`npm install -g @aipm-registry/cli
+aipm --version
+aipm doctor
+aipm publish init --name ${packageName}
+aipm publish explain
 aipm publish add .
 aipm publish status
-AIPM_TOKEN=<token> aipm publish push`}</code>
+aipm publish preview
+aipm publish validate
+aipm publish token --package ${packageName}
+AIPM_TOKEN=<token> aipm publish push --yes`}</code>
         </pre>
         <button
           type="button"

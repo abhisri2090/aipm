@@ -63,12 +63,14 @@ export function upsertLockEntry(
 export function resolveRegistryUrl(
   project: ProjectPackageJson | null,
   flag?: string,
+  fallback?: string,
 ): string {
-  const fromEnv = process.env.AIPM_REGISTRY;
+  const fromEnv = process.env.AIPM_REGISTRY_URL ?? process.env.AIPM_REGISTRY;
   if (flag) return flag.replace(/\/$/, "");
   if (project?.registry) return project.registry.replace(/\/$/, "");
   if (fromEnv) return fromEnv.replace(/\/$/, "");
-  throw new Error("Registry URL required: set registry in aipm.package.json or AIPM_REGISTRY");
+  if (fallback) return fallback.replace(/\/$/, "");
+  throw new Error("Registry URL required: set registry in aipm.package.json or AIPM_REGISTRY_URL");
 }
 
 export function parseTargetFlag(target?: string): AiTool | undefined {

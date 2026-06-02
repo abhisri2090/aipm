@@ -6,7 +6,13 @@ export function encodePackageName(name: string): string {
 
 function registryFetchError(registry: string, cause: unknown): Error {
   const msg = cause instanceof Error ? cause.message : String(cause);
-  if (msg === "fetch failed" || msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND")) {
+  if (
+    msg === "fetch failed" ||
+    msg.includes("ECONNREFUSED") ||
+    msg.includes("ENOTFOUND") ||
+    msg.includes("timed out") ||
+    msg.includes("aborted")
+  ) {
     return new Error(
       `Cannot reach registry at ${registry}. Check your connection or pass --registry <url>.`,
     );
@@ -15,8 +21,12 @@ function registryFetchError(registry: string, cause: unknown): Error {
 }
 
 async function registryFetch(url: string, registry: string, init?: RequestInit): Promise<Response> {
+  const timeoutSignal =
+    typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
+      ? AbortSignal.timeout(10000)
+      : undefined;
   try {
-    return await fetch(url, init);
+    return await fetch(url, { ...init, signal: init?.signal ?? timeoutSignal });
   } catch (e) {
     throw registryFetchError(registry, e);
   }
@@ -49,6 +59,29 @@ export async function publishPackage(
     throw new Error(err.error ?? `Publish failed: ${res.status}`);
   }
   return res.json() as Promise<{ version: string; integrity: string }>;
+}
+
+export type PackageSummary = {
+  name: string;
+  version: string;
+  description: string;
+  targets: string[];
+  createdAt?: string;
+};
+
+export async function searchPackages(
+  registry: string,
+  query: string,
+  limit = 20,
+): Promise<PackageSummary[]> {
+  const base = registry.replace(/\/$/, "");
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  params.set("limit", String(limit));
+  const res = await registryFetch(`${base}/v1/packages?${params}`, base);
+  if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+  const data = (await res.json()) as { packages?: PackageSummary[] };
+  return data.packages ?? [];
 }
 
 export async function fetchPackageMetadata(

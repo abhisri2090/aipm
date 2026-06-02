@@ -23,7 +23,9 @@ export default function UsePage() {
         <h2>Install the CLI</h2>
         <p>Install the bundled AIPM command once on your machine.</p>
         <pre>
-          <code>{CLI_INSTALL_COMMAND}</code>
+          <code>{`${CLI_INSTALL_COMMAND}
+aipm --version
+aipm doctor`}</code>
         </pre>
 
         <h2>Initialize a project</h2>
@@ -41,6 +43,12 @@ export default function UsePage() {
         <h2>List installed skills</h2>
         <pre>
           <code>aipm list</code>
+        </pre>
+
+        <h2>Search and update</h2>
+        <pre>
+          <code>{`aipm search sentry
+aipm update`}</code>
         </pre>
 
         <h2>Where files go</h2>

@@ -29,7 +29,7 @@ const faqs = [
   ],
   [
     "How do I install the CLI?",
-    "Run npm install -g @aipm-registry/cli, then run aipm init inside your project.",
+    "Run npm install -g @aipm-registry/cli, then aipm --version and aipm doctor. If the command is not on PATH, doctor prints the shell profile fix.",
   ],
   [
     "Where are package files stored?",
