@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
@@ -71,32 +72,32 @@ export default function TemplatesPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Templates</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Templates</p>
         <h1>Start publishing from a skill shape that already fits the job.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM templates create starter skill files for common AI workflows. They do not lock you
           in; edit the generated SKILL.md, manifest, and ignored files before staging and pushing.
         </p>
-        <div className="actions">
-          <Link className="button" href="/publish">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/publish">
             Publishing guide
           </Link>
-          <Link className="button secondary" href="/examples">
+          <Link className={cn(shell.button, shell.secondary)} href="/examples">
             Examples
           </Link>
         </div>
       </section>
 
-      <section className="template-grid" aria-label="AIPM starter templates">
+      <section className={cards.templateGrid} aria-label="AIPM starter templates">
         {templates.map((template) => (
-          <article className="template-card" key={template.value}>
-            <p className="eyebrow">{template.value}</p>
+          <article className={cards.templateCard} key={template.value}>
+            <p className={shell.eyebrow}>{template.value}</p>
             <h2>{template.name}</h2>
             <p>{template.bestFor}</p>
             <CodeBlock code={template.command} />
             <h3>Starts with</h3>
-            <ul className="check-list">
+            <ul className={docs.checkList}>
               {template.includes.map((item) => (
                 <li key={item}>{item}</li>
               ))}
@@ -105,7 +106,7 @@ export default function TemplatesPage() {
         ))}
       </section>
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>After choosing a template</h2>
           <CodeBlock

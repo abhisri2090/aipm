@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
@@ -83,33 +84,33 @@ export default function ExamplesPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Examples</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Examples</p>
         <h1>Copy a complete AIPM workflow for a real skill scenario.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           These examples combine templates, targets, staging, publish tokens, and install commands
           so you can see the whole flow before creating your first package.
         </p>
-        <div className="actions">
-          <Link className="button" href="/templates">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/templates">
             Templates
           </Link>
-          <Link className="button secondary" href="/targets">
+          <Link className={cn(shell.button, shell.secondary)} href="/targets">
             Targets
           </Link>
         </div>
       </section>
 
-      <section className="example-list" aria-label="AIPM publishing examples">
+      <section className={cards.exampleList} aria-label="AIPM publishing examples">
         {examples.map((example) => (
-          <article className="example-card" key={example.title}>
+          <article className={cards.exampleCard} key={example.title}>
             <h2>{example.title}</h2>
             <p>{example.scenario}</p>
             <h3>Publish</h3>
             <CodeBlock code={example.publish} />
             <h3>Install</h3>
             <CodeBlock code={example.install} />
-            <ul className="check-list">
+            <ul className={docs.checkList}>
               {example.notes.map((note) => (
                 <li key={note}>{note}</li>
               ))}

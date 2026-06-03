@@ -1,0 +1,89 @@
+.doc {
+  max-width: 860px;
+  margin-top: 42px;
+}
+
+.wideDoc {
+  max-width: none;
+}
+
+.doc > section {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.doc > section > h2 {
+  margin: 0;
+}
+
+.doc h2 {
+  margin-top: 34px;
+}
+
+.doc > section h2 {
+  margin-top: 0;
+}
+
+.doc p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.doc pre {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.checkList {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.checkList li {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.checkList li + li {
+  margin-top: 0;
+}
+
+.flowList {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding-left: 20px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.definitionList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.definitionList div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.definitionList dt {
+  color: var(--muted);
+}
+
+.definitionList dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}

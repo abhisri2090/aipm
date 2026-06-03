@@ -1,3 +1,4 @@
+import { shell, cards, home, cn } from "../lib/page-styles";
 import Link from "next/link";
 import { CodeBlock } from "../components/code-block";
 import { RegistrySearch } from "../components/registry-search";
@@ -36,88 +37,88 @@ export default async function HomePage() {
           }),
         }}
       />
-      <section className="hero" aria-labelledby="hero-title">
-        <p className="eyebrow">AIPM — AI Package Manager</p>
+      <section className={home.hero} aria-labelledby="hero-title">
+        <p className={shell.eyebrow}>AIPM — AI Package Manager</p>
         <h1 id="hero-title">npm-style packages for AI skills, tools, and MCP</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM aims to solve AI package distribution problems. Registry + CLI to Install, Update,
           Deploy, Remove, and bind packages into your repo for Cursor, Claude, Codex, and more — no
           copying files by hand.
         </p>
-        <div className="actions">
-          <Link className="button" href="#get-started">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="#get-started">
             Get started
           </Link>
-          <Link className="button" href="/registry">
+          <Link className={shell.button} href="/registry">
             Browse registry
           </Link>
-          <Link className="button secondary" href="/publish">
+          <Link className={cn(shell.button, shell.secondary)} href="/publish">
             Publishing plan
           </Link>
         </div>
       </section>
 
-      <section className="panel-section" id="get-started" aria-labelledby="get-started-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} id="get-started" aria-labelledby="get-started-title">
+        <div className={shell.sectionHeading}>
           <div>
-            <p className="eyebrow">Get started</p>
+            <p className={shell.eyebrow}>Get started</p>
             <h2 id="get-started-title">Install AIPM and bind skills to a project</h2>
           </div>
-          <Link className="text-link" href="/use">
+          <Link className={shell.textLink} href="/use">
             Full guide
           </Link>
         </div>
 
-        <div className="steps">
-          <article className="step-card">
-            <span className="step-number">1</span>
+        <div className={cards.steps}>
+          <article className={cards.stepCard}>
+            <span className={cards.stepNumber}>1</span>
             <h3>Install the CLI</h3>
             <CodeBlock code={CLI_INSTALL_COMMAND} />
           </article>
-          <article className="step-card">
-            <span className="step-number">2</span>
+          <article className={cards.stepCard}>
+            <span className={cards.stepNumber}>2</span>
             <h3>Initialize your project</h3>
             <CodeBlock code="aipm init" />
           </article>
-          <article className="step-card">
-            <span className="step-number">3</span>
+          <article className={cards.stepCard}>
+            <span className={cards.stepNumber}>3</span>
             <h3>Add a skill</h3>
             <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
           </article>
         </div>
       </section>
 
-      <section className="panel-section" aria-labelledby="home-search-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} aria-labelledby="home-search-title">
+        <div className={shell.sectionHeading}>
           <div>
-            <p className="eyebrow">Live registry</p>
+            <p className={shell.eyebrow}>Live registry</p>
             <h2 id="home-search-title">Find a skill</h2>
           </div>
-          <Link className="text-link" href="/registry">
+          <Link className={shell.textLink} href="/registry">
             Open full registry
           </Link>
         </div>
         <RegistrySearch compact initialPackages={[]} />
       </section>
 
-      <section className="guide-grid" aria-label="AIPM basics">
-        <Link className="guide-card" href="/use">
+      <section className={cards.guideGrid} aria-label="AIPM basics">
+        <Link className={cards.guideCard} href="/use">
           <h2>Use skills</h2>
           <p>Initialize a project, install a skill, and see what files AIPM writes.</p>
         </Link>
-        <Link className="guide-card" href="/publish">
+        <Link className={cards.guideCard} href="/publish">
           <h2>Publish skills</h2>
           <p>Create a manifest, target one or more AI tools, and version updates cleanly.</p>
         </Link>
-        <Link className="guide-card" href="/resources">
+        <Link className={cards.guideCard} href="/resources">
           <h2>Learn the practice</h2>
           <p>Read AI skill best practices, acknowledgements, and publishing resources.</p>
         </Link>
-        <Link className="guide-card" href="/discoverability">
+        <Link className={cards.guideCard} href="/discoverability">
           <h2>Get discovered</h2>
           <p>Write names, descriptions, and examples that help users find the right AI skill.</p>
         </Link>
-        <Link className="guide-card" href="/faq">
+        <Link className={cards.guideCard} href="/faq">
           <h2>Troubleshoot</h2>
           <p>Fix registry, package, target, version, and install problems quickly.</p>
         </Link>

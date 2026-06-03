@@ -1,0 +1,100 @@
+.topbar {
+  width: 100%;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.topbarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.brandMark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  object-fit: cover;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.topbarLink {
+  position: relative;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 650;
+  text-decoration: none;
+  transition:
+    color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.topbarLink::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleX(0.4);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+}
+
+.topbarLink:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.topbarLink:hover::after,
+.topbarLinkActive::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.topbarLinkActive {
+  background: var(--panel-soft);
+  color: var(--accent-strong);
+}
+
+@media (max-width: 760px) {
+  .topbarInner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nav {
+    justify-content: flex-start;
+  }
+}

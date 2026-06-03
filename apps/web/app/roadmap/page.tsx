@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
@@ -75,29 +76,29 @@ export default function RoadmapPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Roadmap</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Roadmap</p>
         <h1>Build the registry in public, one useful layer at a time.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM is moving from a working registry into dependable product infrastructure. This
           roadmap names what users can rely on today, what needs hardening next, and which bigger
           platform bets should wait until the core workflow is stable.
         </p>
-        <div className="actions">
-          <Link className="button" href="/use">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/use">
             Start using AIPM
           </Link>
-          <Link className="button secondary" href="/publish">
+          <Link className={cn(shell.button, shell.secondary)} href="/publish">
             Publish a skill
           </Link>
         </div>
       </section>
 
-      <section className="roadmap-list" aria-label="AIPM roadmap">
+      <section className={cards.roadmapList} aria-label="AIPM roadmap">
         {sections.map((section) => (
-          <article className="roadmap-card" key={section.title}>
+          <article className={cards.roadmapCard} key={section.title}>
             <h2>{section.title}</h2>
-            <ul className="check-list">
+            <ul className={docs.checkList}>
               {section.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}
@@ -106,7 +107,7 @@ export default function RoadmapPage() {
         ))}
       </section>
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>How to read this roadmap</h2>
           <p>

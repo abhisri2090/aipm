@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
@@ -73,40 +74,40 @@ export default function SecurityPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Security</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Security</p>
         <h1>Publish AI skills without leaking private project context.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM packages are public by default. Treat every published skill like open-source code:
           review the files, remove sensitive context, and publish only the instructions and tool
           files that a user should actually install.
         </p>
-        <div className="actions">
-          <Link className="button" href="/publish">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/publish">
             Publishing guide
           </Link>
-          <Link className="button secondary" href="/faq">
+          <Link className={cn(shell.button, shell.secondary)} href="/faq">
             FAQ
           </Link>
         </div>
       </section>
 
-      <section className="practice-grid" aria-label="Security principles">
-        <article className="practice-card">
+      <section className={cards.practiceGrid} aria-label="Security principles">
+        <article className={cards.practiceCard}>
           <h2>Public means inspectable</h2>
           <p>
             Assume package metadata, manifests, skill instructions, prompts, and bundled files can
             be read by anyone. Do not publish internal-only context.
           </p>
         </article>
-        <article className="practice-card">
+        <article className={cards.practiceCard}>
           <h2>Short-lived tokens</h2>
           <p>
             Publish tokens are intentionally temporary. Generate one when you are ready to push, then
             let it expire instead of storing it in shell profiles or project files.
           </p>
         </article>
-        <article className="practice-card">
+        <article className={cards.practiceCard}>
           <h2>Preview before push</h2>
           <p>
             The CLI preview step exists to slow down leaks. Review the file list and package size
@@ -115,10 +116,10 @@ export default function SecurityPage() {
         </article>
       </section>
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Publisher safety checklist</h2>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             {checklist.map((item) => (
               <li key={item}>{item}</li>
             ))}
@@ -136,7 +137,7 @@ export default function SecurityPage() {
 
         <section>
           <h2>If something sensitive is published</h2>
-          <ol className="flow-list">
+          <ol className={docs.flowList}>
             {reportSteps.map((step) => (
               <li key={step}>{step}</li>
             ))}

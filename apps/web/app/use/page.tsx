@@ -1,3 +1,4 @@
+import { shell, docs } from "../../lib/page-styles";
 import { CodeBlock } from "../../components/code-block";
 import { DocLayout } from "../../components/doc-layout";
 import { CLI_INSTALL_COMMAND } from "../../lib/registry";
@@ -12,16 +13,16 @@ export const metadata = pageMetadata({
 export default function UsePage() {
   return (
     <DocLayout>
-      <section className="page-header">
-        <p className="eyebrow">Use AIPM</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Use AIPM</p>
         <h1>Bind AI skills and tool files to your project.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM installs the files a skill needs into your project, so your AI setup travels with
           the code instead of living in scattered notes.
         </p>
       </section>
 
-      <article className="doc">
+      <article className={docs.doc}>
         <h2>Manage project-specific skills</h2>
         <p>AIPM maintaines aipm.package.json file in your project to track installed skills and their versions.</p>
 

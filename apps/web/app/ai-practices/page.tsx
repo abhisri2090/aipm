@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
@@ -113,37 +114,37 @@ export default function AiPracticesPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">AI Best Practices</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>AI Best Practices</p>
         <h1>Build AI skills that teams can trust, reuse, and improve.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           The best AI workflow is not a clever prompt lost in chat history. It is a small,
           documented, versioned skill that can be installed into a real project, tested against real
           work, and updated without surprising the team.
         </p>
-        <div className="actions">
-          <Link className="button" href="/publish">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/publish">
             Publish a skill
           </Link>
-          <Link className="button secondary" href="/registry">
+          <Link className={cn(shell.button, shell.secondary)} href="/registry">
             Browse registry
           </Link>
         </div>
       </section>
 
-      <section className="practice-grid" aria-label="AI best practices">
+      <section className={cards.practiceGrid} aria-label="AI best practices">
         {practices.map((practice) => (
-          <article className="practice-card" key={practice.title}>
+          <article className={cards.practiceCard} key={practice.title}>
             <h2>{practice.title}</h2>
             <p>{practice.body}</p>
           </article>
         ))}
       </section>
 
-      <section className="doc wide-doc" aria-labelledby="skill-checklist">
+      <section className={cn(docs.doc, docs.wideDoc)} aria-labelledby="skill-checklist">
         <section>
           <h2 id="skill-checklist">AIPM skill quality checklist</h2>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             <li>The skill has a clear name, description, supported targets, and entry file.</li>
             <li>The package includes only files that should be public and installable.</li>
             <li>The instructions include context, constraints, examples, and expected output.</li>
@@ -158,9 +159,9 @@ export default function AiPracticesPage() {
             This page translates public AI guidance into AIPM publishing practice. These references
             are useful starting points for teams building reusable AI workflows.
           </p>
-          <div className="source-list">
+          <div className={cards.sourceList}>
             {sources.map((source) => (
-              <a className="source-card" href={source.href} key={source.href}>
+              <a className={cards.sourceCard} href={source.href} key={source.href}>
                 <strong>{source.name}</strong>
                 <span>{source.note}</span>
               </a>

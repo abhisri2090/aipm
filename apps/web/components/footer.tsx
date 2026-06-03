@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./footer.module.css";
 
 const groups = [
   {
@@ -39,19 +40,19 @@ const groups = [
 
 export function Footer() {
   return (
-    <footer className="site-footer">
-      <div className="footer-inner">
-        <section className="footer-brand" aria-label="AIPM summary">
-          <Link className="brand" href="/" aria-label="AIPM home">
-            <img alt="" className="brand-mark" src="/aipm-logo.svg" />
+    <footer className={styles.siteFooter}>
+      <div className={styles.footerInner}>
+        <section className={styles.footerBrand} aria-label="AIPM summary">
+          <Link className={styles.brand} href="/" aria-label="AIPM home">
+            <img alt="" className={styles.brandMark} src="/aipm-logo.svg" />
             <span>AIPM</span>
           </Link>
           <p>Project-ready AI skills, prompts, and tool files that teams can publish, find, and install.</p>
         </section>
 
-        <nav className="footer-nav" aria-label="Footer navigation">
+        <nav className={styles.footerNav} aria-label="Footer navigation">
           {groups.map((group) => (
-            <section className="footer-group" key={group.title}>
+            <section className={styles.footerGroup} key={group.title}>
               <h2>{group.title}</h2>
               {group.links.map((link) => (
                 <Link href={link.href} key={link.href}>

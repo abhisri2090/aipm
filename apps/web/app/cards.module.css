@@ -1,0 +1,389 @@
+.guideGrid,
+.steps,
+.exampleGrid,
+.practiceGrid,
+.templateGrid,
+.targetGrid,
+.thanksList {
+  display: grid;
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.guideGrid,
+.steps,
+.exampleGrid,
+.practiceGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.exampleGrid {
+  margin: 4px 0 0;
+}
+
+.exampleGrid .exampleCard {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+}
+
+.exampleGrid .exampleCard h2,
+.exampleGrid .exampleCard h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.exampleGrid .exampleCard > p {
+  margin: 0;
+}
+
+.guideCard,
+.stepCard,
+.practiceCard,
+.thanksCard,
+.templateCard,
+.targetCard,
+.resultCard,
+.faqList article,
+.statusCard,
+.roadmapCard,
+.changelogCard,
+.exampleCard,
+.glossaryCard,
+.sourceCard,
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.guideCard,
+.stepCard,
+.practiceCard,
+.thanksCard,
+.templateCard,
+.targetCard {
+  padding: 22px;
+}
+
+.guideCard {
+  text-decoration: none;
+}
+
+.guideCard p,
+.resultCard p,
+.faqList p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.templateGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 28px 0;
+}
+
+.templateCard {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.templateCard p,
+.templateCard h2,
+.templateCard h3 {
+  margin: 0;
+}
+
+.templateCard > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.templateCard pre {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--code);
+  color: var(--code-text);
+  padding: 14px;
+}
+
+.targetGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 28px 0;
+}
+
+.targetCard {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.targetCard p,
+.targetCard h2 {
+  margin: 0;
+}
+
+.targetCard > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.targetCard dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.targetCard dl div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.targetCard dt {
+  color: var(--muted);
+}
+
+.targetCard dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.stepNumber {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 14px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.stepCard pre {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.practiceCard p,
+.thanksCard p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.thanksList {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.thanksCard {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.thanksCardLink {
+  margin-top: auto;
+}
+
+.sourceList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sourceCard {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  text-decoration: none;
+}
+
+.sourceCard:hover {
+  border-color: var(--accent);
+}
+
+.sourceCard span {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.sourceCard small {
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 28px 0;
+}
+
+.statusCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+}
+
+.statusCard p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.statusCard strong {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.statusCard[data-status="ok"] strong {
+  color: var(--accent-strong);
+}
+
+.statusCard[data-status="error"] strong {
+  color: #b54708;
+}
+
+.roadmapList,
+.changelogList,
+.exampleList,
+.glossaryList {
+  display: grid;
+  gap: 14px;
+  margin: 28px 0;
+}
+
+.roadmapCard,
+.changelogCard,
+.exampleCard,
+.glossaryCard {
+  padding: 22px;
+}
+
+.roadmapCard h2,
+.changelogCard h2,
+.exampleCard h2,
+.exampleCard h3,
+.glossaryCard h2 {
+  margin: 0 0 14px;
+}
+
+.exampleCard > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.glossaryCard p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.exampleCard pre {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--code);
+  color: var(--code-text);
+  padding: 14px;
+}
+
+.faqList {
+  display: grid;
+  gap: 12px;
+  margin-top: 42px;
+}
+
+.faqList article {
+  padding: 20px;
+}
+
+.resultCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 22px;
+}
+
+.resultCard h3 a {
+  text-decoration: none;
+}
+
+.cardActions {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.packageIntegrity {
+  margin: 12px 0 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.publisherLine {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.results {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .guideGrid,
+  .steps,
+  .exampleGrid,
+  .practiceGrid,
+  .templateGrid,
+  .targetGrid,
+  .thanksList,
+  .statusGrid,
+  .sourceList {
+    grid-template-columns: 1fr;
+  }
+
+  .resultCard {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .cardActions {
+    justify-items: start;
+  }
+
+  .statusCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .targetCard dl div {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,3 +1,4 @@
+import { shell, cards } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
 
@@ -82,13 +83,13 @@ export default function FaqPage() {
           }),
         }}
       />
-      <section className="page-header">
-        <p className="eyebrow">FAQ</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>FAQ</p>
         <h1>Common questions and fixes.</h1>
-        <p className="lede">Short answers for the problems users hit while publishing and installing skills.</p>
+        <p className={shell.lede}>Short answers for the problems users hit while publishing and installing skills.</p>
       </section>
 
-      <section className="faq-list">
+      <section className={cards.faqList}>
         {faqs.map(([question, answer]) => (
           <article key={question}>
             <h2>{question}</h2>

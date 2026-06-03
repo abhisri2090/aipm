@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
@@ -68,34 +69,34 @@ export default function PrivacyPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Privacy</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Privacy</p>
         <h1>Know what is public, what is account data, and what should never be packaged.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM is built for public, reusable AI skill packages. This notice explains the practical
           data boundaries for accounts, publisher profiles, package metadata, short-lived tokens,
           and project files.
         </p>
-        <div className="actions">
-          <Link className="button" href="/security">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/security">
             Security guide
           </Link>
-          <Link className="button secondary" href="/publish">
+          <Link className={cn(shell.button, shell.secondary)} href="/publish">
             Publishing guide
           </Link>
         </div>
       </section>
 
-      <section className="practice-grid" aria-label="Privacy data categories">
+      <section className={cards.practiceGrid} aria-label="Privacy data categories">
         {dataItems.map((item) => (
-          <article className="practice-card" key={item.title}>
+          <article className={cards.practiceCard} key={item.title}>
             <h2>{item.title}</h2>
             <p>{item.body}</p>
           </article>
         ))}
       </section>
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Public package boundary</h2>
           <p>
@@ -103,7 +104,7 @@ export default function PrivacyPage() {
             intended to be public registry content. AIPM should make this boundary obvious before
             users publish.
           </p>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             {packageRules.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}

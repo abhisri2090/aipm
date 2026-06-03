@@ -1,3 +1,4 @@
+import { shell, cards } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
@@ -86,18 +87,18 @@ export default function ResourcesPage() {
 
   return (
     <DocLayout>
-      <section className="page-header">
-        <p className="eyebrow">Resources</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Resources</p>
         <h1>Build better AI skills, then make them reusable.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           Use the documentation tree on the left to move between guides. This page is the home for
           all AIPM docs, including publishing guidance, targets, security, and troubleshooting.
         </p>
       </section>
 
-      <section className="guide-grid">
+      <section className={cards.guideGrid}>
         {resources.map((resource) => (
-          <Link className="guide-card" href={resource.href} key={resource.href}>
+          <Link className={cards.guideCard} href={resource.href} key={resource.href}>
             <h2>{resource.title}</h2>
             <p>{resource.body}</p>
           </Link>

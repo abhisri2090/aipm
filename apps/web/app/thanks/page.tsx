@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
 
@@ -143,30 +144,30 @@ export default function ThanksPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Special Thanks</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Special Thanks</p>
         <h1>The AI world is built on shared work.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM exists because many researchers, product teams, open communities, and conferences
           made AI practical enough to become part of everyday project work. This page is a living
           acknowledgement, not an endorsement claim.
         </p>
       </section>
 
-      <section className="thanks-list" aria-label="AI community acknowledgements">
+      <section className={cards.thanksList} aria-label="AI community acknowledgements">
         {people.map((person) => (
-          <article className="thanks-card" key={person.name}>
-            <p className="eyebrow">{person.work}</p>
+          <article className={cards.thanksCard} key={person.name}>
+            <p className={shell.eyebrow}>{person.work}</p>
             <h2>{person.name}</h2>
             <p>{person.note}</p>
-            <a className="text-link" href={person.href}>
+            <a className={cn(cards.thanksCardLink, shell.textLink)} href={person.href}>
               Read the public work
             </a>
           </article>
         ))}
       </section>
 
-      <section className="doc wide-doc" aria-labelledby="recent-conferences">
+      <section className={cn(docs.doc, docs.wideDoc)} aria-labelledby="recent-conferences">
         <section>
           <h2 id="recent-conferences">Recent conference signal</h2>
           <p>
@@ -174,9 +175,9 @@ export default function ThanksPage() {
             product pressure. AIPM tracks these communities because reusable AI skills should stay
             close to real practice, not just demos. Updated June 3, 2026.
           </p>
-          <div className="source-list">
+          <div className={cards.sourceList}>
             {conferenceSignals.map((signal) => (
-              <a className="source-card" href={signal.href} key={signal.href}>
+              <a className={cards.sourceCard} href={signal.href} key={signal.href}>
                 <strong>{signal.event}</strong>
                 <span>{signal.work}</span>
                 <span>{signal.productLesson}</span>
@@ -188,7 +189,7 @@ export default function ThanksPage() {
 
         <section>
           <h2>How we will keep this page fair</h2>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             <li>Use public sources and direct links to papers, projects, or official pages.</li>
             <li>Separate appreciation from endorsement or partnership claims.</li>
             <li>Update names as new public work becomes important to AI builders.</li>

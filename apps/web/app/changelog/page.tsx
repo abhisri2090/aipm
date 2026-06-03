@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
@@ -66,29 +67,29 @@ export default function ChangelogPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Changelog</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Changelog</p>
         <h1>Track what changed across AIPM.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM is still early, so visible release notes matter. This page highlights product-level
           changes across the CLI, registry API, website, publisher dashboard, and trust surfaces.
         </p>
-        <div className="actions">
-          <Link className="button" href="/roadmap">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/roadmap">
             Roadmap
           </Link>
-          <Link className="button secondary" href="/status">
+          <Link className={cn(shell.button, shell.secondary)} href="/status">
             Status
           </Link>
         </div>
       </section>
 
-      <section className="changelog-list" aria-label="AIPM release notes">
+      <section className={cards.changelogList} aria-label="AIPM release notes">
         {entries.map((entry) => (
-          <article className="changelog-card" key={`${entry.date}-${entry.title}`}>
-            <p className="eyebrow">{entry.date}</p>
+          <article className={cards.changelogCard} key={`${entry.date}-${entry.title}`}>
+            <p className={shell.eyebrow}>{entry.date}</p>
             <h2>{entry.title}</h2>
-            <ul className="check-list">
+            <ul className={docs.checkList}>
               {entry.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}

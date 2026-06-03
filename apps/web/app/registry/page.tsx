@@ -1,3 +1,4 @@
+import { shell, cn } from "../../lib/page-styles";
 import { RegistrySearch } from "../../components/registry-search";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
@@ -36,17 +37,17 @@ export default async function RegistryPage({
           }),
         }}
       />
-      <section className="page-header compact-page-header">
-        <p className="eyebrow">Registry</p>
+      <section className={cn(shell.pageHeader, shell.compactPageHeader)}>
+        <p className={shell.eyebrow}>Registry</p>
         <h1>Search published skills.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           Find installable AI skills by package name, supported tool, or description. Demo packages
           are hidden from the public listing so this page stays focused on usable skills.
         </p>
       </section>
 
-      <section className="panel-section" aria-labelledby="registry-search-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} aria-labelledby="registry-search-title">
+        <div className={shell.sectionHeading}>
           <h2 id="registry-search-title">Skills</h2>
         </div>
         <RegistrySearch initialPackages={[]} initialQuery={query} />

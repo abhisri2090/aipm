@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./theme-toggle";
 import { DOC_PATHS } from "../lib/docs-nav";
+import { cn } from "../lib/class-names";
+import styles from "./header.module.css";
 
 const links = [
   { href: "/registry", label: "Registry" },
@@ -33,19 +35,19 @@ export function Header() {
   }
 
   return (
-    <header className="topbar">
-      <div className="topbar-inner">
-        <Link className="brand" href="/" aria-label="AIPM home">
-          <img alt="" className="brand-mark" src="/aipm-logo.svg" />
+    <header className={styles.topbar}>
+      <div className={styles.topbarInner}>
+        <Link className={styles.brand} href="/" aria-label="AIPM home">
+          <img alt="" className={styles.brandMark} src="/aipm-logo.svg" />
           <span>AIPM</span>
         </Link>
-        <nav aria-label="Main navigation">
+        <nav className={styles.nav} aria-label="Main navigation">
           {links.map((link) => {
             const active = isActive(link.href);
             return (
               <Link
                 aria-current={active ? "page" : undefined}
-                className={active ? "topbar-link is-active" : "topbar-link"}
+                className={cn(styles.topbarLink, active && styles.topbarLinkActive)}
                 key={link.href}
                 href={link.href}
               >

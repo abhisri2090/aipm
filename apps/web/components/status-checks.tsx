@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import cards from "../app/cards.module.css";
 
 type CheckState = {
   label: string;
@@ -64,9 +65,9 @@ export function StatusChecks() {
   }, []);
 
   return (
-    <section className="status-grid" aria-label="Live registry status checks">
+    <section className={cards.statusGrid} aria-label="Live registry status checks">
       {states.map((check) => (
-        <article className="status-card" data-status={check.status} key={check.path}>
+        <article className={cards.statusCard} data-status={check.status} key={check.path}>
           <div>
             <h2>{check.label}</h2>
             <p>{check.description}</p>

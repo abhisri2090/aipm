@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "../lib/class-names";
+import styles from "./code-block.module.css";
 
 type CodeBlockProps = {
   code: string;
@@ -39,11 +41,11 @@ export function CodeBlock({ code, className }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <div className={["code-block", className].filter(Boolean).join(" ")}>
-      <div className="code-block-shell">
+    <div className={cn(styles.codeBlock, className)}>
+      <div className={styles.codeBlockShell}>
         <button
           type="button"
-          className="code-block-copy"
+          className={styles.codeBlockCopy}
           data-copied={copied ? "" : undefined}
           aria-label={copied ? "Copied" : "Copy code"}
           title={copied ? "Copied" : "Copy to clipboard"}

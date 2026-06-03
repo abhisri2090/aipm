@@ -5,6 +5,10 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { CodeBlock } from "./code-block";
 import { packagePath } from "../lib/registry";
+import { cn } from "../lib/class-names";
+import shell from "../app/page-shell.module.css";
+import docs from "../app/docs-content.module.css";
+import dash from "./dashboard-ui.module.css";
 
 type Me = {
   id: string;
@@ -72,19 +76,19 @@ function Avatar({ user, size = "normal" }: { user: Me | null; size?: "normal" | 
   const label = user?.name ?? user?.githubLogin ?? "AIPM user";
   const initial = label.trim().charAt(0).toUpperCase() || "A";
   return user?.avatarUrl ? (
-    <img alt="" className={`avatar ${size === "large" ? "avatar-large" : ""}`} src={user.avatarUrl} />
+    <img alt="" className={cn(dash.avatar, size === "large" && dash.avatarLarge)} src={user.avatarUrl} />
   ) : (
-    <span className={`avatar avatar-fallback ${size === "large" ? "avatar-large" : ""}`}>{initial}</span>
+    <span className={cn(dash.avatar, size === "large" && dash.avatarLarge)}>{initial}</span>
   );
 }
 
 function LoadingShell() {
   return (
-    <main className="dashboard-page">
-      <section className="dashboard-empty-state">
-        <p className="eyebrow">Dashboard</p>
+    <main className={dash.dashboardPage}>
+      <section className={dash.dashboardEmptyState}>
+        <p className={shell.eyebrow}>Dashboard</p>
         <h1>Loading your workspace.</h1>
-        <p className="lede">Fetching account, organization, and package details.</p>
+        <p className={shell.lede}>Fetching account, organization, and package details.</p>
       </section>
     </main>
   );
@@ -92,17 +96,17 @@ function LoadingShell() {
 
 function LoginRequired({ message }: { message: string }) {
   return (
-    <main className="dashboard-page">
-      <section className="login-screen">
+    <main className={dash.dashboardPage}>
+      <section className={dash.loginScreen}>
         <div>
-          <p className="eyebrow">Dashboard</p>
+          <p className={shell.eyebrow}>Dashboard</p>
           <h1>Sign in to manage AIPM publishing.</h1>
-          <p className="lede">{message}</p>
-          <div className="actions">
-            <Link className="button" href="/login">
+          <p className={shell.lede}>{message}</p>
+          <div className={shell.actions}>
+            <Link className={shell.button} href="/login">
               Sign in with GitHub
             </Link>
-            <Link className="button secondary" href="/publish">
+            <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Publishing guide
             </Link>
           </div>
@@ -146,44 +150,44 @@ function DashboardShell({
   ];
 
   return (
-    <main className="dashboard-page">
-      <aside className="dashboard-sidebar">
-        <Link className="dashboard-logo" href="/dashboard">
+    <main className={dash.dashboardPage}>
+      <aside className={dash.dashboardSidebar}>
+        <Link className={dash.dashboardLogo} href="/dashboard">
           <img alt="" src="/aipm-logo.svg" />
           <span>AIPM</span>
         </Link>
-        <div className="account-card compact">
+        <div className={cn(dash.accountCard, dash.accountCardCompact)}>
           <Avatar user={me} />
           <div>
             <strong>{me.name ?? me.githubLogin}</strong>
             <span>@{me.githubLogin}</span>
           </div>
         </div>
-        <nav className="dashboard-nav" aria-label="Dashboard">
+        <nav className={dash.dashboardNav} aria-label="Dashboard">
           {navItems.map((item) => (
             <Link aria-current={active === item.id ? "page" : undefined} href={item.href} key={item.href}>
               {item.label}
             </Link>
           ))}
         </nav>
-        <div className="sidebar-note">
+        <div className={dash.sidebarNote}>
           <strong>{orgs.length}</strong>
           <span>{orgs.length === 1 ? "org" : "orgs"} connected</span>
         </div>
       </aside>
 
-      <section className="dashboard-workspace">
-        <header className="dashboard-hero">
+      <section className={dash.dashboardWorkspace}>
+        <header className={dash.dashboardHero}>
           <div>
-            <p className="eyebrow">Publisher console</p>
+            <p className={shell.eyebrow}>Publisher console</p>
             <h1>{title}</h1>
-            {intro ? <p className="lede">{intro}</p> : null}
+            {intro ? <p className={shell.lede}>{intro}</p> : null}
           </div>
-          <div className="dashboard-hero-actions">
-            <Link className="button secondary" href="/publish">
+          <div className={dash.dashboardHeroActions}>
+            <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Docs
             </Link>
-            <Link className="button" href="/dashboard/orgs/new">
+            <Link className={shell.button} href="/dashboard/orgs/new">
               New org
             </Link>
           </div>
@@ -197,27 +201,27 @@ function DashboardShell({
 export function LoginPanel() {
   return (
     <main>
-      <section className="login-screen">
-        <div className="login-card">
-          <img alt="" className="login-logo" src="/aipm-logo.svg" />
-          <p className="eyebrow">Publisher access</p>
+      <section className={dash.loginScreen}>
+        <div className={dash.loginCard}>
+          <img alt="" className={dash.loginLogo} src="/aipm-logo.svg" />
+          <p className={shell.eyebrow}>Publisher access</p>
           <h1>Build and ship reusable AI skills.</h1>
-          <p className="lede">
+          <p className={shell.lede}>
             Sign in to reserve namespaces, manage packages, generate short-lived publish tokens,
             and keep your AI tooling ready for real projects.
           </p>
-          <div className="actions">
-            <a className="button" href="/v1/auth/github/start">
+          <div className={shell.actions}>
+            <a className={shell.button} href="/v1/auth/github/start">
               Continue with GitHub
             </a>
-            <Link className="button secondary" href="/publish">
+            <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Read publishing guide
             </Link>
           </div>
         </div>
-        <aside className="login-side-panel">
+        <aside className={dash.loginSidePanel}>
           <h2>What you get</h2>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             <li>Organization namespaces for package ownership.</li>
             <li>Reserved skill names before publishing.</li>
             <li>Five-minute publish tokens for safer CLI pushes.</li>
@@ -240,33 +244,33 @@ export function DashboardHome() {
         const packageCount = orgs.length;
         return (
           <>
-            <section className="metric-grid">
-              <article className="metric-card">
+            <section className={dash.metricGrid}>
+              <article className={dash.metricCard}>
                 <span>Profile</span>
                 <strong>{me.name ? "Complete" : "Needs name"}</strong>
                 <p>{me.name ?? "Add a display name so published packages feel trustworthy."}</p>
               </article>
-              <article className="metric-card">
+              <article className={dash.metricCard}>
                 <span>Organizations</span>
                 <strong>{orgs.length}</strong>
                 <p>Create scopes for teams, products, or projects.</p>
               </article>
-              <article className="metric-card">
+              <article className={dash.metricCard}>
                 <span>Next release</span>
                 <strong>{packageCount > 0 ? "Ready" : "Setup"}</strong>
                 <p>{packageCount > 0 ? "Open a package to generate a publish token." : "Create an org first."}</p>
               </article>
             </section>
 
-            <section className="dashboard-grid">
-              <article className="dashboard-panel">
-                <div className="section-heading">
+            <section className={dash.dashboardGrid}>
+              <article className={dash.dashboardPanel}>
+                <div className={shell.sectionHeading}>
                   <div>
-                    <p className="eyebrow">Start here</p>
+                    <p className={shell.eyebrow}>Start here</p>
                     <h2>Publishing checklist</h2>
                   </div>
                 </div>
-                <ol className="workflow-list">
+                <ol className={dash.workflowList}>
                   <li>
                     <strong>Complete profile</strong>
                     <span>Add name and avatar for publisher trust.</span>
@@ -286,20 +290,20 @@ export function DashboardHome() {
                 </ol>
               </article>
 
-              <article className="dashboard-panel">
-                <div className="section-heading">
+              <article className={dash.dashboardPanel}>
+                <div className={shell.sectionHeading}>
                   <div>
-                    <p className="eyebrow">Namespaces</p>
+                    <p className={shell.eyebrow}>Namespaces</p>
                     <h2>Your orgs</h2>
                   </div>
-                  <Link className="text-link" href="/dashboard/orgs/new">
+                  <Link className={shell.textLink} href="/dashboard/orgs/new">
                     Create org
                   </Link>
                 </div>
                 {orgs.length > 0 ? (
-                  <div className="resource-list">
+                  <div className={dash.resourceList}>
                     {orgs.map((org) => (
-                      <Link className="resource-row" href={`/dashboard/orgs/${org.slug}`} key={org.slug}>
+                      <Link className={dash.resourceRow} href={`/dashboard/orgs/${org.slug}`} key={org.slug}>
                         <span>
                           <strong>@{org.slug}</strong>
                           <small>{org.name}</small>
@@ -309,7 +313,7 @@ export function DashboardHome() {
                     ))}
                   </div>
                 ) : (
-                  <div className="empty">No orgs yet. Create one to reserve your first skill name.</div>
+                  <div className={shell.empty}>No orgs yet. Create one to reserve your first skill name.</div>
                 )}
               </article>
             </section>
@@ -333,7 +337,7 @@ export function NewOrgForm() {
     >
       {() => (
         <form
-          className="dashboard-panel form-panel"
+          className={cn(dash.dashboardPanel, dash.formPanel)}
           onSubmit={async (event) => {
             event.preventDefault();
             setError("");
@@ -355,10 +359,10 @@ export function NewOrgForm() {
             placeholder="bazzigames"
             value={slug}
           />
-          <p className="field-help">Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
+          <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
           <label htmlFor="org-name">Display name</label>
           <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Bazzi Games" value={name} />
-          {error ? <p className="notice">{error}</p> : null}
+          {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Create organization</button>
         </form>
       )}
@@ -383,21 +387,21 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
       title={`@${orgSlug}`}
     >
       {() => (
-        <section className="dashboard-panel">
-          <div className="section-heading">
+        <section className={dash.dashboardPanel}>
+          <div className={shell.sectionHeading}>
             <div>
-              <p className="eyebrow">Packages</p>
+              <p className={shell.eyebrow}>Packages</p>
               <h2>Reserved skill names</h2>
             </div>
-            <Link className="button" href={`/dashboard/orgs/${orgSlug}/packages/new`}>
+            <Link className={shell.button} href={`/dashboard/orgs/${orgSlug}/packages/new`}>
               Reserve package
             </Link>
           </div>
-          {error ? <p className="notice">{error}</p> : null}
+          {error ? <p className={shell.notice}>{error}</p> : null}
           {packages.length > 0 ? (
-            <div className="resource-list">
+            <div className={dash.resourceList}>
               {packages.map((pkg) => (
-                <Link className="resource-row" href={packageHref(pkg.name)} key={pkg.name}>
+                <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
                   <span>
                     <strong>{pkg.name}</strong>
                     <small>Ready for token-based publishing</small>
@@ -407,7 +411,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
               ))}
             </div>
           ) : (
-            <div className="empty">No packages reserved yet. Reserve a skill name before generating a token.</div>
+            <div className={shell.empty}>No packages reserved yet. Reserve a skill name before generating a token.</div>
           )}
         </section>
       )}
@@ -427,7 +431,7 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
     >
       {() => (
         <form
-          className="dashboard-panel form-panel"
+          className={cn(dash.dashboardPanel, dash.formPanel)}
           onSubmit={async (event) => {
             event.preventDefault();
             setError("");
@@ -449,8 +453,8 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
             placeholder="sentry-desktop-issue-summariser"
             value={name}
           />
-          <p className="field-help">Use a short name, or paste the full package name such as @{orgSlug}/review-helper.</p>
-          {error ? <p className="notice">{error}</p> : null}
+          <p className={dash.fieldHelp}>Use a short name, or paste the full package name such as @{orgSlug}/review-helper.</p>
+          {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Reserve package</button>
         </form>
       )}
@@ -501,20 +505,20 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
       title={packageName}
     >
       {() => (
-        <section className="dashboard-grid">
-          <article className="dashboard-panel">
-            <div className="section-heading">
+        <section className={dash.dashboardGrid}>
+          <article className={dash.dashboardPanel}>
+            <div className={shell.sectionHeading}>
               <div>
-                <p className="eyebrow">CLI release</p>
+                <p className={shell.eyebrow}>CLI release</p>
                 <h2>Publish steps</h2>
               </div>
             </div>
             <CodeBlock code={command} />
           </article>
-          <article className="dashboard-panel token-panel">
-            <p className="eyebrow">Token</p>
+          <article className={cn(dash.dashboardPanel, dash.tokenPanel)}>
+            <p className={shell.eyebrow}>Token</p>
             <h2>Generate publish token</h2>
-            <p className="muted">
+            <p className={shell.muted}>
               Tokens are shown once, scoped to this package, and expire after 5 minutes.
             </p>
             <button
@@ -535,9 +539,9 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
             >
               Generate token
             </button>
-            {error ? <p className="notice">{error}</p> : null}
+            {error ? <p className={shell.notice}>{error}</p> : null}
             {token ? (
-              <section className="token-result">
+              <section className={dash.tokenResult}>
                 <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
                 <CodeBlock code={token.token} />
                 <h3>Ready-to-run push command</h3>
@@ -545,22 +549,22 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
               </section>
             ) : null}
           </article>
-          <article className="dashboard-panel versions-panel">
-            <div className="section-heading">
+          <article className={cn(dash.dashboardPanel, dash.versionsPanel)}>
+            <div className={shell.sectionHeading}>
               <div>
-                <p className="eyebrow">Public registry</p>
+                <p className={shell.eyebrow}>Public registry</p>
                 <h2>Published versions</h2>
               </div>
-              <Link className="text-link" href="/registry">
+              <Link className={shell.textLink} href="/registry">
                 Open registry
               </Link>
             </div>
-            {versionsError ? <p className="notice">{versionsError}</p> : null}
+            {versionsError ? <p className={shell.notice}>{versionsError}</p> : null}
             {versions.length > 0 ? (
-              <div className="resource-list">
+              <div className={dash.resourceList}>
                 {versions.map((version) => (
                   <Link
-                    className="resource-row"
+                    className={dash.resourceRow}
                     href={packagePath(version.name, version.version)}
                     key={version.version}
                   >
@@ -574,7 +578,7 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
                 ))}
               </div>
             ) : (
-              <div className="empty">No public versions yet. Generate a token, publish from the CLI, then refresh.</div>
+              <div className={shell.empty}>No public versions yet. Generate a token, publish from the CLI, then refresh.</div>
             )}
           </article>
         </section>
@@ -595,15 +599,15 @@ export function ProfileSettings() {
       title="Profile settings"
     >
       {({ me }) => (
-        <section className="dashboard-grid">
-          <article className="dashboard-panel profile-card-large">
+        <section className={dash.dashboardGrid}>
+          <article className={cn(dash.dashboardPanel, dash.profileCardLarge)}>
             <Avatar user={{ ...me, name: name || me.name, avatarUrl: avatarUrl || me.avatarUrl }} size="large" />
             <h2>{name || me.name || me.githubLogin}</h2>
             <p>@{me.githubLogin}</p>
             <span>Connected through GitHub</span>
           </article>
           <form
-            className="dashboard-panel form-panel"
+            className={cn(dash.dashboardPanel, dash.formPanel)}
             onSubmit={async (event) => {
               event.preventDefault();
               setStatus("");
@@ -637,8 +641,8 @@ export function ProfileSettings() {
               placeholder={me.avatarUrl ?? "https://..."}
               value={avatarUrl}
             />
-            <p className="field-help">Use an HTTPS image URL. File upload can be added once image storage is configured.</p>
-            {status ? <p className="notice">{status}</p> : null}
+            <p className={dash.fieldHelp}>Use an HTTPS image URL. File upload can be added once image storage is configured.</p>
+            {status ? <p className={shell.notice}>{status}</p> : null}
             <button type="submit">Save profile</button>
           </form>
         </section>

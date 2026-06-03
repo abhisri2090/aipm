@@ -1,3 +1,4 @@
+import { shell, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
@@ -29,19 +30,19 @@ export default function StatusPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Status</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Status</p>
         <h1>Check whether the AIPM registry is alive and ready.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           Use this page when search, install, or publishing feels stuck. Liveness means the API
           process is running. Readiness means the registry can reach its metadata and package
           storage dependencies.
         </p>
-        <div className="actions">
-          <Link className="button" href="/registry">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/registry">
             Browse registry
           </Link>
-          <Link className="button secondary" href="/faq">
+          <Link className={cn(shell.button, shell.secondary)} href="/faq">
             Troubleshooting
           </Link>
         </div>
@@ -49,7 +50,7 @@ export default function StatusPage() {
 
       <StatusChecks />
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Command-line checks</h2>
           <CodeBlock

@@ -1,3 +1,4 @@
+import { shell, cards, docs, dash, cn } from "../../../../../lib/page-styles";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CodeBlock } from "../../../../../components/code-block";
@@ -172,24 +173,24 @@ export default async function PackagePage({ params }: PackagePageProps) {
           }),
         }}
       />
-      <section className="page-header">
-        <p className="eyebrow">AIPM package</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>AIPM package</p>
         <h1>
           {summary.name}@{summary.version}
         </h1>
-        <p className="lede">{summary.description}</p>
+        <p className={shell.lede}>{summary.description}</p>
       </section>
 
-      <section className="detail-grid">
-        <article className="panel step-card">
+      <section className={shell.detailGrid}>
+        <article className={cn(shell.panel, cards.stepCard)}>
           <h2>Install this skill</h2>
-          <p className="muted">Install the CLI once, initialize the project, then add this package.</p>
+          <p className={shell.muted}>Install the CLI once, initialize the project, then add this package.</p>
           <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm init\n${command}`} />
         </article>
 
-        <aside className="panel step-card">
+        <aside className={cn(shell.panel, cards.stepCard)}>
           <h2>Package details</h2>
-          <dl className="definition-list">
+          <dl className={docs.definitionList}>
             <div>
               <dt>Publisher</dt>
               <dd>
@@ -234,46 +235,46 @@ export default async function PackagePage({ params }: PackagePageProps) {
         </aside>
       </section>
 
-      <section className="panel-section" aria-labelledby="publisher-title">
-        <article className="panel step-card publisher-panel">
+      <section className={shell.panelSection} aria-labelledby="publisher-title">
+        <article className={cn(shell.panel, cards.stepCard, shell.publisherPanel)}>
           <div>
-            <p className="eyebrow">Publisher</p>
+            <p className={shell.eyebrow}>Publisher</p>
             <h2 id="publisher-title">
               {summary.publisher ? summary.publisher.org.name : "Publisher identity unavailable"}
             </h2>
             {summary.publisher ? (
-              <p className="muted">
+              <p className={shell.muted}>
                 Reserved under @{summary.publisher.org.slug} by{" "}
                 {summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`}. This package name is tied
                 to an AIPM publisher account.
               </p>
             ) : (
-              <p className="muted">
+              <p className={shell.muted}>
                 This package was published before publisher identity was attached, or it was published through an
                 admin-only path. Review it carefully before installing.
               </p>
             )}
           </div>
           {summary.publisher?.user.avatarUrl ? (
-            <img alt="" className="avatar avatar-large" src={summary.publisher.user.avatarUrl} />
+            <img alt="" className={cn(dash.avatar, dash.avatarLarge)} src={summary.publisher.user.avatarUrl} />
           ) : (
-            <span className="avatar avatar-large">
+            <span className={cn(dash.avatar, dash.avatarLarge)}>
               {(summary.publisher?.user.name ?? summary.publisher?.user.githubLogin ?? "A").charAt(0).toUpperCase()}
             </span>
           )}
         </article>
       </section>
 
-      <section className="panel-section" aria-labelledby="target-install-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} aria-labelledby="target-install-title">
+        <div className={shell.sectionHeading}>
           <div>
-            <p className="eyebrow">Tool targets</p>
+            <p className={shell.eyebrow}>Tool targets</p>
             <h2 id="target-install-title">Install command by target</h2>
           </div>
         </div>
-        <div className="example-grid">
+        <div className={cards.exampleGrid}>
           {allTargetCommands.map((targetCommand) => (
-            <article className="panel step-card" key={targetCommand.target}>
+            <article className={cn(shell.panel, cards.stepCard)} key={targetCommand.target}>
               <h3>{targetCommand.target}</h3>
               <CodeBlock code={targetCommand.command} />
             </article>
@@ -281,8 +282,8 @@ export default async function PackagePage({ params }: PackagePageProps) {
         </div>
       </section>
 
-      <section className="panel-section" aria-labelledby="install-safety-title">
-        <article className="notice">
+      <section className={shell.panelSection} aria-labelledby="install-safety-title">
+        <article className={shell.notice}>
           <h2 id="install-safety-title">Before installing</h2>
           <p>
             AIPM skills can write AI-tool files into your project. Review the package name, target,

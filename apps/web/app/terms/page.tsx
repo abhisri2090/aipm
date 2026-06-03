@@ -1,3 +1,4 @@
+import { shell, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
@@ -59,28 +60,28 @@ export default function TermsPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Terms</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Terms</p>
         <h1>Use AIPM to share helpful AI skills, not private or deceptive content.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           These practical terms set expectations for a public AI skill registry. They are not a
           replacement for formal legal review, but they make the product boundaries clear while AIPM
           grows.
         </p>
-        <div className="actions">
-          <Link className="button" href="/security">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/security">
             Security guide
           </Link>
-          <Link className="button secondary" href="/privacy">
+          <Link className={cn(shell.button, shell.secondary)} href="/privacy">
             Privacy notice
           </Link>
         </div>
       </section>
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Publisher acceptable use</h2>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             {publisherRules.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
@@ -89,7 +90,7 @@ export default function TermsPage() {
 
         <section>
           <h2>User expectations</h2>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             {userExpectations.map((expectation) => (
               <li key={expectation}>{expectation}</li>
             ))}
@@ -117,7 +118,7 @@ export default function TermsPage() {
         <section>
           <h2>Planned policy work</h2>
           <p>As the product matures, AIPM should add:</p>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             {futureWork.map((item) => (
               <li key={item}>{item}</li>
             ))}

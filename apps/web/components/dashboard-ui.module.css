@@ -1,0 +1,341 @@
+.dashboardPage {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 0;
+  max-width: none;
+  min-height: calc(100vh - 80px);
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.dashboardSidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: calc(100vh - 80px);
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 80%, var(--bg));
+  padding: 24px;
+}
+
+.dashboardLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.dashboardLogo img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.accountCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accountCardCompact {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.accountCard strong,
+.accountCard span {
+  display: block;
+}
+
+.accountCard span,
+.sidebarNote span,
+.resourceRow small,
+.fieldHelp,
+.profileCardLarge p,
+.profileCardLarge span {
+  color: var(--muted);
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 800;
+  object-fit: cover;
+}
+
+.avatarLarge {
+  width: 88px;
+  height: 88px;
+  font-size: 34px;
+}
+
+.dashboardNav {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.dashboardNav a {
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.dashboardNav a:hover,
+.dashboardNav a[aria-current="page"] {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.sidebarNote {
+  display: grid;
+  gap: 4px;
+  margin-top: 24px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.dashboardWorkspace {
+  min-width: 0;
+  padding: 34px;
+}
+
+.dashboardHero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dashboardHero h1 {
+  max-width: 780px;
+  margin-bottom: 12px;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1;
+}
+
+.dashboardHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dashboardGrid,
+.metricGrid {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.dashboardGrid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+}
+
+.metricGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboardPanel,
+.metricCard,
+.loginCard,
+.loginSidePanel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.dashboardPanel,
+.metricCard {
+  padding: 22px;
+}
+
+.metricCard span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.metricCard strong {
+  display: block;
+  margin: 12px 0 8px;
+  font-size: 28px;
+}
+
+.metricCard p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.resourceList {
+  display: grid;
+  gap: 10px;
+}
+
+.resourceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  padding: 14px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.resourceRow:hover {
+  border-color: var(--accent);
+}
+
+.resourceRow strong,
+.resourceRow small {
+  display: block;
+}
+
+.formPanel {
+  display: grid;
+  max-width: 720px;
+  gap: 10px;
+}
+
+.fieldHelp {
+  margin: -2px 0 8px;
+  font-size: 13px;
+}
+
+.tokenPanel {
+  align-self: start;
+}
+
+.versionsPanel {
+  grid-column: 1 / -1;
+}
+
+.tokenResult {
+  margin-top: 18px;
+}
+
+.tokenResult h3 {
+  margin-top: 18px;
+}
+
+.tokenActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.profileCardLarge {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 10px;
+}
+
+.profileCardLarge h2,
+.profileCardLarge p {
+  margin: 0;
+}
+
+.dashboardEmptyState {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 80px 24px;
+}
+
+.loginScreen {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.7fr);
+  gap: 24px;
+  align-items: stretch;
+  padding: 56px 0;
+  border-top: 1px solid var(--line);
+}
+
+.loginCard,
+.loginSidePanel {
+  padding: 32px;
+}
+
+.loginLogo {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+}
+
+.loginSidePanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.workflowList {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workflowList li {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.workflowList strong {
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .loginScreen,
+  .dashboardPage,
+  .dashboardGrid,
+  .metricGrid,
+  .workflowList {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardSidebar {
+    position: static;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dashboardWorkspace {
+    padding: 24px;
+  }
+
+  .dashboardHero {
+    flex-direction: column;
+  }
+
+  .dashboardHeroActions {
+    justify-content: flex-start;
+  }
+}

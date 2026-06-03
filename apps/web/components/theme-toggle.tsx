@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import styles from "./theme-toggle.module.css";
 
 type ThemeChoice = "system" | "light" | "dark";
 
@@ -119,10 +120,10 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="theme-toggle" ref={rootRef}>
+    <div className={styles.themeToggle} ref={rootRef}>
       <button
         type="button"
-        className="theme-toggle-trigger"
+        className={styles.themeToggleTrigger}
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label="Change theme"
@@ -131,14 +132,14 @@ export function ThemeToggle() {
         <BulbIcon />
       </button>
       {open ? (
-        <div className="theme-toggle-menu" role="menu" aria-label="Theme">
+        <div className={styles.themeToggleMenu} role="menu" aria-label="Theme">
           {choices.map((choice) => (
             <button
               key={choice}
               type="button"
               role="menuitemradio"
               aria-checked={theme === choice}
-              className="theme-toggle-option"
+              className={styles.themeToggleOption}
               onClick={() => choose(choice)}
             >
               <MenuIcon choice={choice} />

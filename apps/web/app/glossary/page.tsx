@@ -1,3 +1,4 @@
+import { shell, cards } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
 
@@ -86,18 +87,18 @@ export default function GlossaryPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Glossary</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Glossary</p>
         <h1>Understand the words AIPM uses before you publish or install.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM has package-manager words, AI-tool words, and publisher-account words. This glossary
           keeps the core terms short, explicit, and easy to scan.
         </p>
       </section>
 
-      <section className="glossary-list" aria-label="AIPM glossary terms">
+      <section className={cards.glossaryList} aria-label="AIPM glossary terms">
         {terms.map((item) => (
-          <article className="glossary-card" key={item.term}>
+          <article className={cards.glossaryCard} key={item.term}>
             <h2>{item.term}</h2>
             <p>{item.definition}</p>
           </article>

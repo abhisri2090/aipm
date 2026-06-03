@@ -1,3 +1,4 @@
+import { shell } from "../../lib/page-styles";
 import { redirect } from "next/navigation";
 import { packagePath } from "../../lib/registry";
 
@@ -13,10 +14,10 @@ export default async function LegacySkillPage({
 
   return (
     <main>
-      <section className="page-header">
-        <p className="eyebrow">Skill details</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Skill details</p>
         <h1>Choose a skill from the registry.</h1>
-        <p className="lede">Open a package from the registry results to see its install command and metadata.</p>
+        <p className={shell.lede}>Open a package from the registry results to see its install command and metadata.</p>
       </section>
     </main>
   );

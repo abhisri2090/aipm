@@ -7,6 +7,8 @@ import {
   shortIntegrity,
   type PackageSummary,
 } from "../lib/registry";
+import cards from "../app/cards.module.css";
+import shell from "../app/page-shell.module.css";
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en", {
@@ -19,7 +21,7 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
   const command = installCommand(pkg);
 
   return (
-    <article className={`result-card${compact ? " compact-card" : ""}`}>
+    <article className={cards.resultCard}>
       <div>
         <h3>
           <Link href={packagePath(pkg.name, pkg.version)}>
@@ -28,30 +30,30 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
         </h3>
         <p>{pkg.description}</p>
         {pkg.publisher ? (
-          <p className="publisher-line">
+          <p className={cards.publisherLine}>
             Published by {pkg.publisher.user.name ?? `@${pkg.publisher.user.githubLogin}`} in @
             {pkg.publisher.org.slug}
           </p>
         ) : (
-          <p className="publisher-line">Publisher identity unavailable</p>
+          <p className={cards.publisherLine}>Publisher identity unavailable</p>
         )}
-        <div className="meta">
-          <span className="pill">{pkg.type}</span>
+        <div className={cards.meta}>
+          <span className={cards.pill}>{pkg.type}</span>
           {pkg.targets.map((target) => (
-            <span className="pill" key={target}>
+            <span className={cards.pill} key={target}>
               {target}
             </span>
           ))}
-          <span className="pill">{formatDate(pkg.createdAt)}</span>
-          <span className="pill">{formatBytes(pkg.sizeBytes)}</span>
-          <span className="pill">{pkg.license ?? "No license"}</span>
+          <span className={cards.pill}>{formatDate(pkg.createdAt)}</span>
+          <span className={cards.pill}>{formatBytes(pkg.sizeBytes)}</span>
+          <span className={cards.pill}>{pkg.license ?? "No license"}</span>
         </div>
-        {!compact ? <p className="package-integrity">Integrity {shortIntegrity(pkg.integrity)}</p> : null}
+        {!compact ? <p className={cards.packageIntegrity}>Integrity {shortIntegrity(pkg.integrity)}</p> : null}
       </div>
-      <div className="card-actions">
+      <div className={cards.cardActions}>
         <CopyButton value={command} />
         {!compact ? (
-          <Link className="text-link" href={packagePath(pkg.name, pkg.version)}>
+          <Link className={shell.textLink} href={packagePath(pkg.name, pkg.version)}>
             Details
           </Link>
         ) : null}

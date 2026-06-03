@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
@@ -73,34 +74,34 @@ export default function DiscoverabilityPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Discoverability</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Discoverability</p>
         <h1>Make AI skills easy to find, understand, and trust.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM will succeed only if useful skills are visible to the people who need them. Good SEO
           here is not keyword stuffing. It is clear naming, accurate package metadata, real examples,
           public safety, and pages that explain the workflow better than a search result snippet can.
         </p>
-        <div className="actions">
-          <Link className="button" href="/publish">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/publish">
             Publish a skill
           </Link>
-          <Link className="button secondary" href="/ai-practices">
+          <Link className={cn(shell.button, shell.secondary)} href="/ai-practices">
             AI best practices
           </Link>
         </div>
       </section>
 
-      <section className="practice-grid" aria-label="Discoverability principles">
+      <section className={cards.practiceGrid} aria-label="Discoverability principles">
         {principles.map((principle) => (
-          <article className="practice-card" key={principle.title}>
+          <article className={cards.practiceCard} key={principle.title}>
             <h2>{principle.title}</h2>
             <p>{principle.body}</p>
           </article>
         ))}
       </section>
 
-      <section className="doc wide-doc" aria-labelledby="aipm-seo-foundation">
+      <section className={cn(docs.doc, docs.wideDoc)} aria-labelledby="aipm-seo-foundation">
         <section>
           <h2 id="aipm-seo-foundation">AIPM page quality checklist</h2>
           <p>
@@ -108,7 +109,7 @@ export default function DiscoverabilityPage() {
             needs strong static content, live registry search where it matters, and clear paths from
             search intent to installation or publishing.
           </p>
-          <ul className="check-list">
+          <ul className={docs.checkList}>
             {pageChecklist.map((item) => (
               <li key={item}>{item}</li>
             ))}

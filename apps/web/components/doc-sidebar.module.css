@@ -1,0 +1,96 @@
+.docSidebar {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.docNavHeading {
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.docNavGroup + .docNavGroup {
+  margin-top: 20px;
+}
+
+.docNavSection {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.docNavList {
+  margin: 0;
+  padding: 0 0 0 9px;
+  list-style: none;
+  display: grid;
+  gap: 2px;
+  border-left: 1px solid var(--line);
+}
+
+.docNavLink {
+  position: relative;
+  display: block;
+  padding: 7px 10px 7px 14px;
+  border-radius: 0 7px 7px 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+  text-decoration: none;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease;
+}
+
+.docNavLink::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 50%;
+  width: 0;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  transform: translateY(-50%);
+  transition:
+    width 0.12s ease,
+    opacity 0.12s ease;
+  opacity: 0;
+}
+
+.docNavLink:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.docNavLinkActive {
+  background: var(--panel-soft);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.docNavLinkActive::before {
+  width: 2px;
+  opacity: 1;
+}
+
+@media (max-width: 760px) {
+  .docSidebar {
+    position: static;
+    max-height: none;
+  }
+}

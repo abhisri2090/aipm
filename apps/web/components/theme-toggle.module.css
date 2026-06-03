@@ -1,0 +1,76 @@
+.themeToggle {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.themeToggleTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--control);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.themeToggleTrigger:hover,
+.themeToggleTrigger:focus-visible {
+  border-color: var(--accent);
+  color: var(--text);
+  outline: none;
+}
+
+.themeToggleMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  min-width: 148px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.themeToggleOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.themeToggleOption:hover,
+.themeToggleOption:focus-visible {
+  background: var(--panel-soft);
+  outline: none;
+}
+
+.themeToggleOption[aria-checked="true"] {
+  background: var(--panel-soft);
+  color: var(--accent-strong);
+}
+
+@media (max-width: 760px) {
+  .themeToggle {
+    align-self: flex-start;
+  }
+}

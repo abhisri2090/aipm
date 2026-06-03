@@ -1,16 +1,17 @@
 import { DocSidebar } from "./doc-sidebar";
+import styles from "./doc-layout.module.css";
 
 type DocLayoutProps = {
   children: React.ReactNode;
   wide?: boolean;
 };
 
-export function DocLayout({ children, wide = false }: DocLayoutProps) {
+export function DocLayout({ children }: DocLayoutProps) {
   return (
-    <main className="doc-page">
-      <div className="doc-shell">
+    <main className={styles.docPage}>
+      <div className={styles.docShell}>
         <DocSidebar />
-        <div className={wide ? "doc-main doc-main--wide" : "doc-main"}>{children}</div>
+        <div className={styles.docMain}>{children}</div>
       </div>
     </main>
   );

@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
@@ -58,27 +59,27 @@ export default function TargetsPage() {
         }}
       />
 
-      <section className="page-header">
-        <p className="eyebrow">Targets</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Targets</p>
         <h1>Install each AI skill into the tool that can actually use it.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           A target is the AI tool adapter AIPM should use for installation. Packages declare one or
           more targets in the manifest, and users can choose a target explicitly with the CLI.
         </p>
-        <div className="actions">
-          <Link className="button" href="/registry">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/registry">
             Browse by target
           </Link>
-          <Link className="button secondary" href="/examples">
+          <Link className={cn(shell.button, shell.secondary)} href="/examples">
             Examples
           </Link>
         </div>
       </section>
 
-      <section className="target-grid" aria-label="Supported AIPM targets">
+      <section className={cards.targetGrid} aria-label="Supported AIPM targets">
         {targets.map((target) => (
-          <article className="target-card" key={target.value}>
-            <p className="eyebrow">{target.value}</p>
+          <article className={cards.targetCard} key={target.value}>
+            <p className={shell.eyebrow}>{target.value}</p>
             <h2>{target.name}</h2>
             <p>{target.note}</p>
             <dl>
@@ -96,21 +97,21 @@ export default function TargetsPage() {
         ))}
       </section>
 
-      <article className="doc wide-doc">
+      <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Publisher manifest examples</h2>
-          <div className="example-grid">
-            <article className="example-card">
+          <div className={cards.exampleGrid}>
+            <article className={cards.exampleCard}>
               <h3>Cursor-only</h3>
               <CodeBlock code={`"targets": ["cursor"]`} />
               <p>Writes Cursor-compatible files only.</p>
             </article>
-            <article className="example-card">
+            <article className={cards.exampleCard}>
               <h3>Claude-only</h3>
               <CodeBlock code={`"targets": ["claude"]`} />
               <p>Targets Claude project skill folders only.</p>
             </article>
-            <article className="example-card">
+            <article className={cards.exampleCard}>
               <h3>Multi-tool</h3>
               <CodeBlock code={`"targets": ["cursor", "claude"]`} />
               <p>Installs the same package into multiple AI tools.</p>

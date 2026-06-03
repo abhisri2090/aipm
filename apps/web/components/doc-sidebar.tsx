@@ -3,28 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { DOC_NAV_SECTIONS } from "../lib/docs-nav";
+import { cn } from "../lib/class-names";
+import styles from "./doc-sidebar.module.css";
 
 export function DocSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="doc-sidebar">
-      <nav className="doc-nav" aria-label="Documentation">
-        <p className="doc-nav-heading">Documentation</p>
+    <aside className={styles.docSidebar}>
+      <nav aria-label="Documentation">
+        <p className={styles.docNavHeading}>Documentation</p>
         {DOC_NAV_SECTIONS.map((section) => (
-          <div className="doc-nav-group" key={section.title}>
-            <p className="doc-nav-section">{section.title}</p>
-            <ul className="doc-nav-list">
-              {section.items.map((item) => {
-                const active = pathname === item.href;
+          <div className={styles.docNavGroup} key={section.title}>
+            <p className={styles.docNavSection}>{section.title}</p>
+            <ul className={styles.docNavList}>
+              {section.items.map((link) => {
+                const active = pathname === link.href;
                 return (
-                  <li key={item.href}>
+                  <li key={link.href}>
                     <Link
-                      className={active ? "doc-nav-link is-active" : "doc-nav-link"}
-                      href={item.href}
+                      className={cn(styles.docNavLink, active && styles.docNavLinkActive)}
+                      href={link.href}
                       aria-current={active ? "page" : undefined}
                     >
-                      {item.label}
+                      {link.label}
                     </Link>
                   </li>
                 );

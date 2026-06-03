@@ -1,3 +1,4 @@
+import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { pageMetadata } from "../../lib/seo";
 
@@ -42,36 +43,36 @@ export default function PublishPage() {
 
   return (
     <main>
-      <section className="page-header">
-        <p className="eyebrow">Publish with AIPM</p>
+      <section className={shell.pageHeader}>
+        <p className={shell.eyebrow}>Publish with AIPM</p>
         <h1>Easy distribution for AI skills, MCP, prompts, and tool packages.</h1>
-        <p className="lede">
+        <p className={shell.lede}>
           AIPM helps users and organizations package AI setup once, publish it through a registry,
           and install it into any repo that needs the same skills, MCP setup, prompts, or tool files.
         </p>
-        <div className="actions">
-          <Link className="button" href="/login">
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/login">
             Sign in to publish
           </Link>
-          <Link className="button secondary" href="/publish/guide">
+          <Link className={cn(shell.button, shell.secondary)} href="/publish/guide">
             Read the guide
           </Link>
-          <Link className="button secondary" href="/dashboard">
+          <Link className={cn(shell.button, shell.secondary)} href="/dashboard">
             Publisher dashboard
           </Link>
         </div>
       </section>
 
-      <section className="panel-section" aria-labelledby="publish-benefits-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} aria-labelledby="publish-benefits-title">
+        <div className={shell.sectionHeading}>
           <div>
-            <p className="eyebrow">Benefits</p>
+            <p className={shell.eyebrow}>Benefits</p>
             <h2 id="publish-benefits-title">Why publish through AIPM?</h2>
           </div>
         </div>
-        <div className="guide-grid">
+        <div className={cards.guideGrid}>
           {benefits.map((benefit) => (
-            <article className="guide-card" key={benefit.title}>
+            <article className={cards.guideCard} key={benefit.title}>
               <h2>{benefit.title}</h2>
               <p>{benefit.body}</p>
             </article>
@@ -79,15 +80,15 @@ export default function PublishPage() {
         </div>
       </section>
 
-      <section className="panel-section" aria-labelledby="publish-usecases-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} aria-labelledby="publish-usecases-title">
+        <div className={shell.sectionHeading}>
           <div>
-            <p className="eyebrow">Use cases</p>
+            <p className={shell.eyebrow}>Use cases</p>
             <h2 id="publish-usecases-title">What teams can distribute</h2>
           </div>
         </div>
-        <article className="doc">
-          <ul className="check-list">
+        <article className={docs.doc}>
+          <ul className={docs.checkList}>
             {useCases.map((useCase) => (
               <li key={useCase}>{useCase}</li>
             ))}
@@ -95,29 +96,29 @@ export default function PublishPage() {
         </article>
       </section>
 
-      <section className="panel-section" aria-labelledby="publish-flow-title">
-        <div className="section-heading">
+      <section className={shell.panelSection} aria-labelledby="publish-flow-title">
+        <div className={shell.sectionHeading}>
           <div>
-            <p className="eyebrow">Workflow</p>
+            <p className={shell.eyebrow}>Workflow</p>
             <h2 id="publish-flow-title">From local AI setup to installable package</h2>
           </div>
-          <Link className="text-link" href="/publish/guide">
+          <Link className={shell.textLink} href="/publish/guide">
             Full publishing guide
           </Link>
         </div>
-        <div className="steps">
-          <article className="step-card">
-            <span className="step-number">1</span>
+        <div className={cards.steps}>
+          <article className={cards.stepCard}>
+            <span className={cards.stepNumber}>1</span>
             <h3>Package</h3>
             <p>Wrap skills, prompts, MCP setup, or tool files with an AIPM manifest.</p>
           </article>
-          <article className="step-card">
-            <span className="step-number">2</span>
+          <article className={cards.stepCard}>
+            <span className={cards.stepNumber}>2</span>
             <h3>Publish</h3>
             <p>Reserve a package name, validate contents, and push a version to the registry.</p>
           </article>
-          <article className="step-card">
-            <span className="step-number">3</span>
+          <article className={cards.stepCard}>
+            <span className={cards.stepNumber}>3</span>
             <h3>Install</h3>
             <p>Users add the package to a repo and bind it to Cursor, Claude, Codex, or future targets.</p>
           </article>
