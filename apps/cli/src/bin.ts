@@ -27,7 +27,9 @@ import {
   writeProjectPackageJson,
 } from "./project-files.js";
 import { promptForTool } from "./prompt.js";
+import { getCliVersion } from "./version.js";
 
+const CLI_VERSION = getCliVersion();
 const program = new Command();
 const DEFAULT_REGISTRY = "https://api.aipm-registry.com";
 const SITE_URL = "https://aipm-registry.com";
@@ -38,7 +40,7 @@ program
   .name("aipm")
   .description("AI package manager")
   .enablePositionalOptions()
-  .version("0.1.4", "-v, --version", "output the current version")
+  .version(CLI_VERSION, "-v, --version", "output the current version")
   .option("--verbose", "Print extra diagnostic output")
   .option("--quiet", "Reduce non-essential output")
   .addHelpText(
@@ -390,7 +392,7 @@ program
     const lock = await readLockfile(root);
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const data = {
-      cliVersion: "0.1.4",
+      cliVersion: CLI_VERSION,
       nodeVersion: process.versions.node,
       cwd: root,
       registry,
