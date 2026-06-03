@@ -9,7 +9,9 @@
     "dev": "next dev",
     "start": "next start",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint app components lib next.config.ts"
+    "lint": "eslint app components lib scripts next.config.ts",
+    "verify": "node scripts/verify-web.mjs",
+    "verify:local": "node scripts/verify-web.mjs http://127.0.0.1:3000 --allow-http"
   },
   "dependencies": {
     "next": "^15.3.3",

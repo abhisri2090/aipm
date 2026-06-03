@@ -1,3 +1,15 @@
+export type PackagePublisher = {
+  org: {
+    slug: string;
+    name: string;
+  };
+  user: {
+    githubLogin: string;
+    name: string | null;
+    avatarUrl: string | null;
+  };
+};
+
 export type PackageSummary = {
   name: string;
   version: string;
@@ -8,6 +20,7 @@ export type PackageSummary = {
   integrity: string;
   sizeBytes: number;
   createdAt: string;
+  publisher?: PackagePublisher | null;
 };
 
 export type PackageDetail = {
@@ -23,9 +36,10 @@ export type PackageDetail = {
   integrity: string;
   sizeBytes: number;
   createdAt: string;
+  publisher?: PackagePublisher | null;
 };
 
-const API_BASE_URL = (process.env.AIPM_API_BASE_URL ?? "https://api.aipm-registry.com").replace(
+export const REGISTRY_API_BASE_URL = (process.env.AIPM_API_BASE_URL ?? "https://api.aipm-registry.com").replace(
   /\/$/,
   "",
 );
@@ -47,11 +61,38 @@ export function installCommand(pkg: Pick<PackageSummary, "name" | "version" | "t
   return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
 }
 
+export function installCommandForTarget(
+  pkg: Pick<PackageSummary, "name" | "version">,
+  target: string,
+): string {
+  return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
+}
+
+export function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return "Unknown";
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB"];
+  let value = bytes / 1024;
+  let unit = units[0] ?? "KB";
+  for (const nextUnit of units.slice(1)) {
+    if (value < 1024) break;
+    value /= 1024;
+    unit = nextUnit;
+  }
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${unit}`;
+}
+
+export function shortIntegrity(value: string): string {
+  const [algorithm, hash] = value.split("-");
+  if (!algorithm || !hash) return value.slice(0, 18);
+  return `${algorithm}-${hash.slice(0, 14)}...`;
+}
+
 export async function listPackages(query = "", limit = 50): Promise<PackageSummary[]> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (query) params.set("q", query);
   try {
-    const response = await fetch(`${API_BASE_URL}/v1/packages?${params}`, {
+    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(3000),
     });
@@ -66,7 +107,7 @@ export async function listPackages(query = "", limit = 50): Promise<PackageSumma
 export async function getPackage(name: string, version: string): Promise<PackageDetail | null> {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/v1/packages/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`,
+      `${REGISTRY_API_BASE_URL}/v1/packages/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`,
       { next: { revalidate: 120 }, signal: AbortSignal.timeout(3000) },
     );
     if (!response.ok) return null;

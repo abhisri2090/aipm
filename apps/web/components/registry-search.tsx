@@ -1,21 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PackageCard } from "./package-card";
 import type { PackageSummary } from "../lib/registry";
 
 export function RegistrySearch({
   initialPackages,
+  initialQuery = "",
   compact = false,
 }: {
   initialPackages: PackageSummary[];
+  initialQuery?: string;
   compact?: boolean;
 }) {
   const [packages, setPackages] = useState(initialPackages);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [target, setTarget] = useState("all");
   const [status, setStatus] = useState(
-    initialPackages.length === 1 ? "1 package found" : `${initialPackages.length} packages found`,
+    initialPackages.length === 0
+      ? "Loading skills"
+      : initialPackages.length === 1
+        ? "1 package found"
+        : `${initialPackages.length} packages found`,
   );
 
   const filtered = useMemo(
@@ -23,9 +29,9 @@ export function RegistrySearch({
     [packages, target],
   );
 
-  async function search(nextQuery: string) {
+  const search = useCallback(async (nextQuery: string) => {
     setStatus("Searching");
-    const params = new URLSearchParams({ limit: "50" });
+    const params = new URLSearchParams({ limit: compact ? "3" : "50" });
     if (nextQuery) params.set("q", nextQuery);
     try {
       const response = await fetch(`/v1/packages?${params}`);
@@ -38,7 +44,11 @@ export function RegistrySearch({
       setPackages([]);
       setStatus("Search unavailable");
     }
-  }
+  }, [compact]);
+
+  useEffect(() => {
+    if (initialPackages.length === 0) void search(initialQuery.trim());
+  }, [initialPackages.length, initialQuery, search]);
 
   return (
     <>

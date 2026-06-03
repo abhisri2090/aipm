@@ -47,8 +47,20 @@
           <p>Check that you installed with the right <code>--target</code>, then restart or reload the AI tool if it caches project files.</p>
         </article>
         <article>
+          <h2>Can I publish a public skill?</h2>
+          <p>Yes. Sign in with GitHub, create an org, reserve a package name, generate a 5-minute publish token, then push from the CLI.</p>
+        </article>
+        <article>
           <h2>Can I publish private skills?</h2>
-          <p>Not yet. Public publishing is approval-only while account, organization, and short-lived publish-token flows are designed.</p>
+          <p>Not yet. Current packages are public registry packages. Keep private prompts, credentials, customer data, and internal-only files out of published skills.</p>
+        </article>
+        <article>
+          <h2>My publish token expired.</h2>
+          <p>Generate a fresh token from the package dashboard. Tokens are intentionally short-lived and are not stored by the CLI.</p>
+        </article>
+        <article>
+          <h2>Publisher identity is unavailable on a package.</h2>
+          <p>That package was published before account-backed reservations were attached, or through an admin-only path. Review it carefully before installing.</p>
         </article>
         <article>
           <h2>How do I install the CLI?</h2>

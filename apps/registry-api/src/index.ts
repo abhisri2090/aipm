@@ -19,9 +19,13 @@ import {
   ensureSchema,
   getOwnedOrg,
   getOwnedPackageReservation,
+  getPublicPackagePublisher,
   listOrgPackageReservations,
+  listPublicPackagePublishers,
   listUserOrgs,
   reservePackageName,
+  updateUserProfile,
+  type PublicPackagePublisherRow,
 } from "./db.js";
 import {
   createScopedPublishToken,
@@ -70,6 +74,21 @@ function normalizeOrgSlug(value: string): string {
 function normalizePackageNameForOrg(org: string, value: string): string {
   const normalized = value.trim().toLowerCase();
   return normalized.startsWith("@") ? normalized : `@${org}/${normalized}`;
+}
+
+function serializePublisher(row: PublicPackagePublisherRow | null) {
+  if (!row) return null;
+  return {
+    org: {
+      slug: row.org_slug,
+      name: row.org_name,
+    },
+    user: {
+      githubLogin: row.publisher_login,
+      name: row.publisher_name,
+      avatarUrl: row.publisher_avatar_url,
+    },
+  };
 }
 
 async function createAccountAuth(): Promise<AccountAuth | null> {
@@ -153,6 +172,29 @@ export async function createApp(): Promise<FastifyInstance> {
       githubLogin: user.github_login,
       name: user.name,
       avatarUrl: user.avatar_url,
+    };
+  });
+
+  app.patch<{ Body: { name?: string | null; avatarUrl?: string | null } }>("/v1/me", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const name = request.body?.name?.trim() || null;
+    const avatarUrl = request.body?.avatarUrl?.trim() || null;
+    if (name && name.length > 80) return reply.status(400).send({ error: "Name must be 80 characters or fewer" });
+    if (avatarUrl) {
+      try {
+        const parsed = new URL(avatarUrl);
+        if (parsed.protocol !== "https:") return reply.status(400).send({ error: "Avatar URL must use https" });
+      } catch {
+        return reply.status(400).send({ error: "Avatar URL must be a valid URL" });
+      }
+    }
+    const updated = await updateUserProfile(accountAuth.pool, user.id, { name, avatarUrl });
+    return {
+      id: updated.id,
+      githubLogin: updated.github_login,
+      name: updated.name,
+      avatarUrl: updated.avatar_url,
     };
   });
 
@@ -335,6 +377,9 @@ export async function createApp(): Promise<FastifyInstance> {
       const name = decodePackageName(request.params.name);
       const row = await metadata.get(name, request.params.version);
       if (!row) return reply.status(404).send({ error: "Not found" });
+      const publisher = accountAuth
+        ? await getPublicPackagePublisher(accountAuth.pool, row.name)
+        : null;
       return {
         name: row.name,
         version: row.version,
@@ -342,6 +387,7 @@ export async function createApp(): Promise<FastifyInstance> {
         integrity: row.integrity,
         sizeBytes: Number(row.size_bytes),
         createdAt: row.created_at,
+        publisher: serializePublisher(publisher),
       };
     },
   );
@@ -369,6 +415,10 @@ export async function createApp(): Promise<FastifyInstance> {
       const page = visibleRows.slice(0, limit);
       const nextCursor =
         visibleRows.length > limit ? page[page.length - 1]?.created_at.toISOString() : null;
+      const publishers = accountAuth
+        ? await listPublicPackagePublishers(accountAuth.pool, [...new Set(page.map((row) => row.name))])
+        : [];
+      const publisherByName = new Map(publishers.map((publisher) => [publisher.package_name, publisher]));
       return {
         packages: page.map((row) => ({
           name: row.name,
@@ -380,6 +430,7 @@ export async function createApp(): Promise<FastifyInstance> {
           integrity: row.integrity,
           sizeBytes: Number(row.size_bytes),
           createdAt: row.created_at,
+          publisher: serializePublisher(publisherByName.get(row.name) ?? null),
         })),
         nextCursor,
       };

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { basename, join, resolve } from "node:path";
 import { cwd, env } from "node:process";
 import { PackageManifestSchema, isValidScopeName } from "@aipm-registry/schemas";
 import { detectToolsInProject } from "@aipm-registry/engine";
@@ -37,7 +37,8 @@ const DASHBOARD_URL = "https://aipm-registry.com/dashboard";
 program
   .name("aipm")
   .description("AI package manager")
-  .version("0.1.2", "-v, --version", "output the current version")
+  .enablePositionalOptions()
+  .version("0.1.4", "-v, --version", "output the current version")
   .option("--verbose", "Print extra diagnostic output")
   .option("--quiet", "Reduce non-essential output")
   .addHelpText(
@@ -51,6 +52,7 @@ Examples:
   $ aipm search sentry
   $ aipm add @scope/name@1.0.0 --target cursor --ci
   $ aipm publish init --name @org/skill
+  $ cd skill
   $ aipm publish add .
   $ AIPM_TOKEN=<token> aipm publish push
 `,
@@ -68,6 +70,26 @@ function parsePackageArg(value: string): { name: string; version?: string } {
   return { name, version: match[2] };
 }
 
+function skillFolderName(name: string): string {
+  const parsed = parsePackageArg(name);
+  const folder = parsed.name.split("/").pop();
+  if (!folder) throw new Error("Invalid @scope/name");
+  return folder;
+}
+
+async function writeStarterFile(path: string, content: string): Promise<void> {
+  await writeFile(path, content, { encoding: "utf8", flag: "wx" });
+}
+
+async function inferEntryFromSource(source: string, fallback: string): Promise<string> {
+  const sourceInfo = await stat(source);
+  if (sourceInfo.isFile()) return basename(source);
+  if (!sourceInfo.isDirectory()) return fallback;
+  const entries = await readdir(source);
+  if (entries.includes(fallback)) return fallback;
+  return entries.find((entry) => entry.endsWith(".md")) ?? entries.find((entry) => entry.endsWith(".mdc")) ?? fallback;
+}
+
 async function latestVersionForPackage(registry: string, name: string): Promise<string> {
   const packages = await searchPackages(registry, name, 20);
   const exact = packages.find((pkg) => pkg.name === name);
@@ -79,6 +101,20 @@ function printPublishGuide(done: string, next: string): void {
   console.log(`Done: ${done}`);
   console.log(`Next: ${next}`);
   console.log(`Guide: ${PUBLISH_DOC_URL}`);
+}
+
+function formatBytes(bytes?: number): string | null {
+  if (bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB"];
+  let value = bytes / 1024;
+  let unit = units[0] ?? "KB";
+  for (const nextUnit of units.slice(1)) {
+    if (value < 1024) break;
+    value /= 1024;
+    unit = nextUnit;
+  }
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${unit}`;
 }
 
 function packageDashboardUrl(name?: string): string {
@@ -100,14 +136,15 @@ function printPublishFlow(): void {
   console.log("AIPM publish flow");
   console.log("1. Create an account and organization in the dashboard.");
   console.log("2. Reserve a package name such as @team/review-helper.");
-  console.log("3. Create local skill files: aipm publish init --name @team/review-helper");
-  console.log("4. Edit SKILL.md and any files the skill needs.");
-  console.log("5. Stage files: aipm publish add .");
-  console.log("6. Review files: aipm publish status");
-  console.log("7. Preview package: aipm publish preview");
-  console.log("8. Validate package: aipm publish validate");
-  console.log("9. Generate a 5-minute token from the dashboard.");
-  console.log("10. Push: AIPM_TOKEN=<token> aipm publish push --yes");
+  console.log("3. Create a package folder: aipm publish init --name @team/review-helper");
+  console.log("4. Move into it: cd review-helper");
+  console.log("5. Edit SKILL.md and any files the skill needs.");
+  console.log("6. Stage files: aipm publish add .");
+  console.log("7. Review files: aipm publish status (optional)");
+  console.log("8. Preview package: aipm publish preview (optional)");
+  console.log("9. Validate package: aipm publish validate (optional)");
+  console.log("10. Open the dashboard token page: aipm publish token --package @team/review-helper (optional)");
+  console.log("11. Push: AIPM_TOKEN=<token> aipm publish push --yes");
   console.log(`Guide: ${PUBLISH_DOC_URL}`);
 }
 
@@ -166,33 +203,113 @@ function parseTargets(value: string): Array<"cursor" | "claude"> {
   return [...new Set(targets)] as Array<"cursor" | "claude">;
 }
 
+const SKILL_TEMPLATES = {
+  blank: (name: string) => `# ${name}
+
+Describe what this skill does and how an AI assistant should use it.
+`,
+  "code-review": (name: string) => `# ${name}
+
+Use this skill to review code changes in this project.
+
+## Goal
+- Identify correctness, security, reliability, and maintainability issues.
+- Point to specific files or code when possible.
+- Prioritize actionable findings over broad style feedback.
+
+## Review checklist
+- Confirm the change matches the requested behavior.
+- Look for edge cases, missing validation, and risky assumptions.
+- Check whether tests cover the changed behavior.
+- Call out secrets, credentials, or private data if they appear in files.
+
+## Output
+Return findings first, ordered by severity. If there are no findings, say that clearly and mention any remaining test gaps.
+`,
+  "issue-summary": (name: string) => `# ${name}
+
+Use this skill to summarize product, support, or error-tracking issues for triage.
+
+## Goal
+- Turn raw issue notes into a concise engineering summary.
+- Separate known facts from guesses.
+- Identify owner, impact, urgency, and next debugging steps.
+
+## Inputs to look for
+- Error messages, stack traces, user reports, screenshots, logs, and recent deploys.
+- Reproduction steps and affected environments.
+
+## Output
+Include summary, impact, likely cause, evidence, open questions, and recommended next action.
+`,
+  "release-notes": (name: string) => `# ${name}
+
+Use this skill to draft release notes from project changes.
+
+## Goal
+- Explain what changed in user-facing language.
+- Separate features, fixes, operational notes, and breaking changes.
+- Keep internal implementation details out unless users need them.
+
+## Output
+Create a concise release note with sections for highlights, fixes, upgrade notes, and known issues.
+`,
+} as const;
+
+type SkillTemplate = keyof typeof SKILL_TEMPLATES;
+
+function parseSkillTemplate(value: string): SkillTemplate {
+  if (value in SKILL_TEMPLATES) return value as SkillTemplate;
+  throw new Error(`Unknown template "${value}". Use one of: ${Object.keys(SKILL_TEMPLATES).join(", ")}`);
+}
+
 async function initSkill(opts: {
   name: string;
   version: string;
   description: string;
   targets: string;
   entry: string;
+  template?: string;
+  dir?: string;
+  here?: boolean;
+  from?: string;
 }): Promise<void> {
   if (!isValidScopeName(opts.name)) throw new Error("Invalid @scope/name");
-  const root = cwd();
+  const root = opts.here ? cwd() : resolve(cwd(), opts.dir ?? skillFolderName(opts.name));
+  const cdTarget = opts.here ? null : (opts.dir ?? skillFolderName(opts.name));
+  await mkdir(root, { recursive: true });
+  const source = opts.from ? resolve(opts.from) : null;
+  const entry = source ? await inferEntryFromSource(source, opts.entry) : opts.entry;
   const manifest = {
     schemaVersion: "0.1",
     name: opts.name,
     version: opts.version,
     type: "skill",
     description: opts.description,
-    entry: opts.entry,
+    entry,
     targets: parseTargets(opts.targets),
     license: "Apache-2.0",
   };
   PackageManifestSchema.parse(manifest);
-  await writeFile(join(root, "aipm.manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
-  await writeFile(
-    join(root, opts.entry),
-    `# ${opts.name}\n\nDescribe what this skill does and how an AI assistant should use it.\n`,
-    "utf8",
-  );
-  await writeFile(
+  if (source) {
+    const sourceInfo = await stat(source);
+    if (sourceInfo.isDirectory()) {
+      await cp(source, root, { recursive: true, force: false, errorOnExist: true });
+    } else if (sourceInfo.isFile()) {
+      await cp(source, join(root, basename(source)), { force: false, errorOnExist: true });
+    } else {
+      throw new Error(`Unsupported source path: ${opts.from}`);
+    }
+  }
+  await writeStarterFile(join(root, "aipm.manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
+  if (!opts.from) {
+    const template = parseSkillTemplate(opts.template ?? "blank");
+    await writeStarterFile(
+      join(root, entry),
+      SKILL_TEMPLATES[template](opts.name),
+    );
+  }
+  await writeStarterFile(
     join(root, ".aipmignore"),
     [
       "# Files that should never be published with this skill",
@@ -210,13 +327,16 @@ async function initSkill(opts: {
       "*.publishsettings",
       "",
     ].join("\n"),
-    "utf8",
   );
   await mkdir(join(root, ".aipm"), { recursive: true });
-  console.log(`Created ${opts.name} skill files.`);
+  console.log(`Created ${opts.name} skill folder: ${root}`);
   printPublishGuide(
-    `Created aipm.manifest.json, ${opts.entry}, .aipmignore, and the local publish state folder.`,
-    "Edit the skill files, then run aipm publish add .",
+    opts.from
+      ? `Copied ${opts.from} into ${root} and created aipm.manifest.json, .aipmignore, and the local publish state folder.`
+      : `Created ${root} with aipm.manifest.json, ${entry}, .aipmignore, and the local publish state folder.`,
+    cdTarget
+      ? `Run cd ${cdTarget}, edit/review the files, then run aipm publish add .`
+      : "Edit/review the files, then run aipm publish add .",
   );
 }
 
@@ -270,7 +390,7 @@ program
     const lock = await readLockfile(root);
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const data = {
-      cliVersion: "0.1.2",
+      cliVersion: "0.1.4",
       nodeVersion: process.versions.node,
       cwd: root,
       registry,
@@ -350,6 +470,13 @@ program
     for (const pkg of packages) {
       console.log(`${pkg.name}@${pkg.version} [${pkg.targets.join(", ")}]`);
       if (pkg.description) console.log(`  ${pkg.description}`);
+      const publisher = pkg.publisher
+        ? `${pkg.publisher.user.name ?? `@${pkg.publisher.user.githubLogin}`} in @${pkg.publisher.org.slug}`
+        : "publisher unavailable";
+      const meta = [publisher, pkg.license ? `license ${pkg.license}` : null, formatBytes(pkg.sizeBytes)]
+        .filter(Boolean)
+        .join(" | ");
+      console.log(`  ${meta}`);
     }
   });
 
@@ -389,6 +516,10 @@ program
   .option("--description <description>", "Skill description", "AIPM skill")
   .option("--targets <targets>", "Comma-separated targets", "cursor")
   .option("--entry <entry>", "Entry file", "SKILL.md")
+  .option("--template <template>", "Starter SKILL.md template: blank, code-review, issue-summary, release-notes", "blank")
+  .option("--dir <dir>", "Create files in this folder")
+  .option("--here", "Create files in the current folder instead of a skill-named folder")
+  .option("--from <path>", "Copy an existing AI-tool skill file or folder into the package folder")
   .action(
     async (opts: {
       name: string;
@@ -396,6 +527,10 @@ program
       description: string;
       targets: string;
       entry: string;
+      template?: string;
+      dir?: string;
+      here?: boolean;
+      from?: string;
     }) => initSkill(opts),
   );
 
@@ -432,7 +567,36 @@ publish
   .option("--description <description>", "Skill description", "AIPM skill")
   .option("--targets <targets>", "Comma-separated targets", "cursor")
   .option("--entry <entry>", "Entry file", "SKILL.md")
+  .option("--template <template>", "Starter SKILL.md template: blank, code-review, issue-summary, release-notes", "blank")
+  .option("--dir <dir>", "Create files in this folder")
+  .option("--here", "Create files in the current folder instead of a skill-named folder")
+  .option("--from <path>", "Copy an existing AI-tool skill file or folder into the package folder")
   .action(initSkill);
+
+publish
+  .command("import <source>")
+  .description("Create a package folder from an existing AI-tool skill file or folder")
+  .requiredOption("--name <name>", "Package name, e.g. @org/skill")
+  .option("--version <version>", "Initial version", "1.0.0")
+  .option("--description <description>", "Skill description", "AIPM skill")
+  .option("--targets <targets>", "Comma-separated targets", "cursor")
+  .option("--entry <entry>", "Entry file", "SKILL.md")
+  .option("--dir <dir>", "Create files in this folder")
+  .option("--here", "Create files in the current folder instead of a skill-named folder")
+  .action(
+    async (
+      source: string,
+      opts: {
+        name: string;
+        version: string;
+        description: string;
+        targets: string;
+        entry: string;
+        dir?: string;
+        here?: boolean;
+      },
+    ) => initSkill({ ...opts, from: source }),
+  );
 
 publish
   .command("add [files...]")

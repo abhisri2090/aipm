@@ -49,6 +49,15 @@ export interface PublishTokenRow {
   created_at: Date;
 }
 
+export interface PublicPackagePublisherRow {
+  package_name: string;
+  org_slug: string;
+  org_name: string;
+  publisher_login: string;
+  publisher_name: string | null;
+  publisher_avatar_url: string | null;
+}
+
 export function createPool(connectionString: string): pg.Pool {
   return new Pool({ connectionString });
 }
@@ -209,11 +218,28 @@ export async function upsertGithubUser(
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (github_id) DO UPDATE
      SET github_login = EXCLUDED.github_login,
-         name = EXCLUDED.name,
-         avatar_url = EXCLUDED.avatar_url,
+         name = COALESCE(users.name, EXCLUDED.name),
+         avatar_url = COALESCE(users.avatar_url, EXCLUDED.avatar_url),
          updated_at = NOW()
      RETURNING id, github_id, github_login, name, avatar_url, created_at, updated_at`,
     [user.githubId, user.githubLogin, user.name ?? null, user.avatarUrl ?? null],
+  );
+  return result.rows[0]!;
+}
+
+export async function updateUserProfile(
+  pool: pg.Pool,
+  userId: string,
+  profile: { name?: string | null; avatarUrl?: string | null },
+): Promise<UserRow> {
+  const result = await pool.query<UserRow>(
+    `UPDATE users
+     SET name = $2,
+         avatar_url = $3,
+         updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, github_id, github_login, name, avatar_url, created_at, updated_at`,
+    [userId, profile.name ?? null, profile.avatarUrl ?? null],
   );
   return result.rows[0]!;
 }
@@ -365,4 +391,45 @@ export async function getValidPublishToken(
     [tokenHash, packageName],
   );
   return result.rows[0] ?? null;
+}
+
+export async function getPublicPackagePublisher(
+  pool: pg.Pool,
+  packageName: string,
+): Promise<PublicPackagePublisherRow | null> {
+  const result = await pool.query<PublicPackagePublisherRow>(
+    `SELECT package_reservations.name AS package_name,
+            orgs.slug AS org_slug,
+            orgs.name AS org_name,
+            users.github_login AS publisher_login,
+            users.name AS publisher_name,
+            users.avatar_url AS publisher_avatar_url
+     FROM package_reservations
+     JOIN orgs ON orgs.id = package_reservations.org_id
+     JOIN users ON users.id = package_reservations.owner_user_id
+     WHERE package_reservations.name = $1`,
+    [packageName],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function listPublicPackagePublishers(
+  pool: pg.Pool,
+  packageNames: string[],
+): Promise<PublicPackagePublisherRow[]> {
+  if (packageNames.length === 0) return [];
+  const result = await pool.query<PublicPackagePublisherRow>(
+    `SELECT package_reservations.name AS package_name,
+            orgs.slug AS org_slug,
+            orgs.name AS org_name,
+            users.github_login AS publisher_login,
+            users.name AS publisher_name,
+            users.avatar_url AS publisher_avatar_url
+     FROM package_reservations
+     JOIN orgs ON orgs.id = package_reservations.org_id
+     JOIN users ON users.id = package_reservations.owner_user_id
+     WHERE package_reservations.name = ANY($1::text[])`,
+    [packageNames],
+  );
+  return result.rows;
 }

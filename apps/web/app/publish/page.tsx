@@ -60,14 +60,56 @@ aipm doctor`}</code>
 
         <h2>3. Stage and publish from the CLI</h2>
         <pre>
-          <code>{`aipm publish init --name @team/review-helper
-aipm publish explain
+          <code>{`aipm publish init --name @team/review-helper --template code-review
+cd review-helper
+aipm publish explain # (optional)
 aipm publish add .
-aipm publish status
-aipm publish preview
-aipm publish validate
-aipm publish token --package @team/review-helper
+aipm publish status # (optional)
+aipm publish preview # (optional)
+aipm publish validate # (optional)
+aipm publish token --package @team/review-helper # (optional)
 AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}</code>
+        </pre>
+
+        <h2>Starter templates</h2>
+        <p>
+          Templates only change the starter SKILL.md content. Pick the closest workflow, then edit
+          the generated files before staging.
+        </p>
+        <div className="example-grid">
+          <section>
+            <h3>Code review</h3>
+            <pre>
+              <code>aipm publish init --name @team/review-helper --template code-review</code>
+            </pre>
+            <p>Starts with review goals, checklist, and findings-first output guidance.</p>
+          </section>
+          <section>
+            <h3>Issue summary</h3>
+            <pre>
+              <code>aipm publish init --name @team/issue-summary --template issue-summary</code>
+            </pre>
+            <p>Starts with triage sections for impact, evidence, likely cause, and next action.</p>
+          </section>
+          <section>
+            <h3>Release notes</h3>
+            <pre>
+              <code>aipm publish init --name @team/release-notes --template release-notes</code>
+            </pre>
+            <p>Starts with user-facing sections for highlights, fixes, upgrade notes, and known issues.</p>
+          </section>
+        </div>
+
+        <h2>Publishing an existing AI-tool skill</h2>
+        <p>
+          If Cursor, Claude, Codex, or another AI tool created the skill files first, import that
+          file or folder into an AIPM package folder.
+        </p>
+        <pre>
+          <code>{`aipm publish import ~/.codex/skills/review-helper --name @team/review-helper
+cd review-helper
+aipm publish add .
+aipm publish preview # (optional)`}</code>
         </pre>
 
         <h2>Self-service publishing flow</h2>

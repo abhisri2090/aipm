@@ -28,13 +28,13 @@
         <h1>Package AI skills once, then install them anywhere.</h1>
         <p class="lede">
           A published AIPM skill is a versioned folder with a manifest and the
-          files your AI tool needs. Publish through the CLI; the website only
-          helps users discover and install packages.
+          files your AI tool needs. Use the dashboard to reserve names and
+          generate short-lived tokens, then publish through the CLI.
         </p>
         <p class="notice">
-          Production publishing is currently approval-only. Public users can
-          browse and install packages while self-service publisher accounts are
-          designed.
+          Public publishing uses account-backed orgs, reserved package names,
+          and 5-minute publish tokens. Do not publish private prompts,
+          credentials, customer data, or internal-only files.
         </p>
       </section>
 
@@ -55,16 +55,41 @@
   "license": "Apache-2.0"
 }</code></pre>
 
-        <h2>2. Publish the folder</h2>
-        <pre><code data-template="publish">AIPM_TOKEN=&lt;5-minute-token&gt; aipm publish ./skills/review-helper --registry &lt;registry-url&gt;</code></pre>
-
-        <h2>Planned self-service publishing</h2>
+        <h2>2. Create an account and reserve a name</h2>
         <ol class="flow-list">
-          <li>Create an AIPM account.</li>
-          <li>Register an organization and reserve a skill name such as <code>@team/review-helper</code>.</li>
+          <li>Sign in with GitHub.</li>
+          <li>Create an organization namespace.</li>
+          <li>Reserve a package name such as <code>@team/review-helper</code>.</li>
           <li>Generate a publish token that is valid for 5 minutes.</li>
-          <li>Use the CLI to validate, stage, and push the skill files to the registry.</li>
         </ol>
+
+        <h2>3. Stage and publish from the CLI</h2>
+        <pre><code>aipm publish init --name @team/review-helper --template code-review
+cd review-helper
+aipm publish add .
+aipm publish preview # optional
+aipm publish validate # optional
+AIPM_TOKEN=&lt;5-minute-token&gt; aipm publish push --yes</code></pre>
+
+        <h2>Starter templates</h2>
+        <p>
+          Templates only change the starter <code>SKILL.md</code>. Pick the closest
+          workflow, then edit the generated files before staging.
+        </p>
+        <div class="example-grid">
+          <section>
+            <h3>Code review</h3>
+            <pre><code>aipm publish init --name @team/review-helper --template code-review</code></pre>
+          </section>
+          <section>
+            <h3>Issue summary</h3>
+            <pre><code>aipm publish init --name @team/issue-summary --template issue-summary</code></pre>
+          </section>
+          <section>
+            <h3>Release notes</h3>
+            <pre><code>aipm publish init --name @team/release-notes --template release-notes</code></pre>
+          </section>
+        </div>
 
         <h2>Target examples</h2>
         <div class="example-grid">

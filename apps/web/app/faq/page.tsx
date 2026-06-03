@@ -24,8 +24,20 @@ const faqs = [
     "Check that you installed with the right --target, then restart or reload the AI tool if it caches project files.",
   ],
   [
+    "Can I publish a public skill?",
+    "Yes. Sign in with GitHub, create an org, reserve a package name, generate a 5-minute publish token, then push from the CLI.",
+  ],
+  [
     "Can I publish private skills?",
-    "Not yet. Public publishing is approval-only while account, organization, and short-lived publish-token flows are designed.",
+    "Not yet. Current packages are public registry packages. Keep private prompts, credentials, customer data, and internal-only files out of published skills.",
+  ],
+  [
+    "My publish token expired.",
+    "Generate a fresh token from the package dashboard. Tokens are intentionally short-lived and are not stored by the CLI.",
+  ],
+  [
+    "Publisher identity is unavailable on a package.",
+    "That package was published before account-backed reservations were attached, or through an admin-only path. Review it carefully before installing.",
   ],
   [
     "How do I install the CLI?",
@@ -40,6 +52,23 @@ const faqs = [
 export default function FaqPage() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map(([question, answer]) => ({
+              "@type": "Question",
+              name: question,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: answer,
+              },
+            })),
+          }),
+        }}
+      />
       <section className="page-header">
         <p className="eyebrow">FAQ</p>
         <h1>Common questions and fixes.</h1>

@@ -1,16 +1,22 @@
 import Link from "next/link";
 import { RegistrySearch } from "../components/registry-search";
-import { CLI_INSTALL_COMMAND, listPackages } from "../lib/registry";
+import { CLI_INSTALL_COMMAND } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
 export const metadata = pageMetadata({
   title: "AIPM Registry",
   description: "Install project-ready AI skills, prompts, and tool files into Cursor, Claude, and supported assistants.",
+  keywords: [
+    "AI package manager",
+    "AI skill registry",
+    "Cursor skills",
+    "Claude skills",
+    "prompt packages",
+    "AI tools",
+  ],
 });
 
 export default async function HomePage() {
-  const packages = await listPackages("", 3);
-
   return (
     <main>
       <script
@@ -95,7 +101,7 @@ export default async function HomePage() {
             Open full registry
           </Link>
         </div>
-        <RegistrySearch compact initialPackages={packages} />
+        <RegistrySearch compact initialPackages={[]} />
       </section>
 
       <section className="guide-grid" aria-label="AIPM basics">
@@ -106,6 +112,14 @@ export default async function HomePage() {
         <Link className="guide-card" href="/publish">
           <h2>Publish skills</h2>
           <p>Create a manifest, target one or more AI tools, and version updates cleanly.</p>
+        </Link>
+        <Link className="guide-card" href="/resources">
+          <h2>Learn the practice</h2>
+          <p>Read AI skill best practices, acknowledgements, and publishing resources.</p>
+        </Link>
+        <Link className="guide-card" href="/discoverability">
+          <h2>Get discovered</h2>
+          <p>Write names, descriptions, and examples that help users find the right AI skill.</p>
         </Link>
         <Link className="guide-card" href="/faq">
           <h2>Troubleshoot</h2>

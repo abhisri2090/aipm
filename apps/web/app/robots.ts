@@ -3,10 +3,13 @@ import { SITE_URL } from "../lib/registry";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-    },
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/login", "/dashboard"],
+      },
+    ],
+    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/package-sitemap.xml`],
   };
 }

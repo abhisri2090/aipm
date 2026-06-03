@@ -66,7 +66,20 @@ export type PackageSummary = {
   version: string;
   description: string;
   targets: string[];
+  license?: string | null;
+  sizeBytes?: number;
   createdAt?: string;
+  publisher?: {
+    org: {
+      slug: string;
+      name: string;
+    };
+    user: {
+      githubLogin: string;
+      name: string | null;
+      avatarUrl: string | null;
+    };
+  } | null;
 };
 
 export async function searchPackages(

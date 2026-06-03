@@ -1,0 +1,16 @@
+{
+  "name": "AIPM Registry",
+  "short_name": "AIPM",
+  "description": "Install and manage project-ready AI skills, prompts, and tool files.",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#f7f8f5",
+  "theme_color": "#1f7a5c",
+  "icons": [
+    {
+      "src": "/aipm-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

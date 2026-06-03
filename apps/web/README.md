@@ -44,3 +44,22 @@ Output Directory: leave empty
 If Vercel reports `No Output Directory named "public" found`, the project is
 configured like a static site. Clear the Output Directory field and set the
 Framework Preset to Next.js.
+
+## Verification
+
+After a local or production deploy, verify the public website surface:
+
+```sh
+pnpm --filter @aipm-registry/web verify
+```
+
+For a local dev server:
+
+```sh
+pnpm --filter @aipm-registry/web dev
+pnpm --filter @aipm-registry/web verify:local
+```
+
+The verifier checks core pages, page titles, canonical URLs, JSON-LD on SEO
+pages, `robots.txt`, `sitemap.xml`, `package-sitemap.xml`, `llms.txt`, and
+production security headers when the target URL is HTTPS.

@@ -110,7 +110,7 @@ describe("registry API production behavior", () => {
     const list = await app!.inject({ method: "GET", url: "/v1/packages?limit=1" });
     expect(list.statusCode).toBe(200);
     expect(list.json()).toMatchObject({
-      packages: [{ name: "@team/api-skill", version: "1.0.1" }],
+      packages: [{ name: "@team/api-skill", version: "1.0.1", publisher: null }],
     });
 
     const detail = await app!.inject({
@@ -118,6 +118,7 @@ describe("registry API production behavior", () => {
       url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/versions/1.0.1`,
     });
     expect(detail.statusCode).toBe(200);
+    expect(detail.json()).toMatchObject({ publisher: null });
   });
 
   it("hides demo packages from public listing by default", async () => {
