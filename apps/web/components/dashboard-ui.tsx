@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CopyButton } from "./copy-button";
+import { CodeBlock } from "./code-block";
 import { packagePath } from "../lib/registry";
 
 type Me = {
@@ -509,9 +509,7 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
                 <h2>Publish steps</h2>
               </div>
             </div>
-            <pre>
-              <code>{command}</code>
-            </pre>
+            <CodeBlock code={command} />
           </article>
           <article className="dashboard-panel token-panel">
             <p className="eyebrow">Token</p>
@@ -541,19 +539,9 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
             {token ? (
               <section className="token-result">
                 <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
-                <pre>
-                  <code>{token.token}</code>
-                </pre>
-                <div className="token-actions">
-                  <CopyButton label="Copy token" value={token.token} />
-                </div>
+                <CodeBlock code={token.token} />
                 <h3>Ready-to-run push command</h3>
-                <pre>
-                  <code>{tokenPushCommand}</code>
-                </pre>
-                <div className="token-actions">
-                  <CopyButton label="Copy push command" value={tokenPushCommand} />
-                </div>
+                <CodeBlock code={tokenPushCommand} />
               </section>
             ) : null}
           </article>

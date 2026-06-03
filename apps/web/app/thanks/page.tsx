@@ -1,4 +1,5 @@
 import { pageMetadata } from "../../lib/seo";
+import { DocLayout } from "../../components/doc-layout";
 
 const people = [
   {
@@ -63,26 +64,46 @@ const people = [
   },
 ];
 
-const conferences = [
+const conferenceSignals = [
   {
-    name: "NeurIPS 2025 invited speakers",
+    event: "NeurIPS 2025 invited speakers",
     href: "https://blog.neurips.cc/2025/09/10/2025-speaker-lineup-announced/",
-    note: "Kyunghyun Cho, Yejin Choi, Melanie Mitchell, Andrew Saxe, Richard Sutton, and Zeynep Tufekci highlighted work across NLP, reinforcement learning, AI and society, cognitive science, and learning theory.",
+    sourceLabel: "NeurIPS announcement",
+    work: "Kyunghyun Cho's GRU and neural machine translation work, Yejin Choi's commonsense reasoning research, Melanie Mitchell's abstraction and analogy work, Andrew Saxe's theory of learning, Richard Sutton's reinforcement learning foundations, and Zeynep Tufekci's technology-and-society analysis.",
+    productLesson:
+      "Reusable AI skills should be tested against language, reasoning, society, and learning failures, not only happy-path demos.",
   },
   {
-    name: "ICLR 2026 keynotes",
+    event: "ICLR 2026 keynotes",
     href: "https://blog.iclr.cc/2026/04/17/announcing-the-iclr-2026-keynotes/",
-    note: "Maja Mataric, Max Welling, Percy Liang, Katie Bouman, Karen Adolph, and Pablo Arbelaez covered human-centered robotics, open frontier AI, scientific imaging, development, and AI for open science.",
+    sourceLabel: "ICLR keynote announcement",
+    work: "Maja Mataric on human-centered AI and robotics, Max Welling on physics-to-AI-to-materials, Percy Liang on Marin and open frontier AI, Katie Bouman on imaging hidden science, Karen Adolph on infant learning, and Pablo Arbelaez on AI for open science.",
+    productLesson:
+      "AIPM should make AI work inspectable, open where possible, and grounded in how humans actually use tools.",
   },
   {
-    name: "ICML 2026 invited talks",
+    event: "ICML 2026 invited talks",
     href: "https://blog.icml.cc/2026/05/18/announcing-the-icml-2026-invited-talks/",
-    note: "Pascale Fung, Susan Athey, Sham Kakade, Aviv Regev, Verena Rieser, and Arvind Narayanan connected machine learning theory, conversational AI, economics, biology, alignment, and AI's social impact.",
+    sourceLabel: "ICML invited-talk announcement",
+    work: "Pascale Fung on conversational and ethical AI, Susan Athey on causal inference and AI economics, Sham Kakade on RL and deep learning theory, Aviv Regev on AI for biology, Verena Rieser on alignment and evaluation, and Arvind Narayanan on AI's social impact.",
+    productLesson:
+      "Publishing should combine capability, evaluation, governance, and social context before a skill becomes widely reusable.",
   },
   {
-    name: "ICLR 2026 outstanding papers",
+    event: "ICLR 2026 outstanding papers",
     href: "https://blog.iclr.cc/2026/04/23/announcing-the-iclr-2026-outstanding-papers/",
-    note: "Recent award work included transformer theory, multi-turn LLM evaluation, and optimizer methods, all directly relevant to how reusable AI skills should be tested and updated.",
+    sourceLabel: "ICLR outstanding-papers announcement",
+    work: "Transformers are Inherently Succinct, LLMs Get Lost In Multi-Turn Conversation, and The Polar Express: Optimal Matrix Sign Methods and their Application to the Muon Algorithm.",
+    productLesson:
+      "AIPM skills need multi-turn tests, clear versioning, and honest descriptions of where a model or workflow can fail.",
+  },
+  {
+    event: "CVPR 2025 keynotes",
+    href: "https://cvpr.thecvf.com/Conferences/2025/News/Keynote_PR",
+    sourceLabel: "CVPR keynote announcement",
+    work: "Harry Shum on low-altitude airspace infrastructure, Laurens van der Maaten on the Llama herd of models, and Carolina Parada on Gemini Robotics and embodied AI.",
+    productLesson:
+      "Reusable AI tooling should support text, vision, robotics, and systems workflows as the registry grows beyond simple prompt files.",
   },
 ];
 
@@ -106,7 +127,7 @@ export const metadata = pageMetadata({
 
 export default function ThanksPage() {
   return (
-    <main>
+    <DocLayout wide>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -117,7 +138,7 @@ export default function ThanksPage() {
             description:
               "AIPM acknowledgements for the people, papers, companies, conferences, and public work that shaped modern AI tools and reusable AI skills.",
             url: "https://aipm-registry.com/thanks",
-            about: people.map((person) => person.work),
+            about: [...people.map((person) => person.work), ...conferenceSignals.map((signal) => signal.work)],
           }),
         }}
       />
@@ -151,13 +172,15 @@ export default function ThanksPage() {
           <p>
             The AI field changes through papers, talks, workshops, datasets, replication, and
             product pressure. AIPM tracks these communities because reusable AI skills should stay
-            close to real practice, not just demos.
+            close to real practice, not just demos. Updated June 3, 2026.
           </p>
           <div className="source-list">
-            {conferences.map((conference) => (
-              <a className="source-card" href={conference.href} key={conference.href}>
-                <strong>{conference.name}</strong>
-                <span>{conference.note}</span>
+            {conferenceSignals.map((signal) => (
+              <a className="source-card" href={signal.href} key={signal.href}>
+                <strong>{signal.event}</strong>
+                <span>{signal.work}</span>
+                <span>{signal.productLesson}</span>
+                <small>{signal.sourceLabel}</small>
               </a>
             ))}
           </div>
@@ -173,6 +196,6 @@ export default function ThanksPage() {
           </ul>
         </section>
       </section>
-    </main>
+    </DocLayout>
   );
 }

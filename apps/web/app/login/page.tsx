@@ -1,7 +1,7 @@
 import { LoginPanel } from "../../components/dashboard-ui";
-import { pageMetadata } from "../../lib/seo";
+import { noIndexPageMetadata } from "../../lib/seo";
 
-export const metadata = pageMetadata({
+export const metadata = noIndexPageMetadata({
   title: "Publisher Login",
   description: "Sign in to AIPM with GitHub to publish AI skill packages.",
   path: "/login",

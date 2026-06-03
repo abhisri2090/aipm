@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CodeBlock } from "../components/code-block";
 import { RegistrySearch } from "../components/registry-search";
 import { CLI_INSTALL_COMMAND } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
@@ -36,11 +37,12 @@ export default async function HomePage() {
         }}
       />
       <section className="hero" aria-labelledby="hero-title">
-        <p className="eyebrow">AI Package Manager</p>
-        <h1 id="hero-title">Install the right AI setup into every project.</h1>
+        <p className="eyebrow">AIPM — AI Package Manager</p>
+        <h1 id="hero-title">npm-style packages for AI skills, tools, and MCP</h1>
         <p className="lede">
-          AIPM keeps project-ready AI skills, prompts, and tool files in one registry. Search what
-          exists, install it into Cursor or Claude, and keep teams from copying AI files by hand.
+          AIPM aims to solve AI package distribution problems. Registry + CLI to Install, Update,
+          Deploy, Remove, and bind packages into your repo for Cursor, Claude, Codex, and more — no
+          copying files by hand.
         </p>
         <div className="actions">
           <Link className="button" href="#get-started">
@@ -70,23 +72,17 @@ export default async function HomePage() {
           <article className="step-card">
             <span className="step-number">1</span>
             <h3>Install the CLI</h3>
-            <pre>
-              <code>{CLI_INSTALL_COMMAND}</code>
-            </pre>
+            <CodeBlock code={CLI_INSTALL_COMMAND} />
           </article>
           <article className="step-card">
             <span className="step-number">2</span>
             <h3>Initialize your project</h3>
-            <pre>
-              <code>aipm init</code>
-            </pre>
+            <CodeBlock code="aipm init" />
           </article>
           <article className="step-card">
             <span className="step-number">3</span>
             <h3>Add a skill</h3>
-            <pre>
-              <code>aipm add @scope/name@1.0.0 --target cursor --ci</code>
-            </pre>
+            <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
           </article>
         </div>
       </section>

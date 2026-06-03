@@ -42,3 +42,19 @@ export function pageMetadata({ title, description, path = "/", keywords }: SeoIn
     },
   };
 }
+
+export function noIndexPageMetadata(input: SeoInput): Metadata {
+  return {
+    ...pageMetadata(input),
+    robots: {
+      index: false,
+      follow: false,
+      nocache: true,
+      googleBot: {
+        index: false,
+        follow: false,
+        noimageindex: true,
+      },
+    },
+  };
+}

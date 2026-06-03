@@ -36,7 +36,7 @@ export default async function RegistryPage({
           }),
         }}
       />
-      <section className="page-header">
+      <section className="page-header compact-page-header">
         <p className="eyebrow">Registry</p>
         <h1>Search published skills.</h1>
         <p className="lede">

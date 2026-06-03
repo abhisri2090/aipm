@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DocLayout } from "../../components/doc-layout";
+import { CodeBlock } from "../../components/code-block";
 import { pageMetadata } from "../../lib/seo";
 
 const principles = [
@@ -54,7 +56,7 @@ export const metadata = pageMetadata({
 
 export default function DiscoverabilityPage() {
   return (
-    <main>
+    <DocLayout wide>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -120,13 +122,13 @@ export default function DiscoverabilityPage() {
             helps with, which AI tools it supports, what files it installs, and what a user should
             expect after installation.
           </p>
-          <pre>
-            <code>{`Good:
+          <CodeBlock
+            code={`Good:
 "Summarizes Sentry desktop app issues into triage notes for Cursor and Claude, with project rules and a reusable issue template."
 
 Weak:
-"AI-powered productivity helper for better workflows."`}</code>
-          </pre>
+"AI-powered productivity helper for better workflows."`}
+          />
         </section>
 
         <section>
@@ -138,6 +140,6 @@ Weak:
           </p>
         </section>
       </section>
-    </main>
+    </DocLayout>
   );
 }

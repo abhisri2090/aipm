@@ -1,178 +1,128 @@
-import { CLI_INSTALL_COMMAND } from "../../lib/registry";
+import Link from "next/link";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Publishing Guide",
-  description: "Package, validate, and publish AIPM skills for supported AI tools.",
+  title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
+  description:
+    "Use AIPM to package, publish, and distribute AI skills, MCP setup, prompts, and tool files across teams, repos, and AI assistants.",
   path: "/publish",
+  keywords: [
+    "publish AI skills",
+    "AI package distribution",
+    "MCP package manager",
+    "AI tool distribution",
+    "team AI skills",
+    "Cursor skills publishing",
+    "Claude skills publishing",
+  ],
 });
 
 export default function PublishPage() {
+  const benefits = [
+    {
+      title: "Distribute once, install anywhere",
+      body: "Publish a reusable AI package and let users install it into the repos, editors, and assistants that need it.",
+    },
+    {
+      title: "Made for teams and orgs",
+      body: "Organizations can reserve package names, publish approved workflows, and avoid sending prompts or MCP setup through chat threads.",
+    },
+    {
+      title: "Versioned AI operations",
+      body: "Every skill, tool file, prompt bundle, or MCP package can move through explicit versions so changes stay reviewable.",
+    },
+  ];
+
+  const useCases = [
+    "Internal AI skills for code review, triage, release notes, and support workflows.",
+    "MCP server setup, tool instructions, and assistant-specific config distributed as packages.",
+    "Cross-repo standards for Cursor, Claude, Codex, and future AI tool adapters.",
+    "Public packages that help other developers discover and install useful AI workflows.",
+  ];
+
   return (
     <main>
       <section className="page-header">
-        <p className="eyebrow">Publishing</p>
-        <h1>Package AI skills once, then install them anywhere.</h1>
+        <p className="eyebrow">Publish with AIPM</p>
+        <h1>Easy distribution for AI skills, MCP, prompts, and tool packages.</h1>
         <p className="lede">
-          A published AIPM skill is a versioned folder with a manifest and the files your AI tool
-          needs. Publish through the CLI; the website helps users discover and install packages.
+          AIPM helps users and organizations package AI setup once, publish it through a registry,
+          and install it into any repo that needs the same skills, MCP setup, prompts, or tool files.
         </p>
         <div className="actions">
-          <a className="button" href="/login">
+          <Link className="button" href="/login">
             Sign in to publish
-          </a>
-          <a className="button secondary" href="/dashboard">
+          </Link>
+          <Link className="button secondary" href="/publish/guide">
+            Read the guide
+          </Link>
+          <Link className="button secondary" href="/dashboard">
             Publisher dashboard
-          </a>
+          </Link>
         </div>
       </section>
 
-      <article className="doc">
-        <h2>Install the CLI</h2>
-        <pre>
-          <code>{`${CLI_INSTALL_COMMAND}
-aipm --version
-aipm doctor`}</code>
-        </pre>
-
-        <h2>1. Create a skill folder</h2>
-        <p>Each skill needs an aipm.manifest.json file and an entry file.</p>
-        <pre>
-          <code>{`{
-  "schemaVersion": "0.1",
-  "name": "@team/review-helper",
-  "version": "1.0.0",
-  "type": "skill",
-  "description": "Review checklist for project PRs",
-  "entry": "SKILL.md",
-  "targets": ["cursor"],
-  "license": "Apache-2.0"
-}`}</code>
-        </pre>
-
-        <h2>2. Create an account and reserve a name</h2>
-        <ol className="flow-list">
-          <li>Sign in with GitHub.</li>
-          <li>Create an org namespace.</li>
-          <li>Reserve a package name such as @team/review-helper.</li>
-          <li>Generate a 5-minute publish token.</li>
-        </ol>
-
-        <h2>3. Stage and publish from the CLI</h2>
-        <pre>
-          <code>{`aipm publish init --name @team/review-helper --template code-review
-cd review-helper
-aipm publish explain # (optional)
-aipm publish add .
-aipm publish status # (optional)
-aipm publish preview # (optional)
-aipm publish validate # (optional)
-aipm publish token --package @team/review-helper # (optional)
-AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}</code>
-        </pre>
-
-        <h2>Starter templates</h2>
-        <p>
-          Templates only change the starter SKILL.md content. Pick the closest workflow, then edit
-          the generated files before staging.
-        </p>
-        <div className="example-grid">
-          <section>
-            <h3>Code review</h3>
-            <pre>
-              <code>aipm publish init --name @team/review-helper --template code-review</code>
-            </pre>
-            <p>Starts with review goals, checklist, and findings-first output guidance.</p>
-          </section>
-          <section>
-            <h3>Issue summary</h3>
-            <pre>
-              <code>aipm publish init --name @team/issue-summary --template issue-summary</code>
-            </pre>
-            <p>Starts with triage sections for impact, evidence, likely cause, and next action.</p>
-          </section>
-          <section>
-            <h3>Release notes</h3>
-            <pre>
-              <code>aipm publish init --name @team/release-notes --template release-notes</code>
-            </pre>
-            <p>Starts with user-facing sections for highlights, fixes, upgrade notes, and known issues.</p>
-          </section>
+      <section className="panel-section" aria-labelledby="publish-benefits-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Benefits</p>
+            <h2 id="publish-benefits-title">Why publish through AIPM?</h2>
+          </div>
         </div>
-
-        <h2>Publishing an existing AI-tool skill</h2>
-        <p>
-          If Cursor, Claude, Codex, or another AI tool created the skill files first, import that
-          file or folder into an AIPM package folder.
-        </p>
-        <pre>
-          <code>{`aipm publish import ~/.codex/skills/review-helper --name @team/review-helper
-cd review-helper
-aipm publish add .
-aipm publish preview # (optional)`}</code>
-        </pre>
-
-        <h2>Self-service publishing flow</h2>
-        <ol className="flow-list">
-          <li>Create an AIPM account.</li>
-          <li>Register an organization and reserve a skill name such as @team/review-helper.</li>
-          <li>Generate a publish token that is valid for 5 minutes.</li>
-          <li>Use the CLI to validate, stage, and push the skill files to the registry.</li>
-        </ol>
-
-        <h2>Target examples</h2>
-        <div className="example-grid">
-          <section>
-            <h3>Cursor-only</h3>
-            <pre>
-              <code>{`"targets": ["cursor"]`}</code>
-            </pre>
-            <p>Use this when the skill should write Cursor-compatible files only.</p>
-          </section>
-          <section>
-            <h3>Claude-only</h3>
-            <pre>
-              <code>{`"targets": ["claude"]`}</code>
-            </pre>
-            <p>Use this when the skill is built for Claude project instructions.</p>
-          </section>
-          <section>
-            <h3>Multi-tool</h3>
-            <pre>
-              <code>{`"targets": ["cursor", "claude"]`}</code>
-            </pre>
-            <p>Use this when the same skill should install into multiple AI tools.</p>
-          </section>
+        <div className="guide-grid">
+          {benefits.map((benefit) => (
+            <article className="guide-card" key={benefit.title}>
+              <h2>{benefit.title}</h2>
+              <p>{benefit.body}</p>
+            </article>
+          ))}
         </div>
+      </section>
 
-        <h2>Common publish conditions</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Condition</th>
-              <th>What to do</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Updating an existing skill</td>
-              <td>Change the manifest version, then publish again.</td>
-            </tr>
-            <tr>
-              <td>Duplicate version error</td>
-              <td>AIPM does not overwrite versions. Publish a new version.</td>
-            </tr>
-            <tr>
-              <td>Invalid package name</td>
-              <td>Use scoped names like @team/review-helper.</td>
-            </tr>
-            <tr>
-              <td>Registry unavailable</td>
-              <td>Check the registry URL and run curl &lt;registry-url&gt;/health.</td>
-            </tr>
-          </tbody>
-        </table>
-      </article>
+      <section className="panel-section" aria-labelledby="publish-usecases-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Use cases</p>
+            <h2 id="publish-usecases-title">What teams can distribute</h2>
+          </div>
+        </div>
+        <article className="doc">
+          <ul className="check-list">
+            {useCases.map((useCase) => (
+              <li key={useCase}>{useCase}</li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
+      <section className="panel-section" aria-labelledby="publish-flow-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Workflow</p>
+            <h2 id="publish-flow-title">From local AI setup to installable package</h2>
+          </div>
+          <Link className="text-link" href="/publish/guide">
+            Full publishing guide
+          </Link>
+        </div>
+        <div className="steps">
+          <article className="step-card">
+            <span className="step-number">1</span>
+            <h3>Package</h3>
+            <p>Wrap skills, prompts, MCP setup, or tool files with an AIPM manifest.</p>
+          </article>
+          <article className="step-card">
+            <span className="step-number">2</span>
+            <h3>Publish</h3>
+            <p>Reserve a package name, validate contents, and push a version to the registry.</p>
+          </article>
+          <article className="step-card">
+            <span className="step-number">3</span>
+            <h3>Install</h3>
+            <p>Users add the package to a repo and bind it to Cursor, Claude, Codex, or future targets.</p>
+          </article>
+        </div>
+      </section>
     </main>
   );
 }

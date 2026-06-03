@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /* global AbortController, URL, clearTimeout, console, fetch, process, setTimeout */
 
+import { readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 const DEFAULT_URL = "https://aipm-registry.com";
 const baseUrl = new URL(process.argv[2] ?? process.env.WEB_URL ?? DEFAULT_URL);
 const allowHttp = process.argv.includes("--allow-http") || baseUrl.hostname === "127.0.0.1" || baseUrl.hostname === "localhost";
 const timeoutMs = Number(process.env.VERIFY_TIMEOUT_MS ?? 8000);
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
 if (baseUrl.protocol !== "https:" && !allowHttp) {
   fail(`Refusing to verify non-HTTPS URL ${baseUrl.href}. Pass --allow-http for local checks.`);
@@ -15,16 +20,117 @@ baseUrl.search = "";
 baseUrl.hash = "";
 
 const requiredPages = [
-  { path: "/", renderedTitle: "AIPM Registry", h1: "Install the right AI setup into every project.", jsonLd: true },
+  { path: "/", renderedTitle: "AIPM Registry", h1: "npm-style packages for AI skills, tools, and MCP", jsonLd: true },
   { path: "/registry", title: "AI Skills Registry", h1: "Search published skills.", jsonLd: true },
-  { path: "/publish", title: "Publishing Guide", h1: "Package AI skills once, then install them anywhere.", jsonLd: false },
+  {
+    path: "/publish",
+    title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
+    h1: "Easy distribution for AI skills, MCP, prompts, and tool packages.",
+    jsonLd: false,
+    includes: [
+      "AI package distribution",
+      "MCP setup",
+      "What teams can distribute",
+      "/publish/guide",
+    ],
+  },
+  {
+    path: "/publish/guide",
+    title: "Publishing Guide",
+    h1: "Package AI skills once, then install them anywhere.",
+    jsonLd: false,
+    includes: [
+      "Starter templates",
+      "--template code-review",
+      "--template issue-summary",
+      "--template release-notes",
+    ],
+  },
   { path: "/use", title: "Use AIPM", h1: "Bind AI skills and tool files to your project.", jsonLd: false },
+  {
+    path: "/targets",
+    title: "AIPM Supported Targets",
+    h1: "Install each AI skill into the tool that can actually use it.",
+    jsonLd: true,
+    includes: [".cursor/aipm/skills/&lt;skill&gt;.md", ".claude/aipm/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
+  },
   { path: "/resources", title: "AI Skill Resources", h1: "Build better AI skills, then make them reusable.", jsonLd: false },
+  {
+    path: "/examples",
+    title: "AIPM Skill Examples",
+    h1: "Copy a complete AIPM workflow for a real skill scenario.",
+    jsonLd: true,
+    includes: ["Code review helper for Cursor", "Sentry issue summariser for Claude", "Import an existing Codex skill folder"],
+  },
+  {
+    path: "/glossary",
+    title: "AIPM Glossary",
+    h1: "Understand the words AIPM uses before you publish or install.",
+    jsonLd: true,
+    includes: ["Publish token", "Org namespace", ".aipmignore"],
+  },
   { path: "/ai-practices", title: "AI Best Practices for Reusable Skills", h1: "Build AI skills that teams can trust, reuse, and improve.", jsonLd: true },
   { path: "/discoverability", title: "AI Skill SEO and Discoverability Guide", h1: "Make AI skills easy to find, understand, and trust.", jsonLd: true },
-  { path: "/thanks", title: "Special Thanks to the AI Community", h1: "The AI world is built on shared work.", jsonLd: true },
+  {
+    path: "/security",
+    title: "AIPM Security and Privacy Guide",
+    h1: "Publish AI skills without leaking private project context.",
+    jsonLd: true,
+    includes: [".aipmignore", "aipm publish preview", "formal vulnerability disclosure channel"],
+  },
+  {
+    path: "/privacy",
+    title: "AIPM Privacy Notice",
+    h1: "Know what is public, what is account data, and what should never be packaged.",
+    jsonLd: true,
+    includes: ["Publisher profile", "Short-lived publish tokens", "Public package boundary"],
+  },
+  {
+    path: "/terms",
+    title: "AIPM Terms and Acceptable Use",
+    h1: "Use AIPM to share helpful AI skills, not private or deceptive content.",
+    jsonLd: true,
+    includes: ["Publisher acceptable use", "Registry moderation", "formal takedown and appeal workflow"],
+  },
+  {
+    path: "/status",
+    title: "AIPM Registry Status",
+    h1: "Check whether the AIPM registry is alive and ready.",
+    jsonLd: true,
+    includes: ["/health", "/ready", "Command-line checks"],
+  },
+  {
+    path: "/roadmap",
+    title: "AIPM Product Roadmap",
+    h1: "Build the registry in public, one useful layer at a time.",
+    jsonLd: true,
+    includes: ["Available now", "Near term reliability", "Trust and registry depth"],
+  },
+  {
+    path: "/changelog",
+    title: "AIPM Changelog",
+    h1: "Track what changed across AIPM.",
+    jsonLd: true,
+    includes: ["Public trust and product-readiness pages", "Publisher account and dashboard workflow", "@aipm-registry/cli"],
+  },
+  {
+    path: "/templates",
+    title: "AIPM Skill Templates",
+    h1: "Start publishing from a skill shape that already fits the job.",
+    jsonLd: true,
+    includes: ["--template code-review", "--template issue-summary", "--template release-notes"],
+  },
+  {
+    path: "/thanks",
+    title: "Special Thanks to the AI Community",
+    h1: "The AI world is built on shared work.",
+    jsonLd: true,
+    includes: ["Updated June 3, 2026", "ICLR 2026 keynotes", "CVPR 2025 keynotes"],
+  },
   { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: true },
 ];
+
+const privatePages = ["/login", "/dashboard", "/dashboard/profile", "/dashboard/orgs/new"];
 
 const requiredHeaders = [
   "strict-transport-security",
@@ -106,6 +212,30 @@ for (const page of requiredPages) {
   if (page.jsonLd && extractJsonLd(text).length === 0) {
     fail(`${page.path} is missing JSON-LD structured data`);
   }
+
+  for (const expected of page.includes ?? []) {
+    assertIncludes(page.path, text, expected);
+  }
+}
+
+const homePage = await fetchText("/");
+assertIncludes("/", homePage.text, "Footer navigation");
+assertIncludes("/", homePage.text, 'href="/security"');
+assertIncludes("/", homePage.text, 'href="/privacy"');
+assertIncludes("/", homePage.text, 'href="/terms"');
+assertIncludes("/", homePage.text, 'href="/status"');
+assertIncludes("/", homePage.text, 'href="/roadmap"');
+assertIncludes("/", homePage.text, 'href="/changelog"');
+assertIncludes("/", homePage.text, 'href="/templates"');
+assertIncludes("/", homePage.text, 'href="/targets"');
+assertIncludes("/", homePage.text, 'href="/examples"');
+assertIncludes("/", homePage.text, 'href="/glossary"');
+
+for (const path of privatePages) {
+  const { response, text } = await fetchText(path);
+  assertStatus(path, response);
+  assertIncludes(path, text, "noindex");
+  assertIncludes(path, text, "nofollow");
 }
 
 const robots = await fetchText("/robots.txt");
@@ -116,7 +246,7 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
-for (const path of ["/registry", "/publish", "/resources", "/discoverability", "/thanks"]) {
+for (const path of ["/registry", "/publish", "/publish/guide", "/targets", "/resources", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${DEFAULT_URL}${path}</loc>`);
 }
 
@@ -127,5 +257,24 @@ assertIncludes("/package-sitemap.xml", packageSitemap.text, '<urlset xmlns="http
 const llms = await fetchText("/llms.txt");
 assertStatus("/llms.txt", llms.response);
 assertIncludes("/llms.txt", llms.text, "AIPM is a registry and command line workflow");
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/security`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/privacy`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/terms`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/status`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/roadmap`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/changelog`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/templates`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/targets`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/examples`);
+assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/glossary`);
+
+const securityPolicy = await readFile(resolve(repoRoot, "SECURITY.md"), "utf8");
+assertIncludes("SECURITY.md", securityPolicy, "aipm publish preview");
+assertIncludes("SECURITY.md", securityPolicy, "https://aipm-registry.com/security");
+
+const readme = await readFile(resolve(repoRoot, "README.md"), "utf8");
+assertIncludes("README.md", readme, "web/              → Next.js website, registry UI, docs, and publisher dashboard");
+assertIncludes("README.md", readme, "GitHub sign-in, profile, org namespaces, package reservations, and 5-minute publish tokens");
+assertIncludes("README.md", readme, "Public website: search, package pages, dashboard, docs, SEO pages, security/privacy/terms/status, and roadmap");
 
 console.log("Web verification passed.");

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CopyButton } from "../../../../../components/copy-button";
+import { CodeBlock } from "../../../../../components/code-block";
 import {
   CLI_INSTALL_COMMAND,
   formatBytes,
@@ -184,10 +184,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
         <article className="panel step-card">
           <h2>Install this skill</h2>
           <p className="muted">Install the CLI once, initialize the project, then add this package.</p>
-          <pre>
-            <code>{`${CLI_INSTALL_COMMAND}\naipm init\n${command}`}</code>
-          </pre>
-          <CopyButton label="Copy install command" value={command} />
+          <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm init\n${command}`} />
         </article>
 
         <aside className="panel step-card">
@@ -278,10 +275,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
           {allTargetCommands.map((targetCommand) => (
             <article className="panel step-card" key={targetCommand.target}>
               <h3>{targetCommand.target}</h3>
-              <pre>
-                <code>{targetCommand.command}</code>
-              </pre>
-              <CopyButton label="Copy" value={targetCommand.command} />
+              <CodeBlock code={targetCommand.command} />
             </article>
           ))}
         </div>

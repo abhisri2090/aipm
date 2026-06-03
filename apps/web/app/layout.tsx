@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Footer } from "../components/footer";
 import { Header } from "../components/header";
 import { SITE_URL } from "../lib/registry";
 import "./globals.css";
@@ -62,24 +63,11 @@ const themeScript = `
     } else {
       document.documentElement.removeAttribute("data-theme");
     }
-    document.querySelectorAll("[data-theme-choice]").forEach((button) => {
-      button.setAttribute("aria-pressed", String(button.getAttribute("data-theme-choice") === theme));
-    });
   };
   try {
     const stored = window.localStorage.getItem(storageKey);
     apply(choices.includes(stored) ? stored : "system");
   } catch {}
-  document.addEventListener("click", (event) => {
-    const target = event.target instanceof Element ? event.target.closest("[data-theme-choice]") : null;
-    const theme = target?.getAttribute("data-theme-choice");
-    if (!choices.includes(theme)) return;
-    try {
-      if (theme === "system") window.localStorage.removeItem(storageKey);
-      else window.localStorage.setItem(storageKey, theme);
-    } catch {}
-    apply(theme);
-  });
 })();
 `;
 
@@ -92,6 +80,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <Header />
         {children}
+        <Footer />
       </body>
     </html>
   );

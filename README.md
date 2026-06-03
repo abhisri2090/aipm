@@ -10,6 +10,7 @@ Repository: [https://github.com/abhisri2090/aipm](https://github.com/abhisri2090
 apps/
   cli/              → `aipm` CLI
   registry-api/     → HTTP registry (Azure-ready)
+  web/              → Next.js website, registry UI, docs, and publisher dashboard
 packages/
   schemas/          → Zod schemas + @scope/name validation
   engine/           → install engine + tool detection
@@ -21,6 +22,8 @@ packages/
 Design docs: `InitialDesignPlan/` and `docs/adr/`.
 
 Launch checklist (step-by-step, `[Abhishek]` = your tasks): [`docs/step-by-step-launch-checklist.md`](docs/step-by-step-launch-checklist.md).
+
+Security policy and public package safety guidance: [`SECURITY.md`](SECURITY.md) and [aipm-registry.com/security](https://aipm-registry.com/security). Privacy notice: [aipm-registry.com/privacy](https://aipm-registry.com/privacy). Terms and acceptable use: [aipm-registry.com/terms](https://aipm-registry.com/terms). Product roadmap: [aipm-registry.com/roadmap](https://aipm-registry.com/roadmap). Changelog: [aipm-registry.com/changelog](https://aipm-registry.com/changelog). Skill templates: [aipm-registry.com/templates](https://aipm-registry.com/templates). Supported targets: [aipm-registry.com/targets](https://aipm-registry.com/targets). Examples: [aipm-registry.com/examples](https://aipm-registry.com/examples). Glossary: [aipm-registry.com/glossary](https://aipm-registry.com/glossary).
 
 ## Prerequisites
 
@@ -79,7 +82,9 @@ Then from any folder:
 
 ```bash
 aipm init --registry https://aipm-registry.com
-AIPM_TOKEN=<admin-token> aipm publish ./my-skill --registry https://aipm-registry.com
+aipm publish init --name @team/review-helper --template code-review
+aipm publish add .
+AIPM_TOKEN=<5-minute-token> aipm publish push --yes
 aipm add @team/sample-skill@1.0.0
 ```
 
@@ -94,9 +99,9 @@ pnpm build
 pnpm aipm init --registry https://aipm-registry.com
 ```
 
-Production publishing is currently approval-only. Public registry reads and
-installs do not need a token; publishing requires an admin token passed as
-`--token` or `AIPM_TOKEN`.
+Public registry reads and installs do not need a token. Publishing uses the
+website dashboard for GitHub sign-in, org/package reservation, and short-lived
+publish tokens. Pass the token with `--token` or `AIPM_TOKEN`.
 
 **Option C — npm package**
 
@@ -118,10 +123,12 @@ npm install -g @aipm-registry/cli
 ## Current scope (shipped in repo)
 
 - Skill packages only (`type: skill`)
-- Registry: public read/search/install APIs and admin-token-gated publish
-- CLI: `init`, `add`, `install`, `publish`, `list`
+- Registry: public read/search/install APIs and token-gated publish
+- CLI: `init`, `add`, `install`, `publish`, `list`, `doctor`
 - Tools: `cursor`, `claude` (auto-detect or prompt)
-- Monorepo + CI + local Postgres dev stack
+- Publisher accounts: GitHub sign-in, profile, org namespaces, package reservations, and 5-minute publish tokens
+- Public website: search, package pages, dashboard, docs, SEO pages, security/privacy/terms/status, and roadmap
+- Monorepo + CI + local Postgres dev stack + Azure/Vercel deployment paths
 
 Details: `InitialDesignPlan/aipm_mvp_skill_registry_plan_v0.md`.
 
@@ -129,20 +136,21 @@ Details: `InitialDesignPlan/aipm_mvp_skill_registry_plan_v0.md`.
 
 Work is ordered so each step is usable on its own. Full plan: `InitialDesignPlan/aipm_implementation_plan_v_0.md`.
 
-### Near term — finish MVP slice
+### Near term — reliability and release polish
 
-- **Azure staging** — deploy `registry-api` (App Service + PostgreSQL + Blob Storage)
-- **Hardening** — install transactions/rollback, golden-file adapter tests, E2E publish → install
+- **Production verification** — keep HTTPS, headers, `/health`, `/ready`, search, install, and publish-auth checks automated
+- **Hardening** — publish consistency, rollback, backup/restore drills, golden-file adapter tests, E2E publish → install
 - **CLI lifecycle** — `update`, `remove`, `verify`, `clean`, `pack`
-- **Auth** — `aipm login` / tokens, scoped publishers (`@scope` ownership)
-- **Distribution** — npm global binary, clearer Windows/macOS install story
+- **Dashboard polish** — clearer failed-publish feedback, package version history, token expiry states, and profile completeness
+- **Distribution** — clearer Windows/macOS install story and release checklist
 
 ### Medium term — registry + trust
 
 - **Package types** — `rule`, `mcp`, `environment` bundles (not just `skill`)
 - **Dependencies** — semver resolve, conflict detection, lockfile-driven installs
 - **Security layer** — server-side scan on publish, risk levels, signing, `install --strict`
-- **Public website** (`apps/website`) — search, package pages, publisher dashboard, docs
+- **Trust workflows** — abuse reporting, takedown/appeal, owner transfer, verified publisher labels
+- **Private packages** — org access controls and private `@company/` scopes
 - **Local cache** — `~/.aipm/cache/`, offline reinstall from lockfile
 
 ### Later — product surfaces

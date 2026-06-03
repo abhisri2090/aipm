@@ -1,4 +1,5 @@
 import { pageMetadata } from "../../lib/seo";
+import { DocLayout } from "../../components/doc-layout";
 
 export const metadata = pageMetadata({
   title: "About AIPM",
@@ -8,7 +9,7 @@ export const metadata = pageMetadata({
 
 export default function AboutPage() {
   return (
-    <main>
+    <DocLayout>
       <section className="page-header">
         <p className="eyebrow">About</p>
         <h1>AIPM is package management for AI work inside projects.</h1>
@@ -41,6 +42,6 @@ export default function AboutPage() {
           managing the files and instructions your AI tools use while working in a project.
         </p>
       </article>
-    </main>
+    </DocLayout>
   );
 }

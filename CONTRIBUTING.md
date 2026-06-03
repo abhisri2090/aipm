@@ -8,3 +8,5 @@ Thank you for your interest in contributing.
 4. Open a pull request with a clear description
 
 Package names must use `@scope/name`. See `InitialDesignPlan/aipm_mvp_skill_registry_plan_v0.md`.
+
+If your change touches publishing, auth, package storage, install behavior, or public package docs, also read `SECURITY.md` and avoid committing secrets, tenant IDs, storage keys, connection strings, private keys, or publish profiles.

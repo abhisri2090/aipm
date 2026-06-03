@@ -1,7 +1,7 @@
 import { PackageDashboard } from "../../../../../components/dashboard-ui";
-import { pageMetadata } from "../../../../../lib/seo";
+import { noIndexPageMetadata } from "../../../../../lib/seo";
 
-export const metadata = pageMetadata({
+export const metadata = noIndexPageMetadata({
   title: "Package Dashboard",
   description: "Generate publish tokens for a reserved AIPM package.",
 });

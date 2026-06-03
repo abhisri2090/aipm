@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
 
 const sources = [
@@ -95,7 +96,7 @@ export const metadata = pageMetadata({
 
 export default function AiPracticesPage() {
   return (
-    <main>
+    <DocLayout wide>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -167,6 +168,6 @@ export default function AiPracticesPage() {
           </div>
         </section>
       </section>
-    </main>
+    </DocLayout>
   );
 }

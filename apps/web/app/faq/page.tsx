@@ -1,4 +1,5 @@
 import { pageMetadata } from "../../lib/seo";
+import { DocLayout } from "../../components/doc-layout";
 
 export const metadata = pageMetadata({
   title: "AIPM FAQ",
@@ -9,7 +10,7 @@ export const metadata = pageMetadata({
 const faqs = [
   [
     "The registry is not reachable.",
-    "Check the registry URL and run curl <registry-url>/health. If it fails, the server or network route is down.",
+    "Check the status page or run curl <registry-url>/health and curl <registry-url>/ready. Health checks the API process; ready checks registry dependencies.",
   ],
   [
     "Package not found.",
@@ -32,6 +33,18 @@ const faqs = [
     "Not yet. Current packages are public registry packages. Keep private prompts, credentials, customer data, and internal-only files out of published skills.",
   ],
   [
+    "How do I avoid leaking files while publishing?",
+    "Run aipm publish preview, review the included file list, and use .aipmignore for secrets, private notes, logs, caches, screenshots, exports, and customer data.",
+  ],
+  [
+    "What account data does AIPM use?",
+    "AIPM uses account identity for publishing, profile details for publisher accountability, organization and package records for registry ownership, and short-lived tokens for CLI pushes.",
+  ],
+  [
+    "What content is not allowed in public packages?",
+    "Do not publish secrets, private prompts, customer data, confidential documents, malware, deceptive package content, or names that impersonate another person, company, project, or tool.",
+  ],
+  [
     "My publish token expired.",
     "Generate a fresh token from the package dashboard. Tokens are intentionally short-lived and are not stored by the CLI.",
   ],
@@ -51,7 +64,7 @@ const faqs = [
 
 export default function FaqPage() {
   return (
-    <main>
+    <DocLayout>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -83,6 +96,6 @@ export default function FaqPage() {
           </article>
         ))}
       </section>
-    </main>
+    </DocLayout>
   );
 }

@@ -1,7 +1,7 @@
 import { NewPackageForm } from "../../../../../../components/dashboard-ui";
-import { pageMetadata } from "../../../../../../lib/seo";
+import { noIndexPageMetadata } from "../../../../../../lib/seo";
 
-export const metadata = pageMetadata({
+export const metadata = noIndexPageMetadata({
   title: "Reserve Package",
   description: "Reserve an AIPM package name for publishing.",
 });
