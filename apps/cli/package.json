@@ -1,6 +1,6 @@
 {
   "name": "@aipm-registry/cli",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Command line tool for installing AIPM AI skills into supported editors and assistants.",
   "license": "Apache-2.0",
   "type": "module",
@@ -13,8 +13,12 @@
   "bugs": {
     "url": "https://github.com/abhisri2090/aipm/issues"
   },
+  "main": "./dist/bin.cjs",
   "bin": {
     "aipm": "./dist/bin.cjs"
+  },
+  "exports": {
+    ".": "./dist/bin.cjs"
   },
   "files": [
     "dist",
