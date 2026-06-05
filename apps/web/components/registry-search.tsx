@@ -8,6 +8,13 @@ import cards from "../app/cards.module.css";
 import shell from "../app/page-shell.module.css";
 import styles from "./registry-search.module.css";
 
+function publicSearchError(error: unknown): string {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "Registry API timed out. It may be offline or starting.";
+  }
+  return "Search unavailable";
+}
+
 export function RegistrySearch({
   initialPackages,
   initialQuery = "",
@@ -37,16 +44,20 @@ export function RegistrySearch({
     setStatus("Searching");
     const params = new URLSearchParams({ limit: compact ? "3" : "50" });
     if (nextQuery) params.set("q", nextQuery);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 5000);
     try {
-      const response = await fetch(`/v1/packages?${params}`);
+      const response = await fetch(`/v1/packages?${params}`, { signal: controller.signal });
       if (!response.ok) throw new Error(`Search failed: ${response.status}`);
       const data = (await response.json()) as { packages?: PackageSummary[] };
       const nextPackages = data.packages ?? [];
       setPackages(nextPackages);
       setStatus(nextPackages.length === 1 ? "1 package found" : `${nextPackages.length} packages found`);
-    } catch {
+    } catch (error) {
       setPackages([]);
-      setStatus("Search unavailable");
+      setStatus(publicSearchError(error));
+    } finally {
+      window.clearTimeout(timeout);
     }
   }, [compact]);
 
@@ -104,7 +115,9 @@ export function RegistrySearch({
           ))
         ) : (
           <div className={shell.empty}>
-            No public skills are listed yet. Demo packages are hidden while starter skills are prepared.
+            {status === "Search unavailable" || status.includes("timed out")
+              ? "The public registry API is not responding right now. Docs and guides are still available."
+              : "No public skills are listed yet. Demo packages are hidden while starter skills are prepared."}
           </div>
         )}
       </div>

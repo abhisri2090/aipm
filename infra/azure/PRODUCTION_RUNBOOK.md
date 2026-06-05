@@ -8,12 +8,26 @@ curl https://api.aipm-registry.com/ready
 ./infra/azure/verify-web-cutover.sh
 ```
 
-If `api.aipm-registry.com` times out, the registry VM may be stopped:
+If `api.aipm-registry.com` times out, check the VM state without starting
+anything:
 
 ```bash
-az vm get-instance-view -g aipm-staging -n aipm-registry-vm \
-  --query "instanceView.statuses[?starts_with(code,'PowerState/')].displayStatus" -o tsv
+./infra/azure/check-registry-api-status.sh
+```
+
+If the script reports `VM deallocated`, the API is intentionally offline and
+the Vercel website can only serve docs/static pages. Start the VM only when you
+want the paid API host online:
+
+```bash
 ./infra/azure/ensure-registry-vm-running.sh
+```
+
+After publishing, testing, or maintenance is finished, deallocate the VM again
+if you want to return to the low-cost offline API state:
+
+```bash
+CONFIRM_DEALLOCATE=true ./infra/azure/deallocate-registry-vm.sh
 ```
 
 `/health` confirms the process is alive. `/ready` confirms the metadata and
@@ -55,6 +69,30 @@ aipm-storage-connection-string
 aipm-database-url
 aipm-publish-token-sha256
 ```
+
+Optional secrets for account login and the admin usage dashboard:
+
+```txt
+aipm-github-client-id
+aipm-github-client-secret
+aipm-session-secret
+AIPM-ADMIN-PASSWORD-SHA256
+AIPM-ADMIN-ALLOWED-USERNAMES
+```
+
+Generate the admin password hash with:
+
+```bash
+printf '%s' 'your-admin-password' | shasum -a 256 | awk '{print $1}'
+```
+
+Store allowlisted AIPM usernames as a comma-separated value, for example
+`abhisrivastava,teammate-user`. Each user gets an AIPM username automatically on
+first GitHub sign-in. Find yours on the dashboard profile or in `GET /v1/me`.
+
+The admin page lives at `/admin`. Users sign in with GitHub, enter the shared
+admin password, and the API checks both the hash and the allowlist before
+issuing a short-lived admin session cookie.
 
 The VM's system-assigned managed identity needs `Key Vault Secrets User` on the
 vault. The deploy script fetches the secrets through that identity during the

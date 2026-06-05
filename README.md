@@ -128,7 +128,7 @@ npm install -g @aipm-registry/cli
 - Tools: `cursor`, `claude` (auto-detect or prompt)
 - Publisher accounts: GitHub sign-in, profile, org namespaces, package reservations, and 5-minute publish tokens
 - Public website: search, package pages, dashboard, docs, SEO pages, security/privacy/terms/status, and roadmap
-- Monorepo + CI + local Postgres dev stack + Azure/Vercel deployment paths
+- Monorepo + CI + repo secret scanning + local Postgres dev stack + Azure/Vercel deployment paths
 
 Details: `InitialDesignPlan/aipm_mvp_skill_registry_plan_v0.md`.
 
@@ -139,7 +139,7 @@ Work is ordered so each step is usable on its own. Full plan: `InitialDesignPlan
 ### Near term — reliability and release polish
 
 - **Production verification** — keep HTTPS, headers, `/health`, `/ready`, search, install, and publish-auth checks automated
-- **Hardening** — publish consistency, rollback, backup/restore drills, golden-file adapter tests, E2E publish → install
+- **Hardening** — publish consistency, rollback, backup/restore drills, stronger scan coverage, golden-file adapter tests, E2E publish → install
 - **CLI lifecycle** — `update`, `remove`, `verify`, `clean`, `pack`
 - **Dashboard polish** — clearer failed-publish feedback, package version history, token expiry states, and profile completeness
 - **Distribution** — clearer Windows/macOS install story and release checklist

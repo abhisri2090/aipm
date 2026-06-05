@@ -316,6 +316,27 @@ For production smoke checks, run:
 ./infra/azure/verify-production.sh https://aipm-registry.com
 ```
 
+If the production API appears down, check state first without starting paid
+compute:
+
+```bash
+./infra/azure/check-registry-api-status.sh
+```
+
+If it reports `VM deallocated`, the docs site on Vercel can still load but
+registry search, dashboard actions, install, and publish calls will fail until
+the VM is started intentionally:
+
+```bash
+./infra/azure/ensure-registry-vm-running.sh
+```
+
+When the API work is finished and you want to stop paid compute again:
+
+```bash
+CONFIRM_DEALLOCATE=true ./infra/azure/deallocate-registry-vm.sh
+```
+
 ## Local Development
 
 Local dev uses filesystem package storage unless `AZURE_STORAGE_CONNECTION_STRING`

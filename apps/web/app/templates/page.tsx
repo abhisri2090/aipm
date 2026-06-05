@@ -2,6 +2,7 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
+import { CLI_INSTALL_COMMAND } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 const templates = [
@@ -107,6 +108,11 @@ export default function TemplatesPage() {
       </section>
 
       <article className={cn(docs.doc, docs.wideDoc)}>
+        <section>
+          <h2>Install the CLI first</h2>
+          <p>Templates are created by the AIPM CLI, so install it before running template commands.</p>
+          <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version`} />
+        </section>
         <section>
           <h2>After you choose a template</h2>
           <CodeBlock

@@ -42,7 +42,8 @@ export default async function HomePage() {
         <h1 id="hero-title">Install AI skills like packages.</h1>
         <p className={shell.lede}>
           AIPM gives you a registry and CLI for AI skills. Install prompts, rules, MCP setup, and
-          tool files into a repo for Cursor, Claude, Codex, and more. No manual copy and paste.
+          tool files into a repo for Cursor, Claude, Codex, and more. Start with one command, then
+          keep reusable AI setup with your project.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="#get-started">
@@ -72,7 +73,7 @@ export default async function HomePage() {
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>1</span>
             <h3>Install the CLI</h3>
-            <CodeBlock code={CLI_INSTALL_COMMAND} />
+            <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version`} />
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>2</span>
@@ -107,7 +108,7 @@ export default async function HomePage() {
         </Link>
         <Link className={cards.guideCard} href="/publish">
           <h2>Publish skills</h2>
-          <p>Create a manifest, choose supported AI tools, and publish new versions.</p>
+          <p>Create an account, reserve a package name, generate a token, and publish new versions.</p>
         </Link>
         <Link className={cards.guideCard} href="/resources">
           <h2>Learn the basics</h2>
@@ -116,6 +117,10 @@ export default async function HomePage() {
         <Link className={cards.guideCard} href="/discoverability">
           <h2>Get discovered</h2>
           <p>Write names, descriptions, and examples that help users find the right AI skill.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/templates">
+          <h2>Start from templates</h2>
+          <p>Create package folders for review, issue summary, release notes, or blank skills.</p>
         </Link>
         <Link className={cards.guideCard} href="/faq">
           <h2>Troubleshoot</h2>

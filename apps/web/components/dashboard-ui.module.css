@@ -1,3 +1,7 @@
+.dashboardPageFull {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .dashboardPage {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -107,6 +111,22 @@
   padding-top: 18px;
 }
 
+.sidebarHelp {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+  font-size: 13px;
+}
+
+.sidebarHelp span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .dashboardWorkspace {
   min-width: 0;
   padding: 34px;
@@ -179,6 +199,33 @@
 
 .metricCard p {
   margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.nextActionPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 22px;
+}
+
+.nextActionPanel h2,
+.nextActionPanel p {
+  margin: 0;
+}
+
+.nextActionPanel h2 {
+  margin-bottom: 8px;
+}
+
+.nextActionPanel p {
+  max-width: 720px;
   color: var(--muted);
   line-height: 1.5;
 }
@@ -332,6 +379,11 @@
   }
 
   .dashboardHero {
+    flex-direction: column;
+  }
+
+  .nextActionPanel {
+    align-items: flex-start;
     flex-direction: column;
   }
 

@@ -7,6 +7,7 @@ import {
   deleteSession,
   getUserBySession,
   getValidPublishToken,
+  ensureUserUsername,
   upsertGithubUser,
   type UserRow,
 } from "./db.js";
@@ -41,14 +42,16 @@ type GithubUser = {
 export function resolveUserAuthConfig(env: NodeJS.ProcessEnv = process.env): UserAuthConfig {
   const publicSiteUrl = env.AIPM_PUBLIC_SITE_URL ?? "https://aipm-registry.com";
   const apiUrl = env.AIPM_API_URL ?? "https://api.aipm-registry.com";
+  const isProduction = env.NODE_ENV === "production";
+  const cookieDomain = env.AIPM_COOKIE_DOMAIN?.trim();
   return {
     githubClientId: env.GITHUB_CLIENT_ID,
     githubClientSecret: env.GITHUB_CLIENT_SECRET,
     sessionSecret: env.AIPM_SESSION_SECRET,
     publicSiteUrl,
     apiUrl,
-    cookieDomain: env.AIPM_COOKIE_DOMAIN ?? ".aipm-registry.com",
-    secureCookies: env.NODE_ENV === "production",
+    cookieDomain: cookieDomain || (isProduction ? ".aipm-registry.com" : undefined),
+    secureCookies: isProduction,
   };
 }
 
@@ -60,7 +63,7 @@ function randomToken(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");
 }
 
-function parseCookies(request: FastifyRequest): Record<string, string> {
+export function parseRequestCookies(request: FastifyRequest): Record<string, string> {
   const header = request.headers.cookie;
   if (!header) return {};
   return Object.fromEntries(
@@ -84,7 +87,7 @@ function cookieOptions(config: UserAuthConfig, maxAgeSeconds?: number): string {
   return parts.join("; ");
 }
 
-function setCookie(
+export function setAuthCookie(
   reply: FastifyReply,
   config: UserAuthConfig,
   name: string,
@@ -101,8 +104,8 @@ function setCookie(
   reply.header("Set-Cookie", [...cookies, nextCookie]);
 }
 
-function clearCookie(reply: FastifyReply, config: UserAuthConfig, name: string): void {
-  setCookie(reply, config, name, "", 0);
+export function clearAuthCookie(reply: FastifyReply, config: UserAuthConfig, name: string): void {
+  setAuthCookie(reply, config, name, "", 0);
 }
 
 function constantTimeMatch(a: string, b: string): boolean {
@@ -119,9 +122,11 @@ function readBearerToken(request: FastifyRequest): string | null {
 }
 
 export async function getCurrentUser(auth: AccountAuth, request: FastifyRequest): Promise<UserRow | null> {
-  const sessionId = parseCookies(request)[SESSION_COOKIE];
+  const sessionId = parseRequestCookies(request)[SESSION_COOKIE];
   if (!sessionId) return null;
-  return getUserBySession(auth.pool, sessionId);
+  const user = await getUserBySession(auth.pool, sessionId);
+  if (!user) return null;
+  return ensureUserUsername(auth.pool, user);
 }
 
 export async function requireCurrentUser(
@@ -156,7 +161,7 @@ export function githubStartUrl(config: UserAuthConfig, state: string): string {
 
 export function startGithubLogin(auth: AccountAuth, reply: FastifyReply): void {
   const state = randomToken(24);
-  setCookie(reply, auth.config, OAUTH_STATE_COOKIE, state, 600);
+  setAuthCookie(reply, auth.config, OAUTH_STATE_COOKIE, state, 600);
   reply.redirect(githubStartUrl(auth.config, state));
 }
 
@@ -165,7 +170,7 @@ export async function finishGithubLogin(
   request: FastifyRequest<{ Querystring: { code?: string; state?: string } }>,
   reply: FastifyReply,
 ): Promise<void> {
-  const expectedState = parseCookies(request)[OAUTH_STATE_COOKIE];
+  const expectedState = parseRequestCookies(request)[OAUTH_STATE_COOKIE];
   if (!request.query.code || !request.query.state || !expectedState || !constantTimeMatch(request.query.state, expectedState)) {
     return reply.status(400).send({ error: "Invalid GitHub login state" });
   }
@@ -206,16 +211,16 @@ export async function finishGithubLogin(
   const sessionId = randomToken(32);
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await createSession(auth.pool, { id: sessionId, userId: user.id, expiresAt });
-  clearCookie(reply, auth.config, OAUTH_STATE_COOKIE);
-  setCookie(reply, auth.config, SESSION_COOKIE, sessionId, SESSION_DAYS * 24 * 60 * 60);
+  clearAuthCookie(reply, auth.config, OAUTH_STATE_COOKIE);
+  setAuthCookie(reply, auth.config, SESSION_COOKIE, sessionId, SESSION_DAYS * 24 * 60 * 60);
   reply.redirect(`${auth.config.publicSiteUrl}/dashboard`);
 }
 
 export async function logout(auth: AccountAuth | null, request: FastifyRequest, reply: FastifyReply): Promise<void> {
   if (auth) {
-    const sessionId = parseCookies(request)[SESSION_COOKIE];
+    const sessionId = parseRequestCookies(request)[SESSION_COOKIE];
     if (sessionId) await deleteSession(auth.pool, sessionId);
-    clearCookie(reply, auth.config, SESSION_COOKIE);
+    clearAuthCookie(reply, auth.config, SESSION_COOKIE);
   }
   reply.send({ ok: true });
 }

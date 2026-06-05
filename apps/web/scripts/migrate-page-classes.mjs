@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* global console */
 import { readFileSync, writeFileSync } from "node:fs";
 import { globSync } from "node:fs";
 import { dirname, join, relative } from "node:path";

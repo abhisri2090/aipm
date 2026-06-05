@@ -17,6 +17,7 @@ import {
   createOrg,
   createPool,
   ensureSchema,
+  getInternalStats,
   getOwnedOrg,
   getOwnedPackageReservation,
   getPublicPackagePublisher,
@@ -38,6 +39,18 @@ import {
   verifyScopedPublishToken,
   type AccountAuth,
 } from "./user-auth.js";
+import {
+  clearAdminLoginAttempts,
+  finishAdminSession,
+  getCurrentAdminUser,
+  isAdminAuthConfigured,
+  isAllowedAdminUsername,
+  registerAdminLoginAttempt,
+  requireCurrentAdminUser,
+  resolveAdminAuthConfig,
+  startAdminSession,
+  verifyAdminPassword,
+} from "./admin-auth.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const APP_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -105,6 +118,7 @@ export async function createApp(): Promise<FastifyInstance> {
   const metadata = await createMetadataStore(dataDir);
   const publishAuth = resolvePublishAuthConfig();
   const accountAuth = await createAccountAuth();
+  const adminAuthConfig = resolveAdminAuthConfig();
 
   const app = Fastify({
     logger: true,
@@ -163,12 +177,68 @@ export async function createApp(): Promise<FastifyInstance> {
 
   app.post("/v1/auth/logout", async (request, reply) => logout(accountAuth, request, reply));
 
+  app.get("/v1/admin/session", async (request, reply) => {
+    if (!accountAuth || !isAdminAuthConfigured(adminAuthConfig)) {
+      return reply.status(503).send({ error: "Admin access is not configured" });
+    }
+    const user = await getCurrentAdminUser(accountAuth, request);
+    if (!user || !isAllowedAdminUsername(user.username, adminAuthConfig.allowedUsernames)) {
+      return reply.status(401).send({ error: "Admin session required" });
+    }
+    return {
+      username: user.username,
+      githubLogin: user.github_login,
+      name: user.name,
+      avatarUrl: user.avatar_url,
+    };
+  });
+
+  app.post<{ Body: { password?: string } }>("/v1/admin/login", async (request, reply) => {
+    if (!accountAuth || !isAdminAuthConfigured(adminAuthConfig)) {
+      return reply.status(503).send({ error: "Admin access is not configured" });
+    }
+    const attempt = registerAdminLoginAttempt(request);
+    if (!attempt.allowed) {
+      return reply.status(429).send({
+        error: "Too many admin login attempts",
+        retryAfterSeconds: attempt.retryAfterSeconds,
+      });
+    }
+    const user = await getCurrentUser(accountAuth, request);
+    if (!user) return reply.status(401).send({ error: "GitHub login required" });
+    const password = request.body?.password?.trim();
+    if (!password || !verifyAdminPassword(password, adminAuthConfig.passwordSha256)) {
+      return reply.status(403).send({ error: "Admin access denied" });
+    }
+    if (!isAllowedAdminUsername(user.username, adminAuthConfig.allowedUsernames)) {
+      return reply.status(403).send({ error: "Admin access denied" });
+    }
+    clearAdminLoginAttempts(request);
+    await startAdminSession(accountAuth, user, reply);
+    return {
+      username: user.username,
+      githubLogin: user.github_login,
+      name: user.name,
+      avatarUrl: user.avatar_url,
+    };
+  });
+
+  app.post("/v1/admin/logout", async (request, reply) => finishAdminSession(accountAuth, request, reply));
+
+  app.get("/v1/admin/stats", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+    if (!user) return;
+    return getInternalStats(accountAuth.pool);
+  });
+
   app.get("/v1/me", async (request, reply) => {
     if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
     const user = await getCurrentUser(accountAuth, request);
     if (!user) return reply.status(401).send({ error: "Login required" });
     return {
       id: user.id,
+      username: user.username,
       githubLogin: user.github_login,
       name: user.name,
       avatarUrl: user.avatar_url,

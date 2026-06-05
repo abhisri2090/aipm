@@ -2,6 +2,7 @@
   "name": "aipm",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "description": "AI package manager — monorepo",
   "license": "Apache-2.0",
   "repository": {
@@ -15,13 +16,17 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
+    "test": "turbo run test && pnpm test:root",
+    "test:root": "vitest run scripts/*.test.mjs",
+    "lint": "turbo run lint && pnpm lint:root",
+    "lint:root": "eslint scripts eslint.config.js prettier.config.js",
     "typecheck": "turbo run typecheck",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "aipm": "node apps/cli/dist/bin.cjs",
     "registry": "pnpm --filter @aipm-registry/registry-api build && pnpm --filter @aipm-registry/registry-api start",
     "release:cli:dry-run": "pnpm --filter @aipm-registry/cli build && pnpm --filter @aipm-registry/cli publish --dry-run --access public --no-git-checks",
+    "release:cli:pack": "pnpm --filter @aipm-registry/cli build && rm -rf /tmp/aipm-cli-pack && mkdir -p /tmp/aipm-cli-pack && pnpm --dir apps/cli pack --pack-destination /tmp/aipm-cli-pack",
     "release:cli:publish": "pnpm --filter @aipm-registry/cli build && pnpm --filter @aipm-registry/cli publish --access public",
     "cli:link": "pnpm build && npm link --prefix apps/cli",
     "cli:unlink": "npm unlink -g @aipm-registry/cli"

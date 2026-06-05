@@ -121,6 +121,12 @@ describe("registry API production behavior", () => {
     expect(detail.json()).toMatchObject({ publisher: null });
   });
 
+  it("keeps admin stats behind account services", async () => {
+    const response = await app!.inject({ method: "GET", url: "/v1/admin/stats" });
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({ error: "Account services are not configured" });
+  });
+
   it("hides demo packages from public listing by default", async () => {
     const tarball = await createTarball("1.0.2", "@team/sample-skill");
     const payload = multipartPayload(tarball);

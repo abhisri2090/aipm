@@ -32,9 +32,28 @@ export default function PublishPage() {
 
       <article className={docs.doc}>
         <h2>Install the CLI</h2>
-        <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version\naipm doctor`} />
+        <p>Install the CLI before running any aipm command.</p>
+        <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version\naipm doctor # (optional)`} />
 
-        <h2>1. Create a skill folder</h2>
+        <h2>1. Create an account and reserve a package name</h2>
+        <ol className={docs.flowList}>
+          <li>Sign in with GitHub.</li>
+          <li>Create an org namespace, such as @team.</li>
+          <li>Reserve a package name, such as @team/review-helper.</li>
+          <li>Open the package dashboard. You will use it later to generate a 5-minute publish token.</li>
+        </ol>
+
+        <h2>2. Create a skill folder</h2>
+        <p>
+          The fastest path is to let the CLI create a folder named after the skill. It includes
+          aipm.manifest.json, SKILL.md, and .aipmignore.
+        </p>
+        <CodeBlock
+          code={`aipm publish init --name @team/review-helper --template code-review
+cd review-helper`}
+        />
+
+        <h2>Manifest shape</h2>
         <p>Each skill needs an aipm.manifest.json file and a main file, usually SKILL.md.</p>
         <CodeBlock
           code={`{
@@ -49,19 +68,9 @@ export default function PublishPage() {
 }`}
         />
 
-        <h2>2. Create an account and reserve a package name</h2>
-        <ol className={docs.flowList}>
-          <li>Sign in with GitHub.</li>
-          <li>Create an org namespace, such as @team.</li>
-          <li>Reserve a package name, such as @team/review-helper.</li>
-          <li>Generate a 5-minute publish token.</li>
-        </ol>
-
         <h2>3. Check and publish from the CLI</h2>
         <CodeBlock
-          code={`aipm publish init --name @team/review-helper --template code-review
-cd review-helper
-aipm publish explain # (optional)
+          code={`aipm publish explain # (optional)
 aipm publish add .
 aipm publish status # (optional)
 aipm publish preview # (optional)
@@ -99,7 +108,8 @@ AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
         <h2>Publish an existing AI-tool skill</h2>
         <p>
           If Cursor, Claude, Codex, or another AI tool already created skill files, import that file
-          or folder into an AIPM package folder.
+          or folder into an AIPM package folder. This copies the source into a new folder and creates
+          the AIPM manifest around it.
         </p>
         <CodeBlock
           code={`aipm publish import ~/.codex/skills/review-helper --name @team/review-helper
@@ -114,6 +124,7 @@ aipm publish preview # (optional)`}
           <li>Register an organization and reserve a package name such as @team/review-helper.</li>
           <li>Generate a publish token that is valid for 5 minutes.</li>
           <li>Use the CLI to check, stage, and push the skill files to the registry.</li>
+          <li>Open the package page and confirm the install command works for the expected target.</li>
         </ol>
 
         <h2>Target examples</h2>

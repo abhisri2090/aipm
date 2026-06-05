@@ -12,6 +12,7 @@ import dash from "./dashboard-ui.module.css";
 
 type Me = {
   id: string;
+  username: string;
   githubLogin: string;
   name: string | null;
   avatarUrl: string | null;
@@ -35,6 +36,17 @@ type PublishedPackageVersion = {
   targets: string[];
   createdAt: string;
 };
+
+function publicApiError(error: unknown): string {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "AIPM API timed out. The registry host may be offline or starting.";
+  }
+  if (error instanceof TypeError) {
+    return "AIPM API is unreachable. The website can still load, but account and publishing actions need the API online.";
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return "AIPM API is unavailable.";
+}
 
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
@@ -95,12 +107,13 @@ function LoadingShell() {
 }
 
 function LoginRequired({ message }: { message: string }) {
+  const apiOffline = message.includes("API") || message.includes("abort") || message.includes("unreachable");
   return (
     <main className={dash.dashboardPage}>
       <section className={dash.loginScreen}>
         <div>
           <p className={shell.eyebrow}>Dashboard</p>
-          <h1>Sign in to manage AIPM publishing.</h1>
+          <h1>{apiOffline ? "Publisher services are not reachable." : "Sign in to manage AIPM publishing."}</h1>
           <p className={shell.lede}>{message}</p>
           <div className={shell.actions}>
             <Link className={shell.button} href="/login">
@@ -122,7 +135,7 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "packages" | "profile";
+  active: "overview" | "orgs" | "packages" | "profile" | "guide";
   children: (context: { me: Me; orgs: Org[] }) => ReactNode;
   intro?: string;
   title: string;
@@ -137,7 +150,7 @@ function DashboardShell({
         setMe(user);
         setOrgs(orgData.orgs);
       })
-      .catch((err: Error) => setError(err.message));
+      .catch((err: unknown) => setError(publicApiError(err)));
   }, []);
 
   if (error) return <LoginRequired message={error} />;
@@ -145,8 +158,10 @@ function DashboardShell({
 
   const navItems = [
     { href: "/dashboard", id: "overview", label: "Overview" },
-    { href: "/dashboard/orgs/new", id: "orgs", label: "Create org" },
+    { href: "/dashboard/orgs/new", id: "orgs", label: "Organizations" },
+    { href: "/dashboard/packages", id: "packages", label: "Packages" },
     { href: "/dashboard/profile", id: "profile", label: "Profile" },
+    { href: "/publish/guide", id: "guide", label: "Publishing guide" },
   ];
 
   return (
@@ -159,8 +174,8 @@ function DashboardShell({
         <div className={cn(dash.accountCard, dash.accountCardCompact)}>
           <Avatar user={me} />
           <div>
-            <strong>{me.name ?? me.githubLogin}</strong>
-            <span>@{me.githubLogin}</span>
+            <strong>{me.name ?? me.username}</strong>
+            <span>{me.username}</span>
           </div>
         </div>
         <nav className={dash.dashboardNav} aria-label="Dashboard">
@@ -173,6 +188,10 @@ function DashboardShell({
         <div className={dash.sidebarNote}>
           <strong>{orgs.length}</strong>
           <span>{orgs.length === 1 ? "org" : "orgs"} connected</span>
+        </div>
+        <div className={dash.sidebarHelp}>
+          <strong>Publishing path</strong>
+          <span>Profile, org, package name, token, CLI push.</span>
         </div>
       </aside>
 
@@ -242,6 +261,11 @@ export function DashboardHome() {
     >
       {({ me, orgs }) => {
         const packageCount = orgs.length;
+        const nextAction = !me.name
+          ? { href: "/dashboard/profile", label: "Complete profile" }
+          : orgs.length === 0
+            ? { href: "/dashboard/orgs/new", label: "Create org" }
+            : { href: "/dashboard/packages", label: "Manage packages" };
         return (
           <>
             <section className={dash.metricGrid}>
@@ -262,6 +286,20 @@ export function DashboardHome() {
               </article>
             </section>
 
+            <section className={dash.nextActionPanel}>
+              <div>
+                <p className={shell.eyebrow}>Next best action</p>
+                <h2>Move one step closer to publishing.</h2>
+                <p>
+                  AIPM keeps publishing gated by identity, namespace ownership, package reservation,
+                  and short-lived CLI tokens.
+                </p>
+              </div>
+              <Link className={shell.button} href={nextAction.href}>
+                {nextAction.label}
+              </Link>
+            </section>
+
             <section className={dash.dashboardGrid}>
               <article className={dash.dashboardPanel}>
                 <div className={shell.sectionHeading}>
@@ -272,19 +310,19 @@ export function DashboardHome() {
                 </div>
                 <ol className={dash.workflowList}>
                   <li>
-                    <strong>Complete profile</strong>
+                    <strong>1. Complete profile</strong>
                     <span>Add name and avatar for publisher trust.</span>
                   </li>
                   <li>
-                    <strong>Create org</strong>
+                    <strong>2. Create org</strong>
                     <span>Reserve your npm-style package scope.</span>
                   </li>
                   <li>
-                    <strong>Reserve skill</strong>
+                    <strong>3. Reserve skill</strong>
                     <span>Lock a package name before publishing.</span>
                   </li>
                   <li>
-                    <strong>Push from CLI</strong>
+                    <strong>4. Push from CLI</strong>
                     <span>Generate token, then publish the staged skill.</span>
                   </li>
                 </ol>
@@ -313,13 +351,134 @@ export function DashboardHome() {
                     ))}
                   </div>
                 ) : (
-                  <div className={shell.empty}>No orgs yet. Create one to reserve your first skill name.</div>
+                  <div className={shell.empty}>
+                    No orgs yet. Create one to reserve your first skill name and unlock package tokens.
+                  </div>
                 )}
               </article>
             </section>
           </>
         );
       }}
+    </DashboardShell>
+  );
+}
+
+function PackageOverviewList({ orgs }: { orgs: Org[] }) {
+  const [packages, setPackages] = useState<ReservedPackage[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(orgs.length > 0);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (orgs.length === 0) {
+      setLoading(false);
+      setPackages([]);
+      return;
+    }
+
+    setLoading(true);
+    Promise.all(orgs.map((org) => api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)))
+      .then((results) => {
+        if (cancelled) return;
+        setPackages(results.flatMap((result) => result.packages));
+        setError("");
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(publicApiError(err));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orgs]);
+
+  if (loading) return <div className={shell.empty}>Loading package reservations...</div>;
+  if (error) return <p className={shell.notice}>{error}</p>;
+  if (orgs.length === 0) {
+    return (
+      <div className={shell.empty}>
+        Create an organization first. Packages are reserved inside org namespaces like @team/review-helper.
+      </div>
+    );
+  }
+  if (packages.length === 0) {
+    return (
+      <div className={shell.empty}>
+        No packages reserved yet. Open an org, reserve a skill name, then generate a publish token.
+      </div>
+    );
+  }
+
+  return (
+    <div className={dash.resourceList}>
+      {packages.map((pkg) => (
+        <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
+          <span>
+            <strong>{pkg.name}</strong>
+            <small>Reserved for token-based publishing</small>
+          </span>
+          <small>{shortDate(pkg.createdAt)}</small>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export function PackagesDashboard() {
+  return (
+    <DashboardShell
+      active="packages"
+      intro="See reserved package names across your organizations and open each package to generate a publish token."
+      title="Packages"
+    >
+      {({ orgs }) => (
+        <section className={dash.dashboardGrid}>
+          <article className={dash.dashboardPanel}>
+            <div className={shell.sectionHeading}>
+              <div>
+                <p className={shell.eyebrow}>Reserved names</p>
+                <h2>Your packages</h2>
+              </div>
+              {orgs[0] ? (
+                <Link className={shell.button} href={`/dashboard/orgs/${orgs[0].slug}/packages/new`}>
+                  Reserve package
+                </Link>
+              ) : (
+                <Link className={shell.button} href="/dashboard/orgs/new">
+                  Create org
+                </Link>
+              )}
+            </div>
+            <PackageOverviewList orgs={orgs} />
+          </article>
+          <article className={dash.dashboardPanel}>
+            <p className={shell.eyebrow}>How packages ship</p>
+            <h2>Token-based CLI releases</h2>
+            <ol className={dash.workflowList}>
+              <li>
+                <strong>Reserve</strong>
+                <span>Claim the package name before anyone publishes it.</span>
+              </li>
+              <li>
+                <strong>Prepare</strong>
+                <span>Create or import the skill folder locally.</span>
+              </li>
+              <li>
+                <strong>Validate</strong>
+                <span>Stage files, preview public content, and validate the bundle.</span>
+              </li>
+              <li>
+                <strong>Push</strong>
+                <span>Generate a 5-minute token and publish from the CLI.</span>
+              </li>
+            </ol>
+          </article>
+        </section>
+      )}
     </DashboardShell>
   );
 }
@@ -364,6 +523,9 @@ export function NewOrgForm() {
           <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Bazzi Games" value={name} />
           {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Create organization</button>
+          <p className={dash.fieldHelp}>
+            After this, reserve your first package name inside the org namespace.
+          </p>
         </form>
       )}
     </DashboardShell>
@@ -377,7 +539,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
   useEffect(() => {
     api<{ packages: ReservedPackage[] }>(`/v1/orgs/${orgSlug}/packages`)
       .then((data) => setPackages(data.packages))
-      .catch((err: Error) => setError(err.message));
+      .catch((err: unknown) => setError(publicApiError(err)));
   }, [orgSlug]);
 
   return (
@@ -411,7 +573,9 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
               ))}
             </div>
           ) : (
-            <div className={shell.empty}>No packages reserved yet. Reserve a skill name before generating a token.</div>
+            <div className={shell.empty}>
+              No packages reserved yet. Reserve a skill name before generating a token or publishing from the CLI.
+            </div>
           )}
         </section>
       )}
@@ -456,6 +620,7 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
           <p className={dash.fieldHelp}>Use a short name, or paste the full package name such as @{orgSlug}/review-helper.</p>
           {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Reserve package</button>
+          <p className={dash.fieldHelp}>After reserving, the package page will show CLI commands and token generation.</p>
         </form>
       )}
     </DashboardShell>
@@ -476,7 +641,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
         setVersions(data.packages.filter((pkg) => pkg.name === packageName));
         setVersionsError("");
       })
-      .catch((err: Error) => setVersionsError(err.message));
+      .catch((err: unknown) => setVersionsError(publicApiError(err)));
   }, [packageName]);
 
   const command = useMemo(
@@ -578,7 +743,9 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
                 ))}
               </div>
             ) : (
-              <div className={shell.empty}>No public versions yet. Generate a token, publish from the CLI, then refresh.</div>
+              <div className={shell.empty}>
+                No public versions yet. Generate a token, publish from the CLI, then refresh this page.
+              </div>
             )}
           </article>
         </section>
@@ -602,9 +769,10 @@ export function ProfileSettings() {
         <section className={dash.dashboardGrid}>
           <article className={cn(dash.dashboardPanel, dash.profileCardLarge)}>
             <Avatar user={{ ...me, name: name || me.name, avatarUrl: avatarUrl || me.avatarUrl }} size="large" />
-            <h2>{name || me.name || me.githubLogin}</h2>
-            <p>@{me.githubLogin}</p>
-            <span>Connected through GitHub</span>
+            <h2>{name || me.name || me.username}</h2>
+            <p>{me.username}</p>
+            <span>GitHub @{me.githubLogin}</span>
+            <p>Public packages should feel accountable. Use a recognizable name and image for your publisher profile.</p>
           </article>
           <form
             className={cn(dash.dashboardPanel, dash.formPanel)}

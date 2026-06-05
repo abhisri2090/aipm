@@ -62,10 +62,14 @@ Before opening a pull request that changes publishing, auth, package storage, in
 pnpm build
 pnpm test
 pnpm lint
+pnpm scan:secrets
 pnpm --filter @aipm-registry/web verify:local
 ```
 
-Also scan changed files for secrets, tenant IDs, storage keys, connection strings, private keys, and publish profiles.
+`pnpm scan:secrets` checks tracked and untracked non-ignored files for common
+private keys, publish profiles, storage keys, SAS signatures, service tokens,
+and live database URLs. It allows documented placeholders and local development
+examples, but treat any finding as a blocker until it is removed or rotated.
 
 ## Current Product Limits
 

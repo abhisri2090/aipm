@@ -1,5 +1,6 @@
 import pg from "pg";
 import type { PackageManifest } from "@aipm-registry/schemas";
+import { nextUsernameCandidate, normalizeUsernameCandidate } from "./aipm-username.js";
 
 const { Pool } = pg;
 
@@ -18,11 +19,16 @@ export interface UserRow {
   id: string;
   github_id: string;
   github_login: string;
+  username: string;
   name: string | null;
   avatar_url: string | null;
   created_at: Date;
   updated_at: Date;
 }
+
+const USER_ROW_FIELDS =
+  "id, github_id, github_login, username, name, avatar_url, created_at, updated_at";
+const USER_ROW_SELECT = `users.${USER_ROW_FIELDS.replace(/, /g, ", users.")}`;
 
 export interface OrgRow {
   id: string;
@@ -81,11 +87,14 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
       id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
       github_id TEXT NOT NULL UNIQUE,
       github_login TEXT NOT NULL,
+      username TEXT,
       name TEXT,
       avatar_url TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users (username);
 
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
@@ -95,6 +104,15 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions (user_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions (expires_at);
+
+    CREATE TABLE IF NOT EXISTS admin_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_user_id ON admin_sessions (user_id);
+    CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at ON admin_sessions (expires_at);
 
     CREATE TABLE IF NOT EXISTS orgs (
       id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
@@ -133,6 +151,40 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_publish_tokens_hash ON publish_tokens (token_hash);
     CREATE INDEX IF NOT EXISTS idx_publish_tokens_expires_at ON publish_tokens (expires_at);
   `);
+  await backfillMissingUsernames(pool);
+}
+
+export async function allocateUsername(pool: pg.Pool, githubLogin: string): Promise<string> {
+  const base = normalizeUsernameCandidate(githubLogin);
+  for (let attempt = 1; attempt <= 200; attempt += 1) {
+    const candidate = nextUsernameCandidate(base, attempt);
+    const existing = await pool.query(`SELECT 1 FROM users WHERE username = $1`, [candidate]);
+    if ((existing.rowCount ?? 0) === 0) return candidate;
+  }
+  throw new Error("Unable to allocate a unique AIPM username");
+}
+
+export async function backfillMissingUsernames(pool: pg.Pool): Promise<void> {
+  const missing = await pool.query<Pick<UserRow, "id" | "github_login">>(
+    `SELECT id, github_login FROM users WHERE username IS NULL`,
+  );
+  for (const row of missing.rows) {
+    const username = await allocateUsername(pool, row.github_login);
+    await pool.query(`UPDATE users SET username = $2, updated_at = NOW() WHERE id = $1`, [row.id, username]);
+  }
+}
+
+export async function ensureUserUsername(pool: pg.Pool, user: UserRow): Promise<UserRow> {
+  if (user.username) return user;
+  const username = await allocateUsername(pool, user.github_login);
+  const result = await pool.query<UserRow>(
+    `UPDATE users
+     SET username = $2, updated_at = NOW()
+     WHERE id = $1
+     RETURNING ${USER_ROW_FIELDS}`,
+    [user.id, username],
+  );
+  return result.rows[0]!;
 }
 
 export async function insertPackageVersion(
@@ -213,16 +265,30 @@ export async function upsertGithubUser(
   pool: pg.Pool,
   user: { githubId: string; githubLogin: string; name?: string | null; avatarUrl?: string | null },
 ): Promise<UserRow> {
+  const existing = await pool.query<UserRow>(
+    `SELECT ${USER_ROW_FIELDS} FROM users WHERE github_id = $1`,
+    [user.githubId],
+  );
+  if (existing.rows[0]) {
+    const result = await pool.query<UserRow>(
+      `UPDATE users
+       SET github_login = $2,
+           name = COALESCE(users.name, $3),
+           avatar_url = COALESCE(users.avatar_url, $4),
+           updated_at = NOW()
+       WHERE github_id = $1
+       RETURNING ${USER_ROW_FIELDS}`,
+      [user.githubId, user.githubLogin, user.name ?? null, user.avatarUrl ?? null],
+    );
+    return ensureUserUsername(pool, result.rows[0]!);
+  }
+
+  const username = await allocateUsername(pool, user.githubLogin);
   const result = await pool.query<UserRow>(
-    `INSERT INTO users (github_id, github_login, name, avatar_url)
-     VALUES ($1, $2, $3, $4)
-     ON CONFLICT (github_id) DO UPDATE
-     SET github_login = EXCLUDED.github_login,
-         name = COALESCE(users.name, EXCLUDED.name),
-         avatar_url = COALESCE(users.avatar_url, EXCLUDED.avatar_url),
-         updated_at = NOW()
-     RETURNING id, github_id, github_login, name, avatar_url, created_at, updated_at`,
-    [user.githubId, user.githubLogin, user.name ?? null, user.avatarUrl ?? null],
+    `INSERT INTO users (github_id, github_login, username, name, avatar_url)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING ${USER_ROW_FIELDS}`,
+    [user.githubId, user.githubLogin, username, user.name ?? null, user.avatarUrl ?? null],
   );
   return result.rows[0]!;
 }
@@ -238,7 +304,7 @@ export async function updateUserProfile(
          avatar_url = $3,
          updated_at = NOW()
      WHERE id = $1
-     RETURNING id, github_id, github_login, name, avatar_url, created_at, updated_at`,
+     RETURNING ${USER_ROW_FIELDS}`,
     [userId, profile.name ?? null, profile.avatarUrl ?? null],
   );
   return result.rows[0]!;
@@ -261,11 +327,36 @@ export async function deleteSession(pool: pg.Pool, sessionId: string): Promise<v
 
 export async function getUserBySession(pool: pg.Pool, sessionId: string): Promise<UserRow | null> {
   const result = await pool.query<UserRow>(
-    `SELECT users.id, users.github_id, users.github_login, users.name, users.avatar_url,
-            users.created_at, users.updated_at
+    `SELECT ${USER_ROW_SELECT}
      FROM sessions
      JOIN users ON users.id = sessions.user_id
      WHERE sessions.id = $1 AND sessions.expires_at > NOW()`,
+    [sessionId],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function createAdminSession(
+  pool: pg.Pool,
+  session: { id: string; userId: string; expiresAt: Date },
+): Promise<void> {
+  await pool.query(`INSERT INTO admin_sessions (id, user_id, expires_at) VALUES ($1, $2, $3)`, [
+    session.id,
+    session.userId,
+    session.expiresAt,
+  ]);
+}
+
+export async function deleteAdminSession(pool: pg.Pool, sessionId: string): Promise<void> {
+  await pool.query(`DELETE FROM admin_sessions WHERE id = $1`, [sessionId]);
+}
+
+export async function getUserByAdminSession(pool: pg.Pool, sessionId: string): Promise<UserRow | null> {
+  const result = await pool.query<UserRow>(
+    `SELECT ${USER_ROW_SELECT}
+     FROM admin_sessions
+     JOIN users ON users.id = admin_sessions.user_id
+     WHERE admin_sessions.id = $1 AND admin_sessions.expires_at > NOW()`,
     [sessionId],
   );
   return result.rows[0] ?? null;
@@ -411,6 +502,79 @@ export async function getPublicPackagePublisher(
     [packageName],
   );
   return result.rows[0] ?? null;
+}
+
+export type InternalStats = {
+  users: number;
+  orgs: number;
+  reservedPackages: number;
+  publishedPackages: number;
+  publishedVersions: number;
+  recentUsers: Array<{ username: string; githubLogin: string; name: string | null; createdAt: string }>;
+  recentOrgs: Array<{ slug: string; name: string; createdAt: string }>;
+  recentPublished: Array<{ name: string; version: string; createdAt: string }>;
+};
+
+export async function getInternalStats(pool: pg.Pool): Promise<InternalStats> {
+  const [counts, recentUsers, recentOrgs, recentPublished] = await Promise.all([
+    pool.query<{
+      users: string;
+      orgs: string;
+      reserved_packages: string;
+      published_packages: string;
+      published_versions: string;
+    }>(`
+      SELECT
+        (SELECT COUNT(*)::text FROM users) AS users,
+        (SELECT COUNT(*)::text FROM orgs) AS orgs,
+        (SELECT COUNT(*)::text FROM package_reservations) AS reserved_packages,
+        (SELECT COUNT(DISTINCT name)::text FROM package_versions) AS published_packages,
+        (SELECT COUNT(*)::text FROM package_versions) AS published_versions
+    `),
+    pool.query<Pick<UserRow, "username" | "github_login" | "name" | "created_at">>(
+      `SELECT username, github_login, name, created_at
+       FROM users
+       ORDER BY created_at DESC
+       LIMIT 10`,
+    ),
+    pool.query<Pick<OrgRow, "slug" | "name" | "created_at">>(
+      `SELECT slug, name, created_at
+       FROM orgs
+       ORDER BY created_at DESC
+       LIMIT 10`,
+    ),
+    pool.query<Pick<PackageVersionRow, "name" | "version" | "created_at">>(
+      `SELECT name, version, created_at
+       FROM package_versions
+       ORDER BY created_at DESC
+       LIMIT 10`,
+    ),
+  ]);
+
+  const row = counts.rows[0]!;
+  return {
+    users: Number(row.users),
+    orgs: Number(row.orgs),
+    reservedPackages: Number(row.reserved_packages),
+    publishedPackages: Number(row.published_packages),
+    publishedVersions: Number(row.published_versions),
+    recentUsers: recentUsers.rows.map((user) => ({
+      username: user.username,
+      githubLogin: user.github_login,
+      name: user.name,
+      createdAt: user.created_at.toISOString(),
+    })),
+    recentOrgs: recentOrgs.rows.map((org) => ({
+      slug: org.slug,
+      name: org.name,
+      createdAt: org.created_at.toISOString(),
+    })),
+    recentPublished: recentPublished.rows.map((pkg) => ({
+      name: pkg.name,
+      version: pkg.version,
+      createdAt: pkg.created_at.toISOString(),
+    })),
+  };
 }
 
 export async function listPublicPackagePublishers(

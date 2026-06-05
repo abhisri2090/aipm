@@ -26,6 +26,13 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm lint
+      - run: pnpm scan:secrets
+
+      - name: Check Azure shell scripts
+        run: bash -n infra/azure/*.sh
+
+      - name: Verify CLI package tarball
+        run: pnpm release:cli:pack
 
       - name: Verify web surface
         run: |

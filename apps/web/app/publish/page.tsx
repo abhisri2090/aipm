@@ -41,6 +41,17 @@ export default function PublishPage() {
     "Public packages that help other developers install useful AI workflows.",
   ];
 
+  const publishingSteps = [
+    "Create an account with GitHub.",
+    "Create an org namespace, such as @team.",
+    "Reserve a skill package name, such as @team/review-helper.",
+    "Create or import a local skill folder.",
+    "Stage, preview, and validate the files that will become public.",
+    "Generate a 5-minute publish token in the dashboard.",
+    "Push the staged files from the CLI.",
+    "Open the public package page and verify the install command.",
+  ];
+
   return (
     <main>
       <section className={shell.pageHeader}>
@@ -48,7 +59,8 @@ export default function PublishPage() {
         <h1>Publish AI skills so others can install them.</h1>
         <p className={shell.lede}>
           AIPM helps you package prompts, rules, MCP setup, and tool files once. Then other projects
-          can install the same setup from the registry.
+          can install the same setup from the registry. Publishing uses account ownership,
+          reserved package names, and short-lived CLI tokens.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/login">
@@ -109,20 +121,39 @@ export default function PublishPage() {
         <div className={cards.steps}>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>1</span>
-            <h3>Package</h3>
-            <p>Add an AIPM manifest to your skills, prompts, MCP setup, or tool files.</p>
+            <h3>Reserve</h3>
+            <p>Sign in, create an org, and reserve a package name before publishing.</p>
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>2</span>
-            <h3>Publish</h3>
-            <p>Reserve a package name, check the files, and push a version to the registry.</p>
+            <h3>Prepare</h3>
+            <p>Create or import a skill folder, then stage and validate the public files.</p>
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>3</span>
-            <h3>Install</h3>
-            <p>Users add the package to a repo and install it into Cursor, Claude, Codex, or future tools.</p>
+            <h3>Push</h3>
+            <p>Generate a 5-minute token and push the version from the CLI.</p>
           </article>
         </div>
+      </section>
+
+      <section className={shell.panelSection} aria-labelledby="publish-real-flow-title">
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>Real user path</p>
+            <h2 id="publish-real-flow-title">Everything needed to publish safely</h2>
+          </div>
+          <Link className={shell.textLink} href="/examples">
+            See examples
+          </Link>
+        </div>
+        <article className={docs.doc}>
+          <ol className={docs.flowList}>
+            {publishingSteps.map((step) => (
+              <li key={step}>{step}</li>
+            ))}
+          </ol>
+        </article>
       </section>
     </main>
   );

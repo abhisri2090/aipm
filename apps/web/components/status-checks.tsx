@@ -24,6 +24,14 @@ const checks: Array<Omit<CheckState, "status" | "detail">> = [
   },
 ];
 
+function publicCheckError(error: unknown): string {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "Timed out. The registry API may be offline or starting.";
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return "Unable to reach endpoint";
+}
+
 export function StatusChecks() {
   const [states, setStates] = useState<CheckState[]>(
     checks.map((check) => ({ ...check, status: "checking", detail: "Checking..." })),
@@ -33,8 +41,10 @@ export function StatusChecks() {
     let cancelled = false;
 
     async function runCheck(check: Omit<CheckState, "status" | "detail">) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 5000);
       try {
-        const response = await fetch(check.path, { cache: "no-store" });
+        const response = await fetch(check.path, { cache: "no-store", signal: controller.signal });
         const body = (await response.json().catch(() => null)) as unknown;
         const detail =
           body && typeof body === "object" && "status" in body
@@ -50,8 +60,10 @@ export function StatusChecks() {
         return {
           ...check,
           status: "error",
-          detail: error instanceof Error ? error.message : "Unable to reach endpoint",
+          detail: publicCheckError(error),
         } satisfies CheckState;
+      } finally {
+        window.clearTimeout(timeout);
       }
     }
 

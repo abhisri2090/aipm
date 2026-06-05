@@ -51,7 +51,7 @@ export default function StatusPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-        <h2>Check from the command line</h2>
+          <h2>Check from the command line</h2>
           <CodeBlock
             code={`curl https://aipm-registry.com/health
 curl https://aipm-registry.com/ready`}
@@ -63,6 +63,7 @@ curl https://aipm-registry.com/ready`}
           <p>
             If health passes but readiness fails, the API is running but a dependency may be down. If
             both fail, check your connection, try another network, or wait for the service to recover.
+            The documentation website can still load while the registry API is unavailable.
           </p>
         </section>
       </article>

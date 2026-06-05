@@ -28,7 +28,7 @@ export default function UsePage() {
 
         <h2>Install the CLI</h2>
         <p>Install the AIPM command once on your machine.</p>
-        <CodeBlock code={CLI_INSTALL_COMMAND} />
+        <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version\naipm doctor # (optional)`} />
 
         <h2>Initialize a project</h2>
         <p>This creates aipm.package.json and points it at the public registry.</p>
@@ -39,7 +39,7 @@ export default function UsePage() {
         <p>
           To install for one tool, choose a target like Cursor or Claude. See <a href="/targets">supported targets</a> for the folders AIPM writes to.
         </p>
-        <CodeBlock code="aipm add <Skill_Name>" />
+        <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
 
         <h2>List installed skills</h2>
         <CodeBlock code="aipm list" />
@@ -50,7 +50,10 @@ export default function UsePage() {
         <h2>Where files go</h2>
         <p>
           AIPM writes files into the folder your AI tool expects. For Cursor, skill files go into
-          the project Cursor skill area.
+          the project Cursor skill area. For Claude, AIPM writes a project skill folder.
+        </p>
+        <p>
+          See the <a href="/targets">targets guide</a> for exact folders and supported tools.
         </p>
 
         <h2>Updating a skill</h2>

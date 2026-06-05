@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 
+const repoRoot = new URL("../..", import.meta.url).pathname;
 const apiProxyOrigin = process.env.AIPM_API_PROXY_ORIGIN ?? "https://api.aipm-registry.com";
 const securityHeaders = [
   {
@@ -22,6 +23,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: repoRoot,
   poweredByHeader: false,
   trailingSlash: false,
   async headers() {
@@ -38,6 +40,11 @@ const nextConfig: NextConfig = {
         source: "/v1/auth/github/start",
         destination: `${apiProxyOrigin}/v1/auth/github/start`,
         permanent: false,
+      },
+      {
+        source: "/internal",
+        destination: "/admin",
+        permanent: true,
       },
     ];
   },
