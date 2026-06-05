@@ -15,12 +15,12 @@ const checks: Array<Omit<CheckState, "status" | "detail">> = [
   {
     label: "Process health",
     path: "/health",
-    description: "Fast liveness check for the registry API process.",
+    description: "Checks whether the registry API is running.",
   },
   {
-    label: "Registry readiness",
+    label: "Registry ready",
     path: "/ready",
-    description: "Dependency check for metadata and package storage.",
+    description: "Checks whether the API can reach the database and package storage.",
   },
 ];
 

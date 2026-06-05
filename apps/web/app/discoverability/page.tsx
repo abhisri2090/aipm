@@ -6,28 +6,28 @@ import { pageMetadata } from "../../lib/seo";
 
 const principles = [
   {
-    title: "Name the job, not the technology",
-    body: "A useful package name says what the skill helps a user do: review pull requests, summarize Sentry issues, draft release notes, or prepare migration plans. Searchers usually look for the job first.",
+    title: "Name the task",
+    body: "A useful package name says what the skill helps users do: review pull requests, summarize Sentry issues, draft release notes, or plan migrations.",
   },
   {
-    title: "Write descriptions for humans",
-    body: "Explain the project situation, supported AI tools, expected output, and the files installed. Avoid vague claims like smarter workflow or AI productivity without saying what changes.",
+    title: "Write for people",
+    body: "Explain when to use the skill, which tools it supports, what output to expect, and what files it installs. Avoid vague claims like smarter workflow.",
   },
   {
-    title: "Use stable keywords naturally",
-    body: "Mention the target tools and workflow only when they are true: Cursor skill, Claude skill, Codex skill, prompt package, AI tool files, code review assistant, or incident summary skill.",
+    title: "Use honest keywords",
+    body: "Mention tools and workflows only when they are true: Cursor skill, Claude skill, prompt package, code review assistant, or incident summary skill.",
   },
   {
-    title: "Publish examples that answer intent",
-    body: "A real install command, a short before-and-after scenario, and a list of included files help both users and search engines understand the package.",
+    title: "Show examples",
+    body: "A real install command, a short example, and a list of included files help users understand the package.",
   },
   {
-    title: "Keep versions and changelogs clear",
-    body: "Search traffic is only useful if users trust what they find. Version behavior changes, explain compatibility, and make old releases understandable.",
+    title: "Explain versions",
+    body: "Users need to trust what they install. Explain behavior changes, compatibility, and old releases clearly.",
   },
   {
-    title: "Do not leak private context",
-    body: "Discoverability should never come from private prompts, internal customer data, secret names, API keys, or company-only documents. Public packages must be safe to inspect.",
+    title: "Do not leak private details",
+    body: "Do not include private prompts, customer data, secret names, API keys, or internal documents. Public packages must be safe to inspect.",
   },
 ];
 
@@ -43,7 +43,7 @@ const pageChecklist = [
 export const metadata = pageMetadata({
   title: "AI Skill SEO and Discoverability Guide",
   description:
-    "A practical SEO guide for publishing discoverable AI skills, prompt packages, Cursor skills, Claude skills, and reusable AI tool files with AIPM.",
+    "Learn how to name and describe AIPM packages so users can find and trust them.",
   path: "/discoverability",
   keywords: [
     "AI skill SEO",
@@ -66,7 +66,7 @@ export default function DiscoverabilityPage() {
             "@type": "Article",
             headline: "AI Skill SEO and Discoverability Guide",
             description:
-              "A practical SEO guide for publishing discoverable AI skills, prompt packages, Cursor skills, Claude skills, and reusable AI tool files with AIPM.",
+              "Learn how to name and describe AIPM packages so users can find and trust them.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
             mainEntityOfPage: "https://aipm-registry.com/discoverability",
@@ -76,11 +76,10 @@ export default function DiscoverabilityPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Discoverability</p>
-        <h1>Make AI skills easy to find, understand, and trust.</h1>
+        <h1>Help users find and understand your skill.</h1>
         <p className={shell.lede}>
-          AIPM will succeed only if useful skills are visible to the people who need them. Good SEO
-          here is not keyword stuffing. It is clear naming, accurate package metadata, real examples,
-          public safety, and pages that explain the workflow better than a search result snippet can.
+          Good discoverability is not keyword stuffing. Use clear names, accurate descriptions, real
+          examples, and safe public content.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish">
@@ -103,11 +102,10 @@ export default function DiscoverabilityPage() {
 
       <section className={cn(docs.doc, docs.wideDoc)} aria-labelledby="aipm-seo-foundation">
         <section>
-          <h2 id="aipm-seo-foundation">AIPM page quality checklist</h2>
+          <h2 id="aipm-seo-foundation">Page quality checklist</h2>
           <p>
-            Every important AIPM page should be useful before a user signs in. The public website
-            needs strong static content, live registry search where it matters, and clear paths from
-            search intent to installation or publishing.
+            Every important page should help users before they sign in. Pages should explain the
+            topic, link to the next step, and make install or publish actions easy to find.
           </p>
           <ul className={docs.checkList}>
             {pageChecklist.map((item) => (
@@ -117,11 +115,10 @@ export default function DiscoverabilityPage() {
         </section>
 
         <section>
-          <h2>How publishers should write package metadata</h2>
+          <h2>How to write package metadata</h2>
           <p>
-            A package description should answer four questions in plain language: what task the skill
-            helps with, which AI tools it supports, what files it installs, and what a user should
-            expect after installation.
+            A package description should answer four questions: what task the skill helps with, which
+            AI tools it supports, what files it installs, and what happens after install.
           </p>
           <CodeBlock
             code={`Good:
@@ -133,11 +130,11 @@ Weak:
         </section>
 
         <section>
-          <h2>What AIPM should keep doing</h2>
+          <h2>What AIPM should keep improving</h2>
           <p>
-            The product should keep expanding high-quality public pages around real user intent:
-            installing AI skills, publishing AI skills, Cursor and Claude setup, prompt package
-            safety, team workflows, troubleshooting, and examples from real packages in the registry.
+            AIPM should keep adding helpful public pages for real user needs: installing skills,
+            publishing skills, Cursor and Claude setup, safety, team workflows, troubleshooting, and
+            package examples.
           </p>
         </section>
       </section>

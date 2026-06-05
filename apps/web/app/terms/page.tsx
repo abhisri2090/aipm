@@ -4,23 +4,23 @@ import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
 
 const publisherRules = [
-  "Only publish packages you have the right to share.",
-  "Do not publish secrets, private prompts, customer data, confidential documents, malware, or deceptive package content.",
-  "Use scoped package names honestly. Do not impersonate another person, company, project, or tool.",
-  "Keep package descriptions accurate about supported targets, installed files, and expected behavior.",
-  "Publish updates as new versions instead of silently changing an existing public release.",
+  "Only publish packages you are allowed to share.",
+  "Do not publish secrets, private prompts, customer data, confidential documents, malware, or misleading content.",
+  "Use package names honestly. Do not pretend to be another person, company, project, or tool.",
+  "Describe supported tools, installed files, and expected behavior accurately.",
+  "Publish updates as new versions. Do not silently change an existing public release.",
   "Respond quickly if maintainers contact you about security, abuse, trademark, or privacy concerns.",
 ];
 
 const userExpectations = [
-  "Review package metadata and publisher identity before installing.",
-  "Install public packages only into projects where you understand the resulting files.",
-  "Treat AI skill output as assistant guidance, not as guaranteed professional advice.",
-  "Report packages that appear unsafe, deceptive, infringing, or privacy-invasive.",
+  "Review package details and publisher identity before installing.",
+  "Install public packages only when you understand the files they add.",
+  "Treat AI output as assistant help, not guaranteed professional advice.",
+  "Report packages that look unsafe, misleading, infringing, or privacy-invasive.",
 ];
 
 const futureWork = [
-  "formal takedown and appeal workflow",
+  "formal takedown and appeal process",
   "verified publisher labels",
   "package abuse reporting inside the dashboard",
   "private package terms",
@@ -31,7 +31,7 @@ const futureWork = [
 export const metadata = pageMetadata({
   title: "AIPM Terms and Acceptable Use",
   description:
-    "Practical terms and acceptable-use expectations for AIPM public package publishers, package users, org namespaces, and registry content.",
+    "Simple rules for publishing and installing public AIPM packages.",
   path: "/terms",
   keywords: [
     "AIPM terms",
@@ -53,7 +53,7 @@ export default function TermsPage() {
             "@type": "WebPage",
             name: "AIPM Terms and Acceptable Use",
             description:
-              "Practical terms and acceptable-use expectations for AIPM public package publishers, package users, org namespaces, and registry content.",
+              "Simple rules for publishing and installing public AIPM packages.",
             url: "https://aipm-registry.com/terms",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
@@ -62,11 +62,10 @@ export default function TermsPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Terms</p>
-        <h1>Use AIPM to share helpful AI skills, not private or deceptive content.</h1>
+        <h1>Use AIPM to share helpful AI skills.</h1>
         <p className={shell.lede}>
-          These practical terms set expectations for a public AI skill registry. They are not a
-          replacement for formal legal review, but they make the product boundaries clear while AIPM
-          grows.
+          These rules explain what is okay in the public registry. They are not a replacement for
+          legal review, but they make the product boundaries clear.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/security">
@@ -80,7 +79,7 @@ export default function TermsPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-          <h2>Publisher acceptable use</h2>
+          <h2>Rules for publishers</h2>
           <ul className={docs.checkList}>
             {publisherRules.map((rule) => (
               <li key={rule}>{rule}</li>
@@ -100,18 +99,18 @@ export default function TermsPage() {
         <section>
           <h2>Org and package names</h2>
           <p>
-            Namespaces and package names should help users identify real ownership and purpose.
-            AIPM may reserve, rename, restrict, or remove names that are confusing, abusive,
-            impersonating, or needed to protect users and the registry.
+            Namespaces and package names should show real ownership and purpose. AIPM may reserve,
+            rename, restrict, or remove names that confuse users, abuse the registry, or impersonate
+            someone else.
           </p>
         </section>
 
         <section>
           <h2>Registry moderation</h2>
           <p>
-            AIPM may hide, remove, or restrict packages that appear to leak sensitive data, include
-            malicious files, misrepresent behavior, violate rights, or create risk for users. If a
-            secret was exposed, rotate it immediately; removal alone is not enough.
+            AIPM may hide, remove, or restrict packages that leak sensitive data, include malicious
+            files, misrepresent behavior, violate rights, or put users at risk. If a secret was
+            exposed, rotate it immediately; removal alone is not enough.
           </p>
         </section>
 

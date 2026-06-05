@@ -6,7 +6,7 @@ import { pageMetadata } from "../../lib/seo";
 export const metadata = pageMetadata({
   title: "AI Skill Resources",
   description:
-    "Guides, best practices, acknowledgements, and publishing resources for building project-ready AI skills with AIPM.",
+    "Guides for using, publishing, and understanding AIPM skills.",
   path: "/resources",
   keywords: ["AI skill resources", "AI package manager", "AI publishing guide", "AI best practices"],
 });
@@ -16,67 +16,67 @@ export default function ResourcesPage() {
     {
       href: "/ai-practices",
       title: "AI Best Practices",
-      body: "A practical guide for building reusable AI skills, prompts, tool files, and agent workflows.",
+      body: "How to write AI skills that are clear, safe, and easy to reuse.",
     },
     {
       href: "/thanks",
       title: "Special Thanks",
-      body: "People, research, conferences, and public work that shaped the modern AI ecosystem.",
+      body: "People, research, and public work that helped make modern AI tools possible.",
     },
     {
       href: "/discoverability",
       title: "Discoverability Guide",
-      body: "Write package names, descriptions, examples, and pages that help real users find useful AI skills.",
+      body: "Write names, descriptions, and examples that help users find the right skill.",
     },
     {
       href: "/security",
       title: "Security and Privacy",
-      body: "Publish public AI skills without leaking credentials, customer data, or private project context.",
+      body: "Publish public skills without leaking secrets, customer data, or private notes.",
     },
     {
       href: "/privacy",
       title: "Privacy Notice",
-      body: "Understand account data, publisher profiles, public packages, tokens, and local preferences.",
+      body: "Learn what data AIPM uses for accounts, packages, tokens, and local settings.",
     },
     {
       href: "/terms",
       title: "Terms and Acceptable Use",
-      body: "Set expectations for public packages, namespace ownership, publishing behavior, and moderation.",
+      body: "Understand what is allowed when publishing public packages.",
     },
     {
       href: "/roadmap",
       title: "Product Roadmap",
-      body: "See what is available now, what is being hardened next, and what should wait.",
+      body: "See what works now and what is planned next.",
     },
     {
       href: "/changelog",
       title: "Changelog",
-      body: "Track product-level updates across the CLI, registry API, website, dashboard, and trust pages.",
+      body: "See recent changes to the CLI, registry API, website, and dashboard.",
     },
     {
       href: "/templates",
       title: "Skill Templates",
-      body: "Choose a starter shape for code review, issue summary, release notes, or custom skills.",
+      body: "Start from a blank, code review, issue summary, or release notes template.",
     },
     {
       href: "/examples",
       title: "Skill Examples",
-      body: "Copy complete publish and install flows for review, triage, release notes, and imports.",
+      body: "Copy full examples for publishing and installing common skills.",
     },
     {
       href: "/glossary",
       title: "Glossary",
-      body: "Learn the product terms behind skills, manifests, targets, adapters, orgs, and tokens.",
+      body: "Learn simple meanings for skills, manifests, targets, orgs, and tokens.",
     },
     {
       href: "/targets",
       title: "Supported Targets",
-      body: "Understand Cursor and Claude adapters, install paths, detection, and manifest target values.",
+      body: "See where AIPM installs files for Cursor and Claude.",
     },
     {
       href: "/publish/guide",
       title: "Publishing Guide",
-      body: "Create a skill package, reserve a name, generate a token, and publish from the CLI.",
+      body: "Create a package, reserve a name, get a token, and publish with the CLI.",
     },
     {
       href: "/faq",
@@ -89,10 +89,10 @@ export default function ResourcesPage() {
     <DocLayout>
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Resources</p>
-        <h1>Build better AI skills, then make them reusable.</h1>
+        <h1>Find the guide you need.</h1>
         <p className={shell.lede}>
-          Use the documentation tree on the left to move between guides. This page is the home for
-          all AIPM docs, including publishing guidance, targets, security, and troubleshooting.
+          This is the home for AIPM docs. Use it to learn how to install skills, publish packages,
+          choose targets, avoid leaks, and fix common problems.
         </p>
       </section>
 

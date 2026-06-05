@@ -20,7 +20,7 @@ export async function packStagedFiles(root: string): Promise<Buffer> {
   const tempDir = await mkdtemp(join(tmpdir(), "aipm-publish-stage-"));
   try {
     await copyStagedFiles(root, tempDir);
-    return packDirectory(tempDir);
+    return await packDirectory(tempDir);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }

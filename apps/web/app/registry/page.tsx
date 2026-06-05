@@ -5,7 +5,7 @@ import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
   title: "AI Skills Registry",
-  description: "Search published AIPM skills by package name, supported tool, or description.",
+  description: "Search public AIPM skills by name, tool, or description.",
   path: "/registry",
 });
 
@@ -26,7 +26,7 @@ export default async function RegistryPage({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             name: "AIPM AI Skills Registry",
-            description: "Search published AIPM skills by package name, supported tool, or description.",
+            description: "Search public AIPM skills by name, tool, or description.",
             url: `${SITE_URL}/registry`,
             about: ["AI skills", "prompt packages", "Cursor skills", "Claude skills", "AI tool files"],
             potentialAction: {
@@ -39,10 +39,10 @@ export default async function RegistryPage({
       />
       <section className={cn(shell.pageHeader, shell.compactPageHeader)}>
         <p className={shell.eyebrow}>Registry</p>
-        <h1>Search published skills.</h1>
+        <h1>Search public skills.</h1>
         <p className={shell.lede}>
-          Find installable AI skills by package name, supported tool, or description. Demo packages
-          are hidden from the public listing so this page stays focused on usable skills.
+          Find AI skills by package name, supported tool, or description. Demo packages are hidden so
+          the list stays focused on usable skills.
         </p>
       </section>
 

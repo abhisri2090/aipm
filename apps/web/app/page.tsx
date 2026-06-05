@@ -7,7 +7,7 @@ import { pageMetadata } from "../lib/seo";
 
 export const metadata = pageMetadata({
   title: "AIPM Registry",
-  description: "Install project-ready AI skills, prompts, and tool files into Cursor, Claude, and supported assistants.",
+  description: "Install AI skills, prompts, and tool files into Cursor, Claude, and other assistants.",
   keywords: [
     "AI package manager",
     "AI skill registry",
@@ -39,11 +39,10 @@ export default async function HomePage() {
       />
       <section className={home.hero} aria-labelledby="hero-title">
         <p className={shell.eyebrow}>AIPM — AI Package Manager</p>
-        <h1 id="hero-title">npm-style packages for AI skills, tools, and MCP</h1>
+        <h1 id="hero-title">Install AI skills like packages.</h1>
         <p className={shell.lede}>
-          AIPM aims to solve AI package distribution problems. Registry + CLI to Install, Update,
-          Deploy, Remove, and bind packages into your repo for Cursor, Claude, Codex, and more — no
-          copying files by hand.
+          AIPM gives you a registry and CLI for AI skills. Install prompts, rules, MCP setup, and
+          tool files into a repo for Cursor, Claude, Codex, and more. No manual copy and paste.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="#get-started">
@@ -53,7 +52,7 @@ export default async function HomePage() {
             Browse registry
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/publish">
-            Publishing plan
+            Publish a skill
           </Link>
         </div>
       </section>
@@ -62,7 +61,7 @@ export default async function HomePage() {
         <div className={shell.sectionHeading}>
           <div>
             <p className={shell.eyebrow}>Get started</p>
-            <h2 id="get-started-title">Install AIPM and bind skills to a project</h2>
+            <h2 id="get-started-title">Install AIPM and add a skill</h2>
           </div>
           <Link className={shell.textLink} href="/use">
             Full guide
@@ -104,15 +103,15 @@ export default async function HomePage() {
       <section className={cards.guideGrid} aria-label="AIPM basics">
         <Link className={cards.guideCard} href="/use">
           <h2>Use skills</h2>
-          <p>Initialize a project, install a skill, and see what files AIPM writes.</p>
+          <p>Create project config, install a skill, and see which files AIPM writes.</p>
         </Link>
         <Link className={cards.guideCard} href="/publish">
           <h2>Publish skills</h2>
-          <p>Create a manifest, target one or more AI tools, and version updates cleanly.</p>
+          <p>Create a manifest, choose supported AI tools, and publish new versions.</p>
         </Link>
         <Link className={cards.guideCard} href="/resources">
-          <h2>Learn the practice</h2>
-          <p>Read AI skill best practices, acknowledgements, and publishing resources.</p>
+          <h2>Learn the basics</h2>
+          <p>Read practical guides for creating safe, useful AI skills.</p>
         </Link>
         <Link className={cards.guideCard} href="/discoverability">
           <h2>Get discovered</h2>

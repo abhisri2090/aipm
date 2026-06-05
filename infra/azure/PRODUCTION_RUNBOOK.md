@@ -3,9 +3,17 @@
 ## Health Checks
 
 ```bash
-curl https://aipm-registry.com/health
-curl https://aipm-registry.com/ready
-./infra/azure/verify-production.sh https://aipm-registry.com
+curl https://api.aipm-registry.com/health
+curl https://api.aipm-registry.com/ready
+./infra/azure/verify-web-cutover.sh
+```
+
+If `api.aipm-registry.com` times out, the registry VM may be stopped:
+
+```bash
+az vm get-instance-view -g aipm-staging -n aipm-registry-vm \
+  --query "instanceView.statuses[?starts_with(code,'PowerState/')].displayStatus" -o tsv
+./infra/azure/ensure-registry-vm-running.sh
 ```
 
 `/health` confirms the process is alive. `/ready` confirms the metadata and

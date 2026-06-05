@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { CodeBlock } from "./code-block";
-import { packagePath } from "../lib/registry";
+import { GITHUB_LOGIN_URL, packagePath } from "../lib/registry";
 import { cn } from "../lib/class-names";
 import shell from "../app/page-shell.module.css";
 import docs from "../app/docs-content.module.css";
@@ -211,7 +211,7 @@ export function LoginPanel() {
             and keep your AI tooling ready for real projects.
           </p>
           <div className={shell.actions}>
-            <a className={shell.button} href="/v1/auth/github/start">
+            <a className={shell.button} href={GITHUB_LOGIN_URL}>
               Continue with GitHub
             </a>
             <Link className={cn(shell.button, shell.secondary)} href="/publish">

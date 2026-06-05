@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     default: "AIPM Registry",
     template: "%s | AIPM",
   },
-  description: "AIPM helps teams install and manage project-ready AI skills, prompts, and tool files.",
+  description: "AIPM helps teams install and manage AI skills, prompts, and tool files.",
   keywords: [
     "AI package manager",
     "AI skill registry",
@@ -35,20 +35,20 @@ export const metadata: Metadata = {
     siteName: "AIPM",
     url: SITE_URL,
     title: "AIPM Registry",
-    description: "Install and manage project-ready AI skills, prompts, and tool files.",
+    description: "Install and manage AI skills, prompts, and tool files.",
     images: [
       {
         url: "/og.svg",
         width: 1200,
         height: 630,
-        alt: "AIPM Registry - project-ready AI skills and tool files",
+        alt: "AIPM Registry - AI skills and tool files",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "AIPM Registry",
-    description: "Install and manage project-ready AI skills, prompts, and tool files.",
+    description: "Install and manage AI skills, prompts, and tool files.",
     images: ["/og.svg"],
   },
 };

@@ -70,7 +70,7 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
           url: `${SITE_URL}/og.svg`,
           width: 1200,
           height: 630,
-          alt: "AIPM Registry - project-ready AI skills and tool files",
+          alt: "AIPM Registry - AI skills and tool files",
         },
       ],
     },
@@ -131,7 +131,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 "@type": "HowTo",
                 "@id": `${canonicalUrl}#install`,
                 name: `Install ${summary.name}@${summary.version}`,
-                description: `Install ${summary.name}@${summary.version} into a supported AI tool project with AIPM.`,
+                description: `Install ${summary.name}@${summary.version} into a supported AI tool with AIPM.`,
                 tool: [{ "@type": "HowToTool", name: "AIPM CLI" }],
                 step: [
                   {
@@ -184,7 +184,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
       <section className={shell.detailGrid}>
         <article className={cn(shell.panel, cards.stepCard)}>
           <h2>Install this skill</h2>
-          <p className={shell.muted}>Install the CLI once, initialize the project, then add this package.</p>
+          <p className={shell.muted}>Install the CLI once, initialize your project, then add this package.</p>
           <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm init\n${command}`} />
         </article>
 
@@ -245,13 +245,12 @@ export default async function PackagePage({ params }: PackagePageProps) {
             {summary.publisher ? (
               <p className={shell.muted}>
                 Reserved under @{summary.publisher.org.slug} by{" "}
-                {summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`}. This package name is tied
+                {summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`}. This package name belongs
                 to an AIPM publisher account.
               </p>
             ) : (
               <p className={shell.muted}>
-                This package was published before publisher identity was attached, or it was published through an
-                admin-only path. Review it carefully before installing.
+                This package does not have a linked publisher account. Review it carefully before installing.
               </p>
             )}
           </div>
@@ -286,9 +285,8 @@ export default async function PackagePage({ params }: PackagePageProps) {
         <article className={shell.notice}>
           <h2 id="install-safety-title">Before installing</h2>
           <p>
-            AIPM skills can write AI-tool files into your project. Review the package name, target,
-            description, license, and source trust before installing. Use a clean branch when trying
-            a new skill in an existing project.
+            AIPM skills can add files to your project. Review the package name, target, description,
+            license, and publisher before installing. Use a clean branch when trying a new skill.
           </p>
         </article>
       </section>

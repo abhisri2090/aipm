@@ -7,28 +7,28 @@ const sections = [
   {
     title: "Available now",
     items: [
-      "Public registry website with live package search and package detail pages.",
-      "CLI install flow for project-ready AI skills and tool files.",
-      "Self-service publisher account, org namespace, package reservation, and short-lived publish token surfaces.",
-      "Publishing flow through the CLI with init, import, add, status, preview, validate, and push steps.",
-      "Public security, privacy, terms, status, FAQ, best-practice, and discoverability pages.",
+      "Public registry website with package search and package detail pages.",
+      "CLI install flow for AI skills and tool files.",
+      "Publisher accounts, org namespaces, package reservations, and short-lived publish tokens.",
+      "CLI publishing with init, import, add, status, preview, validate, and push steps.",
+      "Public docs for security, privacy, terms, status, FAQ, best practices, and discoverability.",
     ],
   },
   {
     title: "Near term reliability",
     items: [
-      "Production verification that covers HTTPS, security headers, health, readiness, search, install, and unauthenticated publish rejection.",
-      "Stronger package publish consistency, rollback, backup, and restore workflows.",
-      "More complete CLI lifecycle commands such as update, remove, verify, clean, and pack.",
-      "Better publisher dashboard feedback for failed publishes, package versions, and token expiry.",
+      "Production checks for HTTPS, security headers, health, readiness, search, install, and blocked unauthenticated publishing.",
+      "Better consistency, rollback, backup, and restore for publishing.",
+      "More CLI commands such as update, remove, verify, clean, and pack.",
+      "Clearer dashboard messages for failed publishes, package versions, and token expiry.",
     ],
   },
   {
     title: "Trust and registry depth",
     items: [
-      "Package abuse reporting, takedown, appeal, and owner transfer workflows.",
-      "Verified publisher labels and clearer package provenance.",
-      "Server-side package scanning, risk levels, and stricter install modes.",
+      "Package abuse reports, takedowns, appeals, and owner transfer.",
+      "Verified publisher labels and clearer package origin.",
+      "Server-side package scanning, risk levels, and stricter install options.",
       "Private packages and organization-level access controls.",
       "More package types beyond skills, including rules, MCP bundles, and environment bundles.",
     ],
@@ -36,10 +36,10 @@ const sections = [
   {
     title: "Platform expansion",
     items: [
-      "More adapters for AI tools and editors beyond Cursor, Claude, and Codex-oriented workflows.",
+      "More adapters for AI tools and editors beyond Cursor, Claude, and Codex workflows.",
       "Dependency resolution, lockfiles, conflict detection, and offline reinstall from local cache.",
-      "AIPM MCP server so agents can discover and install missing skills during work.",
-      "Desktop app and enterprise registry options once the CLI and hosted registry are stable.",
+      "AIPM MCP server so agents can find and install missing skills during work.",
+      "Desktop app and enterprise registry options after the CLI and hosted registry are stable.",
     ],
   },
 ];
@@ -47,7 +47,7 @@ const sections = [
 export const metadata = pageMetadata({
   title: "AIPM Product Roadmap",
   description:
-    "A practical roadmap for AIPM: what is available now, what reliability work comes next, and how the AI skill registry will expand.",
+    "See what AIPM has now, what comes next, and what may come later.",
   path: "/roadmap",
   keywords: [
     "AIPM roadmap",
@@ -69,7 +69,7 @@ export default function RoadmapPage() {
             "@type": "WebPage",
             name: "AIPM Product Roadmap",
             description:
-              "A practical roadmap for AIPM: what is available now, what reliability work comes next, and how the AI skill registry will expand.",
+              "See what AIPM has now, what comes next, and what may come later.",
             url: "https://aipm-registry.com/roadmap",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
@@ -78,11 +78,10 @@ export default function RoadmapPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Roadmap</p>
-        <h1>Build the registry in public, one useful layer at a time.</h1>
+        <h1>See what AIPM is building next.</h1>
         <p className={shell.lede}>
-          AIPM is moving from a working registry into dependable product infrastructure. This
-          roadmap names what users can rely on today, what needs hardening next, and which bigger
-          platform bets should wait until the core workflow is stable.
+          AIPM is moving from a working registry to a dependable product. This roadmap shows what
+          works now, what needs more polish, and what should wait until the core workflow is stable.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/use">
@@ -111,9 +110,8 @@ export default function RoadmapPage() {
         <section>
           <h2>How to read this roadmap</h2>
           <p>
-            Items are intentionally ordered by product dependency, not excitement. AIPM should make
-            installation, publishing, recovery, and trust boring before it expands into larger
-            platform surfaces.
+            Items are ordered by what the product needs first. AIPM should make install, publish,
+            recovery, and trust reliable before adding larger platform features.
           </p>
         </section>
       </article>

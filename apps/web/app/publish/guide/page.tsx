@@ -6,7 +6,7 @@ import { pageMetadata } from "../../../lib/seo";
 
 export const metadata = pageMetadata({
   title: "Publishing Guide",
-  description: "Package, validate, and publish AIPM skills for supported AI tools.",
+  description: "Create, check, and publish AIPM skills for supported AI tools.",
   path: "/publish/guide",
 });
 
@@ -15,10 +15,10 @@ export default function PublishPage() {
     <DocLayout>
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Publishing</p>
-        <h1>Package AI skills once, then install them anywhere.</h1>
+        <h1>Create a skill package and publish it.</h1>
         <p className={shell.lede}>
-          A published AIPM skill is a versioned folder with a manifest and the files your AI tool
-          needs. Publish through the CLI; the website helps users discover and install packages.
+          An AIPM skill package is a folder with a manifest and the files your AI tool needs. You
+          publish it with the CLI. Users find and install it from the registry.
         </p>
         <div className={shell.actions}>
           <a className={shell.button} href="/login">
@@ -35,7 +35,7 @@ export default function PublishPage() {
         <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version\naipm doctor`} />
 
         <h2>1. Create a skill folder</h2>
-        <p>Each skill needs an aipm.manifest.json file and an entry file.</p>
+        <p>Each skill needs an aipm.manifest.json file and a main file, usually SKILL.md.</p>
         <CodeBlock
           code={`{
   "schemaVersion": "0.1",
@@ -49,15 +49,15 @@ export default function PublishPage() {
 }`}
         />
 
-        <h2>2. Create an account and reserve a name</h2>
+        <h2>2. Create an account and reserve a package name</h2>
         <ol className={docs.flowList}>
           <li>Sign in with GitHub.</li>
-          <li>Create an org namespace.</li>
-          <li>Reserve a package name such as @team/review-helper.</li>
+          <li>Create an org namespace, such as @team.</li>
+          <li>Reserve a package name, such as @team/review-helper.</li>
           <li>Generate a 5-minute publish token.</li>
         </ol>
 
-        <h2>3. Stage and publish from the CLI</h2>
+        <h2>3. Check and publish from the CLI</h2>
         <CodeBlock
           code={`aipm publish init --name @team/review-helper --template code-review
 cd review-helper
@@ -72,8 +72,8 @@ AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
 
         <h2>Starter templates</h2>
         <p>
-          Templates only change the starter SKILL.md content. Pick the closest workflow, then edit
-          the generated files before staging.
+          Templates only create starter SKILL.md content. Pick the closest one, then edit the
+          generated files before you stage and publish.
         </p>
         <p>
           See the <a href="/templates">templates guide</a> for when to use each starter.
@@ -82,24 +82,24 @@ AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
           <article className={cards.exampleCard}>
             <h3>Code review</h3>
             <CodeBlock code="aipm publish init --name @team/review-helper --template code-review" />
-            <p>Starts with review goals, checklist, and findings-first output guidance.</p>
+            <p>Starts with review goals, a checklist, and a format for findings.</p>
           </article>
           <article className={cards.exampleCard}>
             <h3>Issue summary</h3>
             <CodeBlock code="aipm publish init --name @team/issue-summary --template issue-summary" />
-            <p>Starts with triage sections for impact, evidence, likely cause, and next action.</p>
+            <p>Starts with sections for impact, evidence, likely cause, and next action.</p>
           </article>
           <article className={cards.exampleCard}>
             <h3>Release notes</h3>
             <CodeBlock code="aipm publish init --name @team/release-notes --template release-notes" />
-            <p>Starts with user-facing sections for highlights, fixes, upgrade notes, and known issues.</p>
+            <p>Starts with sections for highlights, fixes, upgrade notes, and known issues.</p>
           </article>
         </div>
 
-        <h2>Publishing an existing AI-tool skill</h2>
+        <h2>Publish an existing AI-tool skill</h2>
         <p>
-          If Cursor, Claude, Codex, or another AI tool created the skill files first, import that
-          file or folder into an AIPM package folder.
+          If Cursor, Claude, Codex, or another AI tool already created skill files, import that file
+          or folder into an AIPM package folder.
         </p>
         <CodeBlock
           code={`aipm publish import ~/.codex/skills/review-helper --name @team/review-helper
@@ -111,21 +111,20 @@ aipm publish preview # (optional)`}
         <h2>Self-service publishing flow</h2>
         <ol className={docs.flowList}>
           <li>Create an AIPM account.</li>
-          <li>Register an organization and reserve a skill name such as @team/review-helper.</li>
+          <li>Register an organization and reserve a package name such as @team/review-helper.</li>
           <li>Generate a publish token that is valid for 5 minutes.</li>
-          <li>Use the CLI to validate, stage, and push the skill files to the registry.</li>
+          <li>Use the CLI to check, stage, and push the skill files to the registry.</li>
         </ol>
 
         <h2>Target examples</h2>
         <p>
-          See <a href="/targets">supported targets</a> for adapter install paths and detection
-          behavior.
+          See <a href="/targets">supported targets</a> for the folders AIPM writes to.
         </p>
         <div className={cards.exampleGrid}>
           <article className={cards.exampleCard}>
             <h3>Cursor-only</h3>
             <CodeBlock code={`"targets": ["cursor"]`} />
-            <p>Use this when the skill should write Cursor-compatible files only.</p>
+            <p>Use this when the skill should install only into Cursor.</p>
           </article>
           <article className={cards.exampleCard}>
             <h3>Claude-only</h3>
@@ -135,15 +134,15 @@ aipm publish preview # (optional)`}
           <article className={cards.exampleCard}>
             <h3>Multi-tool</h3>
             <CodeBlock code={`"targets": ["cursor", "claude"]`} />
-            <p>Use this when the same skill should install into multiple AI tools.</p>
+            <p>Use this when the same skill should install into more than one AI tool.</p>
           </article>
         </div>
 
-        <h2>Common publish conditions</h2>
+        <h2>Common publishing problems</h2>
         <table>
           <thead>
             <tr>
-              <th>Condition</th>
+              <th>Problem</th>
               <th>What to do</th>
             </tr>
           </thead>

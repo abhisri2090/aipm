@@ -11,7 +11,7 @@ const targets = [
     detect: ".cursor/",
     writes: ".cursor/aipm/skills/<skill>.md",
     command: "aipm add @scope/name@1.0.0 --target cursor --ci",
-    note: "Use this when the skill should become a project-local Cursor skill file.",
+    note: "Use this when you want the skill installed as a Cursor file in this project.",
   },
   {
     name: "Claude",
@@ -19,14 +19,14 @@ const targets = [
     detect: ".claude/",
     writes: ".claude/aipm/skills/<skill>/SKILL.md",
     command: "aipm add @scope/name@1.0.0 --target claude --ci",
-    note: "Use this when the skill should become a Claude project skill folder.",
+    note: "Use this when you want the skill installed as a Claude project skill folder.",
   },
 ];
 
 export const metadata = pageMetadata({
   title: "AIPM Supported Targets",
   description:
-    "Understand AIPM supported targets, adapters, install paths, and manifest target values for Cursor and Claude skills.",
+    "Learn where AIPM installs skills for Cursor and Claude.",
   path: "/targets",
   keywords: [
     "AIPM targets",
@@ -48,7 +48,7 @@ export default function TargetsPage() {
             "@type": "CollectionPage",
             name: "AIPM Supported Targets",
             description:
-              "Understand AIPM supported targets, adapters, install paths, and manifest target values for Cursor and Claude skills.",
+              "Learn where AIPM installs skills for Cursor and Claude.",
             url: "https://aipm-registry.com/targets",
             hasPart: targets.map((target) => ({
               "@type": "SoftwareApplication",
@@ -61,17 +61,17 @@ export default function TargetsPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Targets</p>
-        <h1>Install each AI skill into the tool that can actually use it.</h1>
+        <h1>Choose where AIPM should install a skill.</h1>
         <p className={shell.lede}>
-          A target is the AI tool adapter AIPM should use for installation. Packages declare one or
-          more targets in the manifest, and users can choose a target explicitly with the CLI.
+          A target is the AI tool you want to install into, such as Cursor or Claude. Packages list
+          the targets they support, and you choose one with the CLI.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/registry">
-            Browse by target
+            Browse skills
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/examples">
-            Examples
+            See examples
           </Link>
         </div>
       </section>
@@ -99,17 +99,17 @@ export default function TargetsPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-          <h2>Publisher manifest examples</h2>
+          <h2>Manifest examples</h2>
           <div className={cards.exampleGrid}>
             <article className={cards.exampleCard}>
               <h3>Cursor-only</h3>
               <CodeBlock code={`"targets": ["cursor"]`} />
-              <p>Writes Cursor-compatible files only.</p>
+              <p>Installs only Cursor files.</p>
             </article>
             <article className={cards.exampleCard}>
               <h3>Claude-only</h3>
               <CodeBlock code={`"targets": ["claude"]`} />
-              <p>Targets Claude project skill folders only.</p>
+              <p>Installs only Claude project skill folders.</p>
             </article>
             <article className={cards.exampleCard}>
               <h3>Multi-tool</h3>
@@ -120,10 +120,10 @@ export default function TargetsPage() {
         </section>
 
         <section>
-          <h2>When detection is not enough</h2>
+          <h2>When automatic detection is not enough</h2>
           <p>
-            AIPM can detect `.cursor/` and `.claude/` folders in a project. In CI or ambiguous
-            projects, pass `--target cursor` or `--target claude` so installation is explicit.
+            AIPM can detect `.cursor/` and `.claude/` folders in a project. In CI, or when a project
+            has more than one tool, pass `--target cursor` or `--target claude`.
           </p>
         </section>
       </article>

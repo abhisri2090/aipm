@@ -11,55 +11,55 @@ export const metadata = pageMetadata({
 const faqs = [
   [
     "The registry is not reachable.",
-    "Check the status page or run curl <registry-url>/health and curl <registry-url>/ready. Health checks the API process; ready checks registry dependencies.",
+    "Check the status page or run curl <registry-url>/health and curl <registry-url>/ready. Health checks the API. Ready checks the database and package storage.",
   ],
   [
     "Package not found.",
-    "Confirm the exact scoped name and version. AIPM package names use the format @scope/name.",
+    "Check the exact scoped name and version. AIPM package names use @scope/name.",
   ],
   [
     "Version already published.",
-    "Published versions are immutable. Increase the manifest version and publish again.",
+    "Published versions cannot be changed. Increase the manifest version and publish again.",
   ],
   [
     "The skill installed but does not appear in my tool.",
-    "Check that you installed with the right --target, then restart or reload the AI tool if it caches project files.",
+    "Check that you used the right --target. Then restart or reload the AI tool if it caches project files.",
   ],
   [
     "Can I publish a public skill?",
-    "Yes. Sign in with GitHub, create an org, reserve a package name, generate a 5-minute publish token, then push from the CLI.",
+    "Yes. Sign in with GitHub, create an org, reserve a package name, generate a 5-minute token, then publish from the CLI.",
   ],
   [
     "Can I publish private skills?",
-    "Not yet. Current packages are public registry packages. Keep private prompts, credentials, customer data, and internal-only files out of published skills.",
+    "Not yet. Packages are public today. Keep private prompts, credentials, customer data, and internal files out of published skills.",
   ],
   [
     "How do I avoid leaking files while publishing?",
-    "Run aipm publish preview, review the included file list, and use .aipmignore for secrets, private notes, logs, caches, screenshots, exports, and customer data.",
+    "Run aipm publish preview, review the file list, and use .aipmignore for secrets, private notes, logs, caches, screenshots, exports, and customer data.",
   ],
   [
     "What account data does AIPM use?",
-    "AIPM uses account identity for publishing, profile details for publisher accountability, organization and package records for registry ownership, and short-lived tokens for CLI pushes.",
+    "AIPM uses your account identity for publishing, profile details for ownership, org and package records for registry ownership, and short-lived tokens for CLI publishing.",
   ],
   [
     "What content is not allowed in public packages?",
-    "Do not publish secrets, private prompts, customer data, confidential documents, malware, deceptive package content, or names that impersonate another person, company, project, or tool.",
+    "Do not publish secrets, private prompts, customer data, confidential documents, malware, misleading content, or names that impersonate another person, company, project, or tool.",
   ],
   [
     "My publish token expired.",
-    "Generate a fresh token from the package dashboard. Tokens are intentionally short-lived and are not stored by the CLI.",
+    "Generate a new token from the package dashboard. Tokens are short-lived and are not stored by the CLI.",
   ],
   [
     "Publisher identity is unavailable on a package.",
-    "That package was published before account-backed reservations were attached, or through an admin-only path. Review it carefully before installing.",
+    "That package does not have a linked publisher account. Review it carefully before installing.",
   ],
   [
     "How do I install the CLI?",
-    "Run npm install -g @aipm-registry/cli, then aipm --version and aipm doctor. If the command is not on PATH, doctor prints the shell profile fix.",
+    "Run npm install -g @aipm-registry/cli, then aipm --version and aipm doctor. If the command is not on PATH, doctor shows the shell fix.",
   ],
   [
     "Where are package files stored?",
-    "Metadata is stored by the registry backend. Package tarballs are stored in the configured blob storage backend.",
+    "Package metadata is stored by the registry. Package tarballs are stored in blob storage.",
   ],
 ];
 

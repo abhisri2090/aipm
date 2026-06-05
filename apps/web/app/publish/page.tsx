@@ -5,7 +5,7 @@ import { pageMetadata } from "../../lib/seo";
 export const metadata = pageMetadata({
   title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
   description:
-    "Use AIPM to package, publish, and distribute AI skills, MCP setup, prompts, and tool files across teams, repos, and AI assistants.",
+    "Use AIPM to publish AI skills, MCP setup, prompts, and tool files.",
   path: "/publish",
   keywords: [
     "publish AI skills",
@@ -21,41 +21,41 @@ export const metadata = pageMetadata({
 export default function PublishPage() {
   const benefits = [
     {
-      title: "Distribute once, install anywhere",
-      body: "Publish a reusable AI package and let users install it into the repos, editors, and assistants that need it.",
+      title: "Publish once, install where needed",
+      body: "Turn an AI setup into a package so users can install it into the right repo and AI tool.",
     },
     {
-      title: "Made for teams and orgs",
-      body: "Organizations can reserve package names, publish approved workflows, and avoid sending prompts or MCP setup through chat threads.",
+      title: "Keep team setup in one place",
+      body: "Teams can reserve package names and share approved prompts, skills, and MCP setup without sending files through chat.",
     },
     {
-      title: "Versioned AI operations",
-      body: "Every skill, tool file, prompt bundle, or MCP package can move through explicit versions so changes stay reviewable.",
+      title: "Review every change",
+      body: "Each package has versions, so users can see when a skill or prompt changed.",
     },
   ];
 
   const useCases = [
-    "Internal AI skills for code review, triage, release notes, and support workflows.",
-    "MCP server setup, tool instructions, and assistant-specific config distributed as packages.",
-    "Cross-repo standards for Cursor, Claude, Codex, and future AI tool adapters.",
-    "Public packages that help other developers discover and install useful AI workflows.",
+    "Internal skills for code review, triage, release notes, and support work.",
+    "MCP server setup, tool instructions, and assistant config shared as packages.",
+    "Shared rules for Cursor, Claude, Codex, and future AI tools.",
+    "Public packages that help other developers install useful AI workflows.",
   ];
 
   return (
     <main>
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Publish with AIPM</p>
-        <h1>Easy distribution for AI skills, MCP, prompts, and tool packages.</h1>
+        <h1>Publish AI skills so others can install them.</h1>
         <p className={shell.lede}>
-          AIPM helps users and organizations package AI setup once, publish it through a registry,
-          and install it into any repo that needs the same skills, MCP setup, prompts, or tool files.
+          AIPM helps you package prompts, rules, MCP setup, and tool files once. Then other projects
+          can install the same setup from the registry.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/login">
             Sign in to publish
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/publish/guide">
-            Read the guide
+            Read publishing guide
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/dashboard">
             Publisher dashboard
@@ -67,7 +67,7 @@ export default function PublishPage() {
         <div className={shell.sectionHeading}>
           <div>
             <p className={shell.eyebrow}>Benefits</p>
-            <h2 id="publish-benefits-title">Why publish through AIPM?</h2>
+            <h2 id="publish-benefits-title">Why publish with AIPM?</h2>
           </div>
         </div>
         <div className={cards.guideGrid}>
@@ -84,7 +84,7 @@ export default function PublishPage() {
         <div className={shell.sectionHeading}>
           <div>
             <p className={shell.eyebrow}>Use cases</p>
-            <h2 id="publish-usecases-title">What teams can distribute</h2>
+            <h2 id="publish-usecases-title">What teams can share</h2>
           </div>
         </div>
         <article className={docs.doc}>
@@ -100,7 +100,7 @@ export default function PublishPage() {
         <div className={shell.sectionHeading}>
           <div>
             <p className={shell.eyebrow}>Workflow</p>
-            <h2 id="publish-flow-title">From local AI setup to installable package</h2>
+            <h2 id="publish-flow-title">From local files to an installable package</h2>
           </div>
           <Link className={shell.textLink} href="/publish/guide">
             Full publishing guide
@@ -110,17 +110,17 @@ export default function PublishPage() {
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>1</span>
             <h3>Package</h3>
-            <p>Wrap skills, prompts, MCP setup, or tool files with an AIPM manifest.</p>
+            <p>Add an AIPM manifest to your skills, prompts, MCP setup, or tool files.</p>
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>2</span>
             <h3>Publish</h3>
-            <p>Reserve a package name, validate contents, and push a version to the registry.</p>
+            <p>Reserve a package name, check the files, and push a version to the registry.</p>
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>3</span>
             <h3>Install</h3>
-            <p>Users add the package to a repo and bind it to Cursor, Claude, Codex, or future targets.</p>
+            <p>Users add the package to a repo and install it into Cursor, Claude, Codex, or future tools.</p>
           </article>
         </div>
       </section>

@@ -6,19 +6,19 @@ import { pageMetadata } from "../../lib/seo";
 const entries = [
   {
     date: "June 3, 2026",
-    title: "Public trust and product-readiness pages",
+    title: "Public trust and status pages",
     items: [
       "Added security, privacy, terms, status, and roadmap pages.",
-      "Added footer navigation so users can find product, resource, and trust pages from every route.",
-      "Expanded web verification to cover public SEO pages, private noindex pages, sitemap, package sitemap, llms.txt, footer links, README alignment, and SECURITY.md.",
+      "Added footer links so users can find product, resource, and trust pages from every route.",
+      "Expanded web checks for public pages, private noindex pages, sitemaps, llms.txt, footer links, README alignment, and SECURITY.md.",
     ],
   },
   {
     date: "June 2026",
-    title: "Publisher account and dashboard workflow",
+    title: "Publisher account and dashboard",
     items: [
-      "Added GitHub sign-in surfaces, publisher profile, org creation, package reservation, package dashboard, and short-lived publish token flow.",
-      "Updated publishing docs to show CLI staging, preview, validation, dashboard token generation, and token-based push.",
+      "Added GitHub sign-in, publisher profiles, org creation, package reservation, package dashboard, and short-lived publish tokens.",
+      "Updated publishing docs to show CLI staging, preview, validation, dashboard token creation, and token-based publish.",
       "Marked dashboard and login pages as noindex so search engines focus on public registry and docs pages.",
     ],
   },
@@ -26,17 +26,17 @@ const entries = [
     date: "June 2026",
     title: "CLI publishing polish",
     items: [
-      "Improved publish init/import flows for existing AI-tool skill folders.",
+      "Improved publish init and import flows for existing AI-tool skill folders.",
       "Added starter templates for code review, issue summary, and release notes skills.",
-      "Improved CLI guidance so publish steps explain what happened and what to do next.",
+      "Improved CLI messages so publishing steps explain what happened and what to do next.",
     ],
   },
   {
     date: "May 2026",
     title: "Public registry foundation",
     items: [
-      "Launched public search, package detail pages, install commands, and package metadata rendering.",
-      "Added API health/readiness endpoints and production deployment verification paths.",
+      "Launched public search, package detail pages, install commands, and package metadata display.",
+      "Added API health and readiness endpoints plus production deployment checks.",
       "Published the npm CLI package under @aipm-registry/cli.",
     ],
   },
@@ -44,7 +44,7 @@ const entries = [
 
 export const metadata = pageMetadata({
   title: "AIPM Changelog",
-  description: "Recent AIPM product updates across the CLI, registry API, website, publisher dashboard, trust pages, and SEO.",
+  description: "Recent AIPM updates across the CLI, registry API, website, and dashboard.",
   path: "/changelog",
   keywords: ["AIPM changelog", "AIPM release notes", "AI package manager updates", "AI skill registry updates"],
 });
@@ -60,7 +60,7 @@ export default function ChangelogPage() {
             "@type": "WebPage",
             name: "AIPM Changelog",
             description:
-              "Recent AIPM product updates across the CLI, registry API, website, publisher dashboard, trust pages, and SEO.",
+              "Recent AIPM updates across the CLI, registry API, website, and dashboard.",
             url: "https://aipm-registry.com/changelog",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
@@ -69,10 +69,10 @@ export default function ChangelogPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Changelog</p>
-        <h1>Track what changed across AIPM.</h1>
+        <h1>See what changed in AIPM.</h1>
         <p className={shell.lede}>
-          AIPM is still early, so visible release notes matter. This page highlights product-level
-          changes across the CLI, registry API, website, publisher dashboard, and trust surfaces.
+          AIPM is still early, so changes should be easy to follow. This page lists updates to the
+          CLI, registry API, website, dashboard, and trust pages.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/roadmap">

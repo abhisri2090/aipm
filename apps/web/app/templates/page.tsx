@@ -9,28 +9,28 @@ const templates = [
     name: "Blank",
     value: "blank",
     command: "aipm publish init --name @team/my-skill --template blank",
-    bestFor: "custom skills where you already know the structure",
+    bestFor: "custom skills when you already know what files you need",
     includes: ["minimal SKILL.md", "manifest", ".aipmignore"],
   },
   {
     name: "Code review",
     value: "code-review",
     command: "aipm publish init --name @team/review-helper --template code-review",
-    bestFor: "pull request review, code quality checks, and findings-first assistant output",
-    includes: ["review goals", "checklist", "findings format"],
+    bestFor: "pull request reviews and code quality checks",
+    includes: ["review goals", "checklist", "format for findings"],
   },
   {
     name: "Issue summary",
     value: "issue-summary",
     command: "aipm publish init --name @team/issue-summary --template issue-summary",
-    bestFor: "bug triage, Sentry summaries, support tickets, and incident handoff notes",
+    bestFor: "bug triage, Sentry summaries, support tickets, and handoff notes",
     includes: ["impact", "evidence", "likely cause", "next action"],
   },
   {
     name: "Release notes",
     value: "release-notes",
     command: "aipm publish init --name @team/release-notes --template release-notes",
-    bestFor: "user-facing release summaries, upgrade notes, and known issue sections",
+    bestFor: "release summaries, upgrade notes, and known issues",
     includes: ["highlights", "fixes", "upgrade notes", "known issues"],
   },
 ];
@@ -38,7 +38,7 @@ const templates = [
 export const metadata = pageMetadata({
   title: "AIPM Skill Templates",
   description:
-    "Choose an AIPM starter template for publishing reusable AI skills: blank, code review, issue summary, and release notes.",
+    "Choose a starter template for an AIPM skill.",
   path: "/templates",
   keywords: [
     "AIPM templates",
@@ -61,7 +61,7 @@ export default function TemplatesPage() {
             "@type": "CollectionPage",
             name: "AIPM Skill Templates",
             description:
-              "Choose an AIPM starter template for publishing reusable AI skills: blank, code review, issue summary, and release notes.",
+              "Choose a starter template for an AIPM skill.",
             url: "https://aipm-registry.com/templates",
             hasPart: templates.map((template) => ({
               "@type": "HowTo",
@@ -74,14 +74,14 @@ export default function TemplatesPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Templates</p>
-        <h1>Start publishing from a skill shape that already fits the job.</h1>
+        <h1>Start with a template, then edit it.</h1>
         <p className={shell.lede}>
-          AIPM templates create starter skill files for common AI workflows. They do not lock you
-          in; edit the generated SKILL.md, manifest, and ignored files before staging and pushing.
+          Templates create starter files for common AI tasks. They are only a starting point. Edit
+          the SKILL.md, manifest, and .aipmignore file before you publish.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish">
-            Publishing guide
+            Read publishing guide
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/examples">
             Examples
@@ -108,7 +108,7 @@ export default function TemplatesPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-          <h2>After choosing a template</h2>
+          <h2>After you choose a template</h2>
           <CodeBlock
             code={`cd review-helper
 aipm publish add .

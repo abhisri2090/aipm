@@ -32,6 +32,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/v1/auth/github/start",
+        destination: `${apiProxyOrigin}/v1/auth/github/start`,
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

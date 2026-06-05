@@ -25,6 +25,13 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/v1/auth/github/start",
+      "destination": "https://api.aipm-registry.com/v1/auth/github/start",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/v1/:path*",

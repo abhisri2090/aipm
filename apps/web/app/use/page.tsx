@@ -6,7 +6,7 @@ import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
   title: "Use AIPM",
-  description: "Install and use AIPM skills in project-ready AI tool setups.",
+  description: "Install AIPM skills into a project and keep them with your code.",
   path: "/use",
 });
 
@@ -15,29 +15,29 @@ export default function UsePage() {
     <DocLayout>
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Use AIPM</p>
-        <h1>Bind AI skills and tool files to your project.</h1>
+        <h1>Install AI skills into your project.</h1>
         <p className={shell.lede}>
-          AIPM installs the files a skill needs into your project, so your AI setup travels with
-          the code instead of living in scattered notes.
+          AIPM adds the files an AI tool needs directly to your repo. Your prompts, rules,
+          and skill files stay with the code instead of living in scattered notes.
         </p>
       </section>
 
       <article className={docs.doc}>
-        <h2>Manage project-specific skills</h2>
-        <p>AIPM maintaines aipm.package.json file in your project to track installed skills and their versions.</p>
+        <h2>Track skills per project</h2>
+        <p>AIPM keeps an aipm.package.json file in your project. It lists the skills you installed and their versions.</p>
 
         <h2>Install the CLI</h2>
-        <p>Install the bundled AIPM command once on your machine.</p>
+        <p>Install the AIPM command once on your machine.</p>
         <CodeBlock code={CLI_INSTALL_COMMAND} />
 
         <h2>Initialize a project</h2>
-        <p>This writes an aipm.package.json file with the public registry URL.</p>
+        <p>This creates aipm.package.json and points it at the public registry.</p>
         <CodeBlock code="aipm init" />
 
         <h2>Install a skill</h2>
-        <p>Choose a package from the registry and install it for the target tool.</p>
+        <p>Choose a package from the registry and install it for the AI tool you use.</p>
         <p>
-          Install for single AI Tool: See <a href="/targets">supported targets</a> for install paths and detection behavior.
+          To install for one tool, choose a target like Cursor or Claude. See <a href="/targets">supported targets</a> for the folders AIPM writes to.
         </p>
         <CodeBlock code="aipm add <Skill_Name>" />
 
@@ -49,14 +49,14 @@ export default function UsePage() {
 
         <h2>Where files go</h2>
         <p>
-          AIPM writes tool-specific files into project locations that adapters understand. For
-          Cursor, installed skill files are placed under the project Cursor skill area.
+          AIPM writes files into the folder your AI tool expects. For Cursor, skill files go into
+          the project Cursor skill area.
         </p>
 
         <h2>Updating a skill</h2>
         <p>
-          Install the newer package version with the same add command. Versions are explicit, so
-          project changes stay reviewable.
+          Install the newer version with the same add command. The version is written down, so
+          your team can review what changed.
         </p>
       </article>
     </DocLayout>

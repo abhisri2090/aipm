@@ -7,7 +7,7 @@ import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
   title: "AIPM Registry Status",
-  description: "Live status checks for AIPM registry liveness, readiness, search, install, and publishing dependencies.",
+  description: "Check whether the AIPM registry and its dependencies are working.",
   path: "/status",
   keywords: ["AIPM status", "AI package registry status", "AIPM health", "AIPM ready"],
 });
@@ -23,7 +23,7 @@ export default function StatusPage() {
             "@type": "WebPage",
             name: "AIPM Registry Status",
             description:
-              "Live status checks for AIPM registry liveness, readiness, search, install, and publishing dependencies.",
+              "Check whether the AIPM registry and its dependencies are working.",
             url: "https://aipm-registry.com/status",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
@@ -32,11 +32,10 @@ export default function StatusPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Status</p>
-        <h1>Check whether the AIPM registry is alive and ready.</h1>
+        <h1>Check if the AIPM registry is working.</h1>
         <p className={shell.lede}>
-          Use this page when search, install, or publishing feels stuck. Liveness means the API
-          process is running. Readiness means the registry can reach its metadata and package
-          storage dependencies.
+          Use this page when search, install, or publishing feels stuck. Health means the API is
+          running. Readiness means the API can reach its database and package storage.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/registry">
@@ -52,7 +51,7 @@ export default function StatusPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-          <h2>Command-line checks</h2>
+        <h2>Check from the command line</h2>
           <CodeBlock
             code={`curl https://aipm-registry.com/health
 curl https://aipm-registry.com/ready`}
@@ -62,9 +61,8 @@ curl https://aipm-registry.com/ready`}
         <section>
           <h2>How to read the result</h2>
           <p>
-            If health is OK but readiness fails, the app process is up but a dependency may be
-            unavailable. If both fail, check your connection first, then retry from another network
-            or wait for the service to recover.
+            If health passes but readiness fails, the API is running but a dependency may be down. If
+            both fail, check your connection, try another network, or wait for the service to recover.
           </p>
         </section>
       </article>

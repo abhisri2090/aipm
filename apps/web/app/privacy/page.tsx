@@ -6,41 +6,41 @@ import { pageMetadata } from "../../lib/seo";
 const dataItems = [
   {
     title: "Account identity",
-    body: "When you sign in, AIPM uses your GitHub identity to connect publisher actions to an account.",
+    body: "When you sign in, AIPM uses your GitHub identity to connect publishing actions to your account.",
   },
   {
     title: "Publisher profile",
-    body: "Your display name and profile image URL help users understand who owns an organization or package.",
+    body: "Your display name and profile image help users see who owns an org or package.",
   },
   {
     title: "Organization and package records",
-    body: "Org namespaces, package reservations, package metadata, versions, and public package files are registry data.",
+    body: "Org names, package names, metadata, versions, and public package files are stored by the registry.",
   },
   {
     title: "Short-lived publish tokens",
-    body: "Publish tokens are generated for CLI pushes, expire quickly, and should not be committed or stored in project files.",
+    body: "Publish tokens are used by the CLI, expire quickly, and should not be saved in project files.",
   },
   {
     title: "Operational logs",
-    body: "The registry may process request metadata needed to run the service, troubleshoot abuse, and protect availability.",
+    body: "The registry may process request metadata to run the service, fix abuse, and keep it available.",
   },
   {
     title: "Local preferences",
-    body: "The website can store a local theme preference in your browser. It is not needed for publishing.",
+    body: "The website can save your theme choice in your browser. This is not needed for publishing.",
   },
 ];
 
 const packageRules = [
   "Published packages are public by default.",
   "Do not publish credentials, private prompts, customer data, internal documents, or private project notes.",
-  "Use aipm publish preview and .aipmignore before pushing a package version.",
-  "Rotate any exposed secret immediately. Removing registry content does not make a leaked secret safe again.",
+  "Use aipm publish preview and .aipmignore before publishing.",
+  "Rotate any exposed secret immediately. Removing a package does not make a leaked secret safe again.",
 ];
 
 export const metadata = pageMetadata({
   title: "AIPM Privacy Notice",
   description:
-    "A practical privacy notice for AIPM accounts, publisher profiles, public packages, short-lived publish tokens, and local website preferences.",
+    "What AIPM stores for accounts, packages, tokens, and local website preferences.",
   path: "/privacy",
   keywords: [
     "AIPM privacy",
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             "@type": "WebPage",
             name: "AIPM Privacy Notice",
             description:
-              "A practical privacy notice for AIPM accounts, publisher profiles, public packages, short-lived publish tokens, and local website preferences.",
+              "What AIPM stores for accounts, packages, tokens, and local website preferences.",
             url: "https://aipm-registry.com/privacy",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
@@ -71,11 +71,10 @@ export default function PrivacyPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Privacy</p>
-        <h1>Know what is public, what is account data, and what should never be packaged.</h1>
+        <h1>Know what is public and what should stay private.</h1>
         <p className={shell.lede}>
-          AIPM is built for public, reusable AI skill packages. This notice explains the practical
-          data boundaries for accounts, publisher profiles, package metadata, short-lived tokens,
-          and project files.
+          AIPM is built for public AI skill packages. This page explains what data is used for
+          accounts, publisher profiles, package metadata, tokens, and project files.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/security">
@@ -98,11 +97,10 @@ export default function PrivacyPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-          <h2>Public package boundary</h2>
+          <h2>What becomes public</h2>
           <p>
             Package names, descriptions, targets, versions, manifests, and included skill files are
-            intended to be public registry content. AIPM should make this boundary obvious before
-            users publish.
+            public registry content. Check them before you publish.
           </p>
           <ul className={docs.checkList}>
             {packageRules.map((rule) => (
@@ -114,19 +112,17 @@ export default function PrivacyPage() {
         <section>
           <h2>What AIPM does not need</h2>
           <p>
-            AIPM does not need your private source code, secrets, customer records, internal
-            strategy documents, or unrelated project files to publish a reusable skill. A good
-            package contains only the manifest, entry file, examples, and tool files that the skill
-            needs.
+            AIPM does not need private source code, secrets, customer records, internal documents, or
+            unrelated project files. A good package includes only the manifest, main skill file,
+            examples, and tool files the skill needs.
           </p>
         </section>
 
         <section>
-          <h2>Product privacy work still planned</h2>
+          <h2>Privacy work still planned</h2>
           <p>
-            Future production hardening should include self-service account deletion, package owner
-            transfer, stronger audit logs for publisher actions, verified publisher labels, private
-            package support, and a dedicated privacy contact channel.
+            AIPM should add account deletion, package owner transfer, stronger audit logs, verified
+            publisher labels, private packages, and a privacy contact channel.
           </p>
         </section>
       </article>
