@@ -146,10 +146,6 @@ export function AdminPanel() {
         <section className={dash.dashboardEmptyState}>
           <p className={shell.eyebrow}>Admin</p>
           <h1>Admin access is not configured.</h1>
-          <p className={shell.lede}>
-            Set `AIPM-ADMIN-PASSWORD-SHA256` and `AIPM-ADMIN-ALLOWED-USERNAMES` in Key Vault, redeploy
-            the API, then try again.
-          </p>
         </section>
       </main>
     );

@@ -20,6 +20,21 @@ Until a dedicated disclosure channel is configured, report sensitive security is
 
 For non-sensitive hardening work, open a normal pull request.
 
+## What Must Stay Private
+
+The repository is public source code. Keep these outside git and store them in
+GitHub, Vercel, Azure, npm, or local secret stores:
+
+- production `.env` files
+- Azure storage connection strings and SAS URLs
+- PostgreSQL URLs with credentials
+- Key Vault secret values
+- GitHub OAuth client secrets and session secrets
+- npm tokens and package publish credentials
+- VM SSH keys, private keys, certificates, and publish profiles
+- AIPM publish tokens and token hashes
+- customer data, private prompts, internal notes, logs, or screenshots that are not meant to be public
+
 ## Public Package Safety
 
 Before publishing an AIPM package:

@@ -4,6 +4,7 @@ set -euo pipefail
 RESOURCE_GROUP="${RESOURCE_GROUP:-aipm-staging}"
 VM_NAME="${VM_NAME:-aipm-registry-vm}"
 CONFIRM_DEALLOCATE="${CONFIRM_DEALLOCATE:-false}"
+CONFIRM_PRODUCTION_OUTAGE="${CONFIRM_PRODUCTION_OUTAGE:-false}"
 
 if ! command -v az >/dev/null 2>&1; then
   echo "Azure CLI is required." >&2
@@ -29,11 +30,22 @@ if [[ "${CONFIRM_DEALLOCATE}" != "true" ]]; then
   cat >&2 <<EOF
 Refusing to deallocate without explicit confirmation.
 
-Deallocating stops the registry API, dashboard actions, install, and publish.
-The Vercel website can still serve static docs, but live registry calls will fail.
+This is a regular production VM, not a Spot VM. Deallocating it stops the
+registry API, dashboard actions, install, and publish. The Vercel website can
+still serve static docs, but live registry calls will fail.
 
 Run intentionally with:
-  CONFIRM_DEALLOCATE=true ./infra/azure/deallocate-registry-vm.sh
+  CONFIRM_DEALLOCATE=true CONFIRM_PRODUCTION_OUTAGE=true ./infra/azure/deallocate-registry-vm.sh
+EOF
+  exit 2
+fi
+
+if [[ "${CONFIRM_PRODUCTION_OUTAGE}" != "true" ]]; then
+  cat >&2 <<EOF
+Refusing to deallocate the regular production VM without outage confirmation.
+
+Run intentionally with:
+  CONFIRM_DEALLOCATE=true CONFIRM_PRODUCTION_OUTAGE=true ./infra/azure/deallocate-registry-vm.sh
 EOF
   exit 2
 fi

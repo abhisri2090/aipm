@@ -28,8 +28,9 @@ Add this callback URL to the existing GitHub OAuth app (keep the production one 
 http://localhost:3000/v1/auth/github/callback
 ```
 
-For `/admin`, set `AIPM-ADMIN-PASSWORD-SHA256` and `AIPM-ADMIN-ALLOWED-USERNAMES`
-on the registry API. The web app proxies `/v1/admin/*` through Next.js rewrites.
+For `/admin`, set Key Vault secrets `AIPM-ADMIN-PASSWORD-SHA256` and
+`AIPM-ADMIN-ALLOWED-USERNAMES` on the registry API. The web app proxies `/v1/admin/*`
+through Next.js rewrites.
 
 #### Option B — Docker Postgres
 

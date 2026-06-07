@@ -1,6 +1,7 @@
 .themeToggle {
   position: relative;
   flex: 0 0 auto;
+  z-index: 50;
 }
 
 .themeToggleTrigger {
@@ -16,6 +17,11 @@
   background: var(--control);
   color: var(--muted);
   cursor: pointer;
+  list-style: none;
+}
+
+.themeToggleTrigger::-webkit-details-marker {
+  display: none;
 }
 
 .themeToggleTrigger:hover,
@@ -25,19 +31,36 @@
   outline: none;
 }
 
+.themeToggle[open] .themeToggleTrigger {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--panel-soft);
+}
+
 .themeToggleMenu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 20;
+  z-index: 1200;
   display: grid;
   gap: 4px;
-  min-width: 148px;
-  padding: 6px;
+  min-width: 168px;
+  margin: 0;
+  padding: 8px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--text) 12%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--text) 14%, transparent);
+}
+
+.themeToggleLabel {
+  margin: 0 0 2px;
+  padding: 4px 10px 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .themeToggleOption {
@@ -47,7 +70,6 @@
   width: 100%;
   min-height: 0;
   padding: 8px 10px;
-  border: 0;
   border-radius: 7px;
   background: transparent;
   color: var(--text);
@@ -58,19 +80,29 @@
   text-align: left;
 }
 
+.themeToggleOption input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  min-height: 0;
+}
+
 .themeToggleOption:hover,
-.themeToggleOption:focus-visible {
+.themeToggleOption:has(input:focus-visible) {
   background: var(--panel-soft);
   outline: none;
 }
 
-.themeToggleOption[aria-checked="true"] {
+.themeToggleOption:has(input:checked) {
   background: var(--panel-soft);
   color: var(--accent-strong);
 }
 
 @media (max-width: 760px) {
   .themeToggle {
-    align-self: flex-start;
+    align-self: flex-end;
   }
 }

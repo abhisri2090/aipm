@@ -15,19 +15,20 @@ anything:
 ./infra/azure/check-registry-api-status.sh
 ```
 
-If the script reports `VM deallocated`, the API is intentionally offline and
-the Vercel website can only serve docs/static pages. Start the VM only when you
-want the paid API host online:
+Production is expected to run on a regular, non-Spot VM. If the script reports
+`VM deallocated`, the API is unexpectedly offline and the Vercel website can
+only serve docs/static pages. Start the VM immediately:
 
 ```bash
 ./infra/azure/ensure-registry-vm-running.sh
 ```
 
-After publishing, testing, or maintenance is finished, deallocate the VM again
-if you want to return to the low-cost offline API state:
+Do not deallocate the production VM as a routine cost-saving step. Use the
+deallocation script only for an intentional maintenance window or emergency
+shutdown:
 
 ```bash
-CONFIRM_DEALLOCATE=true ./infra/azure/deallocate-registry-vm.sh
+CONFIRM_DEALLOCATE=true CONFIRM_PRODUCTION_OUTAGE=true ./infra/azure/deallocate-registry-vm.sh
 ```
 
 `/health` confirms the process is alive. `/ready` confirms the metadata and
@@ -76,9 +77,13 @@ Optional secrets for account login and the admin usage dashboard:
 aipm-github-client-id
 aipm-github-client-secret
 aipm-session-secret
-AIPM-ADMIN-PASSWORD-SHA256
-AIPM-ADMIN-ALLOWED-USERNAMES
+AIPM-ADMIN-PASSWORD-SHA256 (Key Vault secret name)
+AIPM-ADMIN-ALLOWED-USERNAMES (Key Vault secret name)
 ```
+
+The deploy script maps those vault secrets onto runtime env vars
+`AIPM_ADMIN_PASSWORD_SHA256` and `AIPM_ADMIN_ALLOWED_USERNAMES` because systemd
+cannot load hyphenated environment variable names.
 
 Generate the admin password hash with:
 

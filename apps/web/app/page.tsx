@@ -114,6 +114,10 @@ export default async function HomePage() {
           <h2>Learn the basics</h2>
           <p>Read practical guides for creating safe, useful AI skills.</p>
         </Link>
+        <Link className={cards.guideCard} href="/popular-skills">
+          <h2>Popular skill ideas</h2>
+          <p>Start with high-value skills for code review, tests, docs, security, MCP setup, and more.</p>
+        </Link>
         <Link className={cards.guideCard} href="/discoverability">
           <h2>Get discovered</h2>
           <p>Write names, descriptions, and examples that help users find the right AI skill.</p>

@@ -4,6 +4,7 @@
 .practiceGrid,
 .templateGrid,
 .targetGrid,
+.popularGrid,
 .thanksList {
   display: grid;
   gap: 18px;
@@ -13,7 +14,8 @@
 .guideGrid,
 .steps,
 .exampleGrid,
-.practiceGrid {
+.practiceGrid,
+.popularGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -45,6 +47,7 @@
 .thanksCard,
 .templateCard,
 .targetCard,
+.popularCard,
 .resultCard,
 .faqList article,
 .statusCard,
@@ -64,7 +67,8 @@
 .practiceCard,
 .thanksCard,
 .templateCard,
-.targetCard {
+.targetCard,
+.popularCard {
   padding: 22px;
 }
 
@@ -128,6 +132,36 @@
 .targetCard > p:not(.eyebrow) {
   color: var(--muted);
   line-height: 1.6;
+}
+
+.popularCard {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.popularCard h2,
+.popularCard p {
+  margin: 0;
+}
+
+.popularCard > p:not(.eyebrow),
+.packageLine,
+.whyLine {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.packageLine {
+  margin-top: 6px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.whyLine {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
 }
 
 .targetCard dl {
@@ -380,6 +414,7 @@
   .practiceGrid,
   .templateGrid,
   .targetGrid,
+  .popularGrid,
   .thanksList,
   .statusGrid,
   .sourceList {

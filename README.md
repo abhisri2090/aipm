@@ -2,7 +2,18 @@
 
 Open-source **AI package manager** — publish and install AI skills into Cursor and Claude project folders.
 
-Repository: [https://github.com/abhisri2090/aipm](https://github.com/abhisri2090/aipm)
+Repository: [https://github.com/aipm-registry/aipm](https://github.com/aipm-registry/aipm)
+
+## What is open source?
+
+This repository is intended to be public. It includes the CLI, registry API,
+Next.js website/docs/dashboard, shared schemas, install engine, tool adapters,
+deployment scripts, and examples.
+
+Production secrets and service state are not part of the open-source project.
+Do not commit `.env` files, Azure publish profiles, storage keys, database URLs
+with credentials, Key Vault values, SSH keys, publish tokens, or private
+customer/project data. Use `.env.example` and the deployment docs as templates.
 
 ## Monorepo layout
 
@@ -19,9 +30,7 @@ packages/
   adapter-sdk/      → adapter interface
 ```
 
-Design docs: `InitialDesignPlan/` and `docs/adr/`.
-
-Launch checklist (step-by-step, `[Abhishek]` = your tasks): [`docs/step-by-step-launch-checklist.md`](docs/step-by-step-launch-checklist.md).
+Design docs: `InitialDesignPlan/`.
 
 Security policy and public package safety guidance: [`SECURITY.md`](SECURITY.md) and [aipm-registry.com/security](https://aipm-registry.com/security). Privacy notice: [aipm-registry.com/privacy](https://aipm-registry.com/privacy). Terms and acceptable use: [aipm-registry.com/terms](https://aipm-registry.com/terms). Product roadmap: [aipm-registry.com/roadmap](https://aipm-registry.com/roadmap). Changelog: [aipm-registry.com/changelog](https://aipm-registry.com/changelog). Skill templates: [aipm-registry.com/templates](https://aipm-registry.com/templates). Supported targets: [aipm-registry.com/targets](https://aipm-registry.com/targets). Examples: [aipm-registry.com/examples](https://aipm-registry.com/examples). Glossary: [aipm-registry.com/glossary](https://aipm-registry.com/glossary).
 
@@ -117,7 +126,26 @@ npm install -g @aipm-registry/cli
 | `pnpm build` | Build all packages        |
 | `pnpm test`  | Run tests                 |
 | `pnpm lint`  | ESLint                    |
+| `pnpm typecheck` | TypeScript checks     |
+| `pnpm scan:secrets` | Scan tracked and untracked non-ignored files for common secret leaks |
 | `pnpm dev`   | Dev mode (registry watch) |
+
+## Before making a branch public
+
+Run:
+
+```bash
+pnpm install
+pnpm build
+pnpm test
+pnpm lint
+pnpm typecheck
+pnpm scan:secrets
+```
+
+Also check `git status --short` and review every untracked file. If you deploy
+from this repo, keep cloud credentials in GitHub/Vercel/Azure secret stores, not
+in the repository.
 
 
 ## Current scope (shipped in repo)

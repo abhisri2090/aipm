@@ -75,8 +75,7 @@ function MenuIcon({ choice }: { choice: ThemeChoice }) {
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<ThemeChoice>("system");
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -86,27 +85,25 @@ export function ThemeToggle() {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
-
-    function onPointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
+    function onPointerDown(event: PointerEvent) {
+      const root = rootRef.current;
+      if (!root?.open || root.contains(event.target as Node)) return;
+      root.open = false;
     }
 
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
+      if (event.key === "Escape" && rootRef.current?.open) {
+        rootRef.current.open = false;
       }
     }
 
-    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, []);
 
   function choose(next: ThemeChoice) {
     setTheme(next);
@@ -116,38 +113,39 @@ export function ThemeToggle() {
     } else {
       window.localStorage.setItem(STORAGE_KEY, next);
     }
-    setOpen(false);
+    if (rootRef.current) rootRef.current.open = false;
   }
 
   return (
-    <div className={styles.themeToggle} ref={rootRef}>
-      <button
-        type="button"
-        className={styles.themeToggleTrigger}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label="Change theme"
-        onClick={() => setOpen((value) => !value)}
-      >
+    <details ref={rootRef} className={styles.themeToggle}>
+      <summary className={styles.themeToggleTrigger} aria-label="Change theme">
         <BulbIcon />
-      </button>
-      {open ? (
-        <div className={styles.themeToggleMenu} role="menu" aria-label="Theme">
-          {choices.map((choice) => (
-            <button
-              key={choice}
-              type="button"
-              role="menuitemradio"
-              aria-checked={theme === choice}
-              className={styles.themeToggleOption}
-              onClick={() => choose(choice)}
-            >
-              <MenuIcon choice={choice} />
-              <span>{labels[choice]}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
-    </div>
+      </summary>
+      <fieldset
+        className={styles.themeToggleMenu}
+        onMouseDown={(event) => event.preventDefault()}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <legend className={styles.themeToggleLabel}>Theme</legend>
+        {choices.map((choice) => (
+          <label
+            key={choice}
+            className={styles.themeToggleOption}
+            onClick={() => choose(choice)}
+          >
+            <input
+              type="radio"
+              name="aipm-theme-choice"
+              value={choice}
+              checked={theme === choice}
+              readOnly
+              tabIndex={-1}
+            />
+            <MenuIcon choice={choice} />
+            <span>{labels[choice]}</span>
+          </label>
+        ))}
+      </fieldset>
+    </details>
   );
 }

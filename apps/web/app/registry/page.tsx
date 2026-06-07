@@ -1,4 +1,5 @@
 import { shell, cn } from "../../lib/page-styles";
+import Link from "next/link";
 import { RegistrySearch } from "../../components/registry-search";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
@@ -44,6 +45,11 @@ export default async function RegistryPage({
           Find AI skills by package name, supported tool, or description. Demo packages are hidden so
           the list stays focused on usable skills.
         </p>
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/popular-skills">
+            See popular skill ideas
+          </Link>
+        </div>
       </section>
 
       <section className={shell.panelSection} aria-labelledby="registry-search-title">

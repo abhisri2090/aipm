@@ -9,8 +9,9 @@ import {
 } from "./db.js";
 import { clearAuthCookie, parseRequestCookies, setAuthCookie, sha256Hex, type AccountAuth } from "./user-auth.js";
 
-export const ADMIN_PASSWORD_SHA256_ENV = "AIPM-ADMIN-PASSWORD-SHA256";
-export const ADMIN_ALLOWED_USERNAMES_ENV = "AIPM-ADMIN-ALLOWED-USERNAMES";
+/** Runtime env names use underscores because systemd/bash cannot load hyphenated keys. */
+export const ADMIN_PASSWORD_SHA256_ENV = "AIPM_ADMIN_PASSWORD_SHA256";
+export const ADMIN_ALLOWED_USERNAMES_ENV = "AIPM_ADMIN_ALLOWED_USERNAMES";
 export const ADMIN_SESSION_COOKIE = "aipm_admin_session";
 const ADMIN_SESSION_HOURS = 12;
 const MAX_LOGIN_ATTEMPTS = 8;

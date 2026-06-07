@@ -29,6 +29,11 @@ export default function ResourcesPage() {
       body: "Write names, descriptions, and examples that help users find the right skill.",
     },
     {
+      href: "/popular-skills",
+      title: "Popular Skill Ideas",
+      body: "Use a curated starter catalog for code review, testing, docs, security, MCP setup, and more.",
+    },
+    {
       href: "/security",
       title: "Security and Privacy",
       body: "Publish public skills without leaking secrets, customer data, or private notes.",

@@ -21,6 +21,7 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
     title: "Guides",
     items: [
       { href: "/targets", label: "Supported targets" },
+      { href: "/popular-skills", label: "Popular skill ideas" },
       { href: "/templates", label: "Skill templates" },
       { href: "/examples", label: "Workflow examples" },
       { href: "/glossary", label: "Glossary" },

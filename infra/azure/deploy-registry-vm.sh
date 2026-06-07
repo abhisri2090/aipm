@@ -255,8 +255,8 @@ tmp="\$(mktemp /run/aipm-registry-secrets.env.XXXXXX)"
   if [ -n "\$github_client_id" ]; then printf 'GITHUB_CLIENT_ID=%s\n' "\$github_client_id"; fi
   if [ -n "\$github_client_secret" ]; then printf 'GITHUB_CLIENT_SECRET=%s\n' "\$github_client_secret"; fi
   if [ -n "\$session_secret" ]; then printf 'AIPM_SESSION_SECRET=%s\n' "\$session_secret"; fi
-  if [ -n "\$admin_password_sha256" ]; then printf 'AIPM-ADMIN-PASSWORD-SHA256=%s\n' "\$admin_password_sha256"; fi
-  if [ -n "\$admin_allowed_usernames" ]; then printf 'AIPM-ADMIN-ALLOWED-USERNAMES=%s\n' "\$admin_allowed_usernames"; fi
+  if [ -n "\$admin_password_sha256" ]; then printf 'AIPM_ADMIN_PASSWORD_SHA256=%s\n' "\$admin_password_sha256"; fi
+  if [ -n "\$admin_allowed_usernames" ]; then printf 'AIPM_ADMIN_ALLOWED_USERNAMES=%s\n' "\$admin_allowed_usernames"; fi
   printf 'AIPM_METADATA_BACKEND=postgres\n'
 } > "\$tmp"
 mv "\$tmp" /run/aipm-registry-secrets.env

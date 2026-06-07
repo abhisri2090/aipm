@@ -316,25 +316,25 @@ For production smoke checks, run:
 ./infra/azure/verify-production.sh https://aipm-registry.com
 ```
 
-If the production API appears down, check state first without starting paid
-compute:
+If the production API appears down, check VM and API state:
 
 ```bash
 ./infra/azure/check-registry-api-status.sh
 ```
 
-If it reports `VM deallocated`, the docs site on Vercel can still load but
-registry search, dashboard actions, install, and publish calls will fail until
-the VM is started intentionally:
+Production is expected to run on a regular, non-Spot VM. If it reports
+`VM deallocated`, the docs site on Vercel can still load but registry search,
+dashboard actions, install, and publish calls will fail until the VM is started:
 
 ```bash
 ./infra/azure/ensure-registry-vm-running.sh
 ```
 
-When the API work is finished and you want to stop paid compute again:
+Do not deallocate production as a routine cost-saving step. Use this only for an
+intentional maintenance window or emergency shutdown:
 
 ```bash
-CONFIRM_DEALLOCATE=true ./infra/azure/deallocate-registry-vm.sh
+CONFIRM_DEALLOCATE=true CONFIRM_PRODUCTION_OUTAGE=true ./infra/azure/deallocate-registry-vm.sh
 ```
 
 ## Local Development
