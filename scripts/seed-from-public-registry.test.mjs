@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   buildPublishPayload,
-  publishToLocalRegistry,
   resolveSeedConfig,
   seedFromPublicRegistry,
 } from "./seed-from-public-registry.mjs";

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile, appendFile, access } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile, access } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { promisify } from "node:util";

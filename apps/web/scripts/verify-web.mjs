@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* global AbortController, URL, clearTimeout, console, fetch, process, setTimeout */
 
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
