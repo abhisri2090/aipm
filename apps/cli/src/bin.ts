@@ -4,7 +4,12 @@ import { execFile } from "node:child_process";
 import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { cwd, env } from "node:process";
-import { PackageManifestSchema, isValidScopeName, type AiTool } from "@aipm-registry/schemas";
+import {
+  PackageManifestSchema,
+  isValidScopeName,
+  type AiTool,
+  type PackageManifest,
+} from "@aipm-registry/schemas";
 import { detectToolsInProject } from "@aipm-registry/engine";
 import { packDirectory, packStagedFiles } from "./pack.js";
 import { publishPackage, searchPackages } from "./registry-client.js";
@@ -285,7 +290,7 @@ async function initSkill(opts: {
   await mkdir(root, { recursive: true });
   const source = opts.from ? resolve(opts.from) : null;
   const entry = source ? await inferEntryFromSource(source, opts.entry) : opts.entry;
-  const manifest = {
+  const manifest: PackageManifest = PackageManifestSchema.parse({
     schemaVersion: "0.1",
     name: opts.name,
     version: opts.version,
@@ -294,8 +299,7 @@ async function initSkill(opts: {
     entry,
     targets: parseTargetsFlag(opts.targets),
     license: "Apache-2.0",
-  };
-  PackageManifestSchema.parse(manifest);
+  });
   if (source) {
     const sourceInfo = await stat(source);
     if (sourceInfo.isDirectory()) {

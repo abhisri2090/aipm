@@ -13,6 +13,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-binary:
     strategy:
@@ -49,6 +52,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm --filter '@aipm-registry/cli...' build
       - run: pnpm --filter @aipm-registry/cli typecheck
       - run: pnpm release:cli:binaries
         env:
@@ -79,6 +83,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm --filter '@aipm-registry/cli...' build
       - run: pnpm --filter @aipm-registry/cli lint
       - run: pnpm --filter @aipm-registry/cli test
 
