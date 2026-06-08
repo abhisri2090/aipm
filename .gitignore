@@ -22,5 +22,5 @@ coverage/
 .DS_Store
 *.log
 .maintainer-private/
-docs/
+docs/*
 !docs/LOCAL_DEV.md
