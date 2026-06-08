@@ -19,4 +19,6 @@ apps/registry-api/data/
 coverage/
 .DS_Store
 *.log
+.maintainer-private/
 docs/
+!docs/LOCAL_DEV.md

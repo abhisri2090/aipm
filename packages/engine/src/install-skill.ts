@@ -1,10 +1,10 @@
 import type { SkillAdapter } from "@aipm-registry/adapter-sdk";
 import { claudeSkillAdapter } from "@aipm-registry/adapter-claude";
 import { cursorSkillAdapter } from "@aipm-registry/adapter-cursor";
-import type { AiTool, PackageManifest } from "@aipm-registry/schemas";
+import type { AiTool, ConcreteAiTool, PackageManifest } from "@aipm-registry/schemas";
 import { resolveInstallTools } from "./detect-tools.js";
 
-const adapters: Record<AiTool, SkillAdapter> = {
+const adapters: Record<ConcreteAiTool, SkillAdapter> = {
   cursor: cursorSkillAdapter,
   claude: claudeSkillAdapter,
 };
@@ -18,8 +18,8 @@ export interface InstallSkillOptions {
 }
 
 export interface InstallSkillResult {
-  resolvedTools: AiTool[];
-  installed: Partial<Record<AiTool, string[]>>;
+  resolvedTools: ConcreteAiTool[];
+  installed: Partial<Record<ConcreteAiTool, string[]>>;
 }
 
 export async function installSkillPackage(
@@ -34,11 +34,11 @@ export async function installSkillPackage(
 
   if (tools.length === 0) {
     throw new Error(
-      "No AI tool detected (.cursor/ or .claude/). Use --target cursor|claude or set preferredTools in aipm.package.json.",
+      "No AI tool detected (.cursor/ or .claude/). Use --target cursor|claude|* or set preferredTools in aipm.package.json.",
     );
   }
 
-  const installed: Partial<Record<AiTool, string[]>> = {};
+  const installed: Partial<Record<ConcreteAiTool, string[]>> = {};
 
   for (const tool of tools) {
     const adapter = adapters[tool];

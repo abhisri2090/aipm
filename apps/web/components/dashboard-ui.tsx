@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { CodeBlock } from "./code-block";
-import { GITHUB_LOGIN_URL, packagePath } from "../lib/registry";
+import { DEV_LOGIN_URL, GITHUB_LOGIN_URL, isLocalDevSite, packagePath } from "../lib/registry";
 import { cn } from "../lib/class-names";
 import shell from "../app/page-shell.module.css";
 import docs from "../app/docs-content.module.css";
@@ -117,7 +117,7 @@ function LoginRequired({ message }: { message: string }) {
           <p className={shell.lede}>{message}</p>
           <div className={shell.actions}>
             <Link className={shell.button} href="/login">
-              Sign in with GitHub
+              Sign in
             </Link>
             <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Publishing guide
@@ -218,6 +218,33 @@ function DashboardShell({
 }
 
 export function LoginPanel() {
+  const localDev = isLocalDevSite();
+  const [authConfig, setAuthConfig] = useState<{ devAuth: boolean; githubAuth: boolean } | null>(null);
+  const [configError, setConfigError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void api<{ devAuth: boolean; githubAuth: boolean }>("/v1/auth/config")
+      .then((config) => {
+        if (!cancelled) {
+          setAuthConfig(config);
+          setConfigError(null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setAuthConfig({ devAuth: false, githubAuth: false });
+          setConfigError(publicApiError(error));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showDevLogin = localDev || authConfig?.devAuth === true;
+  const showGithubLogin = authConfig?.githubAuth === true;
+
   return (
     <main>
       <section className={dash.loginScreen}>
@@ -230,9 +257,27 @@ export function LoginPanel() {
             and keep your AI tooling ready for real projects.
           </p>
           <div className={shell.actions}>
-            <a className={shell.button} href={GITHUB_LOGIN_URL}>
-              Continue with GitHub
-            </a>
+            {authConfig === null && !localDev ? (
+              <span className={shell.muted}>Checking sign-in options…</span>
+            ) : null}
+            {showDevLogin ? (
+              <a className={shell.button} href={DEV_LOGIN_URL}>
+                Continue as local contributor
+              </a>
+            ) : null}
+            {showGithubLogin ? (
+              <a className={shell.button} href={GITHUB_LOGIN_URL}>
+                Continue with GitHub
+              </a>
+            ) : null}
+            {!showDevLogin && !showGithubLogin && authConfig !== null ? (
+              <p className={shell.muted}>Publisher sign-in is not configured on this API.</p>
+            ) : null}
+            {configError && localDev ? (
+              <p className={shell.muted}>
+                {configError} Start the registry API with <code>pnpm local:api</code>, then retry.
+              </p>
+            ) : null}
             <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Read publishing guide
             </Link>
@@ -515,12 +560,12 @@ export function NewOrgForm() {
           <input
             id="org-slug"
             onChange={(event) => setSlug(event.target.value)}
-            placeholder="bazzigames"
+            placeholder="Company name"
             value={slug}
           />
           <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
           <label htmlFor="org-name">Display name</label>
-          <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Bazzi Games" value={name} />
+          <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Company display name" value={name} />
           {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Create organization</button>
           <p className={dash.fieldHelp}>

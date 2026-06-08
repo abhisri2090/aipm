@@ -75,6 +75,22 @@ export function resolveRegistryUrl(
 
 export function parseTargetFlag(target?: string): AiTool | undefined {
   if (!target) return undefined;
-  if (target === "cursor" || target === "claude") return target;
-  throw new Error('--target must be "cursor" or "claude"');
+  if (target === "cursor" || target === "claude" || target === "*") return target;
+  throw new Error('--target must be "cursor", "claude", or "*"');
+}
+
+export function parseTargetsFlag(value: string): AiTool[] {
+  const targets = value
+    .split(",")
+    .map((target) => target.trim())
+    .filter(Boolean);
+  if (targets.length === 0) throw new Error("At least one target is required.");
+  for (const target of targets) {
+    if (target !== "cursor" && target !== "claude" && target !== "*") {
+      throw new Error('--targets must contain only "cursor", "claude", and/or "*"');
+    }
+  }
+  const unique = [...new Set(targets)] as AiTool[];
+  if (unique.includes("*")) return ["*"];
+  return unique;
 }

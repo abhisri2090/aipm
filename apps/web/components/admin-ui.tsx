@@ -2,9 +2,10 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { GITHUB_LOGIN_URL } from "../lib/registry";
+import { DEV_LOGIN_URL, GITHUB_LOGIN_URL, isLocalDevSite } from "../lib/registry";
 import { cn, dash, shell } from "../lib/page-styles";
 import { InternalStatsPanel } from "./internal-stats-ui";
+import { AdminImportSkillPanel } from "./admin-import-ui";
 import type { InternalStats } from "./internal-stats-types";
 
 type Me = {
@@ -16,35 +17,62 @@ type Me = {
 
 type AdminSession = Me;
 
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 8000);
-  const response = await fetch(path, {
-    ...init,
-    credentials: "include",
-    signal: init?.signal ?? controller.signal,
-    headers: {
-      "content-type": "application/json",
-      ...init?.headers,
-    },
-  }).finally(() => window.clearTimeout(timeout));
+type AuthConfig = {
+  devAuth: boolean;
+  githubAuth: boolean;
+};
 
-  if (!response.ok) {
-    const error = (await response.json().catch(() => ({}))) as { error?: string };
-    throw new Error(error.error ?? `Request failed: ${response.status}`);
+function publicApiError(error: unknown): string {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return "AIPM API timed out. Start the local registry API with `pnpm local:api`.";
   }
-  return response.json() as Promise<T>;
+  if (error instanceof TypeError) {
+    return "AIPM API is unreachable. Start the local registry API with `pnpm local:api`.";
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return "AIPM API is unavailable.";
+}
+
+async function fetchWithTimeout(path: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 6000);
+  try {
+    return await fetch(path, {
+      ...init,
+      credentials: "include",
+      signal: init?.signal ?? controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeout);
+  }
 }
 
 export function AdminPanel() {
   const [me, setMe] = useState<Me | null>(null);
   const [adminSession, setAdminSession] = useState<AdminSession | null>(null);
   const [stats, setStats] = useState<InternalStats | null>(null);
+  const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState<string | null>(null);
+
+  async function api<T>(path: string, init?: RequestInit): Promise<T> {
+    const response = await fetchWithTimeout(path, {
+      ...init,
+      headers: {
+        "content-type": "application/json",
+        ...init?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      throw new Error(body.error ?? `Request failed: ${response.status}`);
+    }
+    return response.json() as Promise<T>;
+  }
 
   const loadStats = useCallback(async () => {
     const data = await api<InternalStats>("/v1/admin/stats");
@@ -56,7 +84,23 @@ export function AdminPanel() {
     setError(null);
     setUnavailable(null);
     try {
-      const meResponse = await fetch("/v1/me", { credentials: "include" });
+      const configResponse = await fetchWithTimeout("/v1/auth/config");
+      if (configResponse.ok) {
+        setAuthConfig((await configResponse.json()) as AuthConfig);
+      } else {
+        setAuthConfig({ devAuth: false, githubAuth: false });
+      }
+
+      const meResponse = await fetchWithTimeout("/v1/me");
+      if (meResponse.status === 503) {
+        setUnavailable(
+          "Account services require Docker Postgres. Run `pnpm local:setup`, then restart `pnpm local:api`.",
+        );
+        setMe(null);
+        setAdminSession(null);
+        setStats(null);
+        return;
+      }
       const user = meResponse.ok ? ((await meResponse.json()) as Me) : null;
       setMe(user);
       if (!user) {
@@ -65,7 +109,7 @@ export function AdminPanel() {
         return;
       }
 
-      const sessionResponse = await fetch("/v1/admin/session", { credentials: "include" });
+      const sessionResponse = await fetchWithTimeout("/v1/admin/session");
       if (sessionResponse.status === 503) {
         setUnavailable("Admin access is not configured on the API.");
         setAdminSession(null);
@@ -80,8 +124,7 @@ export function AdminPanel() {
         setStats(null);
       }
     } catch (requestError) {
-      const message =
-        requestError instanceof Error ? requestError.message : "Admin dashboard is unavailable.";
+      const message = publicApiError(requestError);
       if (message.includes("not configured")) {
         setUnavailable(message);
       } else {
@@ -145,7 +188,36 @@ export function AdminPanel() {
       <main className={cn(dash.dashboardPage, dash.dashboardPageFull)}>
         <section className={dash.dashboardEmptyState}>
           <p className={shell.eyebrow}>Admin</p>
-          <h1>Admin access is not configured.</h1>
+          <h1>Admin access is not available.</h1>
+          <p className={shell.lede}>{unavailable}</p>
+          <div className={shell.actions}>
+            <Link className={shell.button} href="/login">
+              Open login
+            </Link>
+            <Link className={cn(shell.button, shell.secondary)} href="/">
+              Back to home
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (error && !me) {
+    return (
+      <main className={cn(dash.dashboardPage, dash.dashboardPageFull)}>
+        <section className={dash.dashboardEmptyState}>
+          <p className={shell.eyebrow}>Admin</p>
+          <h1>Admin dashboard is unavailable.</h1>
+          <p className={shell.lede}>{error}</p>
+          <div className={shell.actions}>
+            <Link className={shell.button} href="/login">
+              Open login
+            </Link>
+            <Link className={cn(shell.button, shell.secondary)} href="/">
+              Back to home
+            </Link>
+          </div>
         </section>
       </main>
     );
@@ -158,13 +230,25 @@ export function AdminPanel() {
           <p className={shell.eyebrow}>Admin</p>
           <h1>Sign in before opening admin.</h1>
           <p className={shell.lede}>
-            Admin access uses your GitHub account plus the shared admin password. Sign in first, then
-            return to this page.
+            Admin access uses your publisher account plus the local admin password. Sign in first,
+            then return to this page.
           </p>
           <div className={shell.actions}>
-            <a className={shell.button} href={GITHUB_LOGIN_URL}>
-              Continue with GitHub
-            </a>
+            {authConfig?.devAuth || isLocalDevSite() ? (
+              <a className={shell.button} href={DEV_LOGIN_URL}>
+                Continue as local contributor
+              </a>
+            ) : null}
+            {authConfig?.githubAuth ? (
+              <a className={shell.button} href={GITHUB_LOGIN_URL}>
+                Continue with GitHub
+              </a>
+            ) : null}
+            {!authConfig?.devAuth && !authConfig?.githubAuth && !isLocalDevSite() ? (
+              <Link className={shell.button} href="/login">
+                Open login
+              </Link>
+            ) : null}
             <Link className={cn(shell.button, shell.secondary)} href="/">
               Back to home
             </Link>
@@ -182,7 +266,8 @@ export function AdminPanel() {
           <h1>Enter the admin password.</h1>
           <p className={shell.lede}>
             Signed in as <strong>{me.username}</strong> (GitHub @{me.githubLogin}). Only allowlisted
-            AIPM usernames can unlock admin after the password check.
+            AIPM usernames can unlock admin after the password check. Local password:{" "}
+            <code>local-admin</code>.
           </p>
           <form className={dash.formPanel} onSubmit={onSubmit}>
             <label htmlFor="admin-password">Admin password</label>
@@ -211,16 +296,17 @@ export function AdminPanel() {
   }
 
   return (
-    <>
-      <div className={dash.dashboardWorkspace} style={{ maxWidth: 1200, margin: "0 auto", paddingTop: 24 }}>
-        <div className={dash.dashboardHeroActions} style={{ justifyContent: "flex-end", marginBottom: 16 }}>
+    <main className={cn(dash.dashboardPage, dash.dashboardPageFull)}>
+      <section className={dash.dashboardWorkspace}>
+        <div className={dash.adminTopBar}>
           <span className={shell.muted}>Signed in as {adminSession.username}</span>
           <button className={cn(shell.button, shell.secondary)} type="button" onClick={() => void onLogout()} disabled={submitting}>
             Sign out of admin
           </button>
         </div>
-      </div>
-      <InternalStatsPanel stats={stats} />
-    </>
+        <AdminImportSkillPanel onImported={loadStats} />
+        <InternalStatsPanel stats={stats} />
+      </section>
+    </main>
   );
 }

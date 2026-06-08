@@ -43,13 +43,21 @@ Security policy and public package safety guidance: [`SECURITY.md`](SECURITY.md)
 
 ## Quick start (local)
 
+Full contributor setup: [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md).
+
+```bash
+pnpm install
+pnpm local:setup
+pnpm local:api    # terminal 1
+pnpm local:web    # terminal 2
+```
+
+Minimal registry-only path (no Docker):
+
 ```bash
 pnpm install
 pnpm build
-
-# Registry API — keep this terminal open (Postgres optional; file metadata fallback)
 pnpm registry
-# or: pnpm --filter @aipm-registry/registry-api build && pnpm --filter @aipm-registry/registry-api start
 
 # Publish sample skill (another terminal)
 node apps/cli/dist/bin.cjs publish examples/skills/@team/sample-skill \
@@ -128,7 +136,11 @@ npm install -g @aipm-registry/cli
 | `pnpm lint`  | ESLint                    |
 | `pnpm typecheck` | TypeScript checks     |
 | `pnpm scan:secrets` | Scan tracked and untracked non-ignored files for common secret leaks |
-| `pnpm dev`   | Dev mode (registry watch) |
+| `pnpm local:setup` | Docker Postgres + local env files |
+| `pnpm local:api` | Registry API with local `.env` |
+| `pnpm local:web` | Next.js dev server |
+| `pnpm local:seed` | Seed local registry from public API |
+| `pnpm local:check` | Verify contributor docs stay production-free |
 
 ## Before making a branch public
 

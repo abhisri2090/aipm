@@ -106,6 +106,7 @@ export function ThemeToggle() {
   }, []);
 
   function choose(next: ThemeChoice) {
+    console.log(">>>>> choose", next);
     setTheme(next);
     applyTheme(next);
     if (next === "system") {
@@ -123,16 +124,10 @@ export function ThemeToggle() {
       </summary>
       <fieldset
         className={styles.themeToggleMenu}
-        onMouseDown={(event) => event.preventDefault()}
-        onPointerDown={(event) => event.stopPropagation()}
       >
         <legend className={styles.themeToggleLabel}>Theme</legend>
         {choices.map((choice) => (
-          <label
-            key={choice}
-            className={styles.themeToggleOption}
-            onClick={() => choose(choice)}
-          >
+          <label key={choice} className={styles.themeToggleOption} onClick={() => choose(choice)}>
             <input
               type="radio"
               name="aipm-theme-choice"

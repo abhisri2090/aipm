@@ -4,10 +4,13 @@ import { notFound } from "next/navigation";
 import { CodeBlock } from "../../../../../components/code-block";
 import {
   CLI_INSTALL_COMMAND,
+  displayTargets,
   formatBytes,
   getPackage,
+  GITHUB_LOGIN_URL,
   installCommand,
   installCommandForTarget,
+  isUnverifiedImportedPackage,
   packagePath,
   SITE_URL,
   shortIntegrity,
@@ -31,6 +34,7 @@ function toSummary(pkg: Awaited<ReturnType<typeof getPackage>>): PackageSummary 
     sizeBytes: pkg.sizeBytes,
     createdAt: pkg.createdAt,
     publisher: pkg.publisher,
+    import: pkg.import,
   };
 }
 
@@ -91,10 +95,18 @@ export default async function PackagePage({ params }: PackagePageProps) {
 
   const summary = toSummary(pkg);
   const command = installCommand(summary);
-  const allTargetCommands = summary.targets.map((target) => ({
-    target,
-    command: installCommandForTarget(summary, target),
-  }));
+  const allTargetCommands = displayTargets(summary.targets)
+    .filter((target) => target !== "*")
+    .map((target) => ({
+      target,
+      command: installCommandForTarget(summary, target),
+    }));
+  if (summary.targets.includes("*")) {
+    allTargetCommands.unshift({
+      target: "all tools",
+      command: installCommand(summary),
+    });
+  }
   const canonicalUrl = `${SITE_URL}${packagePath(summary.name, summary.version)}`;
   const publisherName = summary.publisher
     ? `${summary.publisher.org.name} (${summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`})`
@@ -179,6 +191,18 @@ export default async function PackagePage({ params }: PackagePageProps) {
           {summary.name}@{summary.version}
         </h1>
         <p className={shell.lede}>{summary.description}</p>
+        {isUnverifiedImportedPackage(summary) ? (
+          <div className={shell.actions}>
+            {summary.import?.sourceUrl ? (
+              <a className={shell.textLink} href={summary.import.sourceUrl} rel="noreferrer" target="_blank">
+                View source
+              </a>
+            ) : null}
+            <a className={shell.button} href={GITHUB_LOGIN_URL}>
+              Claim this skill
+            </a>
+          </div>
+        ) : null}
       </section>
 
       <section className={shell.detailGrid}>
@@ -209,8 +233,14 @@ export default async function PackagePage({ params }: PackagePageProps) {
             </div>
             <div>
               <dt>Targets</dt>
-              <dd>{summary.targets.join(", ")}</dd>
+              <dd>{displayTargets(summary.targets).join(", ")}</dd>
             </div>
+            {summary.import?.imported ? (
+              <div>
+                <dt>Import status</dt>
+                <dd>{summary.publisher?.user.verified === false ? "Imported · Unverified" : "Imported"}</dd>
+              </div>
+            ) : null}
             <div>
               <dt>License</dt>
               <dd>{summary.license ?? "Not specified"}</dd>

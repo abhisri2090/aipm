@@ -1,12 +1,13 @@
 import { execFile } from "node:child_process";
 import { access } from "node:fs/promises";
-import { delimiter, sep } from "node:path";
+import { delimiter, join, sep } from "node:path";
 import { promisify } from "node:util";
 import { assertRegistryReachable } from "./registry-client.js";
 import {
   readProjectPackageJson,
   resolveRegistryUrl,
 } from "./project-files.js";
+import { initRequiredMessage, resolveConfigRoot, scopeLabel } from "./project-root.js";
 import {
   readManifest,
   statusPublishState,
@@ -61,9 +62,12 @@ export async function runDoctor(options: {
   registry?: string;
   json?: boolean;
   publish?: boolean;
+  global?: boolean;
 }): Promise<void> {
+  const scope = { global: options.global };
+  const configRoot = resolveConfigRoot(scope);
   const root = process.cwd();
-  const project = await readProjectPackageJson(root);
+  const project = await readProjectPackageJson(configRoot);
   const registry = resolveRegistryUrl(project, options.registry, "https://api.aipm-registry.com");
   const nodeMajor = Number(process.versions.node.split(".")[0]);
   const npmPrefix = await commandOutput("npm", ["prefix", "-g"]);
@@ -105,11 +109,20 @@ export async function runDoctor(options: {
   }
 
   if (!options.publish) {
+    const configLabel = options.global ? "Global config" : "Project config";
     try {
-      await access("aipm.package.json");
-      checks.push({ name: "Project config", ok: true, detail: "aipm.package.json exists." });
+      await access(join(configRoot, "aipm.package.json"));
+      checks.push({
+        name: configLabel,
+        ok: true,
+        detail: `${join(configRoot, "aipm.package.json")} exists (${scopeLabel(scope)}).`,
+      });
     } catch {
-      checks.push({ name: "Project config", ok: false, detail: "Run aipm init in this project." });
+      checks.push({
+        name: configLabel,
+        ok: false,
+        detail: initRequiredMessage(scope),
+      });
     }
   }
 

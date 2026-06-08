@@ -15,7 +15,10 @@ import {
 import { promptForTool } from "./prompt.js";
 
 export interface InstallOneOptions {
-  projectRoot: string;
+  /** Directory for aipm-lock.json reads and writes */
+  configRoot: string;
+  /** Directory for tool detection and adapter installs (.cursor/, .claude/) */
+  installRoot?: string;
   registry: string;
   name: string;
   version: string;
@@ -25,6 +28,8 @@ export interface InstallOneOptions {
 }
 
 export async function installOnePackage(options: InstallOneOptions): Promise<void> {
+  const configRoot = options.configRoot;
+  const installRoot = options.installRoot ?? configRoot;
   await assertRegistryReachable(options.registry);
   const { manifest, integrity: remoteIntegrity } = await fetchPackageMetadata(
     options.registry,
@@ -37,7 +42,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
 
   const { resolveInstallTools } = await import("@aipm-registry/engine");
   let tools = await resolveInstallTools({
-    projectRoot: options.projectRoot,
+    projectRoot: installRoot,
     manifest,
     preferredTools,
     explicitTarget,
@@ -46,14 +51,14 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
   if (tools.length === 0) {
     if (options.ci) {
       throw new Error(
-        "No tool detected. Use --target cursor|claude in CI mode.",
+        "No tool detected. Use --target cursor|claude|* in CI mode.",
       );
     }
     const choice = await promptForTool();
     explicitTarget = choice;
     preferredTools = [choice];
     tools = await resolveInstallTools({
-      projectRoot: options.projectRoot,
+      projectRoot: installRoot,
       manifest,
       preferredTools,
       explicitTarget,
@@ -68,14 +73,14 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
   const skillMarkdown = await unpackTarballToBuffer(tarball, manifest.entry);
 
   const result = await installSkillPackage({
-    projectRoot: options.projectRoot,
+    projectRoot: installRoot,
     manifest,
     skillMarkdown,
     preferredTools,
     explicitTarget,
   });
 
-  const lock: Lockfile = (await readLockfile(options.projectRoot)) ?? {
+  const lock: Lockfile = (await readLockfile(configRoot)) ?? {
     schemaVersion: "0.1",
     packages: {},
   };
@@ -87,7 +92,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
   }
 
   await writeLockfile(
-    options.projectRoot,
+    configRoot,
     upsertLockEntry(lock, options.name, {
       version: options.version,
       integrity: remoteIntegrity,

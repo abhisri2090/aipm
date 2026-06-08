@@ -11,6 +11,13 @@ import { publishPackage, searchPackages } from "./registry-client.js";
 import { installOnePackage } from "./install-one.js";
 import { runDoctor } from "./doctor.js";
 import {
+  initRequiredMessage,
+  resolveConfigRoot,
+  resolveInstallRoot,
+  scopeLabel,
+  type ProjectScopeOptions,
+} from "./project-root.js";
+import {
   addPublishFiles,
   readManifest,
   removePublishFiles,
@@ -20,6 +27,7 @@ import {
 } from "./publish-state.js";
 import {
   parseTargetFlag,
+  parseTargetsFlag,
   readLockfile,
   readProjectPackageJson,
   resolveRegistryUrl,
@@ -28,6 +36,7 @@ import {
 } from "./project-files.js";
 import { promptForTool } from "./prompt.js";
 import { getCliVersion } from "./version.js";
+import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
 
 const CLI_VERSION = getCliVersion();
 const program = new Command();
@@ -35,6 +44,11 @@ const DEFAULT_REGISTRY = "https://api.aipm-registry.com";
 const SITE_URL = "https://aipm-registry.com";
 const PUBLISH_DOC_URL = "https://aipm-registry.com/publish";
 const DASHBOARD_URL = "https://aipm-registry.com/dashboard";
+const GLOBAL_OPTION = "-g, --global";
+const GLOBAL_OPTION_DESC =
+  "Use global config (~/.aipm) and install skills under your home directory";
+
+type ScopedCommandOptions = ProjectScopeOptions;
 
 program
   .name("aipm")
@@ -51,8 +65,10 @@ Examples:
   $ npm install -g @aipm-registry/cli
   $ aipm doctor
   $ aipm init
+  $ aipm init -g
   $ aipm search sentry
   $ aipm add @scope/name@1.0.0 --target cursor --ci
+  $ aipm add @scope/name -g
   $ aipm publish init --name @org/skill
   $ cd skill
   $ aipm publish add .
@@ -191,19 +207,6 @@ async function printPublishPreview(root: string, json?: boolean): Promise<void> 
   );
 }
 
-function parseTargets(value: string): Array<"cursor" | "claude"> {
-  const targets = value
-    .split(",")
-    .map((target) => target.trim())
-    .filter(Boolean);
-  if (targets.length === 0) throw new Error("At least one target is required.");
-  for (const target of targets) {
-    if (target !== "cursor" && target !== "claude") {
-      throw new Error('--targets must contain only "cursor" and/or "claude"');
-    }
-  }
-  return [...new Set(targets)] as Array<"cursor" | "claude">;
-}
 
 const SKILL_TEMPLATES = {
   blank: (name: string) => `# ${name}
@@ -289,7 +292,7 @@ async function initSkill(opts: {
     type: "skill",
     description: opts.description,
     entry,
-    targets: parseTargets(opts.targets),
+    targets: parseTargetsFlag(opts.targets),
     license: "Apache-2.0",
   };
   PackageManifestSchema.parse(manifest);
@@ -344,29 +347,33 @@ async function initSkill(opts: {
 
 program
   .command("init")
-  .description("Create aipm.package.json in the current project")
+  .description("Create aipm.package.json in the current project or globally")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Default registry URL")
-  .action(async (opts: { registry?: string }) => {
-    const root = cwd();
-    const existing = await readProjectPackageJson(root);
+  .action(async (opts: { registry?: string; global?: boolean }) => {
+    const scope: ScopedCommandOptions = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    const existing = await readProjectPackageJson(configRoot);
     if (existing) {
-      console.log("aipm.package.json already exists.");
+      console.log(`aipm.package.json already exists (${scopeLabel(scope)}).`);
       return;
     }
-    const detected = await detectToolsInProject(root);
+    if (scope.global) await mkdir(configRoot, { recursive: true });
+    const installRoot = resolveInstallRoot(scope);
+    const detected = await detectToolsInProject(installRoot);
     let preferredTools = detected;
     if (detected.length === 0) {
       const choice = await promptForTool();
       preferredTools = [choice];
     }
     const registry = registryFromEnvOrDefault(opts.registry);
-    await writeProjectPackageJson(root, {
+    await writeProjectPackageJson(configRoot, {
       schemaVersion: "0.1",
       registry,
       preferredTools: preferredTools.length ? preferredTools : undefined,
       packages: {},
     });
-    console.log(`Created aipm.package.json (registry: ${registry})`);
+    console.log(`Created aipm.package.json (${scopeLabel(scope)}, registry: ${registry})`);
   });
 
 program
@@ -384,17 +391,23 @@ program
 program
   .command("config")
   .description("Show resolved AIPM CLI and project configuration")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--json", "Print machine-readable JSON")
-  .action(async (opts: { registry?: string; json?: boolean }) => {
-    const root = cwd();
-    const project = await readProjectPackageJson(root);
-    const lock = await readLockfile(root);
+  .action(async (opts: { global?: boolean; registry?: string; json?: boolean }) => {
+    const scope: ScopedCommandOptions = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    const installRoot = resolveInstallRoot(scope);
+    const project = await readProjectPackageJson(configRoot);
+    const lock = await readLockfile(configRoot);
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const data = {
       cliVersion: CLI_VERSION,
       nodeVersion: process.versions.node,
-      cwd: root,
+      scope: scopeLabel(scope),
+      configRoot,
+      installRoot,
+      cwd: cwd(),
       registry,
       envRegistry: env.AIPM_REGISTRY_URL ?? env.AIPM_REGISTRY ?? null,
       hasProjectConfig: Boolean(project),
@@ -409,7 +422,10 @@ program
     }
     console.log(`CLI: ${data.cliVersion}`);
     console.log(`Node: ${data.nodeVersion}`);
-    console.log(`Project: ${data.cwd}`);
+    console.log(`Scope: ${data.scope}`);
+    console.log(`Config: ${data.configRoot}`);
+    console.log(`Install root: ${data.installRoot}`);
+    console.log(`Working directory: ${data.cwd}`);
     console.log(`Registry: ${data.registry}`);
     console.log(`Env registry: ${data.envRegistry ?? "not set"}`);
     console.log(`Project config: ${data.hasProjectConfig ? "found" : "not found"}`);
@@ -422,15 +438,18 @@ program
 program
   .command("add <package>")
   .description("Add and install a package @scope/name[@version]")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
-  .option("--target <tool>", "cursor or claude")
+  .option("--target <tool>", "cursor, claude, or *")
   .option("--ci", "Non-interactive; fail if prompt needed")
-  .action(async (pkgArg: string, opts: { registry?: string; target?: string; ci?: boolean }) => {
+  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; ci?: boolean }) => {
     const { name, version: requestedVersion } = parsePackageArg(pkgArg);
 
-    const root = cwd();
-    let project = await readProjectPackageJson(root);
-    if (!project) throw new Error("Run aipm init first");
+    const scope: ScopedCommandOptions = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    const installRoot = resolveInstallRoot(scope);
+    let project = await readProjectPackageJson(configRoot);
+    if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const version = requestedVersion ?? project.packages[name] ?? (await latestVersionForPackage(registry, name));
     if (!version) throw new Error("Specify version: aipm add @scope/pkg@1.0.0");
@@ -439,10 +458,11 @@ program
       ...project,
       packages: { ...project.packages, [name]: version.replace(/^\^/, "") },
     };
-    await writeProjectPackageJson(root, project);
+    await writeProjectPackageJson(configRoot, project);
 
     await installOnePackage({
-      projectRoot: root,
+      configRoot,
+      installRoot,
       registry,
       name,
       version: version.replace(/^\^/, ""),
@@ -450,6 +470,10 @@ program
       explicitTarget: parseTargetFlag(opts.target),
       ci: opts.ci,
     });
+
+    if (!opts.ci && !program.opts().quiet) {
+      await notifyCliUpdateIfNeeded(CLI_VERSION);
+    }
   });
 
 program
@@ -485,19 +509,23 @@ program
 program
   .command("install")
   .description("Install all packages from aipm.package.json")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
-  .option("--target <tool>", "cursor or claude")
+  .option("--target <tool>", "cursor, claude, or *")
   .option("--ci", "Non-interactive")
-  .action(async (opts: { registry?: string; target?: string; ci?: boolean }) => {
-    const root = cwd();
-    const project = await readProjectPackageJson(root);
-    if (!project) throw new Error("Run aipm init first");
+  .action(async (opts: { global?: boolean; registry?: string; target?: string; ci?: boolean }) => {
+    const scope: ScopedCommandOptions = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    const installRoot = resolveInstallRoot(scope);
+    const project = await readProjectPackageJson(configRoot);
+    if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const target = parseTargetFlag(opts.target);
 
     for (const [name, version] of Object.entries(project.packages)) {
       await installOnePackage({
-        projectRoot: root,
+        configRoot,
+        installRoot,
         registry,
         name,
         version: version.replace(/^\^/, ""),
@@ -778,9 +806,10 @@ publish
 program
   .command("list")
   .description("List packages from aipm-lock.json")
-  .action(async () => {
-    const { readLockfile } = await import("./project-files.js");
-    const lock = await readLockfile(cwd());
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
+  .action(async (opts: { global?: boolean }) => {
+    const configRoot = resolveConfigRoot({ global: opts.global });
+    const lock = await readLockfile(configRoot);
     if (!lock || Object.keys(lock.packages).length === 0) {
       console.log("No packages installed.");
       return;
@@ -794,35 +823,40 @@ program
   .command("remove <package>")
   .alias("rm")
   .description("Remove a package from aipm.package.json and aipm-lock.json")
-  .action(async (pkgArg: string) => {
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
+  .action(async (pkgArg: string, opts: { global?: boolean }) => {
     const { name } = parsePackageArg(pkgArg);
-    const root = cwd();
-    const project = await readProjectPackageJson(root);
-    if (!project) throw new Error("Run aipm init first");
+    const scope: ScopedCommandOptions = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    const project = await readProjectPackageJson(configRoot);
+    if (!project) throw new Error(initRequiredMessage(scope));
     const packages = { ...project.packages };
     delete packages[name];
-    await writeProjectPackageJson(root, { ...project, packages });
+    await writeProjectPackageJson(configRoot, { ...project, packages });
 
-    const lock = await readLockfile(root);
+    const lock = await readLockfile(configRoot);
     if (lock) {
       const lockPackages = { ...lock.packages };
       delete lockPackages[name];
-      await writeLockfile(root, { ...lock, packages: lockPackages });
+      await writeLockfile(configRoot, { ...lock, packages: lockPackages });
     }
-    console.log(`Removed ${name} from AIPM project files.`);
+    console.log(`Removed ${name} from AIPM ${scopeLabel(scope)} files.`);
     console.log("Adapter-written files are not deleted yet; review your project before committing.");
   });
 
 program
   .command("update [package]")
   .description("Update one installed package, or all installed packages, to the latest registry version")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
-  .option("--target <tool>", "cursor or claude")
+  .option("--target <tool>", "cursor, claude, or *")
   .option("--ci", "Non-interactive")
-  .action(async (pkgArg: string | undefined, opts: { registry?: string; target?: string; ci?: boolean }) => {
-    const root = cwd();
-    let project = await readProjectPackageJson(root);
-    if (!project) throw new Error("Run aipm init first");
+  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; ci?: boolean }) => {
+    const scope: ScopedCommandOptions = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    const installRoot = resolveInstallRoot(scope);
+    let project = await readProjectPackageJson(configRoot);
+    if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const names = pkgArg ? [parsePackageArg(pkgArg).name] : Object.keys(project.packages);
     if (names.length === 0) {
@@ -836,9 +870,10 @@ program
         ...project,
         packages: { ...project.packages, [name]: version },
       };
-      await writeProjectPackageJson(root, project);
+      await writeProjectPackageJson(configRoot, project);
       await installOnePackage({
-        projectRoot: root,
+        configRoot,
+        installRoot,
         registry,
         name,
         version,
@@ -852,10 +887,11 @@ program
 program
   .command("doctor")
   .description("Check PATH, Node, registry, project config, and publish readiness")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--json", "Print machine-readable JSON")
   .option("--publish", "Only show publish-readiness checks")
-  .action((opts: { registry?: string; json?: boolean; publish?: boolean }) => runDoctor(opts));
+  .action((opts: { global?: boolean; registry?: string; json?: boolean; publish?: boolean }) => runDoctor(opts));
 
 program.parseAsync(process.argv).catch((err: Error) => {
   console.error(err.message);

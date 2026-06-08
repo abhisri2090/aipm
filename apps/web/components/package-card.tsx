@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { CopyButton } from "./copy-button";
 import {
+  displayTargets,
   formatBytes,
+  GITHUB_LOGIN_URL,
   installCommand,
+  isUnverifiedImportedPackage,
   packagePath,
   shortIntegrity,
   type PackageSummary,
@@ -39,7 +42,10 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
         )}
         <div className={cards.meta}>
           <span className={cards.pill}>{pkg.type}</span>
-          {pkg.targets.map((target) => (
+          {isUnverifiedImportedPackage(pkg) ? (
+            <span className={cards.pill}>Imported · Unverified</span>
+          ) : null}
+          {displayTargets(pkg.targets).map((target) => (
             <span className={cards.pill} key={target}>
               {target}
             </span>
@@ -48,6 +54,20 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
           <span className={cards.pill}>{formatBytes(pkg.sizeBytes)}</span>
           <span className={cards.pill}>{pkg.license ?? "No license"}</span>
         </div>
+        {!compact && isUnverifiedImportedPackage(pkg) ? (
+          <p className={cards.publisherLine}>
+            {pkg.import?.sourceUrl ? (
+              <>
+                Imported from{" "}
+                <a href={pkg.import.sourceUrl} rel="noreferrer" target="_blank">
+                  source
+                </a>
+                .{" "}
+              </>
+            ) : null}
+            <a href={GITHUB_LOGIN_URL}>Claim this skill</a>
+          </p>
+        ) : null}
         {!compact ? <p className={cards.packageIntegrity}>Integrity {shortIntegrity(pkg.integrity)}</p> : null}
       </div>
       <div className={cards.cardActions}>

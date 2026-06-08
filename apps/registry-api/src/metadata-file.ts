@@ -119,6 +119,28 @@ export class FileMetadataStore implements MetadataStore {
       .slice(0, limit);
   }
 
+  async deletePackage(name: string): Promise<PackageVersionRow[]> {
+    const index = await this.readIndex();
+    const versions = index.packages[name];
+    if (!versions) return [];
+    const deleted: PackageVersionRow[] = [];
+    for (const [version, entry] of Object.entries(versions)) {
+      deleted.push({
+        id: randomUUID(),
+        name,
+        version,
+        manifest: PackageManifestSchema.parse(entry.manifest),
+        integrity: entry.integrity,
+        blob_path: entry.blob_path,
+        size_bytes: entry.size_bytes,
+        created_at: new Date(entry.created_at),
+      });
+    }
+    delete index.packages[name];
+    await this.writeIndex(index);
+    return deleted;
+  }
+
   async health(): Promise<void> {
     await this.readIndex();
   }

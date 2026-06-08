@@ -7,7 +7,16 @@ export type PackagePublisher = {
     githubLogin: string;
     name: string | null;
     avatarUrl: string | null;
+    verified?: boolean;
   };
+};
+
+export type PackageImportMeta = {
+  imported: boolean;
+  sourceUrl: string | null;
+  sourceCommitSha?: string | null;
+  sourceLicense?: string | null;
+  contentHash?: string | null;
 };
 
 export type PackageSummary = {
@@ -21,6 +30,7 @@ export type PackageSummary = {
   sizeBytes: number;
   createdAt: string;
   publisher?: PackagePublisher | null;
+  import?: PackageImportMeta;
 };
 
 export type PackageDetail = {
@@ -37,6 +47,7 @@ export type PackageDetail = {
   sizeBytes: number;
   createdAt: string;
   publisher?: PackagePublisher | null;
+  import?: PackageImportMeta;
 };
 
 export const REGISTRY_API_BASE_URL = (process.env.AIPM_API_BASE_URL ?? "https://api.aipm-registry.com").replace(
@@ -51,10 +62,17 @@ export const PUBLIC_REGISTRY_API_BASE_URL = (
 
 export const GITHUB_LOGIN_URL = `${PUBLIC_REGISTRY_API_BASE_URL}/v1/auth/github/start`;
 
+export const DEV_LOGIN_URL = "/v1/auth/dev/login";
+
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://aipm-registry.com").replace(
   /\/$/,
   "",
 );
+
+export function isLocalDevSite(siteUrl: string = SITE_URL): boolean {
+  const normalized = siteUrl.toLowerCase();
+  return normalized.includes("localhost") || normalized.includes("127.0.0.1");
+}
 
 export const CLI_INSTALL_COMMAND = "npm install -g @aipm-registry/cli";
 
@@ -64,8 +82,20 @@ export function packagePath(packageName: string, version: string): string {
 }
 
 export function installCommand(pkg: Pick<PackageSummary, "name" | "version" | "targets">): string {
-  const target = pkg.targets[0] ?? "cursor";
+  const target = pkg.targets.includes("*") ? "*" : (pkg.targets[0] ?? "cursor");
   return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
+}
+
+export function displayTargets(targets: string[]): string[] {
+  return targets.includes("*") ? ["cursor", "claude", "*"] : targets;
+}
+
+export function isImportedPackage(pkg: Pick<PackageSummary, "import" | "publisher">): boolean {
+  return Boolean(pkg.import?.imported);
+}
+
+export function isUnverifiedImportedPackage(pkg: Pick<PackageSummary, "import" | "publisher">): boolean {
+  return isImportedPackage(pkg) && pkg.publisher?.user.verified === false;
 }
 
 export function installCommandForTarget(

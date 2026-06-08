@@ -31,5 +31,6 @@ export interface MetadataStore {
   insert(row: PackageVersionInsert): Promise<void>;
   get(name: string, version: string): Promise<PackageVersionRow | null>;
   list(query?: string, options?: { limit?: number; cursor?: string }): Promise<PackageVersionSummary[]>;
+  deletePackage(name: string): Promise<PackageVersionRow[]>;
   health(): Promise<void>;
 }

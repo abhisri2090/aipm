@@ -72,10 +72,6 @@ const checks = [
 
 const allowedMatches = [
   {
-    path: ".env.example",
-    patterns: [/DefaultEndpointsProtocol=https;AccountName=\.\.\./],
-  },
-  {
     path: "apps/registry-api/src/storage.test.ts",
     patterns: [/UseDevelopmentStorage=true/],
   },
@@ -93,7 +89,7 @@ export function listFiles() {
 }
 
 export function isAllowed(file, match) {
-  if (match.includes("localhost") || match.includes("<") || match.includes("${")) return true;
+  if (match.includes("localhost") || match.includes("127.0.0.1") || match.includes("<") || match.includes("${")) return true;
   return allowedMatches.some(
     (entry) => entry.path === file && entry.patterns.some((pattern) => pattern.test(match)),
   );

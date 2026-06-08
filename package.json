@@ -21,7 +21,12 @@
     "lint": "turbo run lint && pnpm lint:root",
     "lint:root": "eslint scripts eslint.config.js prettier.config.js",
     "typecheck": "turbo run typecheck",
-    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "scan:secrets": "node scripts/scan-secrets.mjs && pnpm local:check",
+    "local:setup": "node scripts/local-setup.mjs",
+    "local:api": "pnpm --filter @aipm-registry/registry-api build && node --env-file=.env --watch apps/registry-api/dist/index.js",
+    "local:web": "pnpm --filter @aipm-registry/web dev",
+    "local:seed": "node scripts/seed-from-public-registry.mjs",
+    "local:check": "node scripts/check-local-safety-docs.mjs",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "aipm": "node apps/cli/dist/bin.cjs",
     "registry": "pnpm --filter @aipm-registry/registry-api build && pnpm --filter @aipm-registry/registry-api start",
@@ -29,7 +34,8 @@
     "release:cli:pack": "pnpm --filter @aipm-registry/cli build && rm -rf /tmp/aipm-cli-pack && mkdir -p /tmp/aipm-cli-pack && pnpm --dir apps/cli pack --pack-destination /tmp/aipm-cli-pack",
     "release:cli:publish": "pnpm --filter @aipm-registry/cli build && pnpm --filter @aipm-registry/cli publish --access public",
     "cli:link": "pnpm build && npm link --prefix apps/cli",
-    "cli:unlink": "npm unlink -g @aipm-registry/cli"
+    "cli:unlink": "npm unlink -g @aipm-registry/cli",
+    "import-skill": "node scripts/import-skill.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

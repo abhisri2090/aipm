@@ -16,6 +16,12 @@ const SESSION_COOKIE = "aipm_session";
 const OAUTH_STATE_COOKIE = "aipm_oauth_state";
 const SESSION_DAYS = 30;
 const TOKEN_TTL_MS = 5 * 60 * 1000;
+const DEV_AUTH_ENV = "AIPM_DEV_AUTH";
+const DEV_GITHUB_ID = "dev-local";
+const DEV_GITHUB_LOGIN = "dev-local";
+const DEV_DISPLAY_NAME = "Local Contributor";
+
+export { SESSION_COOKIE };
 
 export interface UserAuthConfig {
   githubClientId?: string;
@@ -146,6 +152,34 @@ export async function requireCurrentUser(
   return user;
 }
 
+export function isDevAuthEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.NODE_ENV !== "production" && env[DEV_AUTH_ENV] === "1";
+}
+
+export function isGithubAuthConfigured(config: UserAuthConfig): boolean {
+  return Boolean(config.githubClientId && config.githubClientSecret && config.sessionSecret);
+}
+
+export async function startDevLogin(auth: AccountAuth, reply: FastifyReply): Promise<void> {
+  if (!isDevAuthEnabled()) {
+    throw new Error("Dev auth is not enabled");
+  }
+
+  const user = await upsertGithubUser(auth.pool, {
+    githubId: DEV_GITHUB_ID,
+    githubLogin: DEV_GITHUB_LOGIN,
+    name: DEV_DISPLAY_NAME,
+    avatarUrl: null,
+    verified: true,
+  });
+
+  const sessionId = randomToken(32);
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
+  await createSession(auth.pool, { id: sessionId, userId: user.id, expiresAt });
+  setAuthCookie(reply, auth.config, SESSION_COOKIE, sessionId, SESSION_DAYS * 24 * 60 * 60);
+  reply.redirect(`${auth.config.publicSiteUrl}/dashboard`);
+}
+
 export function githubStartUrl(config: UserAuthConfig, state: string): string {
   if (!config.githubClientId || !config.githubClientSecret || !config.sessionSecret) {
     throw new Error("GitHub auth is not configured");
@@ -206,6 +240,7 @@ export async function finishGithubLogin(
     githubLogin: githubUser.login,
     name: githubUser.name ?? null,
     avatarUrl: githubUser.avatar_url ?? null,
+    verified: true,
   });
 
   const sessionId = randomToken(32);

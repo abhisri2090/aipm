@@ -32,12 +32,11 @@ describe("scan-secrets", () => {
     ]);
   });
 
-  it("allows documented placeholders and localhost database URLs", () => {
+  it("allows localhost database URLs in env examples", () => {
     const findings = scanContent(
       ".env.example",
       [
         "DATABASE_URL=postgresql://aipm:aipm@localhost:5432/aipm",
-        "AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...",
         "DATABASE_URL=postgresql://<user>:<password>@<postgres-host>:5432/aipm",
       ].join("\n"),
     );

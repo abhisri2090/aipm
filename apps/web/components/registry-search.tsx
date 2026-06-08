@@ -36,7 +36,12 @@ export function RegistrySearch({
   );
 
   const filtered = useMemo(
-    () => (target === "all" ? packages : packages.filter((pkg) => pkg.targets.includes(target))),
+    () =>
+      target === "all"
+        ? packages
+        : packages.filter(
+            (pkg) => pkg.targets.includes(target) || pkg.targets.includes("*"),
+          ),
     [packages, target],
   );
 

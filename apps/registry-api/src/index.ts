@@ -8,22 +8,31 @@ import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import { isValidScopeName, parseScopeName } from "@aipm-registry/schemas";
-import { resolvePublishAuthConfig, verifyPublishAuth } from "./auth.js";
-import { createMetadataStore } from "./create-metadata-store.js";
-import { DuplicateVersionError } from "./metadata-store.js";
-import { blobKeyForPackage, createStorage } from "./storage.js";
-import { extractManifestFromTarball } from "./publish.js";
+import { resolvePublishAuthConfig, resolveAdminImportAuthConfig, verifyPublishAuth, verifyAdminImportAuth } from "./auth.js";
+import {
+  DuplicateVersionError,
+  importSkillPackage,
+  type ImportAuthorPayload,
+  type ImportProvenancePayload,
+} from "./admin-import.js";
+import { importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
   createOrg,
   createPool,
-  ensureSchema,
+  deletePackageProvenance,
+  deletePackageReservation,
   getInternalStats,
+  getLatestProvenance,
   getOwnedOrg,
   getOwnedPackageReservation,
+  getProvenance,
+  getProvenanceByPackageNames,
   getPublicPackagePublisher,
   listOrgPackageReservations,
   listPublicPackagePublishers,
+  listUserImportedPackages,
   listUserOrgs,
+  listPackageVersionsForName,
   reservePackageName,
   updateUserProfile,
   type PublicPackagePublisherRow,
@@ -32,9 +41,12 @@ import {
   createScopedPublishToken,
   finishGithubLogin,
   getCurrentUser,
+  isDevAuthEnabled,
+  isGithubAuthConfigured,
   logout,
   requireCurrentUser,
   resolveUserAuthConfig,
+  startDevLogin,
   startGithubLogin,
   verifyScopedPublishToken,
   type AccountAuth,
@@ -51,6 +63,11 @@ import {
   startAdminSession,
   verifyAdminPassword,
 } from "./admin-auth.js";
+import { createMetadataStore } from "./create-metadata-store.js";
+import { blobKeyForPackage, createStorage } from "./storage.js";
+import { extractManifestFromTarball } from "./publish.js";
+import { ensureSchema } from "./db.js";
+import { assertSafeLocalRuntime } from "./local-safety.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const APP_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -100,23 +117,55 @@ function serializePublisher(row: PublicPackagePublisherRow | null) {
       githubLogin: row.publisher_login,
       name: row.publisher_name,
       avatarUrl: row.publisher_avatar_url,
+      verified: row.publisher_verified,
     },
+  };
+}
+
+function serializeImportMeta(
+  provenance: Awaited<ReturnType<typeof getLatestProvenance>>,
+  latestVersion: string | null,
+) {
+  if (!provenance) {
+    return {
+      imported: false,
+      sourceUrl: null,
+      latestContentHash: null,
+      latestVersion,
+    };
+  }
+  return {
+    imported: true,
+    sourceUrl: provenance.source_url,
+    latestContentHash: provenance.content_hash,
+    latestVersion: latestVersion ?? provenance.version,
   };
 }
 
 async function createAccountAuth(): Promise<AccountAuth | null> {
   if (!process.env.DATABASE_URL) return null;
   const pool = createPool(process.env.DATABASE_URL);
-  await ensureSchema(pool);
-  return { pool, config: resolveUserAuthConfig() };
+  try {
+    await ensureSchema(pool);
+    return { pool, config: resolveUserAuthConfig() };
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") throw error;
+    console.warn(
+      "Account services disabled: Postgres is unavailable. Dashboard and admin require Docker Postgres (`pnpm local:setup`).",
+    );
+    await pool.end().catch(() => undefined);
+    return null;
+  }
 }
 
 export async function createApp(): Promise<FastifyInstance> {
+  assertSafeLocalRuntime(process.env);
   const dataDir = process.env.AIPM_DATA_DIR ?? join(process.cwd(), "data");
   await mkdir(dataDir, { recursive: true });
   const storage = await createStorage(dataDir);
   const metadata = await createMetadataStore(dataDir);
   const publishAuth = resolvePublishAuthConfig();
+  const adminImportAuth = resolveAdminImportAuthConfig();
   const accountAuth = await createAccountAuth();
   const adminAuthConfig = resolveAdminAuthConfig();
 
@@ -165,6 +214,19 @@ export async function createApp(): Promise<FastifyInstance> {
     } catch (error) {
       return reply.status(500).send({ error: publicError(error, "GitHub login is not configured") });
     }
+  });
+
+  app.get("/v1/auth/config", async () => ({
+    devAuth: isDevAuthEnabled(process.env),
+    githubAuth: Boolean(accountAuth && isGithubAuthConfigured(accountAuth.config)),
+  }));
+
+  app.get("/v1/auth/dev/login", async (_request, reply) => {
+    if (!isDevAuthEnabled(process.env)) {
+      return reply.status(404).send({ error: "Dev auth is not enabled" });
+    }
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    await startDevLogin(accountAuth, reply);
   });
 
   app.get<{ Querystring: { code?: string; state?: string } }>(
@@ -232,6 +294,49 @@ export async function createApp(): Promise<FastifyInstance> {
     return getInternalStats(accountAuth.pool);
   });
 
+  app.post<{ Body: { sourceUrl?: string } }>(
+    "/v1/admin/import-from-url",
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!accountAuth) {
+        return reply.status(503).send({ error: "Account services are not configured" });
+      }
+      const adminUser = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+      if (!adminUser) return;
+
+      const sourceUrl = request.body?.sourceUrl?.trim();
+      if (!sourceUrl) {
+        return reply.status(400).send({ error: "Missing sourceUrl" });
+      }
+
+      try {
+        const result = await importSkillFromGitHubUrl({
+          pool: accountAuth.pool,
+          metadata,
+          storage,
+          sourceUrl,
+        });
+        if (result.action === "skipped") {
+          return reply.status(200).send(result);
+        }
+        return reply.status(201).send(result);
+      } catch (error) {
+        if (error instanceof DuplicateVersionError) {
+          return reply.status(409).send({ error: error.message });
+        }
+        request.log.error(error);
+        return reply.status(400).send({ error: publicError(error, "Failed to import skill") });
+      }
+    },
+  );
+
   app.get("/v1/me", async (request, reply) => {
     if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
     const user = await getCurrentUser(accountAuth, request);
@@ -242,6 +347,24 @@ export async function createApp(): Promise<FastifyInstance> {
       githubLogin: user.github_login,
       name: user.name,
       avatarUrl: user.avatar_url,
+      verified: user.verified,
+    };
+  });
+
+  app.get("/v1/me/imports", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const imports = await listUserImportedPackages(accountAuth.pool, user.id);
+    return {
+      imports: imports.map((row) => ({
+        packageName: row.package_name,
+        version: row.version,
+        sourceUrl: row.source_url,
+        sourceCommitSha: row.source_commit_sha,
+        sourceLicense: row.source_license,
+        contentHash: row.content_hash,
+        importedAt: row.imported_at,
+      })),
     };
   });
 
@@ -441,6 +564,100 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
+  app.post("/v1/admin/import", async (request, reply) => {
+    if (!accountAuth) {
+      return reply.status(503).send({ error: "Account services are not configured" });
+    }
+    const auth = verifyAdminImportAuth(request, adminImportAuth);
+    if (!auth.ok) return reply.status(auth.status).send({ error: auth.error });
+
+    const parts = request.parts();
+    let tarball: Buffer | null = null;
+    let author: ImportAuthorPayload | null = null;
+    let provenance: ImportProvenancePayload | null = null;
+
+    for await (const part of parts) {
+      if (part.type === "file" && part.fieldname === "tarball") {
+        tarball = await part.toBuffer();
+      } else if (part.type === "field") {
+        const value = String(part.value);
+        if (part.fieldname === "author") author = JSON.parse(value) as ImportAuthorPayload;
+        if (part.fieldname === "provenance") provenance = JSON.parse(value) as ImportProvenancePayload;
+      }
+    }
+
+    if (!tarball) return reply.status(400).send({ error: "Missing tarball (field: tarball)" });
+    if (!author?.githubId || !author.githubLogin) {
+      return reply.status(400).send({ error: "Missing author payload" });
+    }
+    if (!provenance?.sourceUrl || !provenance.commitSha || !provenance.contentHash) {
+      return reply.status(400).send({ error: "Missing provenance payload" });
+    }
+
+    try {
+      const result = await importSkillPackage({
+        pool: accountAuth.pool,
+        metadata,
+        storage,
+        tarball,
+        author,
+        provenance,
+      });
+      return reply.status(201).send(result);
+    } catch (error) {
+      if (error instanceof DuplicateVersionError) {
+        return reply.status(409).send({ error: error.message });
+      }
+      request.log.error(error);
+      return reply.status(400).send({ error: publicError(error, "Failed to import package") });
+    }
+  });
+
+  app.get<{ Params: { name: string } }>("/v1/packages/:name/import-meta", async (request, reply) => {
+    const name = decodePackageName(request.params.name);
+    if (!accountAuth) {
+      return reply.status(503).send({ error: "Account services are not configured" });
+    }
+    const provenance = await getLatestProvenance(accountAuth.pool, name);
+    const versions = await listPackageVersionsForName(accountAuth.pool, name);
+    return serializeImportMeta(provenance, versions[0]?.version ?? null);
+  });
+
+  app.delete<{ Params: { name: string } }>("/v1/packages/:name", async (request, reply) => {
+    const name = decodePackageName(request.params.name);
+    if (!isValidScopeName(name)) {
+      return reply.status(400).send({ error: "Invalid package name; use @scope/name" });
+    }
+
+    const adminAuth = verifyAdminImportAuth(request, adminImportAuth);
+    let allowed = adminAuth.ok;
+
+    if (!allowed && accountAuth) {
+      const user = await getCurrentUser(accountAuth, request);
+      if (user) {
+        const reservation = await getOwnedPackageReservation(accountAuth.pool, name, user.id);
+        allowed = Boolean(reservation);
+      }
+    }
+
+    if (!allowed) {
+      if (!adminAuth.ok && adminImportAuth.tokenHash) {
+        return reply.status(adminAuth.status).send({ error: adminAuth.error });
+      }
+      return reply.status(403).send({ error: "Not allowed to delete this package" });
+    }
+
+    const deletedVersions = await metadata.deletePackage(name);
+    for (const version of deletedVersions) {
+      await storage.delete(version.blob_path).catch(() => undefined);
+    }
+    if (accountAuth) {
+      await deletePackageProvenance(accountAuth.pool, name);
+      await deletePackageReservation(accountAuth.pool, name);
+    }
+    return reply.status(204).send();
+  });
+
   app.get<{ Params: { name: string; version: string } }>(
     "/v1/packages/:name/versions/:version",
     async (request, reply) => {
@@ -450,6 +667,10 @@ export async function createApp(): Promise<FastifyInstance> {
       const publisher = accountAuth
         ? await getPublicPackagePublisher(accountAuth.pool, row.name)
         : null;
+      const provenance =
+        accountAuth && publisher
+          ? await getProvenance(accountAuth.pool, row.name, row.version)
+          : null;
       return {
         name: row.name,
         version: row.version,
@@ -458,6 +679,15 @@ export async function createApp(): Promise<FastifyInstance> {
         sizeBytes: Number(row.size_bytes),
         createdAt: row.created_at,
         publisher: serializePublisher(publisher),
+        import: provenance
+          ? {
+              imported: true,
+              sourceUrl: provenance.source_url,
+              sourceCommitSha: provenance.source_commit_sha,
+              sourceLicense: provenance.source_license,
+              contentHash: provenance.content_hash,
+            }
+          : { imported: false, sourceUrl: null },
       };
     },
   );
@@ -489,19 +719,28 @@ export async function createApp(): Promise<FastifyInstance> {
         ? await listPublicPackagePublishers(accountAuth.pool, [...new Set(page.map((row) => row.name))])
         : [];
       const publisherByName = new Map(publishers.map((publisher) => [publisher.package_name, publisher]));
+      const provenanceByName = accountAuth
+        ? await getProvenanceByPackageNames(accountAuth.pool, [...publisherByName.keys()])
+        : new Map();
       return {
-        packages: page.map((row) => ({
-          name: row.name,
-          version: row.version,
-          description: row.manifest.description,
-          type: row.manifest.type,
-          targets: row.manifest.targets,
-          license: row.manifest.license ?? null,
-          integrity: row.integrity,
-          sizeBytes: Number(row.size_bytes),
-          createdAt: row.created_at,
-          publisher: serializePublisher(publisherByName.get(row.name) ?? null),
-        })),
+        packages: page.map((row) => {
+          const provenance = provenanceByName.get(row.name);
+          return {
+            name: row.name,
+            version: row.version,
+            description: row.manifest.description,
+            type: row.manifest.type,
+            targets: row.manifest.targets,
+            license: row.manifest.license ?? null,
+            integrity: row.integrity,
+            sizeBytes: Number(row.size_bytes),
+            createdAt: row.created_at,
+            publisher: serializePublisher(publisherByName.get(row.name) ?? null),
+            import: provenance
+              ? { imported: true, sourceUrl: provenance.source_url }
+              : { imported: false, sourceUrl: null },
+          };
+        }),
         nextCursor,
       };
     },

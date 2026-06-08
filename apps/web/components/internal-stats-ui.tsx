@@ -18,27 +18,26 @@ function StatCard({ label, value, detail }: { label: string; value: number; deta
 
 export function InternalStatsPanel({ stats }: { stats: InternalStats }) {
   return (
-    <main className={cn(dash.dashboardPage, dash.dashboardPageFull)}>
-      <section className={dash.dashboardWorkspace}>
-        <header className={dash.dashboardHero}>
-          <div>
-            <p className={shell.eyebrow}>Admin</p>
-            <h1>Registry usage</h1>
-            <p className={shell.lede}>
-              Signed-in users, organizations, reserved package names, and published skill versions.
-            </p>
-          </div>
-          <div className={dash.dashboardHeroActions}>
-            <Link className={shell.button} href="/status">
-              Service status
-            </Link>
-            <Link className={cn(shell.button, shell.secondary)} href="/registry">
-              Public registry
-            </Link>
-          </div>
-        </header>
+    <>
+      <header className={dash.dashboardHero}>
+        <div>
+          <p className={shell.eyebrow}>Admin</p>
+          <h1>Registry usage</h1>
+          <p className={shell.lede}>
+            Signed-in users, organizations, reserved package names, and published skill versions.
+          </p>
+        </div>
+        <div className={dash.dashboardHeroActions}>
+          <Link className={shell.button} href="/status">
+            Service status
+          </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/registry">
+            Public registry
+          </Link>
+        </div>
+      </header>
 
-        <section className={dash.metricGrid} aria-label="Registry totals">
+      <section className={dash.metricGrid} aria-label="Registry totals">
           <StatCard label="Signed-in users" value={stats.users} detail="GitHub accounts that have logged in at least once." />
           <StatCard label="Organizations" value={stats.orgs} detail="Org namespaces created in the dashboard." />
           <StatCard label="Reserved skills" value={stats.reservedPackages} detail="Package names reserved before publishing." />
@@ -90,7 +89,7 @@ export function InternalStatsPanel({ stats }: { stats: InternalStats }) {
           </article>
         </section>
 
-        <section className={dash.dashboardPanel}>
+        <section className={cn(dash.dashboardPanel, dash.dashboardPanelSpaced)}>
           <h2>Recent published skills</h2>
           {stats.recentPublished.length > 0 ? (
             <ul className={dash.resourceList}>
@@ -108,8 +107,7 @@ export function InternalStatsPanel({ stats }: { stats: InternalStats }) {
             <p className={shell.muted}>No published skills yet.</p>
           )}
         </section>
-      </section>
-    </main>
+    </>
   );
 }
 

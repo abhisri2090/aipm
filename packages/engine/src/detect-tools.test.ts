@@ -15,6 +15,11 @@ const baseManifest: PackageManifest = {
   targets: ["cursor", "claude"],
 };
 
+const wildcardManifest: PackageManifest = {
+  ...baseManifest,
+  targets: ["*"],
+};
+
 describe("detectToolsInProject", () => {
   it("detects cursor folder", async () => {
     const root = await mkdtemp(join(tmpdir(), "aipm-"));
@@ -39,5 +44,34 @@ describe("resolveInstallTools", () => {
       explicitTarget: "claude",
     });
     expect(tools).toEqual(["claude"]);
+  });
+
+  it("expands explicit wildcard to all tools", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    const tools = await resolveInstallTools({
+      projectRoot: root,
+      manifest: wildcardManifest,
+      explicitTarget: "*",
+    });
+    expect(tools).toEqual(["cursor", "claude"]);
+  });
+
+  it("matches detected tools against wildcard manifest", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    await mkdir(join(root, ".cursor"));
+    const tools = await resolveInstallTools({
+      projectRoot: root,
+      manifest: wildcardManifest,
+    });
+    expect(tools).toEqual(["cursor"]);
+  });
+
+  it("falls back to all tools when wildcard manifest has no detected tools", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    const tools = await resolveInstallTools({
+      projectRoot: root,
+      manifest: wildcardManifest,
+    });
+    expect(tools).toEqual(["cursor", "claude"]);
   });
 });

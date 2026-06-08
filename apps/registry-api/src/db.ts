@@ -22,12 +22,16 @@ export interface UserRow {
   username: string;
   name: string | null;
   avatar_url: string | null;
+  verified: boolean;
+  contact_email: string | null;
+  contact_x: string | null;
+  contact_github_url: string | null;
   created_at: Date;
   updated_at: Date;
 }
 
 const USER_ROW_FIELDS =
-  "id, github_id, github_login, username, name, avatar_url, created_at, updated_at";
+  "id, github_id, github_login, username, name, avatar_url, verified, contact_email, contact_x, contact_github_url, created_at, updated_at";
 const USER_ROW_SELECT = `users.${USER_ROW_FIELDS.replace(/, /g, ", users.")}`;
 
 export interface OrgRow {
@@ -62,7 +66,50 @@ export interface PublicPackagePublisherRow {
   publisher_login: string;
   publisher_name: string | null;
   publisher_avatar_url: string | null;
+  publisher_verified: boolean;
 }
+
+export interface PackageProvenanceRow {
+  name: string;
+  version: string;
+  source_url: string;
+  source_commit_sha: string;
+  source_license: string | null;
+  content_hash: string;
+  imported_at: Date;
+}
+
+export interface ImportNotificationRow {
+  id: string;
+  user_id: string;
+  package_name: string;
+  status: string;
+  created_at: Date;
+  sent_at: Date | null;
+}
+
+export interface UserImportedPackageRow {
+  package_name: string;
+  source_url: string;
+  source_commit_sha: string;
+  source_license: string | null;
+  content_hash: string;
+  version: string;
+  imported_at: Date;
+}
+
+export type UpsertGithubUserInput = {
+  githubId: string;
+  githubLogin: string;
+  name?: string | null;
+  avatarUrl?: string | null;
+  verified?: boolean;
+  contact?: {
+    email?: string | null;
+    xHandle?: string | null;
+    githubUrl?: string | null;
+  };
+};
 
 export function createPool(connectionString: string): pg.Pool {
   return new Pool({ connectionString });
@@ -150,6 +197,34 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     );
     CREATE INDEX IF NOT EXISTS idx_publish_tokens_hash ON publish_tokens (token_hash);
     CREATE INDEX IF NOT EXISTS idx_publish_tokens_expires_at ON publish_tokens (expires_at);
+
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS verified BOOLEAN NOT NULL DEFAULT true;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_email TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_x TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS contact_github_url TEXT;
+
+    CREATE TABLE IF NOT EXISTS import_notifications (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      package_name TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      sent_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS idx_import_notifications_user_id ON import_notifications (user_id);
+    CREATE INDEX IF NOT EXISTS idx_import_notifications_status ON import_notifications (status);
+
+    CREATE TABLE IF NOT EXISTS package_provenance (
+      name TEXT NOT NULL,
+      version TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      source_commit_sha TEXT NOT NULL,
+      source_license TEXT,
+      content_hash TEXT NOT NULL,
+      imported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (name, version)
+    );
+    CREATE INDEX IF NOT EXISTS idx_package_provenance_name ON package_provenance (name);
   `);
   await backfillMissingUsernames(pool);
 }
@@ -261,34 +336,63 @@ export async function checkDatabase(pool: pg.Pool): Promise<void> {
   await pool.query("SELECT 1");
 }
 
-export async function upsertGithubUser(
-  pool: pg.Pool,
-  user: { githubId: string; githubLogin: string; name?: string | null; avatarUrl?: string | null },
-): Promise<UserRow> {
+export async function upsertGithubUser(pool: pg.Pool, user: UpsertGithubUserInput): Promise<UserRow> {
+  const contactEmail = user.contact?.email ?? null;
+  const contactX = user.contact?.xHandle ?? null;
+  const contactGithubUrl = user.contact?.githubUrl ?? null;
   const existing = await pool.query<UserRow>(
     `SELECT ${USER_ROW_FIELDS} FROM users WHERE github_id = $1`,
     [user.githubId],
   );
   if (existing.rows[0]) {
+    const verifiedClause =
+      user.verified === true
+        ? "verified = true,"
+        : user.verified === false
+          ? "verified = users.verified,"
+          : "";
     const result = await pool.query<UserRow>(
       `UPDATE users
        SET github_login = $2,
            name = COALESCE(users.name, $3),
            avatar_url = COALESCE(users.avatar_url, $4),
+           ${verifiedClause}
+           contact_email = COALESCE(users.contact_email, $5),
+           contact_x = COALESCE(users.contact_x, $6),
+           contact_github_url = COALESCE(users.contact_github_url, $7),
            updated_at = NOW()
        WHERE github_id = $1
        RETURNING ${USER_ROW_FIELDS}`,
-      [user.githubId, user.githubLogin, user.name ?? null, user.avatarUrl ?? null],
+      [
+        user.githubId,
+        user.githubLogin,
+        user.name ?? null,
+        user.avatarUrl ?? null,
+        contactEmail,
+        contactX,
+        contactGithubUrl,
+      ],
     );
     return ensureUserUsername(pool, result.rows[0]!);
   }
 
   const username = await allocateUsername(pool, user.githubLogin);
+  const verified = user.verified ?? true;
   const result = await pool.query<UserRow>(
-    `INSERT INTO users (github_id, github_login, username, name, avatar_url)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO users (github_id, github_login, username, name, avatar_url, verified, contact_email, contact_x, contact_github_url)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING ${USER_ROW_FIELDS}`,
-    [user.githubId, user.githubLogin, username, user.name ?? null, user.avatarUrl ?? null],
+    [
+      user.githubId,
+      user.githubLogin,
+      username,
+      user.name ?? null,
+      user.avatarUrl ?? null,
+      verified,
+      contactEmail,
+      contactX,
+      contactGithubUrl,
+    ],
   );
   return result.rows[0]!;
 }
@@ -402,16 +506,12 @@ export async function listUserOrgs(pool: pg.Pool, userId: string): Promise<OrgRo
   return result.rows;
 }
 
-export async function getOwnedOrg(
-  pool: pg.Pool,
-  slug: string,
-  userId: string,
-): Promise<OrgRow | null> {
+export async function getOrgBySlug(pool: pg.Pool, slug: string): Promise<OrgRow | null> {
   const result = await pool.query<OrgRow>(
     `SELECT id, slug, name, owner_user_id, created_at
      FROM orgs
-     WHERE slug = $1 AND owner_user_id = $2`,
-    [slug, userId],
+     WHERE slug = $1`,
+    [slug],
   );
   return result.rows[0] ?? null;
 }
@@ -441,6 +541,33 @@ export async function listOrgPackageReservations(
     [orgId],
   );
   return result.rows;
+}
+
+export async function getOwnedOrg(
+  pool: pg.Pool,
+  slug: string,
+  userId: string,
+): Promise<OrgRow | null> {
+  const result = await pool.query<OrgRow>(
+    `SELECT id, slug, name, owner_user_id, created_at
+     FROM orgs
+     WHERE slug = $1 AND owner_user_id = $2`,
+    [slug, userId],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getPackageReservationByName(
+  pool: pg.Pool,
+  name: string,
+): Promise<PackageReservationRow | null> {
+  const result = await pool.query<PackageReservationRow>(
+    `SELECT id, name, org_id, owner_user_id, created_at
+     FROM package_reservations
+     WHERE name = $1`,
+    [name],
+  );
+  return result.rows[0] ?? null;
 }
 
 export async function getOwnedPackageReservation(
@@ -494,7 +621,8 @@ export async function getPublicPackagePublisher(
             orgs.name AS org_name,
             users.github_login AS publisher_login,
             users.name AS publisher_name,
-            users.avatar_url AS publisher_avatar_url
+            users.avatar_url AS publisher_avatar_url,
+            users.verified AS publisher_verified
      FROM package_reservations
      JOIN orgs ON orgs.id = package_reservations.org_id
      JOIN users ON users.id = package_reservations.owner_user_id
@@ -588,7 +716,8 @@ export async function listPublicPackagePublishers(
             orgs.name AS org_name,
             users.github_login AS publisher_login,
             users.name AS publisher_name,
-            users.avatar_url AS publisher_avatar_url
+            users.avatar_url AS publisher_avatar_url,
+            users.verified AS publisher_verified
      FROM package_reservations
      JOIN orgs ON orgs.id = package_reservations.org_id
      JOIN users ON users.id = package_reservations.owner_user_id
@@ -596,4 +725,129 @@ export async function listPublicPackagePublishers(
     [packageNames],
   );
   return result.rows;
+}
+
+export async function upsertProvenance(
+  pool: pg.Pool,
+  row: Omit<PackageProvenanceRow, "imported_at">,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO package_provenance (name, version, source_url, source_commit_sha, source_license, content_hash)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT (name, version) DO UPDATE SET
+       source_url = EXCLUDED.source_url,
+       source_commit_sha = EXCLUDED.source_commit_sha,
+       source_license = EXCLUDED.source_license,
+       content_hash = EXCLUDED.content_hash,
+       imported_at = NOW()`,
+    [row.name, row.version, row.source_url, row.source_commit_sha, row.source_license, row.content_hash],
+  );
+}
+
+export async function getProvenance(
+  pool: pg.Pool,
+  name: string,
+  version: string,
+): Promise<PackageProvenanceRow | null> {
+  const result = await pool.query<PackageProvenanceRow>(
+    `SELECT name, version, source_url, source_commit_sha, source_license, content_hash, imported_at
+     FROM package_provenance
+     WHERE name = $1 AND version = $2`,
+    [name, version],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getLatestProvenance(
+  pool: pg.Pool,
+  name: string,
+): Promise<PackageProvenanceRow | null> {
+  const result = await pool.query<PackageProvenanceRow>(
+    `SELECT name, version, source_url, source_commit_sha, source_license, content_hash, imported_at
+     FROM package_provenance
+     WHERE name = $1
+     ORDER BY imported_at DESC
+     LIMIT 1`,
+    [name],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function getLatestContentHash(pool: pg.Pool, name: string): Promise<string | null> {
+  const row = await getLatestProvenance(pool, name);
+  return row?.content_hash ?? null;
+}
+
+export async function queueImportNotification(
+  pool: pg.Pool,
+  input: { userId: string; packageName: string },
+): Promise<ImportNotificationRow> {
+  const result = await pool.query<ImportNotificationRow>(
+    `INSERT INTO import_notifications (user_id, package_name, status)
+     VALUES ($1, $2, 'pending')
+     RETURNING id, user_id, package_name, status, created_at, sent_at`,
+    [input.userId, input.packageName],
+  );
+  return result.rows[0]!;
+}
+
+export async function listUserImportedPackages(
+  pool: pg.Pool,
+  userId: string,
+): Promise<UserImportedPackageRow[]> {
+  const result = await pool.query<UserImportedPackageRow>(
+    `SELECT package_provenance.name AS package_name,
+            package_provenance.source_url,
+            package_provenance.source_commit_sha,
+            package_provenance.source_license,
+            package_provenance.content_hash,
+            package_provenance.version,
+            package_provenance.imported_at
+     FROM package_reservations
+     JOIN package_provenance ON package_provenance.name = package_reservations.name
+     WHERE package_reservations.owner_user_id = $1
+     ORDER BY package_provenance.imported_at DESC`,
+    [userId],
+  );
+  return result.rows;
+}
+
+export async function listPackageVersionsForName(pool: pg.Pool, name: string): Promise<PackageVersionRow[]> {
+  const result = await pool.query<PackageVersionRow>(
+    `SELECT id, name, version, manifest, integrity, blob_path, size_bytes, created_at
+     FROM package_versions
+     WHERE name = $1
+     ORDER BY created_at DESC`,
+    [name],
+  );
+  return result.rows;
+}
+
+export async function deletePackageProvenance(pool: pg.Pool, name: string): Promise<void> {
+  await pool.query(`DELETE FROM package_provenance WHERE name = $1`, [name]);
+}
+
+export async function deletePackageVersions(pool: pg.Pool, name: string): Promise<PackageVersionRow[]> {
+  const versions = await listPackageVersionsForName(pool, name);
+  await pool.query(`DELETE FROM package_versions WHERE name = $1`, [name]);
+  return versions;
+}
+
+export async function deletePackageReservation(pool: pg.Pool, name: string): Promise<void> {
+  await pool.query(`DELETE FROM package_reservations WHERE name = $1`, [name]);
+}
+
+export async function getProvenanceByPackageNames(
+  pool: pg.Pool,
+  packageNames: string[],
+): Promise<Map<string, PackageProvenanceRow>> {
+  if (packageNames.length === 0) return new Map();
+  const result = await pool.query<PackageProvenanceRow>(
+    `SELECT DISTINCT ON (name) name, version, source_url, source_commit_sha, source_license, content_hash, imported_at
+     FROM package_provenance
+     WHERE name = ANY($1::text[])
+     ORDER BY name, imported_at DESC`,
+    [packageNames],
+  );
+  return new Map(result.rows.map((row) => [row.name, row]));
 }

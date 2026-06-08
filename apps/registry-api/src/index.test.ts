@@ -61,6 +61,9 @@ beforeEach(async () => {
   process.env.AIPM_REQUIRE_PUBLISH_TOKEN = "true";
   process.env.AIPM_PUBLISH_TOKEN_SHA256 = tokenHash(token);
   delete process.env.AZURE_STORAGE_CONNECTION_STRING;
+  delete process.env.AIPM_DEV_AUTH;
+  delete process.env.DATABASE_URL;
+  delete process.env.NODE_ENV;
   app = await createApp();
 });
 
@@ -71,6 +74,10 @@ afterEach(async () => {
   delete process.env.AIPM_METADATA_BACKEND;
   delete process.env.AIPM_REQUIRE_PUBLISH_TOKEN;
   delete process.env.AIPM_PUBLISH_TOKEN_SHA256;
+  delete process.env.AIPM_DEV_AUTH;
+  delete process.env.DATABASE_URL;
+  delete process.env.NODE_ENV;
+  delete process.env.KEY_VAULT_NAME;
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
 });
 
@@ -110,7 +117,7 @@ describe("registry API production behavior", () => {
     const list = await app!.inject({ method: "GET", url: "/v1/packages?limit=1" });
     expect(list.statusCode).toBe(200);
     expect(list.json()).toMatchObject({
-      packages: [{ name: "@team/api-skill", version: "1.0.1", publisher: null }],
+      packages: [{ name: "@team/api-skill", version: "1.0.1", publisher: null, import: { imported: false } }],
     });
 
     const detail = await app!.inject({
@@ -118,7 +125,10 @@ describe("registry API production behavior", () => {
       url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/versions/1.0.1`,
     });
     expect(detail.statusCode).toBe(200);
-    expect(detail.json()).toMatchObject({ publisher: null });
+    expect(detail.json()).toMatchObject({
+      publisher: null,
+      import: { imported: false, sourceUrl: null },
+    });
   });
 
   it("keeps admin stats behind account services", async () => {
@@ -153,5 +163,28 @@ describe("registry API production behavior", () => {
     expect(demoList.json()).toMatchObject({
       packages: [{ name: "@team/sample-skill", version: "1.0.2" }],
     });
+  });
+
+  it("reports auth config without dev auth by default", async () => {
+    const response = await app!.inject({ method: "GET", url: "/v1/auth/config" });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ devAuth: false, githubAuth: false });
+  });
+
+  it("rejects dev login when dev auth is disabled", async () => {
+    const response = await app!.inject({ method: "GET", url: "/v1/auth/dev/login" });
+    expect(response.statusCode).toBe(404);
+  });
+});
+
+describe("local safety in createApp", () => {
+  it("rejects remote database URLs outside production", async () => {
+    const dataDir = await mkdtemp(join(tmpdir(), "aipm-api-safety-"));
+    tempDirs.push(dataDir);
+    process.env.AIPM_DATA_DIR = dataDir;
+    process.env.AIPM_METADATA_BACKEND = "file";
+    process.env.NODE_ENV = "development";
+    process.env.DATABASE_URL = "postgresql://<user>:<password>@prod.example.com:5432/aipm";
+    await expect(createApp()).rejects.toThrow(/Remote DATABASE_URL/);
   });
 });

@@ -6,6 +6,7 @@ import {
   getPackageVersion,
   insertPackageVersion,
   listPackageVersions,
+  deletePackageVersions,
 } from "./db.js";
 import {
   DuplicateVersionError,
@@ -47,6 +48,10 @@ export class PostgresMetadataStore implements MetadataStore {
     options: { limit?: number; cursor?: string } = {},
   ): Promise<PackageVersionRow[]> {
     return listPackageVersions(this.pool, query, options);
+  }
+
+  async deletePackage(name: string): Promise<PackageVersionRow[]> {
+    return deletePackageVersions(this.pool, name);
   }
 
   async health(): Promise<void> {
