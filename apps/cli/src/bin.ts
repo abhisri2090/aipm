@@ -4,7 +4,7 @@ import { execFile } from "node:child_process";
 import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { cwd, env } from "node:process";
-import { PackageManifestSchema, isValidScopeName } from "@aipm-registry/schemas";
+import { PackageManifestSchema, isValidScopeName, type AiTool } from "@aipm-registry/schemas";
 import { detectToolsInProject } from "@aipm-registry/engine";
 import { packDirectory, packStagedFiles } from "./pack.js";
 import { publishPackage, searchPackages } from "./registry-client.js";
@@ -361,7 +361,7 @@ program
     if (scope.global) await mkdir(configRoot, { recursive: true });
     const installRoot = resolveInstallRoot(scope);
     const detected = await detectToolsInProject(installRoot);
-    let preferredTools = detected;
+    let preferredTools: AiTool[] = detected;
     if (detected.length === 0) {
       const choice = await promptForTool();
       preferredTools = [choice];

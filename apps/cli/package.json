@@ -25,6 +25,12 @@
     "README.md",
     "package.json"
   ],
+  "pkg": {
+    "scripts": "dist/bin.cjs",
+    "assets": [
+      "package.json"
+    ]
+  },
   "engines": {
     "node": ">=20"
   },
