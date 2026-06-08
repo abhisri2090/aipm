@@ -31,4 +31,4 @@ Use this before making the repository public or before a major public release.
 - [ ] Vercel secrets are configured outside git.
 - [ ] Azure secrets are stored outside git, preferably in Key Vault.
 - [ ] npm publish permissions are limited to trusted maintainers.
-- [ ] Production backend deployment uses `infra/azure/deploy-registry-vm.sh`, not the old App Service staging script unless App Service is intentionally used.
+- [ ] Production backend deployment uses `infra/azure/deploy-registry-vm.sh`.

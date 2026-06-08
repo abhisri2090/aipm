@@ -11,7 +11,7 @@ cleanup() {
 trap cleanup EXIT
 
 if [[ -z "${REGISTRY_URL}" ]]; then
-  echo "Usage: $0 https://<registry-app>.azurewebsites.net" >&2
+  echo "Usage: $0 https://<registry-url>" >&2
   exit 1
 fi
 

@@ -27,6 +27,7 @@ jobs:
       - run: pnpm test
       - run: pnpm lint
       - run: pnpm scan:secrets
+      - run: pnpm release:check
 
       - name: Check Azure shell scripts
         run: bash -n infra/azure/*.sh

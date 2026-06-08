@@ -28,9 +28,31 @@ release/installers/install.sh
 release/installers/install.ps1
 ```
 
+## GitHub Environment Setup
+
+Create a GitHub environment named `production` for release workflows.
+
+Secrets:
+
+```txt
+NPM_TOKEN
+PACKAGE_REPO_TOKEN
+```
+
+Variables:
+
+```txt
+HOMEBREW_TAP_REPO=aipm-registry/homebrew-tap
+SCOOP_BUCKET_REPO=aipm-registry/scoop-bucket
+```
+
+`NPM_TOKEN` publishes `@aipm-registry/cli` to npm. `PACKAGE_REPO_TOKEN` needs
+write access to the optional Homebrew tap and Scoop bucket repos.
+
 ## Accounts And Repositories Needed
 
 - GitHub org access to `aipm-registry/aipm` with permission to create releases.
+- npm account/token with publish access to `@aipm-registry/cli`.
 - Optional public Homebrew tap repo: `aipm-registry/homebrew-tap`.
 - Optional public Scoop bucket repo: `aipm-registry/scoop-bucket`.
 - A GitHub account that can submit PRs to `microsoft/winget-pkgs`.
@@ -42,17 +64,29 @@ commands shorter and more conventional later.
 
 ## Release Order
 
-1. Tag the CLI release, for example `cli-v0.1.9`.
-2. Let GitHub Actions upload standalone binaries and checksums.
-3. Copy `release/homebrew/Formula/aipm.rb` into
-   `aipm-registry/homebrew-tap/Formula/aipm.rb`.
-4. Copy `release/scoop/bucket/aipm.json` into
-   `aipm-registry/scoop-bucket/bucket/aipm.json`.
-5. Submit the winget manifest to `microsoft/winget-pkgs`.
-6. Upload or link the install scripts from the release page and website.
+1. Push a CLI release tag, for example `cli-v0.2.0`.
+2. GitHub Actions sets `apps/cli/package.json` to the tag version in the
+   runner, builds standalone binaries, and creates checksums.
+3. GitHub Actions uploads binaries, installer scripts, and package-manager
+   manifests to the GitHub release.
+4. GitHub Actions publishes `@aipm-registry/cli` to npm with `NPM_TOKEN`.
+5. If `HOMEBREW_TAP_REPO` and `PACKAGE_REPO_TOKEN` are set, GitHub Actions
+   updates `Formula/aipm.rb` in the Homebrew tap repo.
+6. If `SCOOP_BUCKET_REPO` and `PACKAGE_REPO_TOKEN` are set, GitHub Actions
+   updates `bucket/aipm.json` in the Scoop bucket repo.
+7. Submit the generated winget manifest to `microsoft/winget-pkgs`.
+
+Create the tag from the commit you want to release:
+
+```bash
+git tag cli-v0.2.0
+git push origin cli-v0.2.0
+```
 
 ## Notes
 
 - The standalone binaries are built from `apps/cli/dist/bin.cjs`.
 - The npm package remains the canonical JavaScript package.
+- Release workflows are tag-only. Do not run CLI releases from branch pushes.
 - The binaries should be treated as release artifacts, not committed source.
+- Winget remains a generated manifest plus PR flow for now.

@@ -4,6 +4,7 @@ set -euo pipefail
 EXPECTED_TENANT_ID="${EXPECTED_TENANT_ID:-}"
 EXPECTED_TENANT_NAME="${EXPECTED_TENANT_NAME:-configured staging tenant}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-aipm-staging}"
+VM_NAME="${VM_NAME:-aipm-registry-vm}"
 
 if ! command -v az >/dev/null 2>&1; then
   echo "Azure CLI is required. Run this from Azure Cloud Shell or install az locally." >&2
@@ -31,10 +32,7 @@ echo "Available subscriptions:"
 az account list --query "[].{name:name,id:id,tenantId:tenantId,isDefault:isDefault,state:state}" --output table
 echo
 
-SUBSCRIPTION_ID="$(az account show --query id --output tsv)"
 TENANT_ID="$(az account show --query tenantId --output tsv)"
-NAME_SUFFIX="$(printf "%s" "${SUBSCRIPTION_ID}" | tr -d '-' | tr '[:upper:]' '[:lower:]' | cut -c1-10)"
-WEBAPP_NAME="${WEBAPP_NAME:-aipm-registry-stg-${NAME_SUFFIX}}"
 
 if [[ -n "${EXPECTED_TENANT_ID}" && "${TENANT_ID}" != "${EXPECTED_TENANT_ID}" ]]; then
   cat >&2 <<EOF
@@ -56,13 +54,10 @@ fi
 echo
 echo "Default derived resource names:"
 echo "  Resource group: ${RESOURCE_GROUP}"
-echo "  Web App:        ${WEBAPP_NAME}"
+echo "  VM:             ${VM_NAME}"
 echo
-echo "Free-plan-friendly create command:"
-echo "  ACKNOWLEDGE_AZURE_COSTS=true ./infra/azure/create-staging.sh"
-echo
-echo "Direct deploy command after resources exist:"
-echo "  ./infra/azure/deploy-registry.sh"
+echo "VM deploy command:"
+echo "  STORAGE_ACCOUNT=<storage-account-name> ./infra/azure/deploy-registry-vm.sh"
 echo
 echo "Verification command after deploy:"
-echo "  ./infra/azure/verify-staging.sh https://${WEBAPP_NAME}.azurewebsites.net"
+echo "  ./infra/azure/verify-production.sh https://api.aipm-registry.com"
