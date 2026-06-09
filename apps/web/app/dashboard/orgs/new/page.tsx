@@ -1,12 +1,5 @@
-import { NewOrgForm } from "../../../../components/dashboard-ui";
-import { noIndexPageMetadata } from "../../../../lib/seo";
-
-export const metadata = noIndexPageMetadata({
-  title: "Create Org",
-  description: "Create an AIPM publisher organization namespace.",
-  path: "/dashboard/orgs/new",
-});
+import { redirect } from "next/navigation";
 
 export default function NewOrgPage() {
-  return <NewOrgForm />;
+  redirect("/dashboard/orgs");
 }

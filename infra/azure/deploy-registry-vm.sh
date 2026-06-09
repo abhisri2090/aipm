@@ -20,6 +20,10 @@ KEY_VAULT_NAME="${KEY_VAULT_NAME:-}"
 AIPM_PUBLIC_SITE_URL="${AIPM_PUBLIC_SITE_URL:-https://aipm-registry.com}"
 AIPM_API_URL="${AIPM_API_URL:-https://api.aipm-registry.com}"
 AIPM_COOKIE_DOMAIN="${AIPM_COOKIE_DOMAIN:-.aipm-registry.com}"
+AIPM_EMAIL_PROVIDER="${AIPM_EMAIL_PROVIDER:-disabled}"
+AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING="${AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING:-}"
+AIPM_EMAIL_SENDER_ADDRESS="${AIPM_EMAIL_SENDER_ADDRESS:-}"
+AIPM_EMAIL_FROM_NAME="${AIPM_EMAIL_FROM_NAME:-AIPM Registry}"
 EXPECTED_TENANT_ID="${EXPECTED_TENANT_ID:-}"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DEPLOY_DIR="${REPO_ROOT}/deploy/registry-api"
@@ -109,6 +113,10 @@ KEY_VAULT_NAME_B64="$(printf "%s" "${KEY_VAULT_NAME}" | base64 | tr -d "\n")"
 PUBLIC_SITE_URL_B64="$(printf "%s" "${AIPM_PUBLIC_SITE_URL}" | base64 | tr -d "\n")"
 API_URL_B64="$(printf "%s" "${AIPM_API_URL}" | base64 | tr -d "\n")"
 COOKIE_DOMAIN_B64="$(printf "%s" "${AIPM_COOKIE_DOMAIN}" | base64 | tr -d "\n")"
+EMAIL_PROVIDER_B64="$(printf "%s" "${AIPM_EMAIL_PROVIDER}" | base64 | tr -d "\n")"
+EMAIL_CONNECTION_STRING_B64="$(printf "%s" "${AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING}" | base64 | tr -d "\n")"
+EMAIL_SENDER_ADDRESS_B64="$(printf "%s" "${AIPM_EMAIL_SENDER_ADDRESS}" | base64 | tr -d "\n")"
+EMAIL_FROM_NAME_B64="$(printf "%s" "${AIPM_EMAIL_FROM_NAME}" | base64 | tr -d "\n")"
 
 RUN_COMMAND_SCRIPT="${REPO_ROOT}/deploy/registry-run-command.sh"
 umask 077
@@ -125,6 +133,10 @@ KEY_VAULT_NAME="\$(printf '%s' '${KEY_VAULT_NAME_B64}' | base64 -d)"
 PUBLIC_SITE_URL="\$(printf '%s' '${PUBLIC_SITE_URL_B64}' | base64 -d)"
 API_URL="\$(printf '%s' '${API_URL_B64}' | base64 -d)"
 COOKIE_DOMAIN="\$(printf '%s' '${COOKIE_DOMAIN_B64}' | base64 -d)"
+EMAIL_PROVIDER="\$(printf '%s' '${EMAIL_PROVIDER_B64}' | base64 -d)"
+EMAIL_CONNECTION_STRING="\$(printf '%s' '${EMAIL_CONNECTION_STRING_B64}' | base64 -d)"
+EMAIL_SENDER_ADDRESS="\$(printf '%s' '${EMAIL_SENDER_ADDRESS_B64}' | base64 -d)"
+EMAIL_FROM_NAME="\$(printf '%s' '${EMAIL_FROM_NAME_B64}' | base64 -d)"
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -y
 sudo apt-get install -y ca-certificates certbot curl nginx python3-certbot-nginx tar
@@ -194,6 +206,8 @@ KEY_VAULT_NAME=\$KEY_VAULT_NAME
 AIPM_PUBLIC_SITE_URL=\$PUBLIC_SITE_URL
 AIPM_API_URL=\$API_URL
 AIPM_COOKIE_DOMAIN=\$COOKIE_DOMAIN
+AIPM_EMAIL_PROVIDER=\$EMAIL_PROVIDER
+AIPM_EMAIL_FROM_NAME=\$EMAIL_FROM_NAME
 AZURE_STORAGE_CONTAINER=${PACKAGE_CONTAINER}
 AIPM_REQUIRE_PUBLISH_TOKEN=true
 EOF
@@ -209,6 +223,10 @@ KEY_VAULT_NAME=
 AIPM_PUBLIC_SITE_URL=\$PUBLIC_SITE_URL
 AIPM_API_URL=\$API_URL
 AIPM_COOKIE_DOMAIN=\$COOKIE_DOMAIN
+AIPM_EMAIL_PROVIDER=\$EMAIL_PROVIDER
+AIPM_EMAIL_FROM_NAME=\$EMAIL_FROM_NAME
+AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING=\$EMAIL_CONNECTION_STRING
+AIPM_EMAIL_SENDER_ADDRESS=\$EMAIL_SENDER_ADDRESS
 AZURE_STORAGE_CONNECTION_STRING=\$STORAGE_CONNECTION_STRING
 AZURE_STORAGE_CONTAINER=${PACKAGE_CONTAINER}
 AIPM_REQUIRE_PUBLISH_TOKEN=true
@@ -252,11 +270,17 @@ tmp="\$(mktemp /run/aipm-registry-secrets.env.XXXXXX)"
   session_secret="\$(fetch_secret_optional aipm-session-secret)"
   admin_password_sha256="\$(fetch_secret_optional AIPM-ADMIN-PASSWORD-SHA256)"
   admin_allowed_usernames="\$(fetch_secret_optional AIPM-ADMIN-ALLOWED-USERNAMES)"
+  email_connection_string="\$(fetch_secret_optional aipm-email-connection-string)"
+  email_sender_address="\$(fetch_secret_optional aipm-email-sender-address)"
+  email_from_name="\$(fetch_secret_optional aipm-email-from-name)"
   if [ -n "\$github_client_id" ]; then printf 'GITHUB_CLIENT_ID=%s\n' "\$github_client_id"; fi
   if [ -n "\$github_client_secret" ]; then printf 'GITHUB_CLIENT_SECRET=%s\n' "\$github_client_secret"; fi
   if [ -n "\$session_secret" ]; then printf 'AIPM_SESSION_SECRET=%s\n' "\$session_secret"; fi
   if [ -n "\$admin_password_sha256" ]; then printf 'AIPM_ADMIN_PASSWORD_SHA256=%s\n' "\$admin_password_sha256"; fi
   if [ -n "\$admin_allowed_usernames" ]; then printf 'AIPM_ADMIN_ALLOWED_USERNAMES=%s\n' "\$admin_allowed_usernames"; fi
+  if [ -n "\$email_connection_string" ]; then printf 'AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING=%s\n' "\$email_connection_string"; fi
+  if [ -n "\$email_sender_address" ]; then printf 'AIPM_EMAIL_SENDER_ADDRESS=%s\n' "\$email_sender_address"; fi
+  if [ -n "\$email_from_name" ]; then printf 'AIPM_EMAIL_FROM_NAME=%s\n' "\$email_from_name"; fi
   printf 'AIPM_METADATA_BACKEND=postgres\n'
 } > "\$tmp"
 mv "\$tmp" /run/aipm-registry-secrets.env

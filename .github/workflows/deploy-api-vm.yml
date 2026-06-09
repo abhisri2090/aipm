@@ -30,6 +30,9 @@ jobs:
       AIPM_PUBLIC_SITE_URL: ${{ vars.AIPM_PUBLIC_SITE_URL || 'https://aipm-registry.com' }}
       AIPM_API_URL: ${{ vars.AIPM_API_URL || 'https://api.aipm-registry.com' }}
       AIPM_COOKIE_DOMAIN: ${{ vars.AIPM_COOKIE_DOMAIN || '.aipm-registry.com' }}
+      AIPM_EMAIL_PROVIDER: ${{ vars.AIPM_EMAIL_PROVIDER || 'disabled' }}
+      AIPM_EMAIL_SENDER_ADDRESS: ${{ vars.AIPM_EMAIL_SENDER_ADDRESS }}
+      AIPM_EMAIL_FROM_NAME: ${{ vars.AIPM_EMAIL_FROM_NAME || 'AIPM Registry' }}
       AIPM_PUBLISH_TOKEN: ${{ secrets.AIPM_PUBLISH_TOKEN }}
       AIPM_PUBLISH_TOKEN_SHA256: ${{ secrets.AIPM_PUBLISH_TOKEN_SHA256 }}
     steps:

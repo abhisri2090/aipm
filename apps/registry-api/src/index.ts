@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -18,23 +18,41 @@ import {
 import { importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
   createOrg,
+  createOrgAuditEvent,
+  createOrgInvite,
   createPool,
   deletePackageProvenance,
   deletePackageReservation,
+  acceptOrgInvite,
   getInternalStats,
   getLatestProvenance,
-  getOwnedOrg,
-  getOwnedPackageReservation,
+  getOrgBySlugForMember,
+  getOrgInviteById,
+  getOrgMembership,
+  getPackageReservationForUser,
+  getPendingInviteByTokenHash,
   getProvenance,
   getProvenanceByPackageNames,
   getPublicPackagePublisher,
+  listOrgAuditEvents,
+  listOrgInvites,
+  listOrgMembers,
   listOrgPackageReservations,
+  listPackageMembers,
   listPublicPackagePublishers,
   listUserImportedPackages,
   listUserOrgs,
   listPackageVersionsForName,
   reservePackageName,
+  removeOrgMember,
+  removePackageMaintainer,
+  resendOrgInvite,
+  revokeOrgInvite,
+  setPackageMaintainer,
+  transferOrgOwnership,
   updateUserProfile,
+  updateOrgMemberRole,
+  type OrgRole,
   type PublicPackagePublisherRow,
 } from "./db.js";
 import {
@@ -49,6 +67,7 @@ import {
   startDevLogin,
   startGithubLogin,
   verifyScopedPublishToken,
+  sha256Hex,
   type AccountAuth,
 } from "./user-auth.js";
 import {
@@ -64,6 +83,7 @@ import {
   verifyAdminPassword,
 } from "./admin-auth.js";
 import { createMetadataStore } from "./create-metadata-store.js";
+import { createEmailSender, resolveEmailConfig, type InviteEmailResult } from "./email.js";
 import { blobKeyForPackage, createStorage } from "./storage.js";
 import { extractManifestFromTarball } from "./publish.js";
 import { ensureSchema } from "./db.js";
@@ -96,6 +116,8 @@ function isHiddenPublicPackage(name: string): boolean {
 }
 
 const ORG_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const INVITE_ROLES = new Set<Exclude<OrgRole, "owner">>(["admin", "member", "viewer"]);
 
 function normalizeOrgSlug(value: string): string {
   return value.trim().toLowerCase();
@@ -104,6 +126,200 @@ function normalizeOrgSlug(value: string): string {
 function normalizePackageNameForOrg(org: string, value: string): string {
   const normalized = value.trim().toLowerCase();
   return normalized.startsWith("@") ? normalized : `@${org}/${normalized}`;
+}
+
+function canManageOrg(role: OrgRole): boolean {
+  return role === "owner" || role === "admin";
+}
+
+function canManagePackages(role: OrgRole): boolean {
+  return role === "owner" || role === "admin";
+}
+
+function canGeneratePackageToken(access: { org_role: OrgRole | null; package_role: "maintainer" | null }): boolean {
+  return access.org_role === "owner" || access.org_role === "admin" || Boolean(access.package_role);
+}
+
+function normalizeGithubLogin(value?: string | null): string | null {
+  return value?.trim().replace(/^@/, "").toLowerCase() || null;
+}
+
+function normalizeEmail(value?: string | null): string | null {
+  return value?.trim().toLowerCase() || null;
+}
+
+function parseInviteRole(value: unknown): Exclude<OrgRole, "owner"> {
+  const role = String(value ?? "viewer") as Exclude<OrgRole, "owner">;
+  if (!INVITE_ROLES.has(role)) throw new Error("Invalid role");
+  return role;
+}
+
+function parseMemberRole(value: unknown): Exclude<OrgRole, "owner"> {
+  return parseInviteRole(value);
+}
+
+function newInviteToken(): string {
+  return `aipm_inv_${randomBytes(32).toString("base64url")}`;
+}
+
+function inviteUrl(token: string): string {
+  const siteUrl = (process.env.AIPM_PUBLIC_SITE_URL ?? "https://aipm-registry.com").replace(/\/$/, "");
+  return `${siteUrl}/dashboard?invite=${encodeURIComponent(token)}`;
+}
+
+function serializeOrg(org: { slug: string; name: string; owner_user_id?: string; created_at: Date; role?: OrgRole }) {
+  return {
+    slug: org.slug,
+    name: org.name,
+    ownerUserId: org.owner_user_id,
+    role: org.role,
+    createdAt: org.created_at,
+  };
+}
+
+function serializeOrgMember(member: {
+  user_id: string;
+  role: OrgRole;
+  created_at: Date;
+  updated_at: Date;
+  github_login: string;
+  username: string;
+  name: string | null;
+  avatar_url: string | null;
+  contact_email?: string | null;
+}) {
+  return {
+    userId: member.user_id,
+    role: member.role,
+    joinedAt: member.created_at,
+    updatedAt: member.updated_at,
+    githubLogin: member.github_login,
+    username: member.username,
+    name: member.name,
+    avatarUrl: member.avatar_url,
+    contactEmail: member.contact_email ?? null,
+  };
+}
+
+function serializeInvite(invite: {
+  id: string;
+  invited_email: string | null;
+  invited_github_login: string | null;
+  role: OrgRole;
+  status: string;
+  expires_at: Date;
+  invited_by_username: string;
+  created_at: Date;
+  updated_at: Date;
+}) {
+  return {
+    id: invite.id,
+    email: invite.invited_email,
+    githubLogin: invite.invited_github_login,
+    role: invite.role,
+    status: invite.status,
+    expiresAt: invite.expires_at,
+    invitedBy: invite.invited_by_username,
+    createdAt: invite.created_at,
+    updatedAt: invite.updated_at,
+  };
+}
+
+function serializePackageMember(member: {
+  user_id: string;
+  role: "maintainer";
+  created_at: Date;
+  updated_at: Date;
+  github_login: string;
+  username: string;
+  name: string | null;
+  avatar_url: string | null;
+}) {
+  return {
+    userId: member.user_id,
+    role: member.role,
+    addedAt: member.created_at,
+    updatedAt: member.updated_at,
+    githubLogin: member.github_login,
+    username: member.username,
+    name: member.name,
+    avatarUrl: member.avatar_url,
+  };
+}
+
+function serializeAuditEvent(event: {
+  id: string;
+  event_type: string;
+  actor_username: string | null;
+  target_username: string | null;
+  target_user_id: string | null;
+  package_name: string | null;
+  invite_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: Date;
+}) {
+  return {
+    id: event.id,
+    type: event.event_type,
+    actor: event.actor_username,
+    target: event.target_username,
+    targetUserId: event.target_user_id,
+    packageName: event.package_name,
+    inviteId: event.invite_id,
+    metadata: event.metadata,
+    createdAt: event.created_at,
+  };
+}
+
+async function sendInviteEmailWithAudit(
+  input: {
+    emailSender: ReturnType<typeof createEmailSender>;
+    accountAuth: AccountAuth;
+    orgId: string;
+    actorUserId: string;
+    inviteId: string;
+    to: string | null;
+    orgName: string;
+    orgSlug: string;
+    role: string;
+    inviteUrl: string;
+    invitedBy: string;
+    expiresAt: Date;
+    log: { error(error: unknown): void };
+  },
+): Promise<InviteEmailResult> {
+  if (!input.to || !input.emailSender.isEnabled) {
+    return { sent: false, provider: "disabled" };
+  }
+  try {
+    const result = await input.emailSender.sendInviteEmail({
+      to: input.to,
+      orgName: input.orgName,
+      orgSlug: input.orgSlug,
+      role: input.role,
+      inviteUrl: input.inviteUrl,
+      invitedBy: input.invitedBy,
+      expiresAt: input.expiresAt,
+    });
+    await createOrgAuditEvent(input.accountAuth.pool, {
+      orgId: input.orgId,
+      actorUserId: input.actorUserId,
+      inviteId: input.inviteId,
+      eventType: "invite.email_sent",
+      metadata: { provider: result.provider },
+    });
+    return result;
+  } catch (error) {
+    input.log.error(error);
+    await createOrgAuditEvent(input.accountAuth.pool, {
+      orgId: input.orgId,
+      actorUserId: input.actorUserId,
+      inviteId: input.inviteId,
+      eventType: "invite.email_failed",
+      metadata: { provider: "azure" },
+    });
+    return { sent: false, provider: "azure" };
+  }
 }
 
 function serializePublisher(row: PublicPackagePublisherRow | null) {
@@ -168,6 +384,7 @@ export async function createApp(): Promise<FastifyInstance> {
   const adminImportAuth = resolveAdminImportAuthConfig();
   const accountAuth = await createAccountAuth();
   const adminAuthConfig = resolveAdminAuthConfig();
+  const emailSender = createEmailSender(resolveEmailConfig());
 
   const app = Fastify({
     logger: true,
@@ -396,11 +613,7 @@ export async function createApp(): Promise<FastifyInstance> {
     if (!user || !accountAuth) return;
     const orgs = await listUserOrgs(accountAuth.pool, user.id);
     return {
-      orgs: orgs.map((org) => ({
-        slug: org.slug,
-        name: org.name,
-        createdAt: org.created_at,
-      })),
+      orgs: orgs.map(serializeOrg),
     };
   });
 
@@ -414,7 +627,7 @@ export async function createApp(): Promise<FastifyInstance> {
     }
     try {
       const org = await createOrg(accountAuth.pool, { slug, name, ownerUserId: user.id });
-      return reply.status(201).send({ slug: org.slug, name: org.name, createdAt: org.created_at });
+      return reply.status(201).send({ ...serializeOrg(org), role: "owner" });
     } catch (error) {
       const pgErr = error as { code?: string };
       if (pgErr.code === "23505") return reply.status(409).send({ error: "Org slug is already taken" });
@@ -425,15 +638,15 @@ export async function createApp(): Promise<FastifyInstance> {
   app.get<{ Params: { org: string } }>("/v1/orgs/:org", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
-    const org = await getOwnedOrg(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
     if (!org) return reply.status(404).send({ error: "Org not found" });
-    return { slug: org.slug, name: org.name, createdAt: org.created_at };
+    return serializeOrg(org);
   });
 
   app.get<{ Params: { org: string } }>("/v1/orgs/:org/packages", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
-    const org = await getOwnedOrg(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
     if (!org) return reply.status(404).send({ error: "Org not found" });
     const packages = await listOrgPackageReservations(accountAuth.pool, org.id);
     return {
@@ -450,8 +663,9 @@ export async function createApp(): Promise<FastifyInstance> {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
       const orgSlug = normalizeOrgSlug(request.params.org);
-      const org = await getOwnedOrg(accountAuth.pool, orgSlug, user.id);
+      const org = await getOrgBySlugForMember(accountAuth.pool, orgSlug, user.id);
       if (!org) return reply.status(404).send({ error: "Org not found" });
+      if (!canManagePackages(org.role)) return reply.status(403).send({ error: "Only org owners and admins can reserve packages" });
       const name = normalizePackageNameForOrg(orgSlug, request.body?.name ?? "");
       if (!isValidScopeName(name)) {
         return reply.status(400).send({ error: "Invalid package name; use @org/name" });
@@ -475,14 +689,326 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/members", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    const members = await listOrgMembers(accountAuth.pool, org.id);
+    return { members: members.map(serializeOrgMember) };
+  });
+
+  app.patch<{ Params: { org: string; userId: string }; Body: { role?: string } }>(
+    "/v1/orgs/:org/members/:userId",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can change roles" });
+      let role: Exclude<OrgRole, "owner">;
+      try {
+        role = parseMemberRole(request.body?.role);
+      } catch {
+        return reply.status(400).send({ error: "Invalid role" });
+      }
+      if (request.params.userId === user.id && org.role === "admin") {
+        return reply.status(403).send({ error: "Admins cannot change their own role" });
+      }
+      const target = await getOrgMembership(accountAuth.pool, org.id, request.params.userId);
+      if (!target) return reply.status(404).send({ error: "Member not found" });
+      if (target.role === "owner") return reply.status(403).send({ error: "Owner role cannot be changed here" });
+      const updated = await updateOrgMemberRole(accountAuth.pool, {
+        orgId: org.id,
+        userId: request.params.userId,
+        role,
+      });
+      if (!updated) return reply.status(404).send({ error: "Member not found" });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: org.id,
+        actorUserId: user.id,
+        targetUserId: request.params.userId,
+        eventType: "member.role_changed",
+        metadata: { role },
+      });
+      return serializeOrgMember(updated);
+    },
+  );
+
+  app.delete<{ Params: { org: string; userId: string } }>("/v1/orgs/:org/members/:userId", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can remove members" });
+    const target = await getOrgMembership(accountAuth.pool, org.id, request.params.userId);
+    if (!target) return reply.status(404).send({ error: "Member not found" });
+    if (target.role === "owner") return reply.status(403).send({ error: "Owner cannot be removed" });
+    const removed = await removeOrgMember(accountAuth.pool, org.id, request.params.userId);
+    if (!removed) return reply.status(404).send({ error: "Member not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      targetUserId: request.params.userId,
+      eventType: "member.removed",
+    });
+    return reply.status(204).send();
+  });
+
+  app.post<{ Params: { org: string }; Body: { userId?: string } }>("/v1/orgs/:org/transfer-ownership", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (org.role !== "owner") return reply.status(403).send({ error: "Only the owner can transfer ownership" });
+    const targetUserId = request.body?.userId?.trim();
+    if (!targetUserId) return reply.status(400).send({ error: "Missing target user id" });
+    const target = await getOrgMembership(accountAuth.pool, org.id, targetUserId);
+    if (!target) return reply.status(404).send({ error: "Target user must already be an org member" });
+    await transferOrgOwnership(accountAuth.pool, { orgId: org.id, fromUserId: user.id, toUserId: targetUserId });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      targetUserId,
+      eventType: "org.ownership_transferred",
+    });
+    return { ok: true };
+  });
+
+  app.post<{ Params: { org: string } }>("/v1/orgs/:org/leave", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (org.role === "owner") return reply.status(403).send({ error: "Transfer ownership before leaving this org" });
+    await removeOrgMember(accountAuth.pool, org.id, user.id);
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      targetUserId: user.id,
+      eventType: "member.left",
+    });
+    return { ok: true };
+  });
+
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/invites", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can view invites" });
+    const invites = await listOrgInvites(accountAuth.pool, org.id);
+    return { invites: invites.map(serializeInvite) };
+  });
+
+  app.post<{ Params: { org: string }; Body: { email?: string | null; githubLogin?: string | null; role?: string } }>(
+    "/v1/orgs/:org/invites",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can invite teammates" });
+      const email = normalizeEmail(request.body?.email);
+      const githubLogin = normalizeGithubLogin(request.body?.githubLogin);
+      if (!email && !githubLogin) return reply.status(400).send({ error: "Invite needs an email or GitHub username" });
+      let role: Exclude<OrgRole, "owner">;
+      try {
+        role = parseInviteRole(request.body?.role);
+      } catch {
+        return reply.status(400).send({ error: "Invalid role" });
+      }
+      const token = newInviteToken();
+      const invite = await createOrgInvite(accountAuth.pool, {
+        orgId: org.id,
+        invitedEmail: email,
+        invitedGithubLogin: githubLogin,
+        role,
+        tokenHash: sha256Hex(token),
+        expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+        invitedByUserId: user.id,
+      });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: org.id,
+        actorUserId: user.id,
+        inviteId: invite.id,
+        eventType: "invite.sent",
+        metadata: { email: Boolean(email), githubLogin, role },
+      });
+      const url = inviteUrl(token);
+      const emailResult = await sendInviteEmailWithAudit({
+        emailSender,
+        accountAuth,
+        orgId: org.id,
+        actorUserId: user.id,
+        inviteId: invite.id,
+        to: email,
+        orgName: org.name,
+        orgSlug: org.slug,
+        role,
+        inviteUrl: url,
+        invitedBy: user.username,
+        expiresAt: invite.expires_at,
+        log: request.log,
+      });
+      return reply.status(201).send({ ...serializeInvite(invite), inviteUrl: url, email: emailResult });
+    },
+  );
+
+  app.post<{ Params: { org: string; inviteId: string } }>("/v1/orgs/:org/invites/:inviteId/resend", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can resend invites" });
+    const existing = await getOrgInviteById(accountAuth.pool, org.id, request.params.inviteId);
+    if (!existing || existing.status !== "pending") return reply.status(404).send({ error: "Pending invite not found" });
+    const token = newInviteToken();
+    const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
+    const ok = await resendOrgInvite(
+      accountAuth.pool,
+      org.id,
+      request.params.inviteId,
+      sha256Hex(token),
+      expiresAt,
+    );
+    if (!ok) return reply.status(404).send({ error: "Pending invite not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      inviteId: request.params.inviteId,
+      eventType: "invite.resent",
+    });
+    const url = inviteUrl(token);
+    const emailResult = await sendInviteEmailWithAudit({
+      emailSender,
+      accountAuth,
+      orgId: org.id,
+      actorUserId: user.id,
+      inviteId: request.params.inviteId,
+      to: existing.invited_email,
+      orgName: org.name,
+      orgSlug: org.slug,
+      role: existing.role,
+      inviteUrl: url,
+      invitedBy: user.username,
+      expiresAt,
+      log: request.log,
+    });
+    return { inviteUrl: url, expiresAt, email: emailResult };
+  });
+
+  app.delete<{ Params: { org: string; inviteId: string } }>("/v1/orgs/:org/invites/:inviteId", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can revoke invites" });
+    const revoked = await revokeOrgInvite(accountAuth.pool, org.id, request.params.inviteId);
+    if (!revoked) return reply.status(404).send({ error: "Pending invite not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      inviteId: request.params.inviteId,
+      eventType: "invite.revoked",
+    });
+    return reply.status(204).send();
+  });
+
+  app.post<{ Params: { token: string } }>("/v1/org-invites/:token/accept", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const invite = await getPendingInviteByTokenHash(accountAuth.pool, sha256Hex(request.params.token));
+    if (!invite) return reply.status(404).send({ error: "Invite not found or already used" });
+    if (invite.expires_at.getTime() <= Date.now()) return reply.status(410).send({ error: "Invite has expired" });
+    if (invite.invited_github_login && invite.invited_github_login !== user.github_login.toLowerCase()) {
+      return reply.status(403).send({ error: "This invite is for a different GitHub account" });
+    }
+    if (invite.invited_email && invite.invited_email !== user.contact_email?.toLowerCase()) {
+      return reply.status(403).send({ error: "This invite is for a different email address" });
+    }
+    await acceptOrgInvite(accountAuth.pool, invite, user.id);
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: invite.org_id,
+      actorUserId: user.id,
+      targetUserId: user.id,
+      inviteId: invite.id,
+      eventType: "invite.accepted",
+      metadata: { role: invite.role },
+    });
+    return { ok: true };
+  });
+
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/audit-events", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can view audit events" });
+    const events = await listOrgAuditEvents(accountAuth.pool, org.id);
+    return { events: events.map(serializeAuditEvent) };
+  });
+
+  app.get<{ Params: { name: string } }>("/v1/packages/:name/members", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const name = decodePackageName(request.params.name);
+    const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+    if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+    const members = await listPackageMembers(accountAuth.pool, name);
+    return { members: members.map(serializePackageMember), access: { orgRole: access.org_role, packageRole: access.package_role } };
+  });
+
+  app.put<{ Params: { name: string; userId: string } }>("/v1/packages/:name/members/:userId", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const name = decodePackageName(request.params.name);
+    const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+    if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+    if (!canManageOrg(access.org_role)) return reply.status(403).send({ error: "Only org owners and admins can assign package maintainers" });
+    const target = await getOrgMembership(accountAuth.pool, access.org_id, request.params.userId);
+    if (!target) return reply.status(404).send({ error: "User must be an org member before package assignment" });
+    await setPackageMaintainer(accountAuth.pool, { packageName: name, userId: request.params.userId, createdByUserId: user.id });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: access.org_id,
+      actorUserId: user.id,
+      targetUserId: request.params.userId,
+      packageName: name,
+      eventType: "package.maintainer_added",
+    });
+    return { ok: true };
+  });
+
+  app.delete<{ Params: { name: string; userId: string } }>("/v1/packages/:name/members/:userId", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const name = decodePackageName(request.params.name);
+    const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+    if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+    if (!canManageOrg(access.org_role)) return reply.status(403).send({ error: "Only org owners and admins can remove package maintainers" });
+    const removed = await removePackageMaintainer(accountAuth.pool, name, request.params.userId);
+    if (!removed) return reply.status(404).send({ error: "Package maintainer not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: access.org_id,
+      actorUserId: user.id,
+      targetUserId: request.params.userId,
+      packageName: name,
+      eventType: "package.maintainer_removed",
+    });
+    return reply.status(204).send();
+  });
+
   app.post<{ Params: { name: string } }>(
     "/v1/packages/:name/publish-tokens",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
       const name = decodePackageName(request.params.name);
-      const reservation = await getOwnedPackageReservation(accountAuth.pool, name, user.id);
-      if (!reservation) return reply.status(404).send({ error: "Reserved package not found" });
+      const reservation = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+      if (!reservation?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+      if (!canGeneratePackageToken(reservation)) {
+        return reply.status(403).send({ error: "You need org admin access or package maintainer access to generate a token" });
+      }
       const token = await createScopedPublishToken(accountAuth, { packageName: name, userId: user.id });
       return {
         token: token.token,
@@ -635,8 +1161,8 @@ export async function createApp(): Promise<FastifyInstance> {
     if (!allowed && accountAuth) {
       const user = await getCurrentUser(accountAuth, request);
       if (user) {
-        const reservation = await getOwnedPackageReservation(accountAuth.pool, name, user.id);
-        allowed = Boolean(reservation);
+        const reservation = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+        allowed = reservation?.org_role === "owner" || reservation?.org_role === "admin";
       }
     }
 

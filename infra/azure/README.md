@@ -72,6 +72,9 @@ AIPM_API_DOMAIN=api.aipm-registry.com
 AIPM_API_URL=https://api.aipm-registry.com
 AIPM_PUBLIC_SITE_URL=https://aipm-registry.com
 AIPM_COOKIE_DOMAIN=.aipm-registry.com
+AIPM_EMAIL_PROVIDER=disabled
+AIPM_EMAIL_SENDER_ADDRESS=<sender-address-if-email-enabled>
+AIPM_EMAIL_FROM_NAME=AIPM Registry
 ```
 
 `AZURE_CREDENTIALS` is the JSON credentials object consumed by `azure/login@v2`.
@@ -113,6 +116,9 @@ KEY_VAULT_NAME=<key-vault-name>
 AZURE_STORAGE_CONTAINER=packages
 AIPM_REQUIRE_PUBLISH_TOKEN=true
 AIPM_PUBLISH_TOKEN_SHA256=<sha256-hex>
+AIPM_EMAIL_PROVIDER=disabled|azure
+AIPM_EMAIL_SENDER_ADDRESS=<azure-communication-email-sender-address>
+AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING=<acs-connection-string>
 ```
 
 Publishing is closed by default. Pass `AIPM_PUBLISH_TOKEN=<raw-token>` or
@@ -178,6 +184,47 @@ aipm-github-client-id
 aipm-github-client-secret
 aipm-session-secret
 ```
+
+Optional email secret names:
+
+```txt
+aipm-email-connection-string
+aipm-email-sender-address
+aipm-email-from-name
+```
+
+## Email Invites
+
+AIPM uses Azure Communication Services Email for organization invite emails.
+Email is optional: if it is disabled, the dashboard still creates one-time
+invite links for owners/admins to share manually.
+
+Create the Azure Email Communication Service, Azure-managed domain,
+Communication Services resource, and default `donotreply` sender:
+
+```bash
+RESOURCE_GROUP=aipm-staging \
+KEY_VAULT_NAME=<key-vault-name> \
+./infra/azure/create-email-service.sh
+```
+
+The script stores these Key Vault secrets when `KEY_VAULT_NAME` is set:
+
+```txt
+aipm-email-connection-string
+aipm-email-sender-address
+aipm-email-from-name
+```
+
+Then set the GitHub production environment variable:
+
+```txt
+AIPM_EMAIL_PROVIDER=azure
+```
+
+Keep `AIPM_EMAIL_PROVIDER=disabled` until the Azure sender address exists.
+Azure-managed domains are simplest for v1. Move to a custom sender domain later
+when DNS verification and sender reputation are ready.
 
 The GitHub OAuth app callback URL must be:
 

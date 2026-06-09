@@ -62,6 +62,10 @@ beforeEach(async () => {
   process.env.AIPM_PUBLISH_TOKEN_SHA256 = tokenHash(token);
   delete process.env.AZURE_STORAGE_CONNECTION_STRING;
   delete process.env.AIPM_DEV_AUTH;
+  delete process.env.AIPM_EMAIL_PROVIDER;
+  delete process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING;
+  delete process.env.AIPM_EMAIL_SENDER_ADDRESS;
+  delete process.env.AIPM_EMAIL_FROM_NAME;
   delete process.env.DATABASE_URL;
   delete process.env.NODE_ENV;
   app = await createApp();
@@ -75,6 +79,10 @@ afterEach(async () => {
   delete process.env.AIPM_REQUIRE_PUBLISH_TOKEN;
   delete process.env.AIPM_PUBLISH_TOKEN_SHA256;
   delete process.env.AIPM_DEV_AUTH;
+  delete process.env.AIPM_EMAIL_PROVIDER;
+  delete process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING;
+  delete process.env.AIPM_EMAIL_SENDER_ADDRESS;
+  delete process.env.AIPM_EMAIL_FROM_NAME;
   delete process.env.DATABASE_URL;
   delete process.env.NODE_ENV;
   delete process.env.KEY_VAULT_NAME;

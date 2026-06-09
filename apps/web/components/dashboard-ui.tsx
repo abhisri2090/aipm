@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { CodeBlock } from "./code-block";
@@ -21,12 +21,62 @@ type Me = {
 type Org = {
   slug: string;
   name: string;
+  ownerUserId?: string;
   createdAt: string;
+  role?: OrgRole;
 };
 
 type ReservedPackage = {
   name: string;
   createdAt: string;
+};
+
+type OrgRole = "owner" | "admin" | "member" | "viewer";
+
+type OrgMember = {
+  userId: string;
+  role: OrgRole;
+  joinedAt: string;
+  updatedAt: string;
+  githubLogin: string;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+  contactEmail: string | null;
+};
+
+type OrgInvite = {
+  id: string;
+  email: string | null;
+  githubLogin: string | null;
+  role: Exclude<OrgRole, "owner">;
+  status: "pending" | "accepted" | "revoked";
+  expiresAt: string;
+  invitedBy: string;
+  createdAt: string;
+};
+
+type OrgAuditEvent = {
+  id: string;
+  type: string;
+  actor: string | null;
+  target: string | null;
+  targetUserId: string | null;
+  packageName: string | null;
+  inviteId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+type PackageMember = {
+  userId: string;
+  role: "maintainer";
+  addedAt: string;
+  updatedAt: string;
+  githubLogin: string;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
 };
 
 type PublishedPackageVersion = {
@@ -70,6 +120,19 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
 
 function shortDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function roleLabel(role?: string | null): string {
+  if (!role) return "Member";
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+function canManageOrg(role?: OrgRole): boolean {
+  return role === "owner" || role === "admin";
+}
+
+function activeOrgStorageKey(userId: string): string {
+  return `aipm-active-org:${userId}`;
 }
 
 function packageHref(name: string): string {
@@ -135,13 +198,14 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "packages" | "profile" | "guide";
-  children: (context: { me: Me; orgs: Org[] }) => ReactNode;
+  active: "overview" | "orgs" | "members" | "packages" | "tokens" | "activity" | "profile" | "guide";
+  children: (context: { me: Me; orgs: Org[]; activeOrg: Org | null; setActiveOrgSlug: (slug: string) => void }) => ReactNode;
   intro?: string;
   title: string;
 }) {
   const [me, setMe] = useState<Me | null>(null);
   const [orgs, setOrgs] = useState<Org[]>([]);
+  const [activeOrgSlug, setActiveOrgSlugState] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -149,6 +213,15 @@ function DashboardShell({
       .then(([user, orgData]) => {
         setMe(user);
         setOrgs(orgData.orgs);
+        const requestedOrg = new URLSearchParams(window.location.search).get("org");
+        const saved = window.localStorage.getItem(activeOrgStorageKey(user.id));
+        const nextActive =
+          orgData.orgs.find((org) => org.slug === requestedOrg)?.slug ??
+          orgData.orgs.find((org) => org.slug === saved)?.slug ??
+          orgData.orgs[0]?.slug ??
+          "";
+        setActiveOrgSlugState(nextActive);
+        if (nextActive) window.localStorage.setItem(activeOrgStorageKey(user.id), nextActive);
       })
       .catch((err: unknown) => setError(publicApiError(err)));
   }, []);
@@ -156,10 +229,19 @@ function DashboardShell({
   if (error) return <LoginRequired message={error} />;
   if (!me) return <LoadingShell />;
 
+  const activeOrg = orgs.find((org) => org.slug === activeOrgSlug) ?? orgs[0] ?? null;
+  const setActiveOrgSlug = (slug: string) => {
+    setActiveOrgSlugState(slug);
+    window.localStorage.setItem(activeOrgStorageKey(me.id), slug);
+  };
+
   const navItems = [
     { href: "/dashboard", id: "overview", label: "Overview" },
-    { href: "/dashboard/orgs/new", id: "orgs", label: "Organizations" },
+    { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
+    { href: "/dashboard/members", id: "members", label: "Members" },
     { href: "/dashboard/packages", id: "packages", label: "Packages" },
+    { href: "/dashboard/tokens", id: "tokens", label: "Publish tokens" },
+    { href: "/dashboard/activity", id: "activity", label: "Activity" },
     { href: "/dashboard/profile", id: "profile", label: "Profile" },
     { href: "/publish/guide", id: "guide", label: "Publishing guide" },
   ];
@@ -178,6 +260,24 @@ function DashboardShell({
             <span>{me.username}</span>
           </div>
         </div>
+        <div className={dash.orgSwitcher}>
+          <label htmlFor="dashboard-org-switcher">Workspace</label>
+          {orgs.length > 0 ? (
+            <select
+              id="dashboard-org-switcher"
+              value={activeOrg?.slug ?? ""}
+              onChange={(event) => setActiveOrgSlug(event.target.value)}
+            >
+              {orgs.map((org) => (
+                <option key={org.slug} value={org.slug}>
+                  @{org.slug}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <Link href="/dashboard/orgs">Create first org</Link>
+          )}
+        </div>
         <nav className={dash.dashboardNav} aria-label="Dashboard">
           {navItems.map((item) => (
             <Link aria-current={active === item.id ? "page" : undefined} href={item.href} key={item.href}>
@@ -190,8 +290,8 @@ function DashboardShell({
           <span>{orgs.length === 1 ? "org" : "orgs"} connected</span>
         </div>
         <div className={dash.sidebarHelp}>
-          <strong>Publishing path</strong>
-          <span>Profile, org, package name, token, CLI push.</span>
+          <strong>{activeOrg ? `@${activeOrg.slug}` : "No workspace yet"}</strong>
+          <span>{activeOrg ? `${roleLabel(activeOrg.role)} access` : "Create an org to start publishing."}</span>
         </div>
       </aside>
 
@@ -206,12 +306,12 @@ function DashboardShell({
             <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Docs
             </Link>
-            <Link className={shell.button} href="/dashboard/orgs/new">
+            <Link className={shell.button} href="/dashboard/orgs">
               New org
             </Link>
           </div>
         </header>
-        {children({ me, orgs })}
+        {children({ me, orgs, activeOrg, setActiveOrgSlug })}
       </section>
     </main>
   );
@@ -297,6 +397,32 @@ export function LoginPanel() {
   );
 }
 
+function InviteAcceptBanner() {
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const invite = params.get("invite");
+    if (!invite) return;
+
+    setMessage("Accepting organization invite...");
+    api<{ ok: boolean }>(`/v1/org-invites/${encodeURIComponent(invite)}/accept`, {
+      method: "POST",
+      body: "{}",
+    })
+      .then(() => {
+        setMessage("Invite accepted. Your organization access is ready.");
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete("invite");
+        window.history.replaceState({}, "", nextUrl.toString());
+      })
+      .catch((err: unknown) => setMessage(publicApiError(err)));
+  }, []);
+
+  if (!message) return null;
+  return <p className={shell.notice}>{message}</p>;
+}
+
 export function DashboardHome() {
   return (
     <DashboardShell
@@ -309,10 +435,11 @@ export function DashboardHome() {
         const nextAction = !me.name
           ? { href: "/dashboard/profile", label: "Complete profile" }
           : orgs.length === 0
-            ? { href: "/dashboard/orgs/new", label: "Create org" }
+            ? { href: "/dashboard/orgs", label: "Create org" }
             : { href: "/dashboard/packages", label: "Manage packages" };
         return (
           <>
+            <InviteAcceptBanner />
             <section className={dash.metricGrid}>
               <article className={dash.metricCard}>
                 <span>Profile</span>
@@ -379,20 +506,31 @@ export function DashboardHome() {
                     <p className={shell.eyebrow}>Namespaces</p>
                     <h2>Your orgs</h2>
                   </div>
-                  <Link className={shell.textLink} href="/dashboard/orgs/new">
+                  <Link className={shell.textLink} href="/dashboard/orgs">
                     Create org
                   </Link>
                 </div>
                 {orgs.length > 0 ? (
                   <div className={dash.resourceList}>
                     {orgs.map((org) => (
-                      <Link className={dash.resourceRow} href={`/dashboard/orgs/${org.slug}`} key={org.slug}>
+                      <button
+                        className={dash.resourceButton}
+                        type="button"
+                        onClick={() => {
+                          window.localStorage.setItem(activeOrgStorageKey(me.id), org.slug);
+                          window.location.href = "/dashboard/orgs";
+                        }}
+                        key={org.slug}
+                      >
                         <span>
                           <strong>@{org.slug}</strong>
-                          <small>{org.name}</small>
+                          <small>
+                            {org.name}
+                            {org.role ? ` · ${roleLabel(org.role)}` : ""}
+                          </small>
                         </span>
                         <small>{shortDate(org.createdAt)}</small>
-                      </Link>
+                      </button>
                     ))}
                   </div>
                 ) : (
@@ -409,67 +547,178 @@ export function DashboardHome() {
   );
 }
 
-function PackageOverviewList({ orgs }: { orgs: Org[] }) {
-  const [packages, setPackages] = useState<ReservedPackage[]>([]);
+function NoActiveOrg({ action = "Create organization" }: { action?: string }) {
+  return (
+    <section className={dash.dashboardPanel}>
+      <p className={shell.eyebrow}>Workspace required</p>
+      <h2>Create an organization first.</h2>
+      <p className={shell.muted}>
+        Organizations own package scopes, members, invites, publishing tokens, and activity.
+      </p>
+      <Link className={shell.button} href="/dashboard/orgs">
+        {action}
+      </Link>
+    </section>
+  );
+}
+
+export function OrgsDashboard() {
+  const [slug, setSlug] = useState("");
+  const [name, setName] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(orgs.length > 0);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (orgs.length === 0) {
-      setLoading(false);
-      setPackages([]);
-      return;
-    }
-
-    setLoading(true);
-    Promise.all(orgs.map((org) => api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)))
-      .then((results) => {
-        if (cancelled) return;
-        setPackages(results.flatMap((result) => result.packages));
-        setError("");
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(publicApiError(err));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [orgs]);
-
-  if (loading) return <div className={shell.empty}>Loading package reservations...</div>;
-  if (error) return <p className={shell.notice}>{error}</p>;
-  if (orgs.length === 0) {
-    return (
-      <div className={shell.empty}>
-        Create an organization first. Packages are reserved inside org namespaces like @team/review-helper.
-      </div>
-    );
-  }
-  if (packages.length === 0) {
-    return (
-      <div className={shell.empty}>
-        No packages reserved yet. Open an org, reserve a skill name, then generate a publish token.
-      </div>
-    );
-  }
 
   return (
-    <div className={dash.resourceList}>
-      {packages.map((pkg) => (
-        <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
-          <span>
-            <strong>{pkg.name}</strong>
-            <small>Reserved for token-based publishing</small>
-          </span>
-          <small>{shortDate(pkg.createdAt)}</small>
-        </Link>
-      ))}
-    </div>
+    <DashboardShell
+      active="orgs"
+      intro="Create and switch publisher workspaces without drilling through nested pages."
+      title="Organizations"
+    >
+      {({ orgs, me, setActiveOrgSlug }) => (
+        <section className={dash.dashboardGrid}>
+          <article className={dash.dashboardPanel}>
+            <div className={shell.sectionHeading}>
+              <div>
+                <p className={shell.eyebrow}>Workspaces</p>
+                <h2>Your organizations</h2>
+              </div>
+            </div>
+            {orgs.length > 0 ? (
+              <div className={dash.resourceList}>
+                {orgs.map((org) => (
+                  <button
+                    className={dash.resourceButton}
+                    key={org.slug}
+                    type="button"
+                    onClick={() => setActiveOrgSlug(org.slug)}
+                  >
+                    <span>
+                      <strong>@{org.slug}</strong>
+                      <small>{org.name} · {roleLabel(org.role)}</small>
+                    </span>
+                    <small>{shortDate(org.createdAt)}</small>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className={shell.empty}>No organizations yet. Create one to reserve your first package scope.</div>
+            )}
+          </article>
+
+          <form
+            className={cn(dash.dashboardPanel, dash.formPanel)}
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setError("");
+              try {
+                const org = await api<Org>("/v1/orgs", {
+                  method: "POST",
+                  body: JSON.stringify({ slug, name: name || slug }),
+                });
+                window.localStorage.setItem(activeOrgStorageKey(me.id), org.slug);
+                window.location.href = "/dashboard/orgs";
+              } catch (err) {
+                setError((err as Error).message);
+              }
+            }}
+          >
+            <p className={shell.eyebrow}>Create org</p>
+            <h2>Reserve a scope</h2>
+            <label htmlFor="org-slug">Org slug</label>
+            <input
+              id="org-slug"
+              onChange={(event) => setSlug(event.target.value)}
+              placeholder="bazzigames"
+              value={slug}
+            />
+            <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
+            <label htmlFor="org-name">Display name</label>
+            <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Bazzi Games" value={name} />
+            {error ? <p className={shell.notice}>{error}</p> : null}
+            <button type="submit">Create organization</button>
+          </form>
+        </section>
+      )}
+    </DashboardShell>
+  );
+}
+
+function PackagesContent({ org }: { org: Org }) {
+  const [packages, setPackages] = useState<ReservedPackage[]>([]);
+  const [packageName, setPackageName] = useState("");
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)
+      .then((data) => {
+        setPackages(data.packages);
+        setError("");
+      })
+      .catch((err: unknown) => setError(publicApiError(err)));
+  }, [org.slug]);
+
+  const canReserve = canManageOrg(org.role);
+
+  return (
+    <section className={dash.dashboardGrid}>
+      <article className={dash.dashboardPanel}>
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>@{org.slug}</p>
+            <h2>Reserved packages</h2>
+          </div>
+        </div>
+        {error ? <p className={shell.notice}>{error}</p> : null}
+        {packages.length > 0 ? (
+          <div className={dash.resourceList}>
+            {packages.map((pkg) => (
+              <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
+                <span>
+                  <strong>{pkg.name}</strong>
+                  <small>Open package detail, maintainers, versions, and CLI commands</small>
+                </span>
+                <small>{shortDate(pkg.createdAt)}</small>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={shell.empty}>No packages reserved in @{org.slug} yet.</div>
+        )}
+      </article>
+      <form
+        className={cn(dash.dashboardPanel, dash.formPanel)}
+        onSubmit={async (event) => {
+          event.preventDefault();
+          setStatus("");
+          try {
+            const pkg = await api<ReservedPackage>(`/v1/orgs/${org.slug}/packages`, {
+              method: "POST",
+              body: JSON.stringify({ name: packageName }),
+            });
+            setPackageName("");
+            setPackages((current) => [pkg, ...current.filter((item) => item.name !== pkg.name)]);
+            setStatus(`Reserved ${pkg.name}.`);
+          } catch (err) {
+            setStatus((err as Error).message);
+          }
+        }}
+      >
+        <p className={shell.eyebrow}>Reserve package</p>
+        <h2>Claim a skill name</h2>
+        <label htmlFor="package-name">Package name</label>
+        <input
+          disabled={!canReserve}
+          id="package-name"
+          onChange={(event) => setPackageName(event.target.value)}
+          placeholder="review-helper"
+          value={packageName}
+        />
+        <p className={dash.fieldHelp}>Use a short name, or paste @{org.slug}/review-helper.</p>
+        {status ? <p className={shell.notice}>{status}</p> : null}
+        <button disabled={!canReserve} type="submit">Reserve package</button>
+        {!canReserve ? <p className={dash.fieldHelp}>Only owners and admins can reserve package names.</p> : null}
+      </form>
+    </section>
   );
 }
 
@@ -477,53 +726,10 @@ export function PackagesDashboard() {
   return (
     <DashboardShell
       active="packages"
-      intro="See reserved package names across your organizations and open each package to generate a publish token."
+      intro="Reserve and manage skill package names for the selected workspace."
       title="Packages"
     >
-      {({ orgs }) => (
-        <section className={dash.dashboardGrid}>
-          <article className={dash.dashboardPanel}>
-            <div className={shell.sectionHeading}>
-              <div>
-                <p className={shell.eyebrow}>Reserved names</p>
-                <h2>Your packages</h2>
-              </div>
-              {orgs[0] ? (
-                <Link className={shell.button} href={`/dashboard/orgs/${orgs[0].slug}/packages/new`}>
-                  Reserve package
-                </Link>
-              ) : (
-                <Link className={shell.button} href="/dashboard/orgs/new">
-                  Create org
-                </Link>
-              )}
-            </div>
-            <PackageOverviewList orgs={orgs} />
-          </article>
-          <article className={dash.dashboardPanel}>
-            <p className={shell.eyebrow}>How packages ship</p>
-            <h2>Token-based CLI releases</h2>
-            <ol className={dash.workflowList}>
-              <li>
-                <strong>Reserve</strong>
-                <span>Claim the package name before anyone publishes it.</span>
-              </li>
-              <li>
-                <strong>Prepare</strong>
-                <span>Create or import the skill folder locally.</span>
-              </li>
-              <li>
-                <strong>Validate</strong>
-                <span>Stage files, preview public content, and validate the bundle.</span>
-              </li>
-              <li>
-                <strong>Push</strong>
-                <span>Generate a 5-minute token and publish from the CLI.</span>
-              </li>
-            </ol>
-          </article>
-        </section>
-      )}
+      {({ activeOrg }) => (activeOrg ? <PackagesContent org={activeOrg} /> : <NoActiveOrg />)}
     </DashboardShell>
   );
 }
@@ -577,52 +783,800 @@ export function NewOrgForm() {
   );
 }
 
-export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
-  const [packages, setPackages] = useState<ReservedPackage[]>([]);
-  const [error, setError] = useState("");
+function MembersContent({ org }: { org: Org }) {
+  const [members, setMembers] = useState<OrgMember[]>([]);
+  const [invites, setInvites] = useState<OrgInvite[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteGithub, setInviteGithub] = useState("");
+  const [inviteRole, setInviteRole] = useState<Exclude<OrgRole, "owner">>("member");
+  const [inviteLink, setInviteLink] = useState("");
+  const [status, setStatus] = useState("");
+  const manageOrg = canManageOrg(org.role);
+
+  const reload = useCallback(() => {
+    setStatus("");
+    Promise.all([
+      api<{ members: OrgMember[] }>(`/v1/orgs/${org.slug}/members`),
+      manageOrg ? api<{ invites: OrgInvite[] }>(`/v1/orgs/${org.slug}/invites`) : Promise.resolve({ invites: [] }),
+    ])
+      .then(([memberData, inviteData]) => {
+        setMembers(memberData.members);
+        setInvites(inviteData.invites);
+      })
+      .catch((err: unknown) => setStatus(publicApiError(err)));
+  }, [manageOrg, org.slug]);
 
   useEffect(() => {
-    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${orgSlug}/packages`)
-      .then((data) => setPackages(data.packages))
+    reload();
+  }, [reload]);
+
+  return (
+    <>
+      <section className={dash.metricGrid}>
+        <article className={dash.metricCard}>
+          <span>Workspace</span>
+          <strong>@{org.slug}</strong>
+          <p>{roleLabel(org.role)} access</p>
+        </article>
+        <article className={dash.metricCard}>
+          <span>Members</span>
+          <strong>{members.length}</strong>
+          <p>People who can view or manage this organization.</p>
+        </article>
+        <article className={dash.metricCard}>
+          <span>Pending invites</span>
+          <strong>{invites.filter((invite) => invite.status === "pending").length}</strong>
+          <p>Invite links expire after 7 days.</p>
+        </article>
+      </section>
+
+      <section className={dash.dashboardGrid}>
+        <article className={dash.dashboardPanel}>
+          <div className={shell.sectionHeading}>
+            <div>
+              <p className={shell.eyebrow}>Members</p>
+              <h2>Access control</h2>
+            </div>
+          </div>
+          <div className={dash.tableWrap}>
+            <table className={dash.table}>
+              <thead>
+                <tr>
+                  <th>Person</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((member) => (
+                  <tr key={member.userId}>
+                    <td>
+                      <strong>{member.name ?? member.username}</strong>
+                      <small>@{member.githubLogin}</small>
+                    </td>
+                    <td>
+                      {manageOrg && member.role !== "owner" ? (
+                        <select
+                          value={member.role}
+                          onChange={async (event) => {
+                            try {
+                              await api<OrgMember>(`/v1/orgs/${org.slug}/members/${member.userId}`, {
+                                method: "PATCH",
+                                body: JSON.stringify({ role: event.target.value }),
+                              });
+                              reload();
+                            } catch (err) {
+                              setStatus((err as Error).message);
+                            }
+                          }}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="member">Member</option>
+                          <option value="viewer">Viewer</option>
+                        </select>
+                      ) : (
+                        <span className={dash.rolePill}>{roleLabel(member.role)}</span>
+                      )}
+                    </td>
+                    <td>{shortDate(member.joinedAt)}</td>
+                    <td>
+                      {manageOrg && member.role !== "owner" ? (
+                        <button
+                          className={dash.textButton}
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await api<void>(`/v1/orgs/${org.slug}/members/${member.userId}`, { method: "DELETE" });
+                              reload();
+                            } catch (err) {
+                              setStatus((err as Error).message);
+                            }
+                          }}
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article className={dash.dashboardPanel}>
+          <p className={shell.eyebrow}>Invite teammates</p>
+          <h2>Send access</h2>
+          {manageOrg ? (
+            <form
+              className={dash.compactForm}
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setStatus("");
+                setInviteLink("");
+                try {
+                  const invite = await api<OrgInvite & { inviteUrl: string }>(`/v1/orgs/${org.slug}/invites`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                      email: inviteEmail || null,
+                      githubLogin: inviteGithub || null,
+                      role: inviteRole,
+                    }),
+                  });
+                  setInviteEmail("");
+                  setInviteGithub("");
+                  setInviteLink(invite.inviteUrl);
+                  reload();
+                } catch (err) {
+                  setStatus((err as Error).message);
+                }
+              }}
+            >
+              <label htmlFor="invite-email">Email</label>
+              <input id="invite-email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="person@example.com" />
+              <label htmlFor="invite-github">GitHub username</label>
+              <input id="invite-github" value={inviteGithub} onChange={(event) => setInviteGithub(event.target.value)} placeholder="github-user" />
+              <label htmlFor="invite-role">Role</label>
+              <select id="invite-role" value={inviteRole} onChange={(event) => setInviteRole(event.target.value as Exclude<OrgRole, "owner">)}>
+                <option value="admin">Admin</option>
+                <option value="member">Member</option>
+                <option value="viewer">Viewer</option>
+              </select>
+              <button type="submit">Create invite</button>
+            </form>
+          ) : (
+            <p className={shell.muted}>Only owners and admins can invite teammates.</p>
+          )}
+          {inviteLink ? (
+            <section className={dash.tokenResult}>
+              <p>Share this invite link. It is shown once.</p>
+              <CodeBlock code={inviteLink} />
+            </section>
+          ) : null}
+        </article>
+      </section>
+
+      {manageOrg ? (
+        <section className={dash.dashboardPanelSpaced}>
+          <article className={dash.dashboardPanel}>
+            <div className={shell.sectionHeading}>
+              <div>
+                <p className={shell.eyebrow}>Pending invites</p>
+                <h2>Invites</h2>
+              </div>
+            </div>
+            {invites.length > 0 ? (
+              <div className={dash.resourceList}>
+                {invites.map((invite) => (
+                  <div className={dash.resourceRow} key={invite.id}>
+                    <span>
+                      <strong>{invite.githubLogin ? `@${invite.githubLogin}` : invite.email}</strong>
+                      <small>{roleLabel(invite.role)} · {invite.status} · expires {shortDate(invite.expiresAt)}</small>
+                    </span>
+                    {invite.status === "pending" ? (
+                      <span className={dash.rowActions}>
+                        <button
+                          className={dash.textButton}
+                          type="button"
+                          onClick={async () => {
+                            setInviteLink("");
+                            try {
+                              const result = await api<{ inviteUrl: string }>(
+                                `/v1/orgs/${org.slug}/invites/${invite.id}/resend`,
+                                { method: "POST", body: "{}" },
+                              );
+                              setInviteLink(result.inviteUrl);
+                              reload();
+                            } catch (err) {
+                              setStatus((err as Error).message);
+                            }
+                          }}
+                        >
+                          New link
+                        </button>
+                        <button
+                          className={dash.textButton}
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              await api<void>(`/v1/orgs/${org.slug}/invites/${invite.id}`, { method: "DELETE" });
+                              reload();
+                            } catch (err) {
+                              setStatus((err as Error).message);
+                            }
+                          }}
+                        >
+                          Revoke
+                        </button>
+                      </span>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={shell.empty}>No invites yet.</div>
+            )}
+          </article>
+        </section>
+      ) : null}
+      {status ? <p className={shell.notice}>{status}</p> : null}
+    </>
+  );
+}
+
+export function MembersDashboard() {
+  return (
+    <DashboardShell
+      active="members"
+      intro="Invite teammates, change roles, and keep membership separate from package work."
+      title="Members"
+    >
+      {({ activeOrg }) => (activeOrg ? <MembersContent org={activeOrg} /> : <NoActiveOrg />)}
+    </DashboardShell>
+  );
+}
+
+function TokensContent({ org }: { org: Org }) {
+  const [packages, setPackages] = useState<ReservedPackage[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState("");
+  const [token, setToken] = useState<{ token: string; expiresAt: string } | null>(null);
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)
+      .then((data) => {
+        setPackages(data.packages);
+        setSelectedPackage((current) => current || data.packages[0]?.name || "");
+      })
+      .catch((err: unknown) => setStatus(publicApiError(err)));
+  }, [org.slug]);
+
+  const pushCommand = token ? `AIPM_TOKEN=${shellQuote(token.token)} aipm publish push --yes` : "";
+
+  return (
+    <section className={dash.dashboardGrid}>
+      <article className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>Token</p>
+        <h2>Generate a publish token</h2>
+        <p className={shell.muted}>Choose a package in @{org.slug}. Tokens expire after 5 minutes and are shown once.</p>
+        <form
+          className={dash.compactForm}
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setStatus("");
+            setToken(null);
+            try {
+              setToken(
+                await api<{ token: string; expiresAt: string }>(
+                  `/v1/packages/${encodeURIComponent(selectedPackage)}/publish-tokens`,
+                  { method: "POST", body: "{}" },
+                ),
+              );
+            } catch (err) {
+              setStatus((err as Error).message);
+            }
+          }}
+        >
+          <label htmlFor="token-package">Package</label>
+          <select id="token-package" value={selectedPackage} onChange={(event) => setSelectedPackage(event.target.value)}>
+            {packages.map((pkg) => (
+              <option key={pkg.name} value={pkg.name}>
+                {pkg.name}
+              </option>
+            ))}
+          </select>
+          <button disabled={!selectedPackage} type="submit">Generate token</button>
+        </form>
+        {status ? <p className={shell.notice}>{status}</p> : null}
+        {token ? (
+          <section className={dash.tokenResult}>
+            <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
+            <CodeBlock code={token.token} />
+            <h3>Push command</h3>
+            <CodeBlock code={pushCommand} />
+          </section>
+        ) : null}
+      </article>
+
+      <article className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>CLI flow</p>
+        <h2>Publish from terminal</h2>
+        <CodeBlock
+          code={`aipm publish add .
+aipm publish validate
+aipm publish token --package ${selectedPackage || `@${org.slug}/your-package`} # optional
+AIPM_TOKEN=<token> aipm publish push --yes`}
+        />
+      </article>
+    </section>
+  );
+}
+
+export function TokensDashboard() {
+  return (
+    <DashboardShell
+      active="tokens"
+      intro="Generate short-lived publish tokens without opening a package detail page."
+      title="Publish tokens"
+    >
+      {({ activeOrg }) => (activeOrg ? <TokensContent org={activeOrg} /> : <NoActiveOrg />)}
+    </DashboardShell>
+  );
+}
+
+function ActivityContent({ org }: { org: Org }) {
+  const [events, setEvents] = useState<OrgAuditEvent[]>([]);
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    if (!canManageOrg(org.role)) return;
+    api<{ events: OrgAuditEvent[] }>(`/v1/orgs/${org.slug}/audit-events`)
+      .then((data) => setEvents(data.events))
+      .catch((err: unknown) => setStatus(publicApiError(err)));
+  }, [org]);
+
+  if (!canManageOrg(org.role)) {
+    return (
+      <section className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>Activity</p>
+        <h2>Admin access required.</h2>
+        <p className={shell.muted}>Only owners and admins can view the audit log.</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className={dash.dashboardPanel}>
+      <div className={shell.sectionHeading}>
+        <div>
+          <p className={shell.eyebrow}>@{org.slug}</p>
+          <h2>Recent activity</h2>
+        </div>
+      </div>
+      {status ? <p className={shell.notice}>{status}</p> : null}
+      {events.length > 0 ? (
+        <div className={dash.auditList}>
+          {events.map((event) => (
+            <div key={event.id}>
+              <strong>{event.type.replaceAll(".", " ")}</strong>
+              <span>
+                {event.actor ?? "System"}
+                {event.target ? ` → ${event.target}` : ""}
+                {event.packageName ? ` · ${event.packageName}` : ""}
+              </span>
+              <small>{new Date(event.createdAt).toLocaleString()}</small>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={shell.empty}>No activity yet.</div>
+      )}
+    </section>
+  );
+}
+
+export function ActivityDashboard() {
+  return (
+    <DashboardShell
+      active="activity"
+      intro="See invites, member changes, package reservations, and access changes in one place."
+      title="Activity"
+    >
+      {({ activeOrg }) => (activeOrg ? <ActivityContent org={activeOrg} /> : <NoActiveOrg />)}
+    </DashboardShell>
+  );
+}
+
+export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
+  const [org, setOrg] = useState<Org | null>(null);
+  const [packages, setPackages] = useState<ReservedPackage[]>([]);
+  const [members, setMembers] = useState<OrgMember[]>([]);
+  const [invites, setInvites] = useState<OrgInvite[]>([]);
+  const [auditEvents, setAuditEvents] = useState<OrgAuditEvent[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteGithub, setInviteGithub] = useState("");
+  const [inviteRole, setInviteRole] = useState<Exclude<OrgRole, "owner">>("member");
+  const [inviteLink, setInviteLink] = useState("");
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+
+  const reload = useCallback(() => {
+    setError("");
+    Promise.all([
+      api<Org>(`/v1/orgs/${orgSlug}`),
+      api<{ packages: ReservedPackage[] }>(`/v1/orgs/${orgSlug}/packages`),
+      api<{ members: OrgMember[] }>(`/v1/orgs/${orgSlug}/members`),
+    ])
+      .then(([orgData, packageData, memberData]) => {
+        setOrg(orgData);
+        setPackages(packageData.packages);
+        setMembers(memberData.members);
+        if (canManageOrg(orgData.role)) {
+          return Promise.all([
+            api<{ invites: OrgInvite[] }>(`/v1/orgs/${orgSlug}/invites`),
+            api<{ events: OrgAuditEvent[] }>(`/v1/orgs/${orgSlug}/audit-events`),
+          ]).then(([inviteData, auditData]) => {
+            setInvites(inviteData.invites);
+            setAuditEvents(auditData.events);
+          });
+        }
+        setInvites([]);
+        setAuditEvents([]);
+        return undefined;
+      })
       .catch((err: unknown) => setError(publicApiError(err)));
   }, [orgSlug]);
+
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const manageOrg = canManageOrg(org?.role);
 
   return (
     <DashboardShell
       active="packages"
-      intro="Reserve names, generate tokens, and publish versions from the CLI."
+      intro="Control packages, teammates, invites, and access for this publisher namespace."
       title={`@${orgSlug}`}
     >
       {() => (
-        <section className={dash.dashboardPanel}>
-          <div className={shell.sectionHeading}>
-            <div>
-              <p className={shell.eyebrow}>Packages</p>
-              <h2>Reserved skill names</h2>
-            </div>
-            <Link className={shell.button} href={`/dashboard/orgs/${orgSlug}/packages/new`}>
-              Reserve package
-            </Link>
-          </div>
+        <>
           {error ? <p className={shell.notice}>{error}</p> : null}
-          {packages.length > 0 ? (
-            <div className={dash.resourceList}>
-              {packages.map((pkg) => (
-                <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
-                  <span>
-                    <strong>{pkg.name}</strong>
-                    <small>Ready for token-based publishing</small>
-                  </span>
-                  <small>{shortDate(pkg.createdAt)}</small>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className={shell.empty}>
-              No packages reserved yet. Reserve a skill name before generating a token or publishing from the CLI.
-            </div>
-          )}
-        </section>
+          <section className={dash.metricGrid}>
+            <article className={dash.metricCard}>
+              <span>Your role</span>
+              <strong>{roleLabel(org?.role)}</strong>
+              <p>{manageOrg ? "You can manage invites, members, and package access." : "Your access is limited by org role."}</p>
+            </article>
+            <article className={dash.metricCard}>
+              <span>Members</span>
+              <strong>{members.length}</strong>
+              <p>Owner, admins, members, and viewers in this namespace.</p>
+            </article>
+            <article className={dash.metricCard}>
+              <span>Packages</span>
+              <strong>{packages.length}</strong>
+              <p>Reserved package names under @{orgSlug}.</p>
+            </article>
+          </section>
+
+          <section className={dash.dashboardGrid}>
+            <article className={dash.dashboardPanel}>
+              <div className={shell.sectionHeading}>
+                <div>
+                  <p className={shell.eyebrow}>Packages</p>
+                  <h2>Reserved skill names</h2>
+                </div>
+                {manageOrg ? (
+                  <Link className={shell.button} href={`/dashboard/orgs/${orgSlug}/packages/new`}>
+                    Reserve package
+                  </Link>
+                ) : null}
+              </div>
+              {packages.length > 0 ? (
+                <div className={dash.resourceList}>
+                  {packages.map((pkg) => (
+                    <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
+                      <span>
+                        <strong>{pkg.name}</strong>
+                        <small>Ready for token-based publishing</small>
+                      </span>
+                      <small>{shortDate(pkg.createdAt)}</small>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className={shell.empty}>
+                  No packages reserved yet. Reserve a skill name before generating a token or publishing from the CLI.
+                </div>
+              )}
+            </article>
+
+            <article className={dash.dashboardPanel}>
+              <div className={shell.sectionHeading}>
+                <div>
+                  <p className={shell.eyebrow}>Org overview</p>
+                  <h2>{org?.name ?? `@${orgSlug}`}</h2>
+                </div>
+              </div>
+              <dl className={dash.detailList}>
+                <div>
+                  <dt>Slug</dt>
+                  <dd>@{orgSlug}</dd>
+                </div>
+                <div>
+                  <dt>Created</dt>
+                  <dd>{org?.createdAt ? shortDate(org.createdAt) : "Loading"}</dd>
+                </div>
+                <div>
+                  <dt>Owner ID</dt>
+                  <dd>{org?.ownerUserId ?? "Loading"}</dd>
+                </div>
+              </dl>
+              {org?.role !== "owner" ? (
+                <button
+                  className={dash.secondaryButton}
+                  type="button"
+                  onClick={async () => {
+                    setStatus("");
+                    try {
+                      await api<{ ok: boolean }>(`/v1/orgs/${orgSlug}/leave`, { method: "POST", body: "{}" });
+                      window.location.href = "/dashboard";
+                    } catch (err) {
+                      setStatus((err as Error).message);
+                    }
+                  }}
+                >
+                  Leave org
+                </button>
+              ) : null}
+            </article>
+          </section>
+
+          <section className={dash.dashboardGrid}>
+            <article className={dash.dashboardPanel}>
+              <div className={shell.sectionHeading}>
+                <div>
+                  <p className={shell.eyebrow}>Admin panel</p>
+                  <h2>Members</h2>
+                </div>
+              </div>
+              <div className={dash.tableWrap}>
+                <table className={dash.table}>
+                  <thead>
+                    <tr>
+                      <th>Person</th>
+                      <th>Role</th>
+                      <th>Joined</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {members.map((member) => (
+                      <tr key={member.userId}>
+                        <td>
+                          <strong>{member.name ?? member.username}</strong>
+                          <small>@{member.githubLogin} · {member.userId}</small>
+                        </td>
+                        <td>
+                          {manageOrg && member.role !== "owner" ? (
+                            <select
+                              value={member.role}
+                              onChange={async (event) => {
+                                setStatus("");
+                                try {
+                                  await api<OrgMember>(`/v1/orgs/${orgSlug}/members/${member.userId}`, {
+                                    method: "PATCH",
+                                    body: JSON.stringify({ role: event.target.value }),
+                                  });
+                                  reload();
+                                } catch (err) {
+                                  setStatus((err as Error).message);
+                                }
+                              }}
+                            >
+                              <option value="admin">Admin</option>
+                              <option value="member">Member</option>
+                              <option value="viewer">Viewer</option>
+                            </select>
+                          ) : (
+                            <span className={dash.rolePill}>{roleLabel(member.role)}</span>
+                          )}
+                        </td>
+                        <td>{shortDate(member.joinedAt)}</td>
+                        <td>
+                          {manageOrg && member.role !== "owner" ? (
+                            <button
+                              className={dash.textButton}
+                              type="button"
+                              onClick={async () => {
+                                setStatus("");
+                                try {
+                                  await api<void>(`/v1/orgs/${orgSlug}/members/${member.userId}`, { method: "DELETE" });
+                                  reload();
+                                } catch (err) {
+                                  setStatus((err as Error).message);
+                                }
+                              }}
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                          {org?.role === "owner" && member.role !== "owner" ? (
+                            <button
+                              className={dash.textButton}
+                              type="button"
+                              onClick={async () => {
+                                setStatus("");
+                                try {
+                                  await api<{ ok: boolean }>(`/v1/orgs/${orgSlug}/transfer-ownership`, {
+                                    method: "POST",
+                                    body: JSON.stringify({ userId: member.userId }),
+                                  });
+                                  reload();
+                                } catch (err) {
+                                  setStatus((err as Error).message);
+                                }
+                              }}
+                            >
+                              Transfer owner
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article className={dash.dashboardPanel}>
+              <p className={shell.eyebrow}>Invite teammates</p>
+              <h2>Send access</h2>
+              {manageOrg ? (
+                <form
+                  className={dash.compactForm}
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    setStatus("");
+                    setInviteLink("");
+                    try {
+                      const invite = await api<OrgInvite & { inviteUrl: string }>(`/v1/orgs/${orgSlug}/invites`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                          email: inviteEmail || null,
+                          githubLogin: inviteGithub || null,
+                          role: inviteRole,
+                        }),
+                      });
+                      setInviteEmail("");
+                      setInviteGithub("");
+                      setInviteLink(invite.inviteUrl);
+                      reload();
+                    } catch (err) {
+                      setStatus((err as Error).message);
+                    }
+                  }}
+                >
+                  <label htmlFor="invite-email">Email</label>
+                  <input id="invite-email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="person@example.com" />
+                  <label htmlFor="invite-github">GitHub username</label>
+                  <input id="invite-github" value={inviteGithub} onChange={(event) => setInviteGithub(event.target.value)} placeholder="github-user" />
+                  <label htmlFor="invite-role">Role</label>
+                  <select id="invite-role" value={inviteRole} onChange={(event) => setInviteRole(event.target.value as Exclude<OrgRole, "owner">)}>
+                    <option value="admin">Admin</option>
+                    <option value="member">Member</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button type="submit">Create invite link</button>
+                  <p className={dash.fieldHelp}>Invite links expire after 7 days. Use GitHub username when possible.</p>
+                </form>
+              ) : (
+                <p className={shell.muted}>Only owners and admins can invite teammates.</p>
+              )}
+              {inviteLink ? (
+                <section className={dash.tokenResult}>
+                  <p>Share this invite link. It is shown once.</p>
+                  <CodeBlock code={inviteLink} />
+                </section>
+              ) : null}
+            </article>
+          </section>
+
+          {manageOrg ? (
+            <section className={dash.dashboardGrid}>
+              <article className={dash.dashboardPanel}>
+                <div className={shell.sectionHeading}>
+                  <div>
+                    <p className={shell.eyebrow}>Pending invites</p>
+                    <h2>Invites</h2>
+                  </div>
+                </div>
+                {invites.length > 0 ? (
+                  <div className={dash.resourceList}>
+                    {invites.map((invite) => (
+                      <div className={dash.resourceRow} key={invite.id}>
+                        <span>
+                          <strong>{invite.githubLogin ? `@${invite.githubLogin}` : invite.email}</strong>
+                          <small>{roleLabel(invite.role)} · {invite.status} · expires {shortDate(invite.expiresAt)}</small>
+                        </span>
+                        {invite.status === "pending" ? (
+                          <span className={dash.rowActions}>
+                            <button
+                              className={dash.textButton}
+                              type="button"
+                              onClick={async () => {
+                                setStatus("");
+                                setInviteLink("");
+                                try {
+                                  const result = await api<{ inviteUrl: string }>(
+                                    `/v1/orgs/${orgSlug}/invites/${invite.id}/resend`,
+                                    { method: "POST", body: "{}" },
+                                  );
+                                  setInviteLink(result.inviteUrl);
+                                  reload();
+                                } catch (err) {
+                                  setStatus((err as Error).message);
+                                }
+                              }}
+                            >
+                              New link
+                            </button>
+                            <button
+                              className={dash.textButton}
+                              type="button"
+                              onClick={async () => {
+                                setStatus("");
+                                try {
+                                  await api<void>(`/v1/orgs/${orgSlug}/invites/${invite.id}`, { method: "DELETE" });
+                                  reload();
+                                } catch (err) {
+                                  setStatus((err as Error).message);
+                                }
+                              }}
+                            >
+                              Revoke
+                            </button>
+                          </span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={shell.empty}>No invites yet.</div>
+                )}
+              </article>
+
+              <article className={dash.dashboardPanel}>
+                <div className={shell.sectionHeading}>
+                  <div>
+                    <p className={shell.eyebrow}>Audit log</p>
+                    <h2>Recent activity</h2>
+                  </div>
+                </div>
+                {auditEvents.length > 0 ? (
+                  <div className={dash.auditList}>
+                    {auditEvents.slice(0, 12).map((event) => (
+                      <div key={event.id}>
+                        <strong>{event.type.replaceAll(".", " ")}</strong>
+                        <span>
+                          {event.actor ?? "System"}
+                          {event.target ? ` → ${event.target}` : ""}
+                          {event.packageName ? ` · ${event.packageName}` : ""}
+                        </span>
+                        <small>{new Date(event.createdAt).toLocaleString()}</small>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={shell.empty}>No audit events yet.</div>
+                )}
+              </article>
+            </section>
+          ) : null}
+          {status ? <p className={shell.notice}>{status}</p> : null}
+        </>
       )}
     </DashboardShell>
   );
@@ -678,6 +1632,10 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const [error, setError] = useState("");
   const [versions, setVersions] = useState<PublishedPackageVersion[]>([]);
   const [versionsError, setVersionsError] = useState("");
+  const [members, setMembers] = useState<PackageMember[]>([]);
+  const [access, setAccess] = useState<{ orgRole: OrgRole | null; packageRole: "maintainer" | null } | null>(null);
+  const [memberUserId, setMemberUserId] = useState("");
+  const [memberStatus, setMemberStatus] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams({ q: packageName, limit: "20" });
@@ -688,6 +1646,24 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
       })
       .catch((err: unknown) => setVersionsError(publicApiError(err)));
   }, [packageName]);
+
+  const loadMembers = useCallback(() => {
+    api<{ members: PackageMember[]; access: { orgRole: OrgRole | null; packageRole: "maintainer" | null } }>(
+      `/v1/packages/${encodeURIComponent(packageName)}/members`,
+    )
+      .then((data) => {
+        setMembers(data.members);
+        setAccess(data.access);
+        setMemberStatus("");
+      })
+      .catch((err: unknown) => setMemberStatus(publicApiError(err)));
+  }, [packageName]);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
+  const canManageMembers = access?.orgRole === "owner" || access?.orgRole === "admin";
 
   const command = useMemo(
     () => `npm install -g @aipm-registry/cli
@@ -729,7 +1705,7 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
             <p className={shell.eyebrow}>Token</p>
             <h2>Generate publish token</h2>
             <p className={shell.muted}>
-              Tokens are shown once, scoped to this package, and expire after 5 minutes.
+              Tokens are shown once, scoped to this package, and expire after 5 minutes. Members need package maintainer access.
             </p>
             <button
               type="button"
@@ -757,6 +1733,78 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
                 <h3>Ready-to-run push command</h3>
                 <CodeBlock code={tokenPushCommand} />
               </section>
+            ) : null}
+          </article>
+          <article className={dash.dashboardPanel}>
+            <div className={shell.sectionHeading}>
+              <div>
+                <p className={shell.eyebrow}>Access</p>
+                <h2>Package maintainers</h2>
+              </div>
+            </div>
+            {memberStatus ? <p className={shell.notice}>{memberStatus}</p> : null}
+            {members.length > 0 ? (
+              <div className={dash.resourceList}>
+                {members.map((member) => (
+                  <div className={dash.resourceRow} key={member.userId}>
+                    <span>
+                      <strong>{member.name ?? member.username}</strong>
+                      <small>@{member.githubLogin} · {member.userId}</small>
+                    </span>
+                    {canManageMembers ? (
+                      <button
+                        className={dash.textButton}
+                        type="button"
+                        onClick={async () => {
+                          setMemberStatus("");
+                          try {
+                            await api<void>(`/v1/packages/${encodeURIComponent(packageName)}/members/${member.userId}`, {
+                              method: "DELETE",
+                            });
+                            loadMembers();
+                          } catch (err) {
+                            setMemberStatus((err as Error).message);
+                          }
+                        }}
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <small>{roleLabel(member.role)}</small>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={shell.empty}>No package maintainers yet.</div>
+            )}
+            {canManageMembers ? (
+              <form
+                className={dash.inlineForm}
+                onSubmit={async (event) => {
+                  event.preventDefault();
+                  setMemberStatus("");
+                  try {
+                    await api<{ ok: boolean }>(
+                      `/v1/packages/${encodeURIComponent(packageName)}/members/${memberUserId.trim()}`,
+                      { method: "PUT", body: "{}" },
+                    );
+                    setMemberUserId("");
+                    loadMembers();
+                  } catch (err) {
+                    setMemberStatus((err as Error).message);
+                  }
+                }}
+              >
+                <label htmlFor="package-member-user-id">Add org member by user ID</label>
+                <input
+                  id="package-member-user-id"
+                  value={memberUserId}
+                  onChange={(event) => setMemberUserId(event.target.value)}
+                  placeholder="User ID from org members table"
+                />
+                <button type="submit">Add maintainer</button>
+              </form>
             ) : null}
           </article>
           <article className={cn(dash.dashboardPanel, dash.versionsPanel)}>

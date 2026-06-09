@@ -99,6 +99,30 @@
   font-size: 34px;
 }
 
+.orgSwitcher {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.orgSwitcher label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.orgSwitcher select,
+.orgSwitcher a {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
 .dashboardNav {
   display: grid;
   gap: 6px;
@@ -254,11 +278,13 @@
   gap: 10px;
 }
 
-.resourceRow {
+.resourceRow,
+.resourceButton {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--control);
@@ -267,12 +293,21 @@
   text-decoration: none;
 }
 
-.resourceRow:hover {
+.resourceButton {
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.resourceRow:hover,
+.resourceButton:hover {
   border-color: var(--accent);
 }
 
 .resourceRow strong,
-.resourceRow small {
+.resourceRow small,
+.resourceButton strong,
+.resourceButton small {
   display: block;
 }
 
@@ -285,6 +320,158 @@
 .fieldHelp {
   margin: -2px 0 8px;
   font-size: 13px;
+}
+
+.detailList {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.detailList div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.detailList dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.detailList dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  border-top: 1px solid var(--line);
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.table strong,
+.table small {
+  display: block;
+}
+
+.table small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.table select,
+.compactForm select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  padding: 9px 10px;
+}
+
+.rolePill {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  padding: 4px 9px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rowActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.textButton,
+.secondaryButton {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.textButton {
+  background: transparent;
+  padding: 6px 8px;
+}
+
+.textButton:hover,
+.secondaryButton:hover {
+  border-color: var(--accent);
+}
+
+.compactForm,
+.inlineForm {
+  display: grid;
+  gap: 10px;
+}
+
+.inlineForm {
+  margin-top: 16px;
+}
+
+.compactForm label,
+.inlineForm label {
+  font-weight: 700;
+}
+
+.compactForm input,
+.inlineForm input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  padding: 11px 12px;
+}
+
+.auditList {
+  display: grid;
+  gap: 10px;
+}
+
+.auditList div {
+  display: grid;
+  gap: 3px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.auditList span,
+.auditList small {
+  color: var(--muted);
 }
 
 .tokenPanel {

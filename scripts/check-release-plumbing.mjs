@@ -85,10 +85,12 @@ export function scanReleasePlumbing() {
     }
   }
 
-  for (const file of requiredExecutableScripts) {
-    if (!existsSync(join(repoRoot, file))) continue;
-    const mode = statSync(join(repoRoot, file)).mode;
-    if ((mode & 0o111) === 0) findings.push(`${file}: script is not executable`);
+  if (process.platform !== "win32") {
+    for (const file of requiredExecutableScripts) {
+      if (!existsSync(join(repoRoot, file))) continue;
+      const mode = statSync(join(repoRoot, file)).mode;
+      if ((mode & 0o111) === 0) findings.push(`${file}: script is not executable`);
+    }
   }
 
   for (const check of fileChecks) {
