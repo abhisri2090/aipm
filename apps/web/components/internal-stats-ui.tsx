@@ -38,14 +38,18 @@ export function InternalStatsPanel({ stats }: { stats: InternalStats }) {
       </header>
 
       <section className={dash.metricGrid} aria-label="Registry totals">
-          <StatCard label="Signed-in users" value={stats.users} detail="GitHub accounts that have logged in at least once." />
-          <StatCard label="Organizations" value={stats.orgs} detail="Org namespaces created in the dashboard." />
-          <StatCard label="Reserved skills" value={stats.reservedPackages} detail="Package names reserved before publishing." />
-          <StatCard label="Published skills" value={stats.publishedPackages} detail="Distinct package names with at least one published version." />
+          <StatCard label="Users" value={stats.users} detail="Publisher accounts registered in AIPM." />
+          <StatCard label="Organizations" value={stats.orgs} detail="Active org namespaces in the dashboard." />
+          <StatCard label="Reserved skills" value={stats.reservedPackages} detail="Package names reserved in active orgs." />
+          <StatCard
+            label="Published skills"
+            value={stats.publishedPackages}
+            detail="Distinct package names with at least one active (non-yanked) version."
+          />
           <StatCard
             label="Published versions"
             value={stats.publishedVersions}
-            detail="Total immutable versions stored in the registry."
+            detail="Active skill versions stored in the registry (yanked excluded)."
           />
         </section>
 

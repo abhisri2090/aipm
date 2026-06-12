@@ -9,12 +9,13 @@ export interface PackageVersionRow {
   blob_path: string;
   size_bytes: number;
   created_at: Date;
+  yanked_at?: Date | null;
 }
 
 export type PackageVersionInsert = Omit<PackageVersionRow, "id" | "created_at">;
 export type PackageVersionSummary = Pick<
   PackageVersionRow,
-  "name" | "version" | "manifest" | "integrity" | "size_bytes" | "created_at"
+  "name" | "version" | "manifest" | "integrity" | "size_bytes" | "created_at" | "yanked_at"
 >;
 
 export class DuplicateVersionError extends Error {

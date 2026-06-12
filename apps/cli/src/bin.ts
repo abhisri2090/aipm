@@ -445,8 +445,9 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, or *")
+  .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive; fail if prompt needed")
-  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; ci?: boolean }) => {
+  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
     const { name, version: requestedVersion } = parsePackageArg(pkgArg);
 
     const scope: ScopedCommandOptions = { global: opts.global };
@@ -473,6 +474,7 @@ program
       project,
       explicitTarget: parseTargetFlag(opts.target),
       ci: opts.ci,
+      token: opts.token ?? process.env.AIPM_TOKEN,
     });
 
     if (!opts.ci && !program.opts().quiet) {
@@ -516,8 +518,9 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, or *")
+  .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
-  .action(async (opts: { global?: boolean; registry?: string; target?: string; ci?: boolean }) => {
+  .action(async (opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
@@ -536,6 +539,7 @@ program
         project,
         explicitTarget: target,
         ci: opts.ci,
+        token: opts.token ?? process.env.AIPM_TOKEN,
       });
     }
   });

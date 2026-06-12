@@ -20,6 +20,11 @@ function registryFetchError(registry: string, cause: unknown): Error {
   return new Error(`Registry request failed (${registry}): ${msg}`);
 }
 
+function registryAuthHeaders(token?: string): Record<string, string> | undefined {
+  if (!token) return undefined;
+  return { Authorization: `Bearer ${token}` };
+}
+
 async function registryFetch(url: string, registry: string, init?: RequestInit): Promise<Response> {
   const timeoutSignal =
     typeof AbortSignal !== "undefined" && "timeout" in AbortSignal
@@ -30,6 +35,13 @@ async function registryFetch(url: string, registry: string, init?: RequestInit):
   } catch (e) {
     throw registryFetchError(registry, e);
   }
+}
+
+function privateInstallHint(name: string, status: number, token?: string): string {
+  if (status !== 404 || !name.startsWith("@") || token) {
+    return `Package not found: ${name} (${status})`;
+  }
+  return `Package not found: ${name} (${status}). If @org/pkg is private, set AIPM_TOKEN with an install token from the dashboard.`;
 }
 
 /** Fail fast before install/publish if the registry API is not listening. */
@@ -101,27 +113,34 @@ export async function fetchPackageMetadata(
   registry: string,
   name: string,
   version: string,
-): Promise<{ manifest: PackageManifest; integrity: string }> {
+  token?: string,
+): Promise<{
+  manifest: PackageManifest;
+  integrity: string;
+  deprecated?: { at: string; message: string | null } | null;
+}> {
   const base = registry.replace(/\/$/, "");
   const url = `${base}/v1/packages/${encodePackageName(name)}/versions/${version}`;
-  const res = await registryFetch(url, base);
-  if (!res.ok) throw new Error(`Package not found: ${name}@${version} (${res.status})`);
+  const res = await registryFetch(url, base, { headers: registryAuthHeaders(token) });
+  if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status, token));
   const data = (await res.json()) as {
     manifest: PackageManifest;
     integrity: string;
+    deprecated?: { at: string; message: string | null } | null;
   };
-  return { manifest: data.manifest, integrity: data.integrity };
+  return { manifest: data.manifest, integrity: data.integrity, deprecated: data.deprecated ?? null };
 }
 
 export async function fetchPackageTarball(
   registry: string,
   name: string,
   version: string,
+  token?: string,
 ): Promise<Buffer> {
   const base = registry.replace(/\/$/, "");
   const url = `${base}/v1/packages/${encodePackageName(name)}/versions/${version}/tarball`;
-  const res = await registryFetch(url, base);
-  if (!res.ok) throw new Error(`Tarball not found: ${name}@${version} (${res.status})`);
+  const res = await registryFetch(url, base, { headers: registryAuthHeaders(token) });
+  if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status, token));
   const ab = await res.arrayBuffer();
   return Buffer.from(ab);
 }

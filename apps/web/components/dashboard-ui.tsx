@@ -13,10 +13,23 @@ import dash from "./dashboard-ui.module.css";
 type Me = {
   id: string;
   username: string;
-  githubLogin: string;
+  githubLogin: string | null;
   name: string | null;
   avatarUrl: string | null;
+  authProvider?: "github" | "email";
+  email?: string | null;
+  emailVerifiedAt?: string | null;
+  contactEmail?: string | null;
+  contactEmailVerifiedAt?: string | null;
 };
+
+type AuthConfig = {
+  devAuth: boolean;
+  githubAuth: boolean;
+  emailAuth: boolean;
+};
+
+const AUTH_RETURN_KEY = "aipm-auth-return";
 
 type Org = {
   slug: string;
@@ -24,10 +37,32 @@ type Org = {
   ownerUserId?: string;
   createdAt: string;
   role?: OrgRole;
+  defaultPackageVisibility?: "public" | "private";
+  description?: string | null;
+  websiteUrl?: string | null;
+  avatarUrl?: string | null;
+  defaultMemberRole?: Exclude<OrgRole, "owner">;
+  inviteTtlHours?: number;
+  autoJoinDomain?: string | null;
 };
 
 type ReservedPackage = {
   name: string;
+  createdAt: string;
+  visibility?: "public" | "private";
+  deprecatedAt?: string | null;
+  deprecationMessage?: string | null;
+  publishedVersionCount?: number;
+};
+
+type InstallToken = {
+  id: string;
+  name: string;
+  userId: string;
+  githubLogin: string | null;
+  username: string | null;
+  expiresAt: string | null;
+  lastUsedAt: string | null;
   createdAt: string;
 };
 
@@ -135,6 +170,11 @@ function activeOrgStorageKey(userId: string): string {
   return `aipm-active-org:${userId}`;
 }
 
+function orgJoinUrl(orgSlug: string): string {
+  if (typeof window === "undefined") return `/dashboard?join=${encodeURIComponent(orgSlug)}`;
+  return `${window.location.origin}/dashboard?join=${encodeURIComponent(orgSlug)}`;
+}
+
 function packageHref(name: string): string {
   return `/dashboard/packages/${name.replace(/^@/, "")}`;
 }
@@ -198,7 +238,7 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "members" | "packages" | "tokens" | "activity" | "profile" | "guide";
+  active: "overview" | "orgs" | "members" | "packages" | "tokens" | "activity" | "settings" | "profile" | "guide";
   children: (context: { me: Me; orgs: Org[]; activeOrg: Org | null; setActiveOrgSlug: (slug: string) => void }) => ReactNode;
   intro?: string;
   title: string;
@@ -240,8 +280,9 @@ function DashboardShell({
     { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
     { href: "/dashboard/members", id: "members", label: "Members" },
     { href: "/dashboard/packages", id: "packages", label: "Packages" },
-    { href: "/dashboard/tokens", id: "tokens", label: "Publish tokens" },
+    { href: "/dashboard/tokens", id: "tokens", label: "Tokens" },
     { href: "/dashboard/activity", id: "activity", label: "Activity" },
+    { href: "/dashboard/settings", id: "settings", label: "Settings" },
     { href: "/dashboard/profile", id: "profile", label: "Profile" },
     { href: "/publish/guide", id: "guide", label: "Publishing guide" },
   ];
@@ -293,6 +334,19 @@ function DashboardShell({
           <strong>{activeOrg ? `@${activeOrg.slug}` : "No workspace yet"}</strong>
           <span>{activeOrg ? `${roleLabel(activeOrg.role)} access` : "Create an org to start publishing."}</span>
         </div>
+        <button
+          className={dash.secondaryButton}
+          type="button"
+          onClick={async () => {
+            try {
+              await api<void>("/v1/auth/logout", { method: "POST", body: "{}" });
+            } finally {
+              window.location.href = "/login";
+            }
+          }}
+        >
+          Sign out
+        </button>
       </aside>
 
       <section className={dash.dashboardWorkspace}>
@@ -311,20 +365,60 @@ function DashboardShell({
             </Link>
           </div>
         </header>
+        <OrgJoinBanner />
         {children({ me, orgs, activeOrg, setActiveOrgSlug })}
       </section>
     </main>
   );
 }
 
+function storeAuthReturnPath(): void {
+  if (typeof window === "undefined") return;
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get("invite");
+  const join = params.get("join");
+  const returnTo = params.get("returnTo");
+  if (invite) {
+    sessionStorage.setItem(AUTH_RETURN_KEY, `/dashboard?invite=${encodeURIComponent(invite)}`);
+    return;
+  }
+  if (join) {
+    sessionStorage.setItem(AUTH_RETURN_KEY, `/dashboard?join=${encodeURIComponent(join)}`);
+    return;
+  }
+  if (returnTo?.startsWith("/")) {
+    sessionStorage.setItem(AUTH_RETURN_KEY, returnTo);
+  }
+}
+
+function consumeAuthReturnPath(): string {
+  if (typeof window === "undefined") return "/dashboard";
+  const stored = sessionStorage.getItem(AUTH_RETURN_KEY);
+  sessionStorage.removeItem(AUTH_RETURN_KEY);
+  if (stored?.startsWith("/")) return stored;
+  return "/dashboard";
+}
+
 export function LoginPanel() {
   const localDev = isLocalDevSite();
-  const [authConfig, setAuthConfig] = useState<{ devAuth: boolean; githubAuth: boolean } | null>(null);
+  const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [emailStep, setEmailStep] = useState<"idle" | "code_sent">("idle");
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailNotice, setEmailNotice] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    storeAuthReturnPath();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    void api<{ devAuth: boolean; githubAuth: boolean }>("/v1/auth/config")
+    void api<AuthConfig>("/v1/auth/config")
       .then((config) => {
         if (!cancelled) {
           setAuthConfig(config);
@@ -333,7 +427,7 @@ export function LoginPanel() {
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setAuthConfig({ devAuth: false, githubAuth: false });
+          setAuthConfig({ devAuth: false, githubAuth: false, emailAuth: false });
           setConfigError(publicApiError(error));
         }
       });
@@ -344,6 +438,65 @@ export function LoginPanel() {
 
   const showDevLogin = localDev || authConfig?.devAuth === true;
   const showGithubLogin = authConfig?.githubAuth === true;
+  const showEmailLogin = authConfig?.emailAuth === true || (localDev && authConfig?.devAuth === true);
+  const showAuthDivider = (showGithubLogin || showDevLogin) && showEmailLogin;
+
+  async function requestEmailCode() {
+    setEmailBusy(true);
+    setEmailError(null);
+    setEmailNotice(null);
+    setDevCode(null);
+    try {
+      const result = await api<{ ok: boolean; devCode?: string; emailSent: boolean }>(
+        "/v1/auth/email/request-code",
+        { method: "POST", body: JSON.stringify({ email }) },
+      );
+      setEmailStep("code_sent");
+      setResendAvailableAt(Date.now() + 60_000);
+      if (result.devCode) {
+        setDevCode(result.devCode);
+        setEmailNotice(`Local dev code: ${result.devCode}`);
+      } else if (result.emailSent) {
+        setEmailNotice("If an account exists, you'll sign in; otherwise we'll create one. Check your inbox.");
+      } else {
+        setEmailNotice("If an account exists, you'll sign in; otherwise we'll create one.");
+      }
+    } catch (error) {
+      setEmailError(publicApiError(error));
+    } finally {
+      setEmailBusy(false);
+    }
+  }
+
+  async function verifyEmailCode() {
+    setEmailBusy(true);
+    setEmailError(null);
+    try {
+      await api("/v1/auth/email/verify-code", {
+        method: "POST",
+        body: JSON.stringify({ email, code }),
+      });
+      window.location.href = consumeAuthReturnPath();
+    } catch (error) {
+      setEmailError(publicApiError(error));
+    } finally {
+      setEmailBusy(false);
+    }
+  }
+
+  function resetEmailFlow() {
+    setEmailStep("idle");
+    setCode("");
+    setDevCode(null);
+    setEmailError(null);
+    setEmailNotice(null);
+    setResendAvailableAt(null);
+  }
+
+  const resendSeconds =
+    resendAvailableAt && resendAvailableAt > Date.now()
+      ? Math.ceil((resendAvailableAt - Date.now()) / 1000)
+      : 0;
 
   return (
     <main>
@@ -370,7 +523,82 @@ export function LoginPanel() {
                 Continue with GitHub
               </a>
             ) : null}
-            {!showDevLogin && !showGithubLogin && authConfig !== null ? (
+            {showAuthDivider ? <p className={dash.loginOrDivider}>or</p> : null}
+            {showEmailLogin ? (
+              <div className={dash.emailAuthBlock}>
+                {emailStep === "idle" ? (
+                  <form
+                    className={dash.compactForm}
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void requestEmailCode();
+                    }}
+                  >
+                    <label htmlFor="login-email">Email</label>
+                    <input
+                      id="login-email"
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      placeholder="you@company.com"
+                    />
+                    <p className={dash.fieldHelp}>
+                      If an account exists, you&apos;ll sign in; otherwise we&apos;ll create one.
+                    </p>
+                    <button disabled={!email || emailBusy} type="submit">
+                      {emailBusy ? "Sending…" : "Send verification code"}
+                    </button>
+                  </form>
+                ) : (
+                  <form
+                    className={dash.compactForm}
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void verifyEmailCode();
+                    }}
+                  >
+                    <p className={shell.muted}>Enter the 6-digit code we sent to {email}</p>
+                    {devCode ? (
+                      <>
+                        <p className={shell.muted}>Local dev code</p>
+                        <CodeBlock code={devCode} />
+                      </>
+                    ) : null}
+                    <label htmlFor="login-code">Verification code</label>
+                    <input
+                      id="login-code"
+                      className={dash.otpInput}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={code}
+                      onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="000000"
+                    />
+                    <button disabled={code.length !== 6 || emailBusy} type="submit">
+                      {emailBusy ? "Verifying…" : "Verify and continue"}
+                    </button>
+                    <div className={dash.emailAuthLinks}>
+                      <button
+                        className={dash.linkButton}
+                        disabled={emailBusy || resendSeconds > 0}
+                        type="button"
+                        onClick={() => void requestEmailCode()}
+                      >
+                        {resendSeconds > 0 ? `Resend in ${resendSeconds}s` : "Resend code"}
+                      </button>
+                      <button className={dash.linkButton} disabled={emailBusy} type="button" onClick={resetEmailFlow}>
+                        Use a different email
+                      </button>
+                    </div>
+                  </form>
+                )}
+                {emailError ? <p className={shell.notice}>{emailError}</p> : null}
+                {emailNotice && !emailError ? <p className={shell.muted}>{emailNotice}</p> : null}
+              </div>
+            ) : null}
+            {!showDevLogin && !showGithubLogin && !showEmailLogin && authConfig !== null ? (
               <p className={shell.muted}>Publisher sign-in is not configured on this API.</p>
             ) : null}
             {configError && localDev ? (
@@ -421,6 +649,45 @@ function InviteAcceptBanner() {
 
   if (!message) return null;
   return <p className={shell.notice}>{message}</p>;
+}
+
+function OrgJoinBanner() {
+  const [message, setMessage] = useState("");
+  const [needsVerify, setNeedsVerify] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinOrg = params.get("join")?.trim();
+    if (!joinOrg) return;
+
+    setMessage(`Joining @${joinOrg}...`);
+    setNeedsVerify(false);
+    api<Org>(`/v1/orgs/${encodeURIComponent(joinOrg)}/join`, { method: "POST", body: "{}" })
+      .then(() => {
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.delete("join");
+        nextUrl.searchParams.set("org", joinOrg);
+        window.location.href = `${nextUrl.pathname}?${nextUrl.searchParams.toString()}`;
+      })
+      .catch((err: unknown) => {
+        const text = publicApiError(err);
+        setMessage(text);
+        setNeedsVerify(text.toLowerCase().includes("verify"));
+      });
+  }, []);
+
+  if (!message) return null;
+  return (
+    <p className={shell.notice}>
+      {message}
+      {needsVerify ? (
+        <>
+          {" "}
+          <Link href="/dashboard/profile">Verify your work email</Link> first, then open the join link again.
+        </>
+      ) : null}
+    </p>
+  );
 }
 
 export function DashboardHome() {
@@ -573,7 +840,7 @@ export function OrgsDashboard() {
       intro="Create and switch publisher workspaces without drilling through nested pages."
       title="Organizations"
     >
-      {({ orgs, me, setActiveOrgSlug }) => (
+      {({ orgs, me, activeOrg, setActiveOrgSlug }) => (
         <section className={dash.dashboardGrid}>
           <article className={dash.dashboardPanel}>
             <div className={shell.sectionHeading}>
@@ -586,7 +853,8 @@ export function OrgsDashboard() {
               <div className={dash.resourceList}>
                 {orgs.map((org) => (
                   <button
-                    className={dash.resourceButton}
+                    aria-current={org.slug === activeOrg?.slug ? "true" : undefined}
+                    className={cn(dash.resourceButton, org.slug === activeOrg?.slug && dash.resourceButtonActive)}
                     key={org.slug}
                     type="button"
                     onClick={() => setActiveOrgSlug(org.slug)}
@@ -636,9 +904,62 @@ export function OrgsDashboard() {
             {error ? <p className={shell.notice}>{error}</p> : null}
             <button type="submit">Create organization</button>
           </form>
+
+          <JoinableOrgsPanel />
         </section>
       )}
     </DashboardShell>
+  );
+}
+
+function JoinableOrgsPanel() {
+  const [joinable, setJoinable] = useState<Org[]>([]);
+  const [status, setStatus] = useState("");
+
+  useEffect(() => {
+    api<{ orgs: Org[] }>("/v1/me/joinable-orgs")
+      .then((data) => setJoinable(data.orgs))
+      .catch(() => setJoinable([]));
+  }, []);
+
+  if (joinable.length === 0) return null;
+
+  return (
+    <article className={dash.dashboardPanel}>
+      <div className={shell.sectionHeading}>
+        <div>
+          <p className={shell.eyebrow}>Domain match</p>
+          <h2>Organizations you can join</h2>
+        </div>
+      </div>
+      <p className={shell.muted}>Your verified work email domain matches these organizations.</p>
+      <div className={dash.resourceList}>
+        {joinable.map((org) => (
+          <div className={dash.resourceRow} key={org.slug}>
+            <span>
+              <strong>@{org.slug}</strong>
+              <small>{org.name} · joins as {roleLabel(org.defaultMemberRole ?? "member")}</small>
+            </span>
+            <button
+              className={dash.secondaryButton}
+              type="button"
+              onClick={async () => {
+                setStatus("");
+                try {
+                  await api<Org>(`/v1/orgs/${org.slug}/join`, { method: "POST", body: "{}" });
+                  window.location.href = `/dashboard/orgs?org=${org.slug}`;
+                } catch (err) {
+                  setStatus((err as Error).message);
+                }
+              }}
+            >
+              Join
+            </button>
+          </div>
+        ))}
+      </div>
+      {status ? <p className={shell.notice}>{status}</p> : null}
+    </article>
   );
 }
 
@@ -672,13 +993,37 @@ function PackagesContent({ org }: { org: Org }) {
         {packages.length > 0 ? (
           <div className={dash.resourceList}>
             {packages.map((pkg) => (
-              <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
-                <span>
-                  <strong>{pkg.name}</strong>
-                  <small>Open package detail, maintainers, versions, and CLI commands</small>
-                </span>
-                <small>{shortDate(pkg.createdAt)}</small>
-              </Link>
+              <div className={dash.resourceRow} key={pkg.name}>
+                <Link href={packageHref(pkg.name)}>
+                  <span>
+                    <strong>{pkg.name}</strong>
+                    <small>
+                      {pkg.visibility === "private" ? "Private · " : ""}
+                      {pkg.publishedVersionCount ? `${pkg.publishedVersionCount} published` : "Reserved only"}
+                    </small>
+                  </span>
+                  <small>{shortDate(pkg.createdAt)}</small>
+                </Link>
+                {canReserve && (pkg.publishedVersionCount ?? 0) === 0 ? (
+                  <button
+                    className={dash.textButton}
+                    type="button"
+                    onClick={async () => {
+                      if (!window.confirm(`Unreserve ${pkg.name}?`)) return;
+                      try {
+                        await api<void>(`/v1/orgs/${org.slug}/packages/${encodeURIComponent(pkg.name)}`, {
+                          method: "DELETE",
+                        });
+                        setPackages((current) => current.filter((item) => item.name !== pkg.name));
+                      } catch (err) {
+                        setStatus((err as Error).message);
+                      }
+                    }}
+                  >
+                    Unreserve
+                  </button>
+                ) : null}
+              </div>
             ))}
           </div>
         ) : (
@@ -788,10 +1133,20 @@ function MembersContent({ org }: { org: Org }) {
   const [invites, setInvites] = useState<OrgInvite[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteGithub, setInviteGithub] = useState("");
-  const [inviteRole, setInviteRole] = useState<Exclude<OrgRole, "owner">>("member");
+  const [inviteRole, setInviteRole] = useState<Exclude<OrgRole, "owner">>(org.defaultMemberRole ?? "member");
   const [inviteLink, setInviteLink] = useState("");
+  const [inviteTab, setInviteTab] = useState<"email" | "domain">("email");
+  const [autoJoinDomain, setAutoJoinDomain] = useState(org.autoJoinDomain ?? "");
   const [status, setStatus] = useState("");
   const manageOrg = canManageOrg(org.role);
+
+  useEffect(() => {
+    if (org.defaultMemberRole) setInviteRole(org.defaultMemberRole);
+  }, [org.defaultMemberRole]);
+
+  useEffect(() => {
+    setAutoJoinDomain(org.autoJoinDomain ?? "");
+  }, [org.autoJoinDomain]);
 
   const reload = useCallback(() => {
     setStatus("");
@@ -909,42 +1264,103 @@ function MembersContent({ org }: { org: Org }) {
           <p className={shell.eyebrow}>Invite teammates</p>
           <h2>Send access</h2>
           {manageOrg ? (
-            <form
-              className={dash.compactForm}
-              onSubmit={async (event) => {
-                event.preventDefault();
-                setStatus("");
-                setInviteLink("");
-                try {
-                  const invite = await api<OrgInvite & { inviteUrl: string }>(`/v1/orgs/${org.slug}/invites`, {
-                    method: "POST",
-                    body: JSON.stringify({
-                      email: inviteEmail || null,
-                      githubLogin: inviteGithub || null,
-                      role: inviteRole,
-                    }),
-                  });
-                  setInviteEmail("");
-                  setInviteGithub("");
-                  setInviteLink(invite.inviteUrl);
-                  reload();
-                } catch (err) {
-                  setStatus((err as Error).message);
-                }
-              }}
-            >
-              <label htmlFor="invite-email">Email</label>
-              <input id="invite-email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="person@example.com" />
-              <label htmlFor="invite-github">GitHub username</label>
-              <input id="invite-github" value={inviteGithub} onChange={(event) => setInviteGithub(event.target.value)} placeholder="github-user" />
-              <label htmlFor="invite-role">Role</label>
-              <select id="invite-role" value={inviteRole} onChange={(event) => setInviteRole(event.target.value as Exclude<OrgRole, "owner">)}>
-                <option value="admin">Admin</option>
-                <option value="member">Member</option>
-                <option value="viewer">Viewer</option>
-              </select>
-              <button type="submit">Create invite</button>
-            </form>
+            <>
+              <div className={dash.tabRow} role="tablist" aria-label="Invite method">
+                <button
+                  aria-selected={inviteTab === "email"}
+                  className={cn(dash.tabButton, inviteTab === "email" && dash.tabButtonActive)}
+                  role="tab"
+                  type="button"
+                  onClick={() => setInviteTab("email")}
+                >
+                  Email
+                </button>
+                <button
+                  aria-selected={inviteTab === "domain"}
+                  className={cn(dash.tabButton, inviteTab === "domain" && dash.tabButtonActive)}
+                  role="tab"
+                  type="button"
+                  onClick={() => setInviteTab("domain")}
+                >
+                  Domain
+                </button>
+              </div>
+              {inviteTab === "email" ? (
+                <form
+                  className={dash.compactForm}
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    setStatus("");
+                    setInviteLink("");
+                    try {
+                      const invite = await api<OrgInvite & { inviteUrl: string }>(`/v1/orgs/${org.slug}/invites`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                          email: inviteEmail || null,
+                          githubLogin: inviteGithub || null,
+                          role: inviteRole,
+                        }),
+                      });
+                      setInviteEmail("");
+                      setInviteGithub("");
+                      setInviteLink(invite.inviteUrl);
+                      reload();
+                    } catch (err) {
+                      setStatus((err as Error).message);
+                    }
+                  }}
+                >
+                  <label htmlFor="invite-email">Email</label>
+                  <input id="invite-email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} placeholder="person@example.com" />
+                  <label htmlFor="invite-github">GitHub username</label>
+                  <input id="invite-github" value={inviteGithub} onChange={(event) => setInviteGithub(event.target.value)} placeholder="github-user" />
+                  <label htmlFor="invite-role">Role</label>
+                  <select id="invite-role" value={inviteRole} onChange={(event) => setInviteRole(event.target.value as Exclude<OrgRole, "owner">)}>
+                    <option value="admin">Admin</option>
+                    <option value="member">Member</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button type="submit">Create invite</button>
+                </form>
+              ) : (
+                <form
+                  className={dash.compactForm}
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    setStatus("");
+                    try {
+                      const updated = await api<Org>(`/v1/orgs/${org.slug}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ autoJoinDomain: autoJoinDomain.trim() || null }),
+                      });
+                      setAutoJoinDomain(updated.autoJoinDomain ?? "");
+                      setStatus(updated.autoJoinDomain ? `Auto-join enabled for @${updated.autoJoinDomain} emails.` : "Auto-join disabled.");
+                    } catch (err) {
+                      setStatus((err as Error).message);
+                    }
+                  }}
+                >
+                  <label htmlFor="invite-auto-join">Auto-join email domain</label>
+                  <input
+                    id="invite-auto-join"
+                    value={autoJoinDomain}
+                    onChange={(event) => setAutoJoinDomain(event.target.value)}
+                    placeholder="company.com"
+                  />
+                  <p className={dash.fieldHelp}>
+                    Anyone who verifies an email on this domain can join as {roleLabel(org.defaultMemberRole ?? "member")}.
+                    Leave empty to disable. Public email providers are not allowed.
+                  </p>
+                  <button type="submit">Save domain</button>
+                  {autoJoinDomain.trim() ? (
+                    <section className={dash.tokenResult}>
+                      <p>Share this link with teammates on @{autoJoinDomain.trim()}.</p>
+                      <CodeBlock code={orgJoinUrl(org.slug)} />
+                    </section>
+                  ) : null}
+                </form>
+              )}
+            </>
           ) : (
             <p className={shell.muted}>Only owners and admins can invite teammates.</p>
           )}
@@ -1041,7 +1457,19 @@ function TokensContent({ org }: { org: Org }) {
   const [packages, setPackages] = useState<ReservedPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState("");
   const [token, setToken] = useState<{ token: string; expiresAt: string } | null>(null);
+  const [installTokens, setInstallTokens] = useState<InstallToken[]>([]);
+  const [installTokenName, setInstallTokenName] = useState("");
+  const [installTokenExpiryDays, setInstallTokenExpiryDays] = useState("30");
+  const [installTokenValue, setInstallTokenValue] = useState("");
   const [status, setStatus] = useState("");
+  const canInstallTokens = org.role === "owner" || org.role === "admin" || org.role === "member";
+
+  const reloadInstallTokens = useCallback(() => {
+    if (!canInstallTokens) return;
+    api<{ tokens: InstallToken[] }>(`/v1/orgs/${org.slug}/install-tokens`)
+      .then((data) => setInstallTokens(data.tokens))
+      .catch((err: unknown) => setStatus(publicApiError(err)));
+  }, [canInstallTokens, org.slug]);
 
   useEffect(() => {
     api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)
@@ -1050,7 +1478,8 @@ function TokensContent({ org }: { org: Org }) {
         setSelectedPackage((current) => current || data.packages[0]?.name || "");
       })
       .catch((err: unknown) => setStatus(publicApiError(err)));
-  }, [org.slug]);
+    reloadInstallTokens();
+  }, [org.slug, reloadInstallTokens]);
 
   const pushCommand = token ? `AIPM_TOKEN=${shellQuote(token.token)} aipm publish push --yes` : "";
 
@@ -1108,6 +1537,95 @@ aipm publish validate
 aipm publish token --package ${selectedPackage || `@${org.slug}/your-package`} # optional
 AIPM_TOKEN=<token> aipm publish push --yes`}
         />
+      </article>
+
+      <article className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>Private installs</p>
+        <h2>Install tokens</h2>
+        {canInstallTokens ? (
+          <>
+            <p className={shell.muted}>Long-lived read tokens for installing private packages from the CLI.</p>
+            <form
+              className={dash.compactForm}
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setStatus("");
+                setInstallTokenValue("");
+                try {
+                  const created = await api<{ token: string }>(`/v1/orgs/${org.slug}/install-tokens`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                      name: installTokenName,
+                      expiresInDays: installTokenExpiryDays ? Number(installTokenExpiryDays) : null,
+                    }),
+                  });
+                  setInstallTokenName("");
+                  setInstallTokenValue(created.token);
+                  reloadInstallTokens();
+                } catch (err) {
+                  setStatus((err as Error).message);
+                }
+              }}
+            >
+              <label htmlFor="install-token-name">Token name</label>
+              <input
+                id="install-token-name"
+                value={installTokenName}
+                onChange={(event) => setInstallTokenName(event.target.value)}
+                placeholder="CI laptop"
+              />
+              <label htmlFor="install-token-expiry">Expires in days</label>
+              <select
+                id="install-token-expiry"
+                value={installTokenExpiryDays}
+                onChange={(event) => setInstallTokenExpiryDays(event.target.value)}
+              >
+                <option value="7">7 days</option>
+                <option value="30">30 days</option>
+                <option value="90">90 days</option>
+                <option value="">Never</option>
+              </select>
+              <button type="submit">Create install token</button>
+            </form>
+            {installTokenValue ? (
+              <section className={dash.tokenResult}>
+                <p>Shown once. Use with private installs:</p>
+                <CodeBlock code={`AIPM_TOKEN=${shellQuote(installTokenValue)} aipm install @${org.slug}/your-package`} />
+              </section>
+            ) : null}
+            {installTokens.length > 0 ? (
+              <div className={dash.resourceList}>
+                {installTokens.map((item) => (
+                  <div className={dash.resourceRow} key={item.id}>
+                    <span>
+                      <strong>{item.name}</strong>
+                      <small>
+                        {item.username ?? item.githubLogin ?? item.userId}
+                        {item.expiresAt ? ` · expires ${shortDate(item.expiresAt)}` : " · no expiry"}
+                      </small>
+                    </span>
+                    <button
+                      className={dash.textButton}
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await api<void>(`/v1/orgs/${org.slug}/install-tokens/${item.id}`, { method: "DELETE" });
+                          reloadInstallTokens();
+                        } catch (err) {
+                          setStatus((err as Error).message);
+                        }
+                      }}
+                    >
+                      Revoke
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className={shell.muted}>Viewers cannot create install tokens.</p>
+        )}
       </article>
     </section>
   );
@@ -1636,6 +2154,10 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const [access, setAccess] = useState<{ orgRole: OrgRole | null; packageRole: "maintainer" | null } | null>(null);
   const [memberUserId, setMemberUserId] = useState("");
   const [memberStatus, setMemberStatus] = useState("");
+  const [visibility, setVisibility] = useState<"public" | "private">("public");
+  const [deprecatedAt, setDeprecatedAt] = useState<string | null>(null);
+  const [deprecationMessage, setDeprecationMessage] = useState("");
+  const [packageStatus, setPackageStatus] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams({ q: packageName, limit: "20" });
@@ -1662,6 +2184,19 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
+
+  useEffect(() => {
+    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${scope}/packages`)
+      .then((data) => {
+        const pkg = data.packages.find((item) => item.name === packageName);
+        if (pkg) {
+          setVisibility(pkg.visibility ?? "public");
+          setDeprecatedAt(pkg.deprecatedAt ?? null);
+          setDeprecationMessage(pkg.deprecationMessage ?? "");
+        }
+      })
+      .catch(() => undefined);
+  }, [packageName, scope]);
 
   const canManageMembers = access?.orgRole === "owner" || access?.orgRole === "admin";
 
@@ -1692,6 +2227,79 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
     >
       {() => (
         <section className={dash.dashboardGrid}>
+          <article className={dash.dashboardPanel}>
+            <p className={shell.eyebrow}>Package settings</p>
+            <h2>Visibility and lifecycle</h2>
+            {deprecatedAt ? <p className={shell.notice}>Deprecated{deprecationMessage ? `: ${deprecationMessage}` : ""}</p> : null}
+            {canManageMembers ? (
+              <>
+                <label htmlFor="package-visibility">Visibility</label>
+                <select
+                  id="package-visibility"
+                  value={visibility}
+                  onChange={async (event) => {
+                    const next = event.target.value as "public" | "private";
+                    if (next === "public" && visibility === "private" && !window.confirm("Make this package public?")) return;
+                    setPackageStatus("");
+                    try {
+                      await api<{ visibility: "public" | "private" }>(`/v1/packages/${encodeURIComponent(packageName)}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ visibility: next }),
+                      });
+                      setVisibility(next);
+                    } catch (err) {
+                      setPackageStatus((err as Error).message);
+                    }
+                  }}
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+                {!deprecatedAt ? (
+                  <form
+                    className={dash.compactForm}
+                    onSubmit={async (event) => {
+                      event.preventDefault();
+                      setPackageStatus("");
+                      try {
+                        await api<{ deprecatedAt: string }>(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, {
+                          method: "POST",
+                          body: JSON.stringify({ message: deprecationMessage || null }),
+                        });
+                        setDeprecatedAt(new Date().toISOString());
+                      } catch (err) {
+                        setPackageStatus((err as Error).message);
+                      }
+                    }}
+                  >
+                    <label htmlFor="deprecation-message">Deprecation message</label>
+                    <input id="deprecation-message" value={deprecationMessage} onChange={(e) => setDeprecationMessage(e.target.value)} />
+                    <button type="submit">Deprecate package</button>
+                  </form>
+                ) : (
+                  <button
+                    className={dash.secondaryButton}
+                    type="button"
+                    onClick={async () => {
+                      setPackageStatus("");
+                      try {
+                        await api(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, { method: "DELETE" });
+                        setDeprecatedAt(null);
+                        setDeprecationMessage("");
+                      } catch (err) {
+                        setPackageStatus((err as Error).message);
+                      }
+                    }}
+                  >
+                    Remove deprecation
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className={shell.muted}>{visibility === "private" ? "Private package" : "Public package"}</p>
+            )}
+            {packageStatus ? <p className={shell.notice}>{packageStatus}</p> : null}
+          </article>
           <article className={dash.dashboardPanel}>
             <div className={shell.sectionHeading}>
               <div>
@@ -1821,18 +2429,37 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
             {versions.length > 0 ? (
               <div className={dash.resourceList}>
                 {versions.map((version) => (
-                  <Link
-                    className={dash.resourceRow}
-                    href={packagePath(version.name, version.version)}
-                    key={version.version}
-                  >
-                    <span>
-                      <strong>{version.name}@{version.version}</strong>
-                      <small>{version.description}</small>
-                      <small>Targets: {version.targets.join(", ")}</small>
-                    </span>
-                    <small>{shortDate(version.createdAt)}</small>
-                  </Link>
+                  <div className={dash.resourceRow} key={version.version}>
+                    <Link href={packagePath(version.name, version.version)}>
+                      <span>
+                        <strong>{version.name}@{version.version}</strong>
+                        <small>{version.description}</small>
+                        <small>Targets: {version.targets.join(", ")}</small>
+                      </span>
+                      <small>{shortDate(version.createdAt)}</small>
+                    </Link>
+                    {canManageMembers ? (
+                      <button
+                        className={dash.textButton}
+                        type="button"
+                        onClick={async () => {
+                          if (!window.confirm(`Yank ${version.name}@${version.version}?`)) return;
+                          setVersionsError("");
+                          try {
+                            await api(`/v1/packages/${encodeURIComponent(packageName)}/versions/${version.version}/yank`, {
+                              method: "POST",
+                              body: "{}",
+                            });
+                            setVersions((current) => current.filter((item) => item.version !== version.version));
+                          } catch (err) {
+                            setVersionsError((err as Error).message);
+                          }
+                        }}
+                      >
+                        Yank
+                      </button>
+                    ) : null}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -1843,6 +2470,127 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
           </article>
         </section>
       )}
+    </DashboardShell>
+  );
+}
+
+function SettingsContent({ org }: { org: Org }) {
+  const [details, setDetails] = useState<Org>(org);
+  const [name, setName] = useState(org.name);
+  const [description, setDescription] = useState(org.description ?? "");
+  const [websiteUrl, setWebsiteUrl] = useState(org.websiteUrl ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(org.avatarUrl ?? "");
+  const [defaultPackageVisibility, setDefaultPackageVisibility] = useState(org.defaultPackageVisibility ?? "public");
+  const [defaultMemberRole, setDefaultMemberRole] = useState<Exclude<OrgRole, "owner">>(org.defaultMemberRole ?? "member");
+  const [inviteTtlHours, setInviteTtlHours] = useState(String(org.inviteTtlHours ?? 168));
+  const [deleteSlug, setDeleteSlug] = useState("");
+  const [status, setStatus] = useState("");
+  const manageOrg = canManageOrg(org.role);
+
+  useEffect(() => {
+    api<Org>(`/v1/orgs/${org.slug}`)
+      .then((data) => {
+        setDetails(data);
+        setName(data.name);
+        setDescription(data.description ?? "");
+        setWebsiteUrl(data.websiteUrl ?? "");
+        setAvatarUrl(data.avatarUrl ?? "");
+        setDefaultPackageVisibility(data.defaultPackageVisibility ?? "public");
+        setDefaultMemberRole(data.defaultMemberRole ?? "member");
+        setInviteTtlHours(String(data.inviteTtlHours ?? 168));
+      })
+      .catch((err: unknown) => setStatus(publicApiError(err)));
+  }, [org.slug]);
+
+  return (
+    <section className={dash.dashboardGrid}>
+      <form
+        className={cn(dash.dashboardPanel, dash.formPanel)}
+        onSubmit={async (event) => {
+          event.preventDefault();
+          if (!manageOrg) return;
+          setStatus("");
+          try {
+            const updated = await api<Org>(`/v1/orgs/${org.slug}`, {
+              method: "PATCH",
+              body: JSON.stringify({
+                name,
+                description: description || null,
+                websiteUrl: websiteUrl || null,
+                avatarUrl: avatarUrl || null,
+                defaultPackageVisibility,
+                defaultMemberRole,
+                inviteTtlHours: Number(inviteTtlHours),
+              }),
+            });
+            setDetails(updated);
+            setStatus("Settings saved.");
+          } catch (err) {
+            setStatus((err as Error).message);
+          }
+        }}
+      >
+        <p className={shell.eyebrow}>Profile</p>
+        <h2>Organization</h2>
+        <label htmlFor="settings-name">Display name</label>
+        <input id="settings-name" value={name} disabled={!manageOrg} onChange={(e) => setName(e.target.value)} />
+        <label htmlFor="settings-description">Description</label>
+        <textarea id="settings-description" value={description} disabled={!manageOrg} onChange={(e) => setDescription(e.target.value)} />
+        <label htmlFor="settings-website">Website URL</label>
+        <input id="settings-website" value={websiteUrl} disabled={!manageOrg} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" />
+        <label htmlFor="settings-avatar">Avatar URL</label>
+        <input id="settings-avatar" value={avatarUrl} disabled={!manageOrg} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://..." />
+        <p className={shell.eyebrow}>Defaults</p>
+        <label htmlFor="settings-default-visibility">Default package visibility</label>
+        <select id="settings-default-visibility" value={defaultPackageVisibility} disabled={!manageOrg} onChange={(e) => setDefaultPackageVisibility(e.target.value as "public" | "private")}>
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+        <label htmlFor="settings-default-role">Default invite role</label>
+        <select id="settings-default-role" value={defaultMemberRole} disabled={!manageOrg} onChange={(e) => setDefaultMemberRole(e.target.value as Exclude<OrgRole, "owner">)}>
+          <option value="admin">Admin</option>
+          <option value="member">Member</option>
+          <option value="viewer">Viewer</option>
+        </select>
+        <label htmlFor="settings-invite-ttl">Invite expiry (hours)</label>
+        <input id="settings-invite-ttl" type="number" min={1} max={720} value={inviteTtlHours} disabled={!manageOrg} onChange={(e) => setInviteTtlHours(e.target.value)} />
+        {manageOrg ? <button type="submit">Save settings</button> : <p className={shell.muted}>Only owners and admins can edit settings.</p>}
+        {status ? <p className={shell.notice}>{status}</p> : null}
+      </form>
+
+      {details.role === "owner" ? (
+        <article className={dash.dashboardPanel}>
+          <p className={shell.eyebrow}>Danger zone</p>
+          <h2>Delete organization</h2>
+          <p className={shell.muted}>Soft-deletes @{org.slug}. Slug stays reserved for 30 days. Blocked if any package has published versions.</p>
+          <label htmlFor="delete-org-slug">Type @{org.slug} to confirm</label>
+          <input id="delete-org-slug" value={deleteSlug} onChange={(e) => setDeleteSlug(e.target.value)} placeholder={`@${org.slug}`} />
+          <button
+            className={dash.secondaryButton}
+            disabled={deleteSlug !== `@${org.slug}`}
+            type="button"
+            onClick={async () => {
+              setStatus("");
+              try {
+                await api<void>(`/v1/orgs/${org.slug}`, { method: "DELETE" });
+                window.location.href = "/dashboard";
+              } catch (err) {
+                setStatus((err as Error).message);
+              }
+            }}
+          >
+            Delete organization
+          </button>
+        </article>
+      ) : null}
+    </section>
+  );
+}
+
+export function SettingsDashboard() {
+  return (
+    <DashboardShell active="settings" intro="Profile, defaults, and org lifecycle controls." title="Settings">
+      {({ activeOrg }) => (activeOrg ? <SettingsContent org={activeOrg} /> : <NoActiveOrg />)}
     </DashboardShell>
   );
 }
@@ -1864,7 +2612,11 @@ export function ProfileSettings() {
             <Avatar user={{ ...me, name: name || me.name, avatarUrl: avatarUrl || me.avatarUrl }} size="large" />
             <h2>{name || me.name || me.username}</h2>
             <p>{me.username}</p>
-            <span>GitHub @{me.githubLogin}</span>
+            {me.authProvider === "email" ? (
+              <span>Signed in with {me.email ?? "email"}</span>
+            ) : me.githubLogin ? (
+              <span>GitHub @{me.githubLogin}</span>
+            ) : null}
             <p>Public packages should feel accountable. Use a recognizable name and image for your publisher profile.</p>
           </article>
           <form
@@ -1892,7 +2644,7 @@ export function ProfileSettings() {
             <input
               id="profile-name"
               onChange={(event) => setName(event.target.value)}
-              placeholder={me.name ?? me.githubLogin}
+              placeholder={me.name ?? me.githubLogin ?? me.username}
               value={name}
             />
             <label htmlFor="profile-avatar">Profile image URL</label>
@@ -1906,8 +2658,121 @@ export function ProfileSettings() {
             {status ? <p className={shell.notice}>{status}</p> : null}
             <button type="submit">Save profile</button>
           </form>
+          {me.authProvider === "email" ? (
+            <article className={cn(dash.dashboardPanel, dash.formPanel)}>
+              <p className={shell.eyebrow}>Login email</p>
+              <h2>Email sign-in</h2>
+              <p className={shell.muted}>
+                Your verified login email is used for org invites and domain-based joining.
+              </p>
+              {me.email ? (
+                <p>
+                  {me.email} <span className={dash.rolePill}>Verified</span>
+                </p>
+              ) : null}
+            </article>
+          ) : (
+            <EmailVerificationPanel me={me} />
+          )}
         </section>
       )}
     </DashboardShell>
+  );
+}
+
+function EmailVerificationPanel({ me }: { me: Me }) {
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [codeRequested, setCodeRequested] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [verifiedAt, setVerifiedAt] = useState<string | null>(null);
+  const [status, setStatus] = useState("");
+
+  const currentEmail = verifiedEmail ?? me.contactEmail ?? null;
+  const isVerified = Boolean(verifiedAt ?? me.contactEmailVerifiedAt);
+
+  return (
+    <article className={cn(dash.dashboardPanel, dash.formPanel)}>
+      <p className={shell.eyebrow}>Work email</p>
+      <h2>Verify your email</h2>
+      <p className={shell.muted}>
+        A verified work email lets you auto-join organizations that enabled domain-based joining.
+      </p>
+      {currentEmail ? (
+        <p>
+          {currentEmail} {isVerified ? <span className={dash.rolePill}>Verified</span> : <span className={dash.rolePill}>Unverified</span>}
+        </p>
+      ) : null}
+      {!codeRequested ? (
+        <form
+          className={dash.compactForm}
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setStatus("");
+            try {
+              const result = await api<{ expiresAt: string; emailSent: boolean; devCode?: string }>(
+                "/v1/me/email/verify-request",
+                { method: "POST", body: JSON.stringify({ email }) },
+              );
+              setCodeRequested(true);
+              setStatus(
+                result.devCode
+                  ? `Local dev: your code is ${result.devCode}`
+                  : result.emailSent
+                    ? "Code sent. Check your inbox."
+                    : "Email sending is disabled on this API. Ask the operator to enable it.",
+              );
+            } catch (err) {
+              setStatus((err as Error).message);
+            }
+          }}
+        >
+          <label htmlFor="verify-email">Work email</label>
+          <input
+            id="verify-email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="you@company.com"
+          />
+          <button disabled={!email} type="submit">Send verification code</button>
+        </form>
+      ) : (
+        <form
+          className={dash.compactForm}
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setStatus("");
+            try {
+              const result = await api<{ contactEmail: string; contactEmailVerifiedAt: string }>(
+                "/v1/me/email/verify",
+                { method: "POST", body: JSON.stringify({ code }) },
+              );
+              setVerifiedEmail(result.contactEmail);
+              setVerifiedAt(result.contactEmailVerifiedAt);
+              setCodeRequested(false);
+              setCode("");
+              setStatus("Email verified.");
+            } catch (err) {
+              setStatus((err as Error).message);
+            }
+          }}
+        >
+          <label htmlFor="verify-code">Verification code</label>
+          <input
+            id="verify-code"
+            inputMode="numeric"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            placeholder="6-digit code"
+          />
+          <button disabled={!code} type="submit">Verify</button>
+          <button className={dash.secondaryButton} type="button" onClick={() => setCodeRequested(false)}>
+            Use a different email
+          </button>
+        </form>
+      )}
+      {status ? <p className={shell.notice}>{status}</p> : null}
+    </article>
   );
 }

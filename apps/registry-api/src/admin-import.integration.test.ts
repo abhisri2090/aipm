@@ -6,11 +6,13 @@ import { join } from "node:path";
 import { promisify } from "util";
 import type { FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { normalizeImportOrgSlug } from "./admin-import.js";
 import { createApp } from "./index.js";
 import { createPool, ensureSchema, getLatestContentHash } from "./db.js";
 
 const execFileAsync = promisify(execFile);
 const databaseUrl = process.env.DATABASE_URL;
+const unique = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const adminToken = "admin-import-secret";
 const tempDirs: string[] = [];
 let app: FastifyInstance | null = null;
@@ -111,22 +113,27 @@ describe.skipIf(!databaseUrl)("admin import API", () => {
   });
 
   it("creates unverified user, reservation, version, provenance, and notification", async () => {
-    const tarball = await createTarball("1.0.0");
+    const runId = unique();
+    const suffix = runId.slice(-8);
+    const githubLogin = `mp-${suffix}`;
+    const orgSlug = normalizeImportOrgSlug(githubLogin);
+    const packageName = `@${orgSlug}/grill-me`;
+    const tarball = await createTarball("1.0.0", packageName);
     const payload = multipartImportPayload(
       tarball,
       {
-        githubId: "999001",
-        githubLogin: "mattpocock",
+        githubId: `999001-${runId}`,
+        githubLogin,
         name: "Matt Pocock",
-        email: "matt@example.com",
-        xHandle: "mattpocock",
-        githubUrl: "https://github.com/mattpocock",
+        email: `${githubLogin}@example.com`,
+        xHandle: githubLogin,
+        githubUrl: `https://github.com/${githubLogin}`,
       },
       {
-        sourceUrl: "https://github.com/mattpocock/skills/tree/main/skills/productivity/grill-me",
+        sourceUrl: `https://github.com/${githubLogin}/skills/tree/main/skills/productivity/grill-me`,
         commitSha: "abc123",
         license: "Apache-2.0",
-        contentHash: "hash-v1",
+        contentHash: `hash-v1-${runId}`,
       },
     );
     const response = await app!.inject({
@@ -140,23 +147,23 @@ describe.skipIf(!databaseUrl)("admin import API", () => {
     });
     expect(response.statusCode).toBe(201);
     expect(response.json()).toMatchObject({
-      name: "@mattpocock/grill-me",
+      name: packageName,
       version: "1.0.0",
     });
 
-    const list = await app!.inject({ method: "GET", url: "/v1/packages?q=grill-me" });
+    const list = await app!.inject({ method: "GET", url: `/v1/packages?q=${encodeURIComponent(githubLogin)}` });
     expect(list.statusCode).toBe(200);
     expect(list.json()).toMatchObject({
       packages: [
         {
-          name: "@mattpocock/grill-me",
+          name: packageName,
           import: { imported: true },
           publisher: { user: { verified: false } },
         },
       ],
     });
 
-    expect(await getLatestContentHash(pool!, "@mattpocock/grill-me")).toBe("hash-v1");
+    expect(await getLatestContentHash(pool!, packageName)).toBe(`hash-v1-${runId}`);
 
     const duplicate = await app!.inject({
       method: "POST",

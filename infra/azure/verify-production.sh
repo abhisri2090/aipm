@@ -25,6 +25,18 @@ printf "%s\n" "${HEADERS}" | grep -qi "^x-content-type-options:"
 printf "%s\n" "${HEADERS}" | grep -qi "^referrer-policy:"
 printf "%s\n" "${HEADERS}" | grep -qi "^content-security-policy:"
 
+echo "Checking auth config exposes email and GitHub toggles"
+curl -fsS "${REGISTRY_URL}/v1/auth/config" | node -e '
+let data = "";
+process.stdin.on("data", (chunk) => data += chunk);
+process.stdin.on("end", () => {
+  const parsed = JSON.parse(data);
+  if (typeof parsed.devAuth !== "boolean") throw new Error("devAuth must be boolean");
+  if (typeof parsed.githubAuth !== "boolean") throw new Error("githubAuth must be boolean");
+  if (typeof parsed.emailAuth !== "boolean") throw new Error("emailAuth must be boolean");
+});
+'
+
 echo "Checking public package search"
 curl -fsS "${REGISTRY_URL}/v1/packages?limit=1" | node -e '
 let data = "";

@@ -34,3 +34,26 @@ describe("resolveEmailConfig", () => {
     expect(() => createEmailSender(resolveEmailConfig())).toThrow(/AIPM_EMAIL_SENDER_ADDRESS/);
   });
 });
+
+describe("sendAuthCodeEmail", () => {
+  it("returns sent false when email is disabled", async () => {
+    const sender = createEmailSender(resolveEmailConfig());
+    await expect(
+      sender.sendAuthCodeEmail({
+        to: "person@example.com",
+        code: "123456",
+        expiresAt: new Date("2026-06-09T00:00:00.000Z"),
+      }),
+    ).resolves.toEqual({ sent: false, provider: "disabled" });
+  });
+
+  it("configures Azure sender for auth code emails", () => {
+    process.env.AIPM_EMAIL_PROVIDER = "azure";
+    process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING =
+      "endpoint=https://example.communication.azure.com/;accesskey=fake";
+    process.env.AIPM_EMAIL_SENDER_ADDRESS = "noreply@example.com";
+    const sender = createEmailSender(resolveEmailConfig());
+    expect(sender.isEnabled).toBe(true);
+    expect(sender.sendAuthCodeEmail).toBeTypeOf("function");
+  });
+});

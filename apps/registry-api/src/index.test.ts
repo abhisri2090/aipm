@@ -12,6 +12,7 @@ const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
 let app: FastifyInstance | null = null;
 const token = "test-publish-token";
+const savedDatabaseUrl = process.env.DATABASE_URL;
 
 function tokenHash(value: string): string {
   return createHash("sha256").update(value).digest("hex");
@@ -83,7 +84,8 @@ afterEach(async () => {
   delete process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING;
   delete process.env.AIPM_EMAIL_SENDER_ADDRESS;
   delete process.env.AIPM_EMAIL_FROM_NAME;
-  delete process.env.DATABASE_URL;
+  if (savedDatabaseUrl !== undefined) process.env.DATABASE_URL = savedDatabaseUrl;
+  else delete process.env.DATABASE_URL;
   delete process.env.NODE_ENV;
   delete process.env.KEY_VAULT_NAME;
   await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })));
@@ -176,7 +178,7 @@ describe("registry API production behavior", () => {
   it("reports auth config without dev auth by default", async () => {
     const response = await app!.inject({ method: "GET", url: "/v1/auth/config" });
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({ devAuth: false, githubAuth: false });
+    expect(response.json()).toMatchObject({ devAuth: false, githubAuth: false, emailAuth: false });
   });
 
   it("rejects dev login when dev auth is disabled", async () => {

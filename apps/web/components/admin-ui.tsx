@@ -10,7 +10,9 @@ import type { InternalStats } from "./internal-stats-types";
 
 type Me = {
   username: string;
-  githubLogin: string;
+  githubLogin: string | null;
+  authProvider?: "github" | "email";
+  email?: string | null;
   name: string | null;
   avatarUrl: string | null;
 };
@@ -20,6 +22,7 @@ type AdminSession = Me;
 type AuthConfig = {
   devAuth: boolean;
   githubAuth: boolean;
+  emailAuth: boolean;
 };
 
 function publicApiError(error: unknown): string {
@@ -88,7 +91,7 @@ export function AdminPanel() {
       if (configResponse.ok) {
         setAuthConfig((await configResponse.json()) as AuthConfig);
       } else {
-        setAuthConfig({ devAuth: false, githubAuth: false });
+        setAuthConfig({ devAuth: false, githubAuth: false, emailAuth: false });
       }
 
       const meResponse = await fetchWithTimeout("/v1/me");
@@ -265,8 +268,16 @@ export function AdminPanel() {
           <p className={shell.eyebrow}>Admin</p>
           <h1>Enter the admin password.</h1>
           <p className={shell.lede}>
-            Signed in as <strong>{me.username}</strong> (GitHub @{me.githubLogin}). Only allowlisted
-            AIPM usernames can unlock admin after the password check. Local password:{" "}
+            Signed in as <strong>{me.username}</strong>
+            {me.authProvider === "email"
+              ? me.email
+                ? ` (email ${me.email})`
+                : " (email sign-in)"
+              : me.githubLogin
+                ? ` (GitHub @${me.githubLogin})`
+                : ""}
+            . Only allowlisted AIPM usernames
+            (including email-derived usernames) can unlock admin after the password check. Local password:{" "}
             <code>local-admin</code>.
           </p>
           <form className={dash.formPanel} onSubmit={onSubmit}>

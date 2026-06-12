@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import Fastify, { type FastifyInstance } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyRequest } from "fastify";
 import helmet from "@fastify/helmet";
 import multipart from "@fastify/multipart";
 import rateLimit from "@fastify/rate-limit";
@@ -17,6 +17,12 @@ import {
 } from "./admin-import.js";
 import { importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
+  addOrgMember,
+  confirmEmailVerification,
+  countPackageVersions,
+  countPublishedVersionsForOrg,
+  createEmailVerification,
+  createInstallToken,
   createOrg,
   createOrgAuditEvent,
   createOrgInvite,
@@ -24,17 +30,31 @@ import {
   deletePackageProvenance,
   deletePackageReservation,
   acceptOrgInvite,
+  deprecatePackage,
+  getActiveEmailVerification,
+  getActiveInstallTokenByHash,
+  getDeprecatedPackageNames,
+  getInstallTokenById,
   getInternalStats,
   getLatestProvenance,
+  getOrgBySlug,
   getOrgBySlugForMember,
+  getOrgIdForPackage,
   getOrgInviteById,
   getOrgMembership,
+  getPackageReservationByName,
   getPackageReservationForUser,
+  getPackageVisibilityMap,
   getPendingInviteByTokenHash,
   getProvenance,
   getProvenanceByPackageNames,
   getPublicPackagePublisher,
+  incrementEmailVerificationAttempts,
+  listAccessiblePrivatePackageNames,
+  listJoinableOrgsByDomain,
   listOrgAuditEvents,
+  listOrgIdsForUser,
+  listOrgInstallTokens,
   listOrgInvites,
   listOrgMembers,
   listOrgPackageReservations,
@@ -47,12 +67,20 @@ import {
   removeOrgMember,
   removePackageMaintainer,
   resendOrgInvite,
+  revokeInstallToken,
   revokeOrgInvite,
   setPackageMaintainer,
+  softDeleteOrg,
+  touchInstallToken,
   transferOrgOwnership,
+  undeprecatePackage,
+  updateOrgSettings,
+  updatePackageVisibility,
   updateUserProfile,
   updateOrgMemberRole,
+  yankPackageVersion,
   type OrgRole,
+  type PackageVisibility,
   type PublicPackagePublisherRow,
 } from "./db.js";
 import {
@@ -64,12 +92,26 @@ import {
   logout,
   requireCurrentUser,
   resolveUserAuthConfig,
+  SESSION_COOKIE,
+  setAuthCookie,
   startDevLogin,
   startGithubLogin,
   verifyScopedPublishToken,
   sha256Hex,
   type AccountAuth,
 } from "./user-auth.js";
+import {
+  createDbEmailAuthStore,
+  emailDomain,
+  EMAIL_REGEX,
+  getVerifiedUserEmail,
+  newVerificationCode,
+  requestAuthCode,
+  verifyAuthCode,
+  VERIFICATION_CODE_TTL_MS,
+  VERIFICATION_MAX_ATTEMPTS,
+  VERIFICATION_RESEND_INTERVAL_MS,
+} from "./email-auth.js";
 import {
   clearAdminLoginAttempts,
   finishAdminSession,
@@ -116,8 +158,9 @@ function isHiddenPublicPackage(name: string): boolean {
 }
 
 const ORG_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
-const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const INVITE_ROLES = new Set<Exclude<OrgRole, "owner">>(["admin", "member", "viewer"]);
+const PACKAGE_VISIBILITIES = new Set<PackageVisibility>(["public", "private"]);
+const YANK_WINDOW_MS = 72 * 60 * 60 * 1000;
 
 function normalizeOrgSlug(value: string): string {
   return value.trim().toLowerCase();
@@ -138,6 +181,74 @@ function canManagePackages(role: OrgRole): boolean {
 
 function canGeneratePackageToken(access: { org_role: OrgRole | null; package_role: "maintainer" | null }): boolean {
   return access.org_role === "owner" || access.org_role === "admin" || Boolean(access.package_role);
+}
+
+function canCreateInstallToken(role: OrgRole): boolean {
+  return role === "owner" || role === "admin" || role === "member";
+}
+
+function parsePackageVisibility(value: unknown): PackageVisibility {
+  const visibility = String(value ?? "public") as PackageVisibility;
+  if (!PACKAGE_VISIBILITIES.has(visibility)) throw new Error("Invalid visibility");
+  return visibility;
+}
+
+function newInstallToken(): string {
+  return `aipm_read_${randomBytes(32).toString("base64url")}`;
+}
+
+type ReadAccess = {
+  userId: string | null;
+  orgIds: string[];
+  installTokenId: string | null;
+};
+
+async function resolveReadAccess(
+  accountAuth: AccountAuth | null,
+  request: FastifyRequest,
+): Promise<ReadAccess> {
+  if (!accountAuth) return { userId: null, orgIds: [], installTokenId: null };
+  const user = await getCurrentUser(accountAuth, request);
+  if (user) {
+    const orgIds = await listOrgIdsForUser(accountAuth.pool, user.id);
+    return { userId: user.id, orgIds, installTokenId: null };
+  }
+  const authHeader = request.headers.authorization;
+  if (authHeader?.startsWith("Bearer aipm_read_")) {
+    const token = authHeader.slice("Bearer ".length).trim();
+    const row = await getActiveInstallTokenByHash(accountAuth.pool, sha256Hex(token));
+    if (row) {
+      void touchInstallToken(accountAuth.pool, row.id);
+      const orgIds = await listOrgIdsForUser(accountAuth.pool, row.user_id);
+      return { userId: row.user_id, orgIds, installTokenId: row.id };
+    }
+  }
+  return { userId: null, orgIds: [], installTokenId: null };
+}
+
+async function canViewPackage(
+  accountAuth: AccountAuth | null,
+  name: string,
+  access: ReadAccess,
+): Promise<boolean> {
+  if (!accountAuth) return true;
+  const visibilityMap = await getPackageVisibilityMap(accountAuth.pool, [name]);
+  const visibility = visibilityMap.get(name) ?? "public";
+  if (visibility === "public") return true;
+  if (!access.userId) return false;
+  const orgId = await getOrgIdForPackage(accountAuth.pool, name);
+  return orgId ? access.orgIds.includes(orgId) : false;
+}
+
+function validateHttpsUrl(value: string | null, field: string): string | null {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== "https:") throw new Error(`${field} must use https`);
+    return value;
+  } catch {
+    throw new Error(`${field} must be a valid URL`);
+  }
 }
 
 function normalizeGithubLogin(value?: string | null): string | null {
@@ -162,18 +273,72 @@ function newInviteToken(): string {
   return `aipm_inv_${randomBytes(32).toString("base64url")}`;
 }
 
+const DOMAIN_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/;
+const AUTO_JOIN_BLOCKED_DOMAINS = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "yahoo.com",
+  "icloud.com",
+  "me.com",
+  "aol.com",
+  "proton.me",
+  "protonmail.com",
+  "zoho.com",
+  "mail.com",
+  "gmx.com",
+  "yandex.com",
+]);
+function parseAutoJoinDomain(value: string | null): string | null {
+  if (!value) return null;
+  const domain = value.trim().toLowerCase().replace(/^@/, "");
+  if (!DOMAIN_REGEX.test(domain)) throw new Error("Enter a valid domain such as company.com");
+  if (AUTO_JOIN_BLOCKED_DOMAINS.has(domain)) throw new Error("Public email domains cannot be used for auto-join");
+  return domain;
+}
+
+function requestIp(request: FastifyRequest): string {
+  const forwarded = request.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0]?.trim() || request.ip;
+  }
+  return request.ip;
+}
+
 function inviteUrl(token: string): string {
   const siteUrl = (process.env.AIPM_PUBLIC_SITE_URL ?? "https://aipm-registry.com").replace(/\/$/, "");
   return `${siteUrl}/dashboard?invite=${encodeURIComponent(token)}`;
 }
 
-function serializeOrg(org: { slug: string; name: string; owner_user_id?: string; created_at: Date; role?: OrgRole }) {
+function serializeOrg(org: {
+  slug: string;
+  name: string;
+  owner_user_id?: string;
+  created_at: Date;
+  role?: OrgRole;
+  default_package_visibility?: PackageVisibility;
+  description?: string | null;
+  website_url?: string | null;
+  avatar_url?: string | null;
+  default_member_role?: Exclude<OrgRole, "owner">;
+  invite_ttl_hours?: number;
+  auto_join_domain?: string | null;
+}) {
   return {
     slug: org.slug,
     name: org.name,
     ownerUserId: org.owner_user_id,
     role: org.role,
     createdAt: org.created_at,
+    defaultPackageVisibility: org.default_package_visibility ?? "public",
+    description: org.description ?? null,
+    websiteUrl: org.website_url ?? null,
+    avatarUrl: org.avatar_url ?? null,
+    defaultMemberRole: org.default_member_role ?? "member",
+    inviteTtlHours: org.invite_ttl_hours ?? 168,
+    autoJoinDomain: org.auto_join_domain ?? null,
   };
 }
 
@@ -436,6 +601,7 @@ export async function createApp(): Promise<FastifyInstance> {
   app.get("/v1/auth/config", async () => ({
     devAuth: isDevAuthEnabled(process.env),
     githubAuth: Boolean(accountAuth && isGithubAuthConfigured(accountAuth.config)),
+    emailAuth: emailSender.isEnabled,
   }));
 
   app.get("/v1/auth/dev/login", async (_request, reply) => {
@@ -455,6 +621,39 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.post("/v1/auth/logout", async (request, reply) => logout(accountAuth, request, reply));
+
+  app.post<{ Body: { email?: string } }>("/v1/auth/email/request-code", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const store = createDbEmailAuthStore(accountAuth.pool);
+    const result = await requestAuthCode(
+      store,
+      emailSender,
+      { email: request.body?.email, requestIp: requestIp(request) },
+      { devAuth: isDevAuthEnabled(process.env) },
+    );
+    if (!result.ok) {
+      if (result.retryAfter) reply.header("Retry-After", String(result.retryAfter));
+      return reply.status(result.status).send({ error: result.error });
+    }
+    return reply.status(result.status).send(result.body);
+  });
+
+  app.post<{ Body: { email?: string; code?: string } }>("/v1/auth/email/verify-code", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const store = createDbEmailAuthStore(accountAuth.pool);
+    const result = await verifyAuthCode(
+      store,
+      { email: request.body?.email, code: request.body?.code, requestIp: requestIp(request) },
+      { newSessionId: () => randomBytes(32).toString("base64url") },
+    );
+    if (!result.ok) {
+      if (result.retryAfter) reply.header("Retry-After", String(result.retryAfter));
+      return reply.status(result.status).send({ error: result.error });
+    }
+    const { sessionId, sessionExpiresAt, ...body } = result.body;
+    setAuthCookie(reply, accountAuth.config, SESSION_COOKIE, sessionId, 30 * 24 * 60 * 60);
+    return reply.status(result.status).send(body);
+  });
 
   app.get("/v1/admin/session", async (request, reply) => {
     if (!accountAuth || !isAdminAuthConfigured(adminAuthConfig)) {
@@ -565,7 +764,106 @@ export async function createApp(): Promise<FastifyInstance> {
       name: user.name,
       avatarUrl: user.avatar_url,
       verified: user.verified,
+      authProvider: user.auth_provider,
+      email: user.primary_email,
+      emailVerifiedAt: user.primary_email_verified_at,
+      contactEmail: user.contact_email,
+      contactEmailVerifiedAt: user.contact_email_verified_at,
     };
+  });
+
+  app.post<{ Body: { email?: string } }>("/v1/me/email/verify-request", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    if (user.auth_provider === "email") {
+      return reply.status(400).send({ error: "Your login email is already verified." });
+    }
+    const email = normalizeEmail(request.body?.email);
+    if (!email || !EMAIL_REGEX.test(email)) return reply.status(400).send({ error: "Enter a valid email address" });
+    const existing = await getActiveEmailVerification(accountAuth.pool, user.id);
+    if (existing && Date.now() - existing.created_at.getTime() < VERIFICATION_RESEND_INTERVAL_MS) {
+      return reply.status(429).send({ error: "Please wait a minute before requesting another code" });
+    }
+    const code = newVerificationCode();
+    const expiresAt = new Date(Date.now() + VERIFICATION_CODE_TTL_MS);
+    await createEmailVerification(accountAuth.pool, {
+      userId: user.id,
+      email,
+      codeHash: sha256Hex(code),
+      expiresAt,
+    });
+    let emailResult: InviteEmailResult = { sent: false, provider: "disabled" };
+    try {
+      emailResult = await emailSender.sendVerificationEmail({ to: email, code, expiresAt });
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(502).send({ error: "Could not send the verification email. Try again later." });
+    }
+    const devCode = !emailSender.isEnabled && isDevAuthEnabled(process.env) ? { devCode: code } : {};
+    return reply.status(201).send({ email, expiresAt, emailSent: emailResult.sent, ...devCode });
+  });
+
+  app.post<{ Body: { code?: string } }>("/v1/me/email/verify", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const code = request.body?.code?.trim();
+    if (!code) return reply.status(400).send({ error: "Enter the verification code" });
+    const verification = await getActiveEmailVerification(accountAuth.pool, user.id);
+    if (!verification) return reply.status(404).send({ error: "No pending verification. Request a new code." });
+    if (verification.expires_at.getTime() <= Date.now()) {
+      return reply.status(410).send({ error: "Code has expired. Request a new one." });
+    }
+    if (verification.attempts >= VERIFICATION_MAX_ATTEMPTS) {
+      return reply.status(429).send({ error: "Too many attempts. Request a new code." });
+    }
+    if (sha256Hex(code) !== verification.code_hash) {
+      const attempts = await incrementEmailVerificationAttempts(accountAuth.pool, verification.id);
+      const left = Math.max(0, VERIFICATION_MAX_ATTEMPTS - attempts);
+      return reply.status(400).send({ error: `Incorrect code. ${left} ${left === 1 ? "attempt" : "attempts"} left.` });
+    }
+    const updated = await confirmEmailVerification(accountAuth.pool, {
+      verificationId: verification.id,
+      userId: user.id,
+      email: verification.email,
+    });
+    return {
+      contactEmail: updated.contact_email,
+      contactEmailVerifiedAt: updated.contact_email_verified_at,
+    };
+  });
+
+  app.get("/v1/me/joinable-orgs", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const verifiedEmail = getVerifiedUserEmail(user);
+    if (!verifiedEmail) return { orgs: [] };
+    const orgs = await listJoinableOrgsByDomain(accountAuth.pool, user.id, emailDomain(verifiedEmail));
+    return { orgs: orgs.map(serializeOrg) };
+  });
+
+  app.post<{ Params: { org: string } }>("/v1/orgs/:org/join", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlug(accountAuth.pool, normalizeOrgSlug(request.params.org));
+    if (!org || !org.auto_join_domain) return reply.status(404).send({ error: "Org not found or auto-join is not enabled" });
+    const verifiedEmail = getVerifiedUserEmail(user);
+    if (!verifiedEmail) {
+      return reply.status(403).send({ error: "Verify your email before joining" });
+    }
+    if (emailDomain(verifiedEmail) !== org.auto_join_domain) {
+      return reply.status(403).send({ error: `Auto-join requires a verified @${org.auto_join_domain} email` });
+    }
+    const role = org.default_member_role ?? "member";
+    const joined = await addOrgMember(accountAuth.pool, { orgId: org.id, userId: user.id, role });
+    if (!joined) return reply.status(409).send({ error: "You are already a member of this org" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      targetUserId: user.id,
+      eventType: "member.auto_joined",
+      metadata: { role, domain: org.auto_join_domain },
+    });
+    return reply.status(201).send({ ...serializeOrg(org), role });
   });
 
   app.get("/v1/me/imports", async (request, reply) => {
@@ -643,21 +941,169 @@ export async function createApp(): Promise<FastifyInstance> {
     return serializeOrg(org);
   });
 
+  app.patch<{
+    Params: { org: string };
+    Body: {
+      name?: string;
+      defaultPackageVisibility?: string;
+      description?: string | null;
+      websiteUrl?: string | null;
+      avatarUrl?: string | null;
+      defaultMemberRole?: string;
+      inviteTtlHours?: number;
+      autoJoinDomain?: string | null;
+    };
+  }>("/v1/orgs/:org", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManageOrg(org.role)) return reply.status(403).send({ error: "Only org owners and admins can change settings" });
+
+    const settings: Parameters<typeof updateOrgSettings>[2] = {};
+    if (request.body?.name !== undefined) {
+      const name = request.body.name.trim();
+      if (!name) return reply.status(400).send({ error: "Name is required" });
+      if (name.length > 80) return reply.status(400).send({ error: "Name must be 80 characters or fewer" });
+      settings.name = name;
+    }
+    if (request.body?.defaultPackageVisibility !== undefined) {
+      try {
+        settings.defaultPackageVisibility = parsePackageVisibility(request.body.defaultPackageVisibility);
+      } catch {
+        return reply.status(400).send({ error: "Invalid default package visibility" });
+      }
+    }
+    if (request.body?.description !== undefined) {
+      const description = request.body.description?.trim() || null;
+      if (description && description.length > 500) {
+        return reply.status(400).send({ error: "Description must be 500 characters or fewer" });
+      }
+      settings.description = description;
+    }
+    if (request.body?.websiteUrl !== undefined) {
+      try {
+        settings.websiteUrl = validateHttpsUrl(request.body.websiteUrl?.trim() || null, "Website URL");
+      } catch (error) {
+        return reply.status(400).send({ error: error instanceof Error ? error.message : "Invalid website URL" });
+      }
+    }
+    if (request.body?.avatarUrl !== undefined) {
+      try {
+        settings.avatarUrl = validateHttpsUrl(request.body.avatarUrl?.trim() || null, "Avatar URL");
+      } catch (error) {
+        return reply.status(400).send({ error: error instanceof Error ? error.message : "Invalid avatar URL" });
+      }
+    }
+    if (request.body?.defaultMemberRole !== undefined) {
+      try {
+        settings.defaultMemberRole = parseInviteRole(request.body.defaultMemberRole);
+      } catch {
+        return reply.status(400).send({ error: "Invalid default member role" });
+      }
+    }
+    if (request.body?.inviteTtlHours !== undefined) {
+      const ttl = Number(request.body.inviteTtlHours);
+      if (!Number.isInteger(ttl) || ttl < 1 || ttl > 720) {
+        return reply.status(400).send({ error: "Invite TTL must be between 1 and 720 hours" });
+      }
+      settings.inviteTtlHours = ttl;
+    }
+    if (request.body?.autoJoinDomain !== undefined) {
+      try {
+        settings.autoJoinDomain = parseAutoJoinDomain(request.body.autoJoinDomain?.trim() || null);
+      } catch (error) {
+        return reply.status(400).send({ error: error instanceof Error ? error.message : "Invalid auto-join domain" });
+      }
+    }
+
+    const updated = await updateOrgSettings(accountAuth.pool, org.id, settings);
+    if (!updated) return reply.status(404).send({ error: "Org not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      eventType: "org.settings_changed",
+      metadata: settings as Record<string, unknown>,
+    });
+    return { ...serializeOrg(updated), role: org.role };
+  });
+
+  app.delete<{ Params: { org: string } }>("/v1/orgs/:org", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (org.role !== "owner") return reply.status(403).send({ error: "Only the owner can delete this org" });
+    const publishedCount = await countPublishedVersionsForOrg(accountAuth.pool, org.id);
+    if (publishedCount > 0) {
+      return reply.status(409).send({
+        error: "Cannot delete org while published packages exist. Remove all published versions first.",
+      });
+    }
+    const deleted = await softDeleteOrg(accountAuth.pool, org.id);
+    if (!deleted) return reply.status(404).send({ error: "Org not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      eventType: "org.deleted",
+    });
+    return reply.status(204).send();
+  });
+
   app.get<{ Params: { org: string } }>("/v1/orgs/:org/packages", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
     if (!org) return reply.status(404).send({ error: "Org not found" });
     const packages = await listOrgPackageReservations(accountAuth.pool, org.id);
+    const versionCounts = await Promise.all(
+      packages.map(async (pkg) => ({
+        name: pkg.name,
+        count: await countPackageVersions(accountAuth.pool, pkg.name),
+      })),
+    );
+    const versionCountByName = new Map(versionCounts.map((row) => [row.name, row.count]));
     return {
       packages: packages.map((pkg) => ({
         name: pkg.name,
         createdAt: pkg.created_at,
+        visibility: pkg.visibility,
+        deprecatedAt: pkg.deprecated_at,
+        deprecationMessage: pkg.deprecation_message,
+        publishedVersionCount: versionCountByName.get(pkg.name) ?? 0,
       })),
     };
   });
 
-  app.post<{ Params: { org: string }; Body: { name?: string } }>(
+  app.delete<{ Params: { org: string; name: string } }>("/v1/orgs/:org/packages/:name", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const orgSlug = normalizeOrgSlug(request.params.org);
+    const org = await getOrgBySlugForMember(accountAuth.pool, orgSlug, user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (!canManagePackages(org.role)) {
+      return reply.status(403).send({ error: "Only org owners and admins can unreserve packages" });
+    }
+    const name = decodePackageName(request.params.name);
+    const reservation = await getPackageReservationByName(accountAuth.pool, name);
+    if (!reservation || reservation.org_id !== org.id) {
+      return reply.status(404).send({ error: "Package not found in this org" });
+    }
+    const publishedCount = await countPackageVersions(accountAuth.pool, name);
+    if (publishedCount > 0) {
+      return reply.status(409).send({ error: "Cannot unreserve a package with published versions" });
+    }
+    await deletePackageReservation(accountAuth.pool, name);
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: org.id,
+      actorUserId: user.id,
+      packageName: name,
+      eventType: "package.unreserved",
+    });
+    return reply.status(204).send();
+  });
+
+  app.post<{ Params: { org: string }; Body: { name?: string; visibility?: string } }>(
     "/v1/orgs/:org/packages",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
@@ -674,13 +1120,26 @@ export async function createApp(): Promise<FastifyInstance> {
       if (parsed.scope !== orgSlug) {
         return reply.status(400).send({ error: `Package name must use @${orgSlug}/...` });
       }
+      let visibility: PackageVisibility | undefined;
+      if (request.body?.visibility !== undefined) {
+        try {
+          visibility = parsePackageVisibility(request.body.visibility);
+        } catch {
+          return reply.status(400).send({ error: "Invalid package visibility" });
+        }
+      }
       try {
         const pkg = await reservePackageName(accountAuth.pool, {
           name,
           orgId: org.id,
           ownerUserId: user.id,
+          visibility,
         });
-        return reply.status(201).send({ name: pkg.name, createdAt: pkg.created_at });
+        return reply.status(201).send({
+          name: pkg.name,
+          createdAt: pkg.created_at,
+          visibility: pkg.visibility,
+        });
       } catch (error) {
         const pgErr = error as { code?: string };
         if (pgErr.code === "23505") return reply.status(409).send({ error: "Package name is already reserved" });
@@ -825,7 +1284,7 @@ export async function createApp(): Promise<FastifyInstance> {
         invitedGithubLogin: githubLogin,
         role,
         tokenHash: sha256Hex(token),
-        expiresAt: new Date(Date.now() + INVITE_TTL_MS),
+        expiresAt: new Date(Date.now() + org.invite_ttl_hours * 60 * 60 * 1000),
         invitedByUserId: user.id,
       });
       await createOrgAuditEvent(accountAuth.pool, {
@@ -864,7 +1323,7 @@ export async function createApp(): Promise<FastifyInstance> {
     const existing = await getOrgInviteById(accountAuth.pool, org.id, request.params.inviteId);
     if (!existing || existing.status !== "pending") return reply.status(404).send({ error: "Pending invite not found" });
     const token = newInviteToken();
-    const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
+    const expiresAt = new Date(Date.now() + org.invite_ttl_hours * 60 * 60 * 1000);
     const ok = await resendOrgInvite(
       accountAuth.pool,
       org.id,
@@ -921,10 +1380,11 @@ export async function createApp(): Promise<FastifyInstance> {
     const invite = await getPendingInviteByTokenHash(accountAuth.pool, sha256Hex(request.params.token));
     if (!invite) return reply.status(404).send({ error: "Invite not found or already used" });
     if (invite.expires_at.getTime() <= Date.now()) return reply.status(410).send({ error: "Invite has expired" });
-    if (invite.invited_github_login && invite.invited_github_login !== user.github_login.toLowerCase()) {
+    if (invite.invited_github_login && invite.invited_github_login !== user.github_login?.toLowerCase()) {
       return reply.status(403).send({ error: "This invite is for a different GitHub account" });
     }
-    if (invite.invited_email && invite.invited_email !== user.contact_email?.toLowerCase()) {
+    const verifiedEmail = getVerifiedUserEmail(user)?.toLowerCase() ?? null;
+    if (invite.invited_email && invite.invited_email !== verifiedEmail) {
       return reply.status(403).send({ error: "This invite is for a different email address" });
     }
     await acceptOrgInvite(accountAuth.pool, invite, user.id);
@@ -948,6 +1408,92 @@ export async function createApp(): Promise<FastifyInstance> {
     const events = await listOrgAuditEvents(accountAuth.pool, org.id);
     return { events: events.map(serializeAuditEvent) };
   });
+
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/install-tokens", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    if (org.role === "viewer") return reply.status(403).send({ error: "Viewers cannot manage install tokens" });
+    const tokens = await listOrgInstallTokens(accountAuth.pool, org.id, user.id, org.role);
+    return {
+      tokens: tokens.map((token) => ({
+        id: token.id,
+        name: token.name,
+        userId: token.user_id,
+        githubLogin: token.github_login ?? null,
+        username: token.username ?? null,
+        expiresAt: token.expires_at,
+        lastUsedAt: token.last_used_at,
+        createdAt: token.created_at,
+      })),
+    };
+  });
+
+  app.post<{ Params: { org: string }; Body: { name?: string; expiresInDays?: number | null } }>(
+    "/v1/orgs/:org/install-tokens",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      if (!canCreateInstallToken(org.role)) {
+        return reply.status(403).send({ error: "Only owners, admins, and members can create install tokens" });
+      }
+      const name = request.body?.name?.trim();
+      if (!name) return reply.status(400).send({ error: "Token name is required" });
+      const expiresInDays = request.body?.expiresInDays;
+      const expiresAt =
+        expiresInDays == null
+          ? null
+          : new Date(Date.now() + Math.min(Math.max(expiresInDays, 1), 365) * 24 * 60 * 60 * 1000);
+      const token = newInstallToken();
+      const created = await createInstallToken(accountAuth.pool, {
+        orgId: org.id,
+        userId: user.id,
+        name,
+        tokenHash: sha256Hex(token),
+        expiresAt,
+      });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: org.id,
+        actorUserId: user.id,
+        eventType: "install_token.created",
+        metadata: { tokenId: created.id, name },
+      });
+      return reply.status(201).send({
+        id: created.id,
+        name: created.name,
+        token,
+        expiresAt: created.expires_at,
+        createdAt: created.created_at,
+      });
+    },
+  );
+
+  app.delete<{ Params: { org: string; tokenId: string } }>(
+    "/v1/orgs/:org/install-tokens/:tokenId",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      const existing = await getInstallTokenById(accountAuth.pool, org.id, request.params.tokenId);
+      if (!existing || existing.revoked_at) return reply.status(404).send({ error: "Install token not found" });
+      if (existing.user_id !== user.id && !canManageOrg(org.role)) {
+        return reply.status(403).send({ error: "Not allowed to revoke this install token" });
+      }
+      const revoked = await revokeInstallToken(accountAuth.pool, org.id, request.params.tokenId);
+      if (!revoked) return reply.status(404).send({ error: "Install token not found" });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: org.id,
+        actorUserId: user.id,
+        eventType: "install_token.revoked",
+        metadata: { tokenId: request.params.tokenId },
+      });
+      return reply.status(204).send();
+    },
+  );
 
   app.get<{ Params: { name: string } }>("/v1/packages/:name/members", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
@@ -997,6 +1543,123 @@ export async function createApp(): Promise<FastifyInstance> {
     });
     return reply.status(204).send();
   });
+
+  app.patch<{ Params: { name: string }; Body: { visibility?: string } }>(
+    "/v1/packages/:name",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const name = decodePackageName(request.params.name);
+      const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+      if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+      if (!canManageOrg(access.org_role)) {
+        return reply.status(403).send({ error: "Only org owners and admins can change package visibility" });
+      }
+      let visibility: PackageVisibility;
+      try {
+        visibility = parsePackageVisibility(request.body?.visibility);
+      } catch {
+        return reply.status(400).send({ error: "Invalid package visibility" });
+      }
+      const previous = access.visibility;
+      const updated = await updatePackageVisibility(accountAuth.pool, name, visibility);
+      if (!updated) return reply.status(404).send({ error: "Reserved package not found" });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: access.org_id,
+        actorUserId: user.id,
+        packageName: name,
+        eventType: "package.visibility_changed",
+        metadata: { from: previous, to: visibility },
+      });
+      return {
+        name: updated.name,
+        visibility: updated.visibility,
+        createdAt: updated.created_at,
+      };
+    },
+  );
+
+  app.post<{ Params: { name: string }; Body: { message?: string | null } }>(
+    "/v1/packages/:name/deprecate",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const name = decodePackageName(request.params.name);
+      const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+      if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+      if (!canManageOrg(access.org_role)) {
+        return reply.status(403).send({ error: "Only org owners and admins can deprecate packages" });
+      }
+      const message = request.body?.message?.trim() || null;
+      const updated = await deprecatePackage(accountAuth.pool, name, message);
+      if (!updated) return reply.status(404).send({ error: "Reserved package not found" });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: access.org_id,
+        actorUserId: user.id,
+        packageName: name,
+        eventType: "package.deprecated",
+        metadata: { message },
+      });
+      return {
+        name: updated.name,
+        deprecatedAt: updated.deprecated_at,
+        deprecationMessage: updated.deprecation_message,
+      };
+    },
+  );
+
+  app.delete<{ Params: { name: string } }>("/v1/packages/:name/deprecate", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const name = decodePackageName(request.params.name);
+    const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+    if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+    if (!canManageOrg(access.org_role)) {
+      return reply.status(403).send({ error: "Only org owners and admins can undeprecate packages" });
+    }
+    const updated = await undeprecatePackage(accountAuth.pool, name);
+    if (!updated) return reply.status(404).send({ error: "Reserved package not found" });
+    await createOrgAuditEvent(accountAuth.pool, {
+      orgId: access.org_id,
+      actorUserId: user.id,
+      packageName: name,
+      eventType: "package.undeprecated",
+    });
+    return { name: updated.name, deprecatedAt: null, deprecationMessage: null };
+  });
+
+  app.post<{ Params: { name: string; version: string } }>(
+    "/v1/packages/:name/versions/:version/yank",
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      const name = decodePackageName(request.params.name);
+      const access = await getPackageReservationForUser(accountAuth.pool, name, user.id);
+      if (!access?.org_role) return reply.status(404).send({ error: "Reserved package not found" });
+      if (!canManageOrg(access.org_role)) {
+        return reply.status(403).send({ error: "Only org owners and admins can yank versions" });
+      }
+      const row = await metadata.get(name, request.params.version);
+      if (!row) return reply.status(404).send({ error: "Version not found" });
+      if (Date.now() - row.created_at.getTime() > YANK_WINDOW_MS) {
+        return reply.status(403).send({ error: "Versions can only be yanked within 72 hours of publish" });
+      }
+      const yanked = await yankPackageVersion(accountAuth.pool, name, request.params.version);
+      if (!yanked) return reply.status(404).send({ error: "Version not found" });
+      await createOrgAuditEvent(accountAuth.pool, {
+        orgId: access.org_id,
+        actorUserId: user.id,
+        packageName: name,
+        eventType: "package.version_yanked",
+        metadata: { version: request.params.version },
+      });
+      return {
+        name: yanked.name,
+        version: yanked.version,
+        yankedAt: yanked.yanked_at,
+      };
+    },
+  );
 
   app.post<{ Params: { name: string } }>(
     "/v1/packages/:name/publish-tokens",
@@ -1188,6 +1851,10 @@ export async function createApp(): Promise<FastifyInstance> {
     "/v1/packages/:name/versions/:version",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
+      const readAccess = await resolveReadAccess(accountAuth, request);
+      if (!(await canViewPackage(accountAuth, name, readAccess))) {
+        return reply.status(404).send({ error: "Not found" });
+      }
       const row = await metadata.get(name, request.params.version);
       if (!row) return reply.status(404).send({ error: "Not found" });
       const publisher = accountAuth
@@ -1197,6 +1864,7 @@ export async function createApp(): Promise<FastifyInstance> {
         accountAuth && publisher
           ? await getProvenance(accountAuth.pool, row.name, row.version)
           : null;
+      const reservation = accountAuth ? await getPackageReservationByName(accountAuth.pool, name) : null;
       return {
         name: row.name,
         version: row.version,
@@ -1204,6 +1872,15 @@ export async function createApp(): Promise<FastifyInstance> {
         integrity: row.integrity,
         sizeBytes: Number(row.size_bytes),
         createdAt: row.created_at,
+        yanked: Boolean(row.yanked_at),
+        yankedAt: row.yanked_at ?? null,
+        visibility: reservation?.visibility ?? "public",
+        deprecated: reservation?.deprecated_at
+          ? {
+              at: reservation.deprecated_at,
+              message: reservation.deprecation_message,
+            }
+          : null,
         publisher: serializePublisher(publisher),
         import: provenance
           ? {
@@ -1231,13 +1908,31 @@ export async function createApp(): Promise<FastifyInstance> {
     async (request) => {
       const limit = normalizeListLimit(request.query.limit);
       const includeDemo = request.query.includeDemo === "true";
-      const rows = await metadata.list(request.query.q, {
+      const query = request.query.q?.trim() ?? "";
+      const readAccess = await resolveReadAccess(accountAuth, request);
+      const rows = await metadata.list(query, {
         limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT,
         cursor: request.query.cursor,
       });
-      const visibleRows = includeDemo
-        ? rows
-        : rows.filter((row) => !isHiddenPublicPackage(row.name));
+      let visibleRows = includeDemo ? rows : rows.filter((row) => !isHiddenPublicPackage(row.name));
+      visibleRows = visibleRows.filter((row) => !row.yanked_at);
+
+      if (accountAuth) {
+        const names = [...new Set(visibleRows.map((row) => row.name))];
+        const visibilityMap = await getPackageVisibilityMap(accountAuth.pool, names);
+        const accessiblePrivate = readAccess.userId
+          ? await listAccessiblePrivatePackageNames(accountAuth.pool, readAccess.userId, names)
+          : new Set<string>();
+        const deprecatedMap = await getDeprecatedPackageNames(accountAuth.pool, names);
+        const exactNameQuery = query.startsWith("@") ? query.toLowerCase() : null;
+        visibleRows = visibleRows.filter((row) => {
+          const visibility = visibilityMap.get(row.name) ?? "public";
+          if (visibility === "private" && !accessiblePrivate.has(row.name)) return false;
+          if (deprecatedMap.has(row.name) && row.name.toLowerCase() !== exactNameQuery) return false;
+          return true;
+        });
+      }
+
       const page = visibleRows.slice(0, limit);
       const nextCursor =
         visibleRows.length > limit ? page[page.length - 1]?.created_at.toISOString() : null;
@@ -1276,8 +1971,12 @@ export async function createApp(): Promise<FastifyInstance> {
     "/v1/packages/:name/versions/:version/tarball",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
+      const readAccess = await resolveReadAccess(accountAuth, request);
+      if (!(await canViewPackage(accountAuth, name, readAccess))) {
+        return reply.status(404).send({ error: "Not found" });
+      }
       const row = await metadata.get(name, request.params.version);
-      if (!row) return reply.status(404).send({ error: "Not found" });
+      if (!row || row.yanked_at) return reply.status(404).send({ error: "Not found" });
       const buf = await storage.get(row.blob_path);
       return reply
         .header("content-type", "application/gzip")

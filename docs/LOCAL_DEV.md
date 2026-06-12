@@ -59,6 +59,26 @@ local user and session.
 
 This is disabled in production and blocked when `NODE_ENV=production`.
 
+### Email OTP sign-in (local, no Azure)
+
+When `AIPM_DEV_AUTH=1` and email is disabled (`AIPM_EMAIL_PROVIDER` unset or
+`disabled`), the login page also shows email sign-in. Request a code, then use
+the inline `devCode` from the API response:
+
+```bash
+curl -s -X POST http://127.0.0.1:8080/v1/auth/email/request-code \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@test.com"}'
+
+curl -s -c cookies.txt -X POST http://127.0.0.1:8080/v1/auth/email/verify-code \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@test.com","code":"XXXXXX"}'
+
+curl -s -b cookies.txt http://127.0.0.1:8080/v1/me
+```
+
+Requires Docker Postgres (`pnpm local:setup`) and `DATABASE_URL` in `.env`.
+
 ## Admin (`/admin`)
 
 Requires Docker Postgres (`pnpm local:setup`) and the local registry API (`pnpm local:api`).

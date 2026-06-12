@@ -25,17 +25,24 @@ export interface InstallOneOptions {
   project: ProjectPackageJson;
   explicitTarget?: AiTool;
   ci?: boolean;
+  token?: string;
 }
 
 export async function installOnePackage(options: InstallOneOptions): Promise<void> {
   const configRoot = options.configRoot;
   const installRoot = options.installRoot ?? configRoot;
   await assertRegistryReachable(options.registry);
-  const { manifest, integrity: remoteIntegrity } = await fetchPackageMetadata(
+  const { manifest, integrity: remoteIntegrity, deprecated } = await fetchPackageMetadata(
     options.registry,
     options.name,
     options.version,
+    options.token,
   );
+  if (deprecated) {
+    console.warn(
+      `Warning: ${options.name} is deprecated${deprecated.message ? `: ${deprecated.message}` : ""}.`,
+    );
+  }
 
   let explicitTarget = options.explicitTarget;
   let preferredTools = options.project.preferredTools;
@@ -69,6 +76,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
     options.registry,
     options.name,
     options.version,
+    options.token,
   );
   const skillMarkdown = await unpackTarballToBuffer(tarball, manifest.entry);
 

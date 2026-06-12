@@ -28,10 +28,11 @@ describe.skipIf(!databaseUrl)("db import helpers", () => {
     const pool = createPool(databaseUrl!);
     await ensureSchema(pool);
     await ensureSchema(pool);
+    const suffix = unique();
 
     const imported = await upsertGithubUser(pool, {
-      githubId: "import-test-1",
-      githubLogin: "ImportTestUser",
+      githubId: `import-test-${suffix}`,
+      githubLogin: `ImportTestUser-${suffix}`,
       name: "Import Test",
       verified: false,
       contact: {
@@ -44,25 +45,25 @@ describe.skipIf(!databaseUrl)("db import helpers", () => {
     expect(imported.contact_email).toBe("import@test.example");
 
     const claimed = await upsertGithubUser(pool, {
-      githubId: "import-test-1",
-      githubLogin: "ImportTestUser",
+      githubId: `import-test-${suffix}`,
+      githubLogin: `ImportTestUser-${suffix}`,
       verified: true,
     });
     expect(claimed.verified).toBe(true);
 
     await upsertProvenance(pool, {
-      name: "@importtest/sample",
+      name: `@importtest-${suffix}/sample`,
       version: "1.0.0",
       source_url: "https://github.com/importtest/skills/tree/main/sample",
       source_commit_sha: "abc123",
       source_license: "Apache-2.0",
       content_hash: "hash-v1",
     });
-    expect(await getLatestContentHash(pool, "@importtest/sample")).toBe("hash-v1");
+    expect(await getLatestContentHash(pool, `@importtest-${suffix}/sample`)).toBe("hash-v1");
 
     const notification = await queueImportNotification(pool, {
       userId: claimed.id,
-      packageName: "@importtest/sample",
+      packageName: `@importtest-${suffix}/sample`,
     });
     expect(notification.status).toBe("pending");
 

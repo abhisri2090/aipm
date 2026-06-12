@@ -24,9 +24,19 @@ export type InviteEmailResult = {
   provider: EmailProvider;
 };
 
+export type VerificationEmailInput = {
+  to: string;
+  code: string;
+  expiresAt: Date;
+};
+
+export type AuthCodeEmailInput = VerificationEmailInput;
+
 export type EmailSender = {
   isEnabled: boolean;
   sendInviteEmail(input: InviteEmailInput): Promise<InviteEmailResult>;
+  sendVerificationEmail(input: VerificationEmailInput): Promise<InviteEmailResult>;
+  sendAuthCodeEmail(input: AuthCodeEmailInput): Promise<InviteEmailResult>;
 };
 
 export function resolveEmailConfig(env: NodeJS.ProcessEnv = process.env): EmailConfig {
@@ -94,6 +104,74 @@ function htmlInvite(input: InviteEmailInput): string {
 </html>`;
 }
 
+function textVerification(input: VerificationEmailInput): string {
+  return [
+    `Your AIPM email verification code is: ${input.code}`,
+    "",
+    `This code expires at ${input.expiresAt.toISOString()}.`,
+    "",
+    "If you did not request this code, you can ignore this email.",
+  ].join("\n");
+}
+
+function textAuthCode(input: AuthCodeEmailInput): string {
+  return [
+    `Your AIPM sign-in code is: ${input.code}`,
+    "",
+    `This code expires at ${input.expiresAt.toISOString()}.`,
+    "",
+    "If you did not request this code, you can ignore this email.",
+  ].join("\n");
+}
+
+function htmlAuthCode(input: AuthCodeEmailInput): string {
+  const escapedCode = escapeHtml(input.code);
+  return `<!doctype html>
+<html lang="en">
+  <body style="margin:0;background:#f7f8f5;color:#1b211d;font-family:Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f8f5;padding:28px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #d9ded6;border-radius:8px;padding:28px;">
+            <tr><td>
+              <p style="margin:0 0 10px;color:#1d7f5f;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">AIPM sign-in</p>
+              <h1 style="margin:0 0 14px;font-size:28px;line-height:1.15;">Your sign-in code</h1>
+              <p style="margin:0 0 18px;font-size:16px;line-height:1.55;">Enter this code on the AIPM login page:</p>
+              <p style="margin:0 0 22px;font-size:32px;font-weight:700;letter-spacing:.18em;">${escapedCode}</p>
+              <p style="margin:0;color:#5e6a62;font-size:14px;line-height:1.5;">This code expires at ${escapeHtml(input.expiresAt.toISOString())}. If you did not request it, ignore this email.</p>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+function htmlVerification(input: VerificationEmailInput): string {
+  const escapedCode = escapeHtml(input.code);
+  return `<!doctype html>
+<html lang="en">
+  <body style="margin:0;background:#f7f8f5;color:#1b211d;font-family:Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f8f5;padding:28px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #d9ded6;border-radius:8px;padding:28px;">
+            <tr><td>
+              <p style="margin:0 0 10px;color:#1d7f5f;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">AIPM email verification</p>
+              <h1 style="margin:0 0 14px;font-size:28px;line-height:1.15;">Verify your email</h1>
+              <p style="margin:0 0 18px;font-size:16px;line-height:1.55;">Enter this code on your AIPM profile page:</p>
+              <p style="margin:0 0 22px;font-size:32px;font-weight:700;letter-spacing:.18em;">${escapedCode}</p>
+              <p style="margin:0;color:#5e6a62;font-size:14px;line-height:1.5;">This code expires at ${escapeHtml(input.expiresAt.toISOString())}. If you did not request it, ignore this email.</p>
+            </td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -110,16 +188,23 @@ export function createEmailSender(config: EmailConfig = resolveEmailConfig()): E
       async sendInviteEmail() {
         return { sent: false, provider: "disabled" };
       },
+      async sendVerificationEmail() {
+        return { sent: false, provider: "disabled" };
+      },
+      async sendAuthCodeEmail() {
+        return { sent: false, provider: "disabled" };
+      },
     };
   }
 
   assertAzureEmailConfig(config);
   const client = new EmailClient(config.connectionString);
+  const senderAddress = config.senderAddress;
   return {
     isEnabled: true,
     async sendInviteEmail(input) {
       const poller = await client.beginSend({
-        senderAddress: config.senderAddress,
+        senderAddress,
         recipients: {
           to: [{ address: input.to }],
         },
@@ -127,6 +212,36 @@ export function createEmailSender(config: EmailConfig = resolveEmailConfig()): E
           subject: `Invitation to join ${input.orgName} on AIPM`,
           plainText: textInvite(input),
           html: htmlInvite(input),
+        },
+      });
+      await poller.pollUntilDone();
+      return { sent: true, provider: "azure" };
+    },
+    async sendVerificationEmail(input) {
+      const poller = await client.beginSend({
+        senderAddress,
+        recipients: {
+          to: [{ address: input.to }],
+        },
+        content: {
+          subject: "Your AIPM email verification code",
+          plainText: textVerification(input),
+          html: htmlVerification(input),
+        },
+      });
+      await poller.pollUntilDone();
+      return { sent: true, provider: "azure" };
+    },
+    async sendAuthCodeEmail(input) {
+      const poller = await client.beginSend({
+        senderAddress,
+        recipients: {
+          to: [{ address: input.to }],
+        },
+        content: {
+          subject: "Your AIPM sign-in code",
+          plainText: textAuthCode(input),
+          html: htmlAuthCode(input),
         },
       });
       await poller.pollUntilDone();

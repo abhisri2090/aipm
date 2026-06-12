@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { assertSafeLocalRuntime, isLocalDatabaseUrl, LocalSafetyError } from "./local-safety.js";
 
+const savedDatabaseUrl = process.env.DATABASE_URL;
+
 afterEach(() => {
   delete process.env.NODE_ENV;
-  delete process.env.DATABASE_URL;
+  if (savedDatabaseUrl !== undefined) process.env.DATABASE_URL = savedDatabaseUrl;
+  else delete process.env.DATABASE_URL;
   delete process.env.AZURE_STORAGE_CONNECTION_STRING;
   delete process.env.KEY_VAULT_NAME;
 });

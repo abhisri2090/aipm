@@ -3,7 +3,7 @@ import { noIndexPageMetadata } from "../../lib/seo";
 
 export const metadata = noIndexPageMetadata({
   title: "Publisher Login",
-  description: "Sign in to AIPM with GitHub to publish AI skill packages.",
+  description: "Sign in to AIPM with GitHub or email verification code to publish AI skill packages.",
   path: "/login",
 });
 
