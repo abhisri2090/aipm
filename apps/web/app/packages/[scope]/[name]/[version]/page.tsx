@@ -89,6 +89,11 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
   };
 }
 
+function packageShortName(name: string): string {
+  const parts = name.replace(/^@/, "").split("/");
+  return parts[parts.length - 1] ?? name;
+}
+
 export default async function PackagePage({ params }: PackagePageProps) {
   const { scope, name, version } = await params;
   const packageName = `@${decodeURIComponent(scope)}/${decodeURIComponent(name)}`;
@@ -189,10 +194,8 @@ export default async function PackagePage({ params }: PackagePageProps) {
       />
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>AIPM package</p>
-        <h1>{summary.description}</h1>
-        <p className={shell.lede}>
-          {summary.name}@{summary.version}
-        </p>
+        <h1>{packageShortName(summary.name)}</h1>
+        <p className={shell.lede}>{summary.description}</p>
         {isUnverifiedImportedPackage(summary) ? (
           <div className={shell.actions}>
             {summary.import?.sourceUrl ? (
