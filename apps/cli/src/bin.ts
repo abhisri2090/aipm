@@ -113,6 +113,27 @@ async function inferEntryFromSource(source: string, fallback: string): Promise<s
   return entries.find((entry) => entry.endsWith(".md")) ?? entries.find((entry) => entry.endsWith(".mdc")) ?? fallback;
 }
 
+async function copySourceIntoSkillRoot(source: string, root: string, sourceLabel: string): Promise<void> {
+  const sourceInfo = await stat(source);
+  await mkdir(root, { recursive: true });
+  if (sourceInfo.isDirectory()) {
+    const entries = await readdir(source);
+    for (const entry of entries) {
+      await cp(join(source, entry), join(root, entry), {
+        recursive: true,
+        force: false,
+        errorOnExist: true,
+      });
+    }
+    return;
+  }
+  if (sourceInfo.isFile()) {
+    await cp(source, join(root, basename(source)), { force: false, errorOnExist: true });
+    return;
+  }
+  throw new Error(`Unsupported source path: ${sourceLabel}`);
+}
+
 async function latestVersionForPackage(registry: string, name: string): Promise<string> {
   const packages = await searchPackages(registry, name, 20);
   const exact = packages.find((pkg) => pkg.name === name);
@@ -287,7 +308,6 @@ async function initSkill(opts: {
   if (!isValidScopeName(opts.name)) throw new Error("Invalid @scope/name");
   const root = opts.here ? cwd() : resolve(cwd(), opts.dir ?? skillFolderName(opts.name));
   const cdTarget = opts.here ? null : (opts.dir ?? skillFolderName(opts.name));
-  await mkdir(root, { recursive: true });
   const source = opts.from ? resolve(opts.from) : null;
   const entry = source ? await inferEntryFromSource(source, opts.entry) : opts.entry;
   const manifest: PackageManifest = PackageManifestSchema.parse({
@@ -301,14 +321,9 @@ async function initSkill(opts: {
     license: "Apache-2.0",
   });
   if (source) {
-    const sourceInfo = await stat(source);
-    if (sourceInfo.isDirectory()) {
-      await cp(source, root, { recursive: true, force: false, errorOnExist: true });
-    } else if (sourceInfo.isFile()) {
-      await cp(source, join(root, basename(source)), { force: false, errorOnExist: true });
-    } else {
-      throw new Error(`Unsupported source path: ${opts.from}`);
-    }
+    await copySourceIntoSkillRoot(source, root, opts.from);
+  } else {
+    await mkdir(root, { recursive: true });
   }
   await writeStarterFile(join(root, "aipm.manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   if (!opts.from) {
