@@ -7,7 +7,6 @@ import { CodeBlock } from "./code-block";
 import { DEV_LOGIN_URL, GITHUB_LOGIN_URL, isLocalDevSite, packagePath } from "../lib/registry";
 import { cn } from "../lib/class-names";
 import shell from "../app/page-shell.module.css";
-import docs from "../app/docs-content.module.css";
 import dash from "./dashboard-ui.module.css";
 
 type Me = {
@@ -326,16 +325,12 @@ function DashboardShell({
             </Link>
           ))}
         </nav>
-        <div className={dash.sidebarNote}>
-          <strong>{orgs.length}</strong>
-          <span>{orgs.length === 1 ? "org" : "orgs"} connected</span>
-        </div>
         <div className={dash.sidebarHelp}>
           <strong>{activeOrg ? `@${activeOrg.slug}` : "No workspace yet"}</strong>
           <span>{activeOrg ? `${roleLabel(activeOrg.role)} access` : "Create an org to start publishing."}</span>
         </div>
         <button
-          className={dash.secondaryButton}
+          className={cn(dash.secondaryButton, dash.sidebarSignOut)}
           type="button"
           onClick={async () => {
             try {
@@ -411,6 +406,7 @@ export function LoginPanel() {
   const [emailNotice, setEmailNotice] = useState<string | null>(null);
   const [devCode, setDevCode] = useState<string | null>(null);
   const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     storeAuthReturnPath();
@@ -435,6 +431,18 @@ export function LoginPanel() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!resendAvailableAt) return;
+    const timer = window.setInterval(() => {
+      const nextNow = Date.now();
+      setNow(nextNow);
+      if (nextNow >= resendAvailableAt) {
+        setResendAvailableAt(null);
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendAvailableAt]);
 
   const showDevLogin = localDev || authConfig?.devAuth === true;
   const showGithubLogin = authConfig?.githubAuth === true;
@@ -494,8 +502,8 @@ export function LoginPanel() {
   }
 
   const resendSeconds =
-    resendAvailableAt && resendAvailableAt > Date.now()
-      ? Math.ceil((resendAvailableAt - Date.now()) / 1000)
+    resendAvailableAt && resendAvailableAt > now
+      ? Math.ceil((resendAvailableAt - now) / 1000)
       : 0;
 
   return (
@@ -613,11 +621,31 @@ export function LoginPanel() {
         </div>
         <aside className={dash.loginSidePanel}>
           <h2>What you get</h2>
-          <ul className={docs.checkList}>
-            <li>Organization namespaces for package ownership.</li>
-            <li>Reserved skill names before publishing.</li>
-            <li>Five-minute publish tokens for safer CLI pushes.</li>
-            <li>A profile that makes packages feel accountable.</li>
+          <ul className={dash.loginBenefitList}>
+            <li>
+              <span aria-hidden="true" className={dash.loginBenefitIcon}>
+                🏢
+              </span>
+              <span>Organization namespaces for package ownership.</span>
+            </li>
+            <li>
+              <span aria-hidden="true" className={dash.loginBenefitIcon}>
+                📌
+              </span>
+              <span>Reserved skill names before publishing.</span>
+            </li>
+            <li>
+              <span aria-hidden="true" className={dash.loginBenefitIcon}>
+                🔑
+              </span>
+              <span>Five-minute publish tokens for safer CLI pushes.</span>
+            </li>
+            <li>
+              <span aria-hidden="true" className={dash.loginBenefitIcon}>
+                👤
+              </span>
+              <span>A profile that makes packages feel accountable.</span>
+            </li>
           </ul>
         </aside>
       </section>
@@ -734,7 +762,7 @@ export function DashboardHome() {
                   and short-lived CLI tokens.
                 </p>
               </div>
-              <Link className={shell.button} href={nextAction.href}>
+              <Link className={cn(shell.button, dash.nextActionButton)} href={nextAction.href}>
                 {nextAction.label}
               </Link>
             </section>

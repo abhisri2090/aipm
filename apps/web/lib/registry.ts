@@ -70,7 +70,8 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://aipm-regis
 );
 
 export function isLocalDevSite(siteUrl: string = SITE_URL): boolean {
-  const normalized = siteUrl.toLowerCase();
+  const normalized =
+    typeof window === "undefined" ? siteUrl.toLowerCase() : window.location.origin.toLowerCase();
   return normalized.includes("localhost") || normalized.includes("127.0.0.1");
 }
 

@@ -67,11 +67,11 @@
 }
 
 .accountCard strong,
-.accountCard span {
+.accountCard span:not(.avatar) {
   display: block;
 }
 
-.accountCard span,
+.accountCard span:not(.avatar),
 .sidebarNote span,
 .resourceRow small,
 .fieldHelp,
@@ -143,11 +143,12 @@
 }
 
 .sidebarNote {
-  display: grid;
   gap: 4px;
+  display: grid;
+  flex-direction: row;
   margin-top: 24px;
-  border-top: 1px solid var(--line);
   padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 
 .sidebarHelp {
@@ -164,6 +165,10 @@
 .sidebarHelp span {
   color: var(--muted);
   line-height: 1.45;
+}
+
+.sidebarSignOut {
+  margin-top: 12px;
 }
 
 .dashboardWorkspace {
@@ -271,6 +276,13 @@
   max-width: 720px;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.nextActionButton {
+  flex: 0 0 auto;
+  width: fit-content;
+  justify-content: center;
+  text-align: center;
 }
 
 .resourceList {
@@ -600,8 +612,7 @@
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.7fr);
   gap: 24px;
   align-items: stretch;
-  padding: 56px 0;
-  border-top: 1px solid var(--line);
+  padding: 0 0 56px 0;
 }
 
 .loginCard,
@@ -662,6 +673,30 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.loginBenefitList {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.loginBenefitList li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.loginBenefitIcon {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  line-height: 1.35;
 }
 
 .workflowList {
