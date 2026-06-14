@@ -1,6 +1,13 @@
 import { shell, cards } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
+import {
+  CLI_HOMEBREW_COMMAND,
+  CLI_INSTALL_COMMAND,
+  CLI_INSTALL_SCRIPT_COMMAND,
+  CLI_VERSION,
+  CLI_WINDOWS_INSTALL_COMMAND,
+} from "../../lib/registry";
 
 export const metadata = pageMetadata({
   title: "AIPM FAQ",
@@ -55,7 +62,7 @@ const faqs = [
   ],
   [
     "How do I install the CLI?",
-    "Run npm install -g @aipm-registry/cli, then aipm --version and aipm doctor. If the command is not on PATH, doctor shows the shell fix.",
+    `Install AIPM CLI ${CLI_VERSION} with npm (${CLI_INSTALL_COMMAND}), the standalone installer (${CLI_INSTALL_SCRIPT_COMMAND}), Homebrew (${CLI_HOMEBREW_COMMAND}), or Windows PowerShell (${CLI_WINDOWS_INSTALL_COMMAND}). Then run aipm --version and aipm doctor.`,
   ],
   [
     "Where are package files stored?",

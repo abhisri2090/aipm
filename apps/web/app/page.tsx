@@ -2,7 +2,7 @@ import { shell, cards, home, cn } from "../lib/page-styles";
 import Link from "next/link";
 import { CodeBlock } from "../components/code-block";
 import { RegistrySearch } from "../components/registry-search";
-import { CLI_INSTALL_COMMAND } from "../lib/registry";
+import { CLI_INSTALL_OPTIONS, CLI_RELEASE_URL, CLI_VERSION } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
 export const metadata = pageMetadata({
@@ -73,7 +73,8 @@ export default async function HomePage() {
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>1</span>
             <h3>Install the CLI</h3>
-            <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version`} />
+            <p>Latest verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.</p>
+            <CodeBlock code={CLI_INSTALL_OPTIONS[0].code} />
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>2</span>

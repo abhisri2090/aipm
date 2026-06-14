@@ -1,7 +1,7 @@
 import { shell, docs } from "../../lib/page-styles";
 import { CodeBlock } from "../../components/code-block";
 import { DocLayout } from "../../components/doc-layout";
-import { CLI_INSTALL_COMMAND } from "../../lib/registry";
+import { CLI_INSTALL_OPTIONS, CLI_RELEASE_URL, CLI_VERSION } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
@@ -27,8 +27,16 @@ export default function UsePage() {
         <p>AIPM keeps an aipm.package.json file in your project. It lists the skills you installed and their versions.</p>
 
         <h2>Install the CLI</h2>
-        <p>Install the AIPM command once on your machine.</p>
-        <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version\naipm doctor # (optional)`} />
+        <p>
+          Install the AIPM command once on your machine. The current verified release is{" "}
+          <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+        </p>
+        {CLI_INSTALL_OPTIONS.map((option) => (
+          <section key={option.label}>
+            <h3>{option.label}</h3>
+            <CodeBlock code={`${option.code}\naipm doctor # (optional)`} />
+          </section>
+        ))}
 
         <h2>Initialize a project</h2>
         <p>This creates aipm.package.json and points it at the public registry.</p>

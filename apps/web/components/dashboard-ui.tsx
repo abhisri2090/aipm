@@ -4,7 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { CodeBlock } from "./code-block";
-import { DEV_LOGIN_URL, GITHUB_LOGIN_URL, isLocalDevSite, packagePath } from "../lib/registry";
+import {
+  CLI_INSTALL_COMMAND,
+  CLI_INSTALL_SCRIPT_COMMAND,
+  CLI_VERSION,
+  DEV_LOGIN_URL,
+  GITHUB_LOGIN_URL,
+  isLocalDevSite,
+  packagePath,
+} from "../lib/registry";
 import { cn } from "../lib/class-names";
 import shell from "../app/page-shell.module.css";
 import dash from "./dashboard-ui.module.css";
@@ -2229,7 +2237,12 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const canManageMembers = access?.orgRole === "owner" || access?.orgRole === "admin";
 
   const command = useMemo(
-    () => `npm install -g @aipm-registry/cli
+    () => `# Install AIPM CLI ${CLI_VERSION} with npm
+${CLI_INSTALL_COMMAND}
+
+# Or install the standalone macOS/Linux binary
+${CLI_INSTALL_SCRIPT_COMMAND}
+
 aipm --version
 aipm doctor # (optional)
 aipm publish init --name ${packageName} --template code-review

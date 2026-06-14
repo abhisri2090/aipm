@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { CodeBlock } from "../../../../../components/code-block";
 import {
   CLI_INSTALL_COMMAND,
+  CLI_RELEASE_URL,
+  CLI_VERSION,
   displayTargets,
   formatBytes,
   getPackage,
@@ -208,7 +210,10 @@ export default async function PackagePage({ params }: PackagePageProps) {
       <section className={shell.detailGrid}>
         <article className={cn(shell.panel, cards.stepCard)}>
           <h2>Install this skill</h2>
-          <p className={shell.muted}>Install the CLI once, initialize your project, then add this package.</p>
+          <p className={shell.muted}>
+            Install the CLI once, initialize your project, then add this package. Current verified release:{" "}
+            <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+          </p>
           <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm init\n${command}`} />
         </article>
 

@@ -1,7 +1,7 @@
 import { shell, cards, docs, cn } from "../../../lib/page-styles";
 import { CodeBlock } from "../../../components/code-block";
 import { DocLayout } from "../../../components/doc-layout";
-import { CLI_INSTALL_COMMAND } from "../../../lib/registry";
+import { CLI_INSTALL_OPTIONS, CLI_RELEASE_URL, CLI_VERSION } from "../../../lib/registry";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata = pageMetadata({
@@ -32,8 +32,16 @@ export default function PublishPage() {
 
       <article className={docs.doc}>
         <h2>Install the CLI</h2>
-        <p>Install the CLI before running any aipm command.</p>
-        <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version\naipm doctor # (optional)`} />
+        <p>
+          Install the CLI before running any aipm command. The current verified release is{" "}
+          <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+        </p>
+        {CLI_INSTALL_OPTIONS.map((option) => (
+          <section key={option.label}>
+            <h3>{option.label}</h3>
+            <CodeBlock code={`${option.code}\naipm doctor # (optional)`} />
+          </section>
+        ))}
 
         <h2>1. Create an account and reserve a package name</h2>
         <ol className={docs.flowList}>

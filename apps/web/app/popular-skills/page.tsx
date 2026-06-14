@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CodeBlock } from "../../components/code-block";
 import { shell, cards, docs, cn } from "../../lib/page-styles";
-import { CLI_INSTALL_COMMAND, SITE_URL } from "../../lib/registry";
+import { CLI_INSTALL_COMMAND, CLI_RELEASE_URL, CLI_VERSION, SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 const popularSkills = [
@@ -263,6 +263,9 @@ export default function PopularSkillsPage() {
             Publishing guide
           </Link>
         </div>
+        <p className={shell.muted}>
+          Install the current verified CLI release first: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+        </p>
         <CodeBlock
           code={`${CLI_INSTALL_COMMAND}
 aipm init

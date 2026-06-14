@@ -1,4 +1,13 @@
-import { CLI_INSTALL_COMMAND, SITE_URL } from "../../lib/registry";
+import {
+  CLI_HOMEBREW_COMMAND,
+  CLI_INSTALL_COMMAND,
+  CLI_INSTALL_SCRIPT_COMMAND,
+  CLI_RELEASE_URL,
+  CLI_SCOOP_COMMAND,
+  CLI_VERSION,
+  CLI_WINDOWS_INSTALL_COMMAND,
+  SITE_URL,
+} from "../../lib/registry";
 
 export const dynamic = "force-static";
 
@@ -32,10 +41,35 @@ AIPM is a registry and command line workflow for project-ready AI skills, prompt
 ${CLI_INSTALL_COMMAND}
 \`\`\`
 
+Standalone macOS/Linux installer:
+
+\`\`\`sh
+${CLI_INSTALL_SCRIPT_COMMAND}
+\`\`\`
+
+Homebrew direct formula:
+
+\`\`\`sh
+${CLI_HOMEBREW_COMMAND}
+\`\`\`
+
+Windows PowerShell:
+
+\`\`\`powershell
+${CLI_WINDOWS_INSTALL_COMMAND}
+\`\`\`
+
+Scoop direct manifest:
+
+\`\`\`powershell
+${CLI_SCOOP_COMMAND}
+\`\`\`
+
 ## Product Notes
 
 - AIPM packages are AI skill packages, not npm packages.
-- The CLI package is published on npm as @aipm-registry/cli.
+- The current verified CLI release is ${CLI_VERSION}: ${CLI_RELEASE_URL}.
+- The CLI package is published on npm as @aipm-registry/cli and standalone binaries are attached to the GitHub release.
 - Public users can browse and install packages.
 - Publishing uses accounts, organization ownership, package reservations, short-lived publish tokens, and CLI validation.
 - Public package publishing should use aipm publish preview and .aipmignore to avoid leaking private files.

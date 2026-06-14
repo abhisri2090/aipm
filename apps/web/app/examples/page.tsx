@@ -2,7 +2,7 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
-import { CLI_INSTALL_COMMAND } from "../../lib/registry";
+import { CLI_INSTALL_COMMAND, CLI_RELEASE_URL, CLI_VERSION } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 type ExampleStep = {
@@ -247,7 +247,10 @@ export default function ExamplesPage() {
       <article className={docs.doc}>
         <section>
           <h2>Before any example</h2>
-          <p>Install the CLI once, then sign in on the website to create an org and reserve the package name.</p>
+          <p>
+            Install the CLI once, then sign in on the website to create an org and reserve the package name.
+            Current verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+          </p>
           <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version`} />
         </section>
       </article>

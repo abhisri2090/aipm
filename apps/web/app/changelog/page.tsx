@@ -5,6 +5,15 @@ import { pageMetadata } from "../../lib/seo";
 
 const entries = [
   {
+    date: "June 14, 2026",
+    title: "CLI 0.2.12 distribution",
+    items: [
+      "Published @aipm-registry/cli@0.2.12 to npm.",
+      "Added public standalone binaries for macOS, Linux, and Windows.",
+      "Added downloadable Homebrew formula, Scoop manifest, Winget manifest, checksums, and shell/PowerShell installers.",
+    ],
+  },
+  {
     date: "June 3, 2026",
     title: "Public trust and status pages",
     items: [

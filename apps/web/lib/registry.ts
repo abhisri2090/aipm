@@ -76,6 +76,33 @@ export function isLocalDevSite(siteUrl: string = SITE_URL): boolean {
 }
 
 export const CLI_INSTALL_COMMAND = "npm install -g @aipm-registry/cli";
+export const CLI_VERSION = "0.2.12";
+export const CLI_RELEASE_TAG = `cli-v${CLI_VERSION}`;
+export const CLI_RELEASE_URL = `https://github.com/abhisri2090/aipm/releases/tag/${CLI_RELEASE_TAG}`;
+export const CLI_RELEASE_DOWNLOAD_URL = `https://github.com/abhisri2090/aipm/releases/download/${CLI_RELEASE_TAG}`;
+export const CLI_INSTALL_SCRIPT_COMMAND = `curl -fsSL ${CLI_RELEASE_DOWNLOAD_URL}/install.sh | sh`;
+export const CLI_WINDOWS_INSTALL_COMMAND = `irm ${CLI_RELEASE_DOWNLOAD_URL}/install.ps1 | iex`;
+export const CLI_HOMEBREW_COMMAND = `brew install ${CLI_RELEASE_DOWNLOAD_URL}/aipm.rb`;
+export const CLI_SCOOP_COMMAND = `scoop install ${CLI_RELEASE_DOWNLOAD_URL}/aipm.json`;
+
+export const CLI_INSTALL_OPTIONS = [
+  {
+    label: "npm",
+    code: `${CLI_INSTALL_COMMAND}\naipm --version`,
+  },
+  {
+    label: "macOS/Linux standalone",
+    code: `${CLI_INSTALL_SCRIPT_COMMAND}\naipm --version`,
+  },
+  {
+    label: "Homebrew",
+    code: `${CLI_HOMEBREW_COMMAND}\naipm --version`,
+  },
+  {
+    label: "Windows PowerShell",
+    code: `${CLI_WINDOWS_INSTALL_COMMAND}\naipm --version`,
+  },
+] as const;
 
 export function packagePath(packageName: string, version: string): string {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
