@@ -6,9 +6,11 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const version = process.env.AIPM_CLI_VERSION ?? (await readPackageVersion());
+const releaseRepository = process.env.AIPM_RELEASE_REPOSITORY ?? process.env.GITHUB_REPOSITORY ?? "abhisri2090/aipm";
 const releaseBaseUrl =
   process.env.AIPM_RELEASE_BASE_URL ??
-  `https://github.com/aipm-registry/aipm/releases/download/cli-v${version}`;
+  `https://github.com/${releaseRepository}/releases/download/cli-v${version}`;
+const repositoryUrl = `https://github.com/${releaseRepository}`;
 
 const binaryDir = join(repoRoot, "release", "binaries");
 const releaseDir = join(repoRoot, "release");
@@ -111,13 +113,13 @@ function scoopManifest(shas) {
       },
       bin: [["aipm-windows-x64.exe", "aipm"]],
       checkver: {
-        github: "https://github.com/aipm-registry/aipm",
+        github: repositoryUrl,
         regex: "cli-v([\\\\d.]+)",
       },
       autoupdate: {
         architecture: {
           "64bit": {
-            url: "https://github.com/aipm-registry/aipm/releases/download/cli-v$version/aipm-windows-x64.exe",
+            url: `${repositoryUrl}/releases/download/cli-v$version/aipm-windows-x64.exe`,
           },
         },
       },
@@ -136,7 +138,7 @@ Publisher: AIPM Registry
 PublisherUrl: https://aipm-registry.com
 PackageName: AIPM
 License: Apache-2.0
-LicenseUrl: https://github.com/aipm-registry/aipm/blob/main/LICENSE
+LicenseUrl: ${repositoryUrl}/blob/main/LICENSE
 ShortDescription: AI package manager for installing project-ready AI skills.
 Moniker: aipm
 Tags:
@@ -161,7 +163,7 @@ function installSh(shas) {
 set -eu
 
 version="\${AIPM_VERSION:-${version}}"
-base_url="\${AIPM_RELEASE_BASE_URL:-https://github.com/aipm-registry/aipm/releases/download/cli-v\${version}}"
+base_url="\${AIPM_RELEASE_BASE_URL:-${repositoryUrl}/releases/download/cli-v\${version}}"
 install_dir="\${AIPM_INSTALL_DIR:-/usr/local/bin}"
 
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -193,7 +195,7 @@ function installPs1(shas) {
   return `$Version = $env:AIPM_VERSION
 if (-not $Version) { $Version = "${version}" }
 $BaseUrl = $env:AIPM_RELEASE_BASE_URL
-if (-not $BaseUrl) { $BaseUrl = "https://github.com/aipm-registry/aipm/releases/download/cli-v$Version" }
+if (-not $BaseUrl) { $BaseUrl = "${repositoryUrl}/releases/download/cli-v$Version" }
 $InstallDir = $env:AIPM_INSTALL_DIR
 if (-not $InstallDir) { $InstallDir = Join-Path $env:LOCALAPPDATA "AIPM\\\\bin" }
 
