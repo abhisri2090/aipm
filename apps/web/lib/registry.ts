@@ -88,18 +88,22 @@ export const CLI_SCOOP_COMMAND = `scoop install ${CLI_RELEASE_DOWNLOAD_URL}/aipm
 export const CLI_INSTALL_OPTIONS = [
   {
     label: "via npm",
+    slug: "via-npm",
     code: CLI_INSTALL_COMMAND,
   },
   {
     label: "via macOS/Linux standalone",
+    slug: "via-macos-linux-standalone",
     code: CLI_INSTALL_SCRIPT_COMMAND,
   },
   {
     label: "via Homebrew",
+    slug: "via-homebrew",
     code: CLI_HOMEBREW_COMMAND,
   },
   {
     label: "via Windows PowerShell",
+    slug: "via-windows-powershell",
     code: CLI_WINDOWS_INSTALL_COMMAND,
   },
 ] as const;
@@ -109,9 +113,8 @@ export function packagePath(packageName: string, version: string): string {
   return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
-export function installCommand(pkg: Pick<PackageSummary, "name" | "version" | "targets">): string {
-  const target = pkg.targets.includes("*") ? "*" : (pkg.targets[0] ?? "cursor");
-  return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
+export function installCommand(pkg: Pick<PackageSummary, "name" | "version">): string {
+  return `aipm add ${pkg.name}@${pkg.version}`;
 }
 
 export function displayTargets(targets: string[]): string[] {

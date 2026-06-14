@@ -3,46 +3,38 @@ import Link from "next/link";
 import { CodeBlock } from "../../components/code-block";
 import { DocLayout } from "../../components/doc-layout";
 import {
-  CLI_HOMEBREW_COMMAND,
-  CLI_INSTALL_COMMAND,
-  CLI_INSTALL_SCRIPT_COMMAND,
+  CLI_INSTALL_OPTIONS,
   CLI_RELEASE_URL,
   CLI_SCOOP_COMMAND,
   CLI_VERSION,
-  CLI_WINDOWS_INSTALL_COMMAND,
 } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 type CommandItem = {
   title: string;
+  slug?: string;
   description: string;
   code: string;
   options?: string[];
 };
 
 const installCommands: CommandItem[] = [
-  {
-    title: "via npm",
-    description: "Installs the AIPM CLI from npm for users who already have Node.js and npm.",
-    code: CLI_INSTALL_COMMAND,
-  },
-  {
-    title: "via macOS/Linux standalone",
-    description: "Downloads the standalone binary and installs it into your local command path.",
-    code: CLI_INSTALL_SCRIPT_COMMAND,
-  },
-  {
-    title: "via Homebrew",
-    description: "Installs the downloadable Homebrew formula directly from the CLI release.",
-    code: CLI_HOMEBREW_COMMAND,
-  },
-  {
-    title: "via Windows PowerShell",
-    description: "Downloads the Windows installer script and installs aipm.exe.",
-    code: CLI_WINDOWS_INSTALL_COMMAND,
-  },
+  ...CLI_INSTALL_OPTIONS.map((option) => ({
+    title: option.label,
+    slug: option.slug,
+    description:
+      option.slug === "via-npm"
+        ? "Installs the AIPM CLI from npm for users who already have Node.js and npm."
+        : option.slug === "via-macos-linux-standalone"
+          ? "Downloads the standalone binary and installs it into your local command path."
+          : option.slug === "via-homebrew"
+            ? "Installs the downloadable Homebrew formula directly from the CLI release."
+            : "Downloads the Windows installer script and installs aipm.exe.",
+    code: option.code,
+  })),
   {
     title: "via Scoop",
+    slug: "via-scoop",
     description: "Installs from the downloadable Scoop manifest attached to the CLI release.",
     code: CLI_SCOOP_COMMAND,
   },
@@ -225,7 +217,11 @@ function CommandSection({ title, commands }: { title: string; commands: CommandI
         {title}
       </h2>
       {commands.map((command) => (
-        <article className={cards.exampleCard} key={command.title}>
+        <article
+          className={cards.exampleCard}
+          id={command.slug}
+          key={command.title}
+        >
           <h3>{command.title}</h3>
           <p>{command.description}</p>
           <CodeBlock code={command.code} />

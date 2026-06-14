@@ -12,11 +12,14 @@
 }
 
 .guideGrid,
-.steps,
 .exampleGrid,
 .practiceGrid,
 .popularGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.steps {
+  grid-template-columns: 1fr;
 }
 
 .exampleGrid {
@@ -189,12 +192,35 @@
   overflow-wrap: anywhere;
 }
 
+.stepCard {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.stepHeading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepHeading h3 {
+  margin: 0;
+}
+
+.stepInstallMethods {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .stepNumber {
   display: grid;
   place-items: center;
   width: 32px;
   height: 32px;
-  margin-bottom: 14px;
+  flex-shrink: 0;
   border-radius: 999px;
   background: var(--text);
   color: var(--bg);
@@ -362,21 +388,50 @@
 }
 
 .resultCard {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
   align-items: start;
   padding: 22px;
+  cursor: pointer;
 }
 
-.resultCard h3 a {
-  text-decoration: none;
+.resultCardOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 8px;
+}
+
+.resultCardBody {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.resultCardBody h3 {
+  margin: 0 0 8px;
+}
+
+.claimLine {
+  margin: 12px 0 0;
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.claimLine a {
+  pointer-events: auto;
 }
 
 .cardActions {
+  position: relative;
+  z-index: 1;
   display: grid;
   justify-items: end;
   gap: 10px;
+  pointer-events: auto;
 }
 
 .meta {

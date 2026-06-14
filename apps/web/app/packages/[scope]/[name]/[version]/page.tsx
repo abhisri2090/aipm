@@ -1,4 +1,4 @@
-import { shell, cards, docs, dash, cn } from "../../../../../lib/page-styles";
+import { shell, cards, dash, cn } from "../../../../../lib/page-styles";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CodeBlock } from "../../../../../components/code-block";
@@ -189,10 +189,10 @@ export default async function PackagePage({ params }: PackagePageProps) {
       />
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>AIPM package</p>
-        <h1>
+        <h1>{summary.description}</h1>
+        <p className={shell.lede}>
           {summary.name}@{summary.version}
-        </h1>
-        <p className={shell.lede}>{summary.description}</p>
+        </p>
         {isUnverifiedImportedPackage(summary) ? (
           <div className={shell.actions}>
             {summary.import?.sourceUrl ? (
@@ -215,13 +215,14 @@ export default async function PackagePage({ params }: PackagePageProps) {
             <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
           </p>
           <CodeBlock code={CLI_INSTALL_COMMAND} />
-          <CodeBlock code={`aipm init\n${command}`} />
+          <CodeBlock code="aipm init" />
+          <CodeBlock code={command} />
         </article>
 
         <aside className={cn(shell.panel, cards.stepCard)}>
           <h2>Package details</h2>
-          <dl className={docs.definitionList}>
-            <div>
+          <dl className={shell.packageDetailList}>
+            <div className={shell.packageDetailItem}>
               <dt>Publisher</dt>
               <dd>
                 {summary.publisher
@@ -229,41 +230,41 @@ export default async function PackagePage({ params }: PackagePageProps) {
                   : "Unavailable"}
               </dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Package</dt>
               <dd>{summary.name}</dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Version</dt>
               <dd>{summary.version}</dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Targets</dt>
               <dd>{displayTargets(summary.targets).join(", ")}</dd>
             </div>
             {summary.import?.imported ? (
-              <div>
+              <div className={shell.packageDetailItem}>
                 <dt>Import status</dt>
                 <dd>{summary.publisher?.user.verified === false ? "Imported · Unverified" : "Imported"}</dd>
               </div>
             ) : null}
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>License</dt>
               <dd>{summary.license ?? "Not specified"}</dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Size</dt>
               <dd>{formatBytes(summary.sizeBytes)}</dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Integrity</dt>
               <dd title={summary.integrity}>{shortIntegrity(summary.integrity)}</dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Published</dt>
               <dd>{new Date(summary.createdAt).toLocaleString()}</dd>
             </div>
-            <div>
+            <div className={shell.packageDetailItem}>
               <dt>Entry</dt>
               <dd>{pkg.manifest.entry ?? "Not specified"}</dd>
             </div>

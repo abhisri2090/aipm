@@ -2,7 +2,7 @@ import { shell, cards, home, cn } from "../lib/page-styles";
 import Link from "next/link";
 import { CodeBlock } from "../components/code-block";
 import { RegistrySearch } from "../components/registry-search";
-import { CLI_INSTALL_OPTIONS, CLI_RELEASE_URL, CLI_VERSION } from "../lib/registry";
+import { CLI_INSTALL_OPTIONS } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
 export const metadata = pageMetadata({
@@ -71,22 +71,37 @@ export default async function HomePage() {
 
         <div className={cards.steps}>
           <article className={cards.stepCard}>
-            <span className={cards.stepNumber}>1</span>
-            <h3>Install the CLI</h3>
-            <p>Latest verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.</p>
+            <div className={cards.stepHeading}>
+              <span className={cards.stepNumber}>1</span>
+              <h3>Install the CLI</h3>
+            </div>
             <CodeBlock code={CLI_INSTALL_OPTIONS[0].code} />
+            <p className={cards.stepInstallMethods}>
+              {CLI_INSTALL_OPTIONS.map((option, index) => (
+                <span key={option.slug}>
+                  {index > 0 ? " · " : null}
+                  <Link className={shell.textLink} href={`/commands#${option.slug}`}>
+                    {option.label}
+                  </Link>
+                </span>
+              ))}
+            </p>
           </article>
           <article className={cards.stepCard}>
-            <span className={cards.stepNumber}>2</span>
-            <h3>Initialize your project</h3>
+            <div className={cards.stepHeading}>
+              <span className={cards.stepNumber}>2</span>
+              <h3>Initialize your project</h3>
+            </div>
             <p>Create an AIPM config file in the current project.</p>
             <CodeBlock code="aipm init" />
           </article>
           <article className={cards.stepCard}>
-            <span className={cards.stepNumber}>3</span>
-            <h3>Add a skill</h3>
+            <div className={cards.stepHeading}>
+              <span className={cards.stepNumber}>3</span>
+              <h3>Add a skill</h3>
+            </div>
             <p>Install one package version into the selected AI tool target.</p>
-            <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
+            <CodeBlock code="aipm add <ai_package_name>" />
           </article>
         </div>
       </section>

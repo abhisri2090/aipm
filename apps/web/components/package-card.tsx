@@ -7,11 +7,9 @@ import {
   installCommand,
   isUnverifiedImportedPackage,
   packagePath,
-  shortIntegrity,
   type PackageSummary,
 } from "../lib/registry";
 import cards from "../app/cards.module.css";
-import shell from "../app/page-shell.module.css";
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en", {
@@ -22,20 +20,16 @@ function formatDate(value: string): string {
 
 export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; compact?: boolean }) {
   const command = installCommand(pkg);
+  const skillPath = packagePath(pkg.name, pkg.version);
 
   return (
     <article className={cards.resultCard}>
-      <div>
-        <h3>
-          <Link href={packagePath(pkg.name, pkg.version)}>
-            {pkg.name}@{pkg.version}
-          </Link>
-        </h3>
-        <p>{pkg.description}</p>
+      <Link href={skillPath} className={cards.resultCardOverlay} aria-label={`View ${pkg.description}`} />
+      <div className={cards.resultCardBody}>
+        <h3>{pkg.description}</h3>
         {pkg.publisher ? (
           <p className={cards.publisherLine}>
-            Published by {pkg.publisher.user.name ?? `@${pkg.publisher.user.githubLogin}`} in @
-            {pkg.publisher.org.slug}
+            Published by {pkg.publisher.user.name ?? `@${pkg.publisher.user.githubLogin}`}
           </p>
         ) : (
           <p className={cards.publisherLine}>Publisher identity unavailable</p>
@@ -55,7 +49,7 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
           <span className={cards.pill}>{pkg.license ?? "No license"}</span>
         </div>
         {!compact && isUnverifiedImportedPackage(pkg) ? (
-          <p className={cards.publisherLine}>
+          <p className={cards.claimLine}>
             {pkg.import?.sourceUrl ? (
               <>
                 Imported from{" "}
@@ -68,15 +62,9 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
             <a href={GITHUB_LOGIN_URL}>Claim this skill</a>
           </p>
         ) : null}
-        {!compact ? <p className={cards.packageIntegrity}>Integrity {shortIntegrity(pkg.integrity)}</p> : null}
       </div>
       <div className={cards.cardActions}>
         <CopyButton value={command} />
-        {!compact ? (
-          <Link className={shell.textLink} href={packagePath(pkg.name, pkg.version)}>
-            Details
-          </Link>
-        ) : null}
       </div>
     </article>
   );

@@ -32,7 +32,7 @@ export default function UsePage() {
           <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
         </p>
         {CLI_INSTALL_OPTIONS.map((option) => (
-          <section key={option.label}>
+          <section key={option.label} id={option.slug}>
             <h3 className={docs.cliInstallVia}>{option.label}</h3>
             <CodeBlock code={option.code} />
           </section>
