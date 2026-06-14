@@ -11,11 +11,11 @@ const outDir = join(repoRoot, "release", "binaries");
 const commandTimeoutMs = Number(process.env.AIPM_CLI_BINARY_TIMEOUT_MS ?? 20 * 60 * 1000);
 
 const releaseTargets = [
-  { pkg: "node20-macos-arm64", asset: "aipm-darwin-arm64", executable: "aipm-darwin-arm64" },
-  { pkg: "node20-macos-x64", asset: "aipm-darwin-x64", executable: "aipm-darwin-x64" },
-  { pkg: "node20-linux-x64", asset: "aipm-linux-x64", executable: "aipm-linux-x64" },
-  { pkg: "node20-linux-arm64", asset: "aipm-linux-arm64", executable: "aipm-linux-arm64" },
-  { pkg: "node20-win-x64", asset: "aipm-windows-x64.exe", executable: "aipm-windows-x64.exe" },
+  { pkg: "node22-macos-arm64", asset: "aipm-darwin-arm64", executable: "aipm-darwin-arm64" },
+  { pkg: "node22-macos-x64", asset: "aipm-darwin-x64", executable: "aipm-darwin-x64" },
+  { pkg: "node22-linux-x64", asset: "aipm-linux-x64", executable: "aipm-linux-x64" },
+  { pkg: "node22-linux-arm64", asset: "aipm-linux-arm64", executable: "aipm-linux-arm64" },
+  { pkg: "node22-win-x64", asset: "aipm-windows-x64.exe", executable: "aipm-windows-x64.exe" },
 ];
 
 const targets =

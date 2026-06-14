@@ -19,19 +19,19 @@ jobs:
       matrix:
         include:
           - os: macos-14
-            target: node20-macos-arm64
+            target: node22-macos-arm64
             asset: aipm-darwin-arm64
           - os: macos-13
-            target: node20-macos-x64
+            target: node22-macos-x64
             asset: aipm-darwin-x64
           - os: ubuntu-24.04
-            target: node20-linux-x64
+            target: node22-linux-x64
             asset: aipm-linux-x64
           - os: ubuntu-24.04-arm
-            target: node20-linux-arm64
+            target: node22-linux-arm64
             asset: aipm-linux-arm64
           - os: windows-2022
-            target: node20-win-x64
+            target: node22-win-x64
             asset: aipm-windows-x64.exe
     runs-on: ${{ matrix.os }}
     steps:
@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
@@ -79,7 +79,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
