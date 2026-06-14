@@ -21,7 +21,7 @@ jobs:
           - os: macos-14
             target: node22-macos-arm64
             asset: aipm-darwin-arm64
-          - os: macos-13
+          - os: macos-15-intel
             target: node22-macos-x64
             asset: aipm-darwin-x64
           - os: ubuntu-24.04
