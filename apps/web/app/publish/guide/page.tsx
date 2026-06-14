@@ -39,9 +39,13 @@ export default function PublishPage() {
         {CLI_INSTALL_OPTIONS.map((option) => (
           <section key={option.label}>
             <h3>{option.label}</h3>
-            <CodeBlock code={`${option.code}\naipm doctor # (optional)`} />
+            <CodeBlock code={option.code} />
           </section>
         ))}
+
+        <h2>Check the install</h2>
+        <p>After installing, confirm the command is available before creating or publishing a skill.</p>
+        <CodeBlock code={`aipm --version\naipm doctor # (optional)`} />
 
         <h2>1. Create an account and reserve a package name</h2>
         <ol className={docs.flowList}>

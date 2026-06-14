@@ -2,13 +2,13 @@ const registryBase = window.location.origin;
 const cliInstallCommand = "npm install -g @aipm-registry/cli";
 const cliReleaseDownloadUrl = "https://github.com/abhisri2090/aipm/releases/download/cli-v0.2.12";
 const cliInstallOptions = [
-  "# npm",
+  "# via npm",
   cliInstallCommand,
   "",
-  "# macOS/Linux standalone",
+  "# via macOS/Linux standalone",
   `curl -fsSL ${cliReleaseDownloadUrl}/install.sh | sh`,
   "",
-  "# Windows PowerShell",
+  "# via Windows PowerShell",
   `irm ${cliReleaseDownloadUrl}/install.ps1 | iex`,
 ].join("\n");
 
@@ -264,7 +264,7 @@ async function setupSkillPage() {
 
     title.textContent = `${summary.name}@${summary.version}`;
     description.textContent = summary.description;
-    initCommand.textContent = `${cliInstallOptions}\naipm init`;
+    initCommand.textContent = cliInstallOptions;
     installCommandEl.textContent = installCommand(summary);
     metadata.innerHTML = `
       <div><dt>Package</dt><dd>${escapeHtml(summary.name)}</dd></div>

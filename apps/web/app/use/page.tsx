@@ -33,10 +33,14 @@ export default function UsePage() {
         </p>
         {CLI_INSTALL_OPTIONS.map((option) => (
           <section key={option.label}>
-            <h3>{option.label}</h3>
-            <CodeBlock code={`${option.code}\naipm doctor # (optional)`} />
+            <h3 className={docs.cliInstallVia}>{option.label}</h3>
+            <CodeBlock code={option.code} />
           </section>
         ))}
+
+        <h2>Check the install</h2>
+        <p>After installing, confirm the command is on your PATH and check your local setup.</p>
+        <CodeBlock code={`aipm --version\naipm doctor # (optional)`} />
 
         <h2>Initialize a project</h2>
         <p>This creates aipm.package.json and points it at the public registry.</p>

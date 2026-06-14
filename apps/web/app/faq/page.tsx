@@ -62,7 +62,7 @@ const faqs = [
   ],
   [
     "How do I install the CLI?",
-    `Install AIPM CLI ${CLI_VERSION} with npm (${CLI_INSTALL_COMMAND}), the standalone installer (${CLI_INSTALL_SCRIPT_COMMAND}), Homebrew (${CLI_HOMEBREW_COMMAND}), or Windows PowerShell (${CLI_WINDOWS_INSTALL_COMMAND}). Then run aipm --version and aipm doctor.`,
+    `Install AIPM CLI ${CLI_VERSION} via npm (${CLI_INSTALL_COMMAND}), via macOS/Linux standalone (${CLI_INSTALL_SCRIPT_COMMAND}), via Homebrew (${CLI_HOMEBREW_COMMAND}), or via Windows PowerShell (${CLI_WINDOWS_INSTALL_COMMAND}). Then run aipm --version and aipm doctor.`,
   ],
   [
     "Where are package files stored?",

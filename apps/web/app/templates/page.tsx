@@ -114,7 +114,11 @@ export default function TemplatesPage() {
             Templates are created by the AIPM CLI, so install it before running template commands.
             Current verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
           </p>
-          <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version`} />
+          <CodeBlock code={CLI_INSTALL_COMMAND} />
+        </section>
+        <section>
+          <h2>Check the install</h2>
+          <CodeBlock code="aipm --version" />
         </section>
         <section>
           <h2>After you choose a template</h2>

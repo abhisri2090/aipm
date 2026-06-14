@@ -41,25 +41,25 @@ AIPM is a registry and command line workflow for project-ready AI skills, prompt
 ${CLI_INSTALL_COMMAND}
 \`\`\`
 
-Standalone macOS/Linux installer:
+via macOS/Linux standalone:
 
 \`\`\`sh
 ${CLI_INSTALL_SCRIPT_COMMAND}
 \`\`\`
 
-Homebrew direct formula:
+via Homebrew:
 
 \`\`\`sh
 ${CLI_HOMEBREW_COMMAND}
 \`\`\`
 
-Windows PowerShell:
+via Windows PowerShell:
 
 \`\`\`powershell
 ${CLI_WINDOWS_INSTALL_COMMAND}
 \`\`\`
 
-Scoop direct manifest:
+via Scoop:
 
 \`\`\`powershell
 ${CLI_SCOOP_COMMAND}

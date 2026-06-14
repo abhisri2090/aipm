@@ -251,7 +251,9 @@ export default function ExamplesPage() {
             Install the CLI once, then sign in on the website to create an org and reserve the package name.
             Current verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
           </p>
-          <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm --version`} />
+          <CodeBlock code={CLI_INSTALL_COMMAND} />
+          <h2>Check the install</h2>
+          <CodeBlock code="aipm --version" />
         </section>
       </article>
 

@@ -2237,14 +2237,16 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const canManageMembers = access?.orgRole === "owner" || access?.orgRole === "admin";
 
   const command = useMemo(
-    () => `# Install AIPM CLI ${CLI_VERSION} with npm
+    () => `# Install AIPM CLI ${CLI_VERSION} via npm
 ${CLI_INSTALL_COMMAND}
 
-# Or install the standalone macOS/Linux binary
+# Install AIPM CLI ${CLI_VERSION} via macOS/Linux standalone
 ${CLI_INSTALL_SCRIPT_COMMAND}
 
+# Check the install
 aipm --version
 aipm doctor # (optional)
+
 aipm publish init --name ${packageName} --template code-review
 cd ${packageFolderName(packageName)}
 aipm publish explain # (optional)

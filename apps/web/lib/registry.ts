@@ -87,20 +87,20 @@ export const CLI_SCOOP_COMMAND = `scoop install ${CLI_RELEASE_DOWNLOAD_URL}/aipm
 
 export const CLI_INSTALL_OPTIONS = [
   {
-    label: "npm",
-    code: `${CLI_INSTALL_COMMAND}\naipm --version`,
+    label: "via npm",
+    code: CLI_INSTALL_COMMAND,
   },
   {
-    label: "macOS/Linux standalone",
-    code: `${CLI_INSTALL_SCRIPT_COMMAND}\naipm --version`,
+    label: "via macOS/Linux standalone",
+    code: CLI_INSTALL_SCRIPT_COMMAND,
   },
   {
-    label: "Homebrew",
-    code: `${CLI_HOMEBREW_COMMAND}\naipm --version`,
+    label: "via Homebrew",
+    code: CLI_HOMEBREW_COMMAND,
   },
   {
-    label: "Windows PowerShell",
-    code: `${CLI_WINDOWS_INSTALL_COMMAND}\naipm --version`,
+    label: "via Windows PowerShell",
+    code: CLI_WINDOWS_INSTALL_COMMAND,
   },
 ] as const;
 

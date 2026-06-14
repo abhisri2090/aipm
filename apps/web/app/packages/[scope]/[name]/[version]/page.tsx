@@ -214,7 +214,8 @@ export default async function PackagePage({ params }: PackagePageProps) {
             Install the CLI once, initialize your project, then add this package. Current verified release:{" "}
             <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
           </p>
-          <CodeBlock code={`${CLI_INSTALL_COMMAND}\naipm init\n${command}`} />
+          <CodeBlock code={CLI_INSTALL_COMMAND} />
+          <CodeBlock code={`aipm init\n${command}`} />
         </article>
 
         <aside className={cn(shell.panel, cards.stepCard)}>

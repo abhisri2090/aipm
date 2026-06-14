@@ -29,6 +29,15 @@
   margin-top: 0;
 }
 
+.cliInstallVia {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.35em;
+  margin: 0;
+  white-space: nowrap;
+}
+
 .doc p {
   color: var(--muted);
   line-height: 1.6;

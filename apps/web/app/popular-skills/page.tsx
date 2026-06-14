@@ -266,11 +266,8 @@ export default function PopularSkillsPage() {
         <p className={shell.muted}>
           Install the current verified CLI release first: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
         </p>
-        <CodeBlock
-          code={`${CLI_INSTALL_COMMAND}
-aipm init
-aipm add @aipm-starters/code-review --target cursor --ci`}
-        />
+        <CodeBlock code={CLI_INSTALL_COMMAND} />
+        <CodeBlock code={`aipm init\naipm add @aipm-starters/code-review --target cursor --ci`} />
       </section>
 
       <section className={cards.popularGrid} aria-label="Popular AI skill starter catalog">
