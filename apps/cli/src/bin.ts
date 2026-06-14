@@ -321,7 +321,7 @@ async function initSkill(opts: {
     license: "Apache-2.0",
   });
   if (source) {
-    await copySourceIntoSkillRoot(source, root, opts.from);
+    await copySourceIntoSkillRoot(source, root, source);
   } else {
     await mkdir(root, { recursive: true });
   }
