@@ -13,24 +13,25 @@ env:
 
 jobs:
   build-binary:
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: macos-14
-            target: host
+            target: node20-macos-arm64
             asset: aipm-darwin-arm64
           - os: macos-13
-            target: host
+            target: node20-macos-x64
             asset: aipm-darwin-x64
           - os: ubuntu-24.04
-            target: host
+            target: node20-linux-x64
             asset: aipm-linux-x64
           - os: ubuntu-24.04-arm
-            target: host
+            target: node20-linux-arm64
             asset: aipm-linux-arm64
           - os: windows-2022
-            target: host
+            target: node20-win-x64
             asset: aipm-windows-x64.exe
     runs-on: ${{ matrix.os }}
     steps:
@@ -68,6 +69,7 @@ jobs:
     needs: build-binary
     runs-on: ubuntu-24.04
     environment: production
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 

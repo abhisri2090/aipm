@@ -8,6 +8,7 @@ import { spawn } from "node:child_process";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const cliDir = join(repoRoot, "apps", "cli");
 const outDir = join(repoRoot, "release", "binaries");
+const commandTimeoutMs = Number(process.env.AIPM_CLI_BINARY_TIMEOUT_MS ?? 20 * 60 * 1000);
 
 const releaseTargets = [
   { pkg: "node20-macos-arm64", asset: "aipm-darwin-arm64", executable: "aipm-darwin-arm64" },
@@ -37,17 +38,33 @@ function hostAssetName() {
 
 function run(command, args, options = {}) {
   return new Promise((resolveRun, reject) => {
+    console.log(`$ ${command} ${args.join(" ")}`);
     const child = spawn(command, args, {
       cwd: repoRoot,
       stdio: "inherit",
       shell: process.platform === "win32",
       ...options,
     });
+    const timer =
+      Number.isFinite(commandTimeoutMs) && commandTimeoutMs > 0
+        ? setTimeout(() => {
+            child.kill("SIGTERM");
+            reject(
+              new Error(
+                `${command} ${args.join(" ")} timed out after ${Math.round(commandTimeoutMs / 1000)} seconds`,
+              ),
+            );
+          }, commandTimeoutMs)
+        : null;
     child.on("exit", (code) => {
+      if (timer) clearTimeout(timer);
       if (code === 0) resolveRun();
       else reject(new Error(`${command} ${args.join(" ")} exited with ${code}`));
     });
-    child.on("error", reject);
+    child.on("error", (error) => {
+      if (timer) clearTimeout(timer);
+      reject(error);
+    });
   });
 }
 
@@ -65,6 +82,7 @@ async function main() {
 
   for (const target of targets) {
     const output = join(outDir, target.executable);
+    console.log(`Building ${target.asset} with pkg target ${target.pkg}`);
     await run("pnpm", [
       "exec",
       "pkg",
