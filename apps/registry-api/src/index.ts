@@ -650,6 +650,7 @@ export async function createApp(): Promise<FastifyInstance> {
       if (result.retryAfter) reply.header("Retry-After", String(result.retryAfter));
       return reply.status(result.status).send({ error: result.error });
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { sessionId, sessionExpiresAt, ...body } = result.body;
     setAuthCookie(reply, accountAuth.config, SESSION_COOKIE, sessionId, 30 * 24 * 60 * 60);
     return reply.status(result.status).send(body);
