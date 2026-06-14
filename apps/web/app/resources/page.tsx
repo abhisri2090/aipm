@@ -84,6 +84,11 @@ export default function ResourcesPage() {
       body: "Create a package, reserve a name, get a token, and publish with the CLI.",
     },
     {
+      href: "/commands",
+      title: "CLI Commands",
+      body: "See every install, use, publish, token, and diagnostic command with options.",
+    },
+    {
       href: "/faq",
       title: "Troubleshooting",
       body: "Answers for install, registry, package, token, and publishing issues.",

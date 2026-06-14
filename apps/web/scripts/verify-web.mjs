@@ -47,6 +47,13 @@ const requiredPages = [
   },
   { path: "/use", title: "Use AIPM", h1: "Install AI skills into your project.", jsonLd: false },
   {
+    path: "/commands",
+    title: "AIPM CLI Commands",
+    h1: "Every AIPM command in one place.",
+    jsonLd: false,
+    includes: ["via Homebrew", "aipm publish init", "aipm add @scope/name@1.0.0 --target cursor --ci"],
+  },
+  {
     path: "/targets",
     title: "AIPM Supported Targets",
     h1: "Choose where AIPM should install a skill.",

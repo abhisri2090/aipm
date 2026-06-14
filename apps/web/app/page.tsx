@@ -79,11 +79,13 @@ export default async function HomePage() {
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>2</span>
             <h3>Initialize your project</h3>
+            <p>Create an AIPM config file in the current project.</p>
             <CodeBlock code="aipm init" />
           </article>
           <article className={cards.stepCard}>
             <span className={cards.stepNumber}>3</span>
             <h3>Add a skill</h3>
+            <p>Install one package version into the selected AI tool target.</p>
             <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
           </article>
         </div>

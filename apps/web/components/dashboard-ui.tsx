@@ -1559,6 +1559,7 @@ function TokensContent({ org }: { org: Org }) {
             <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
             <CodeBlock code={token.token} />
             <h3>Push command</h3>
+            <p>Run this inside the staged package folder to publish the current version.</p>
             <CodeBlock code={pushCommand} />
           </section>
         ) : null}
@@ -1567,6 +1568,7 @@ function TokensContent({ org }: { org: Org }) {
       <article className={dash.dashboardPanel}>
         <p className={shell.eyebrow}>CLI flow</p>
         <h2>Publish from terminal</h2>
+        <p className={shell.muted}>Use this sequence after your package folder exists and your files are ready.</p>
         <CodeBlock
           code={`aipm publish add .
 aipm publish validate
@@ -2350,6 +2352,7 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
                 <h2>Publish steps</h2>
               </div>
             </div>
+            <p className={shell.muted}>Copy this flow when preparing and publishing this package from your terminal.</p>
             <CodeBlock code={command} />
           </article>
           <article className={cn(dash.dashboardPanel, dash.tokenPanel)}>
@@ -2382,6 +2385,7 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
                 <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
                 <CodeBlock code={token.token} />
                 <h3>Ready-to-run push command</h3>
+                <p>Run this inside the package folder after staging and validating files.</p>
                 <CodeBlock code={tokenPushCommand} />
               </section>
             ) : null}

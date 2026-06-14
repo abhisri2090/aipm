@@ -21,6 +21,7 @@ AIPM is a registry and command line workflow for project-ready AI skills, prompt
 - Website: ${SITE_URL}
 - Registry search: ${SITE_URL}/registry
 - Use guide: ${SITE_URL}/use
+- CLI commands: ${SITE_URL}/commands
 - Publish guide: ${SITE_URL}/publish
 - Examples: ${SITE_URL}/examples
 - Glossary: ${SITE_URL}/glossary

@@ -15,6 +15,7 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
       { href: "/resources", label: "Documentation home" },
       { href: "/use", label: "Use AIPM" },
       { href: "/publish/guide", label: "Publishing guide" },
+      { href: "/commands", label: "CLI commands" },
     ],
   },
   {

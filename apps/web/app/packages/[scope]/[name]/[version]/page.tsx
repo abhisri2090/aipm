@@ -311,6 +311,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
           {allTargetCommands.map((targetCommand) => (
             <article className={cn(shell.panel, cards.stepCard)} key={targetCommand.target}>
               <h3>{targetCommand.target}</h3>
+              <p>Run this variant when you want to install the package into {targetCommand.target}.</p>
               <CodeBlock code={targetCommand.command} />
             </article>
           ))}

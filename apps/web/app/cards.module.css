@@ -23,6 +23,10 @@
   margin: 4px 0 0;
 }
 
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
 .exampleGrid .exampleCard {
   display: grid;
   align-content: start;

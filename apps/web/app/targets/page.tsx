@@ -92,6 +92,7 @@ export default function TargetsPage() {
                 <dd>{target.writes}</dd>
               </div>
             </dl>
+            <p>Use this command to force installation into the {target.name} target.</p>
             <CodeBlock code={target.command} />
           </article>
         ))}

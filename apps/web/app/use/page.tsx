@@ -54,9 +54,11 @@ export default function UsePage() {
         <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
 
         <h2>List installed skills</h2>
+        <p>Show the packages currently recorded in this project lockfile.</p>
         <CodeBlock code="aipm list" />
 
         <h2>Search and update installed skills</h2>
+        <p>Search finds registry packages; update checks configured packages for newer versions.</p>
         <CodeBlock code={`aipm search sentry\naipm update`} />
 
         <h2>Where files go</h2>

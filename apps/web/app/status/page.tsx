@@ -52,6 +52,7 @@ export default function StatusPage() {
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Check from the command line</h2>
+          <p>Use these curl checks when you want to confirm the API process and its dependencies from a terminal.</p>
           <CodeBlock
             code={`curl https://aipm-registry.com/health
 curl https://aipm-registry.com/ready`}
