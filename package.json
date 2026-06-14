@@ -34,7 +34,7 @@
     "release:cli:pack": "pnpm --filter @aipm-registry/cli build && rm -rf /tmp/aipm-cli-pack && mkdir -p /tmp/aipm-cli-pack && pnpm --dir apps/cli pack --pack-destination /tmp/aipm-cli-pack",
     "release:cli:binaries": "node scripts/build-cli-binaries.mjs",
     "release:cli:templates": "node scripts/render-cli-distribution-templates.mjs",
-    "release:cli:publish": "pnpm --filter @aipm-registry/cli build && pnpm --filter @aipm-registry/cli publish --access public",
+    "release:cli:publish": "pnpm --filter @aipm-registry/cli build && pnpm --filter @aipm-registry/cli publish --access public --no-git-checks",
     "release:check": "node scripts/check-release-plumbing.mjs",
     "release:version-from-tag": "node scripts/set-package-version-from-tag.mjs",
     "cli:link": "pnpm build && npm link --prefix apps/cli",
