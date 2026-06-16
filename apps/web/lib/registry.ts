@@ -42,6 +42,7 @@ export type PackageDetail = {
     targets: string[];
     license?: string;
     entry?: string;
+    usage?: string;
   };
   integrity: string;
   sizeBytes: number;
@@ -113,8 +114,33 @@ export function packagePath(packageName: string, version: string): string {
   return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
-export function installCommand(pkg: Pick<PackageSummary, "name" | "version">): string {
-  return `aipm add ${pkg.name}@${pkg.version}`;
+export function packageShortName(name: string): string {
+  const parts = name.replace(/^@/, "").split("/");
+  return parts[parts.length - 1] ?? name;
+}
+
+export function resolveSkillUsage(options: {
+  name: string;
+  description: string;
+  targets: string[];
+  usage?: string | null;
+}): string {
+  if (options.usage?.trim()) return options.usage.trim();
+
+  const shortName = packageShortName(options.name);
+  const tools = displayTargets(options.targets).filter((target) => target !== "*");
+  const toolHint =
+    tools.length === 1
+      ? `Open ${tools[0] === "cursor" ? "Cursor" : "Claude"} in this project`
+      : tools.length > 1
+        ? "Open Cursor or Claude in this project"
+        : "Open your AI tool in this project";
+
+  return `${toolHint} and ask the assistant to use the ${shortName} skill. For example: "${options.description}".`;
+}
+
+export function installCommand(pkg: Pick<PackageSummary, "name">): string {
+  return `aipm add ${pkg.name}`;
 }
 
 export function displayTargets(targets: string[]): string[] {
@@ -130,10 +156,10 @@ export function isUnverifiedImportedPackage(pkg: Pick<PackageSummary, "import" |
 }
 
 export function installCommandForTarget(
-  pkg: Pick<PackageSummary, "name" | "version">,
+  pkg: Pick<PackageSummary, "name">,
   target: string,
 ): string {
-  return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
+  return `aipm add ${pkg.name} --target ${target} --ci`;
 }
 
 export function formatBytes(bytes: number): string {

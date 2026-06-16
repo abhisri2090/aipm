@@ -127,6 +127,33 @@
   margin-top: 42px;
 }
 
+.detailMain {
+  display: grid;
+  gap: 24px;
+  align-self: start;
+  min-width: 0;
+}
+
+.installPanel {
+  align-self: start;
+}
+
+.installPanel h2,
+.howToUsePanel h2 {
+  margin: 0;
+}
+
+.howToUsePanel {
+  align-self: start;
+}
+
+.usageText {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .packageDetailList {
   display: grid;
   gap: 16px;

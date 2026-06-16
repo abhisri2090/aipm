@@ -97,6 +97,21 @@ export function resolveDescription(options: {
   return options.fallbackName;
 }
 
+export function resolveUsage(options: {
+  frontmatter: Record<string, string>;
+  entryContent?: string;
+}): string | undefined {
+  if (options.frontmatter.usage?.trim()) return options.frontmatter.usage.trim();
+  if (!options.entryContent) return undefined;
+
+  let body = options.entryContent.replace(/^---[\s\S]*?---\r?\n?/, "").trim();
+  body = body.replace(/^#\s+[^\n]+\n+/, "").trim();
+  const paragraph = body.split(/\n\s*\n/).find((block) => block.trim())?.trim();
+  if (!paragraph) return undefined;
+  if (paragraph.length <= 500) return paragraph;
+  return `${paragraph.slice(0, 497).trimEnd()}...`;
+}
+
 export function computeContentHash(files: Record<string, string>): string {
   const entries = Object.entries(files).sort(([a], [b]) => a.localeCompare(b));
   const hash = createHash("sha256");
@@ -268,6 +283,10 @@ export async function importSkillFromGitHubUrl(options: {
     readmeContent,
     fallbackName: folderName,
   });
+  const usage = resolveUsage({
+    frontmatter,
+    entryContent: files[entry],
+  });
   const license = detectLicense(files, repoMeta.license);
   const contentHash = computeContentHash(files);
 
@@ -306,6 +325,7 @@ export async function importSkillFromGitHubUrl(options: {
           entry,
           targets: ["*"],
           license,
+          ...(usage ? { usage } : {}),
         },
         null,
         2,

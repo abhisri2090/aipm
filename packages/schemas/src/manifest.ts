@@ -24,6 +24,7 @@ export const PackageManifestSchema = z.object({
   entry: z.string().min(1),
   targets: z.array(AiToolSchema).min(1),
   license: z.string().optional(),
+  usage: z.string().min(1).optional(),
 });
 
 export type PackageManifest = z.infer<typeof PackageManifestSchema>;

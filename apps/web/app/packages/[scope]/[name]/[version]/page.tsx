@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 import { CodeBlock } from "../../../../../components/code-block";
 import {
   CLI_INSTALL_COMMAND,
-  CLI_RELEASE_URL,
-  CLI_VERSION,
   displayTargets,
   formatBytes,
   getPackage,
@@ -14,6 +12,8 @@ import {
   installCommandForTarget,
   isUnverifiedImportedPackage,
   packagePath,
+  packageShortName,
+  resolveSkillUsage,
   SITE_URL,
   shortIntegrity,
   type PackageSummary,
@@ -89,11 +89,6 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
   };
 }
 
-function packageShortName(name: string): string {
-  const parts = name.replace(/^@/, "").split("/");
-  return parts[parts.length - 1] ?? name;
-}
-
 export default async function PackagePage({ params }: PackagePageProps) {
   const { scope, name, version } = await params;
   const packageName = `@${decodeURIComponent(scope)}/${decodeURIComponent(name)}`;
@@ -102,6 +97,12 @@ export default async function PackagePage({ params }: PackagePageProps) {
 
   const summary = toSummary(pkg);
   const command = installCommand(summary);
+  const usage = resolveSkillUsage({
+    name: summary.name,
+    description: summary.description,
+    targets: summary.targets,
+    usage: pkg.manifest.usage,
+  });
   const allTargetCommands = displayTargets(summary.targets)
     .filter((target) => target !== "*")
     .map((target) => ({
@@ -211,16 +212,17 @@ export default async function PackagePage({ params }: PackagePageProps) {
       </section>
 
       <section className={shell.detailGrid}>
-        <article className={cn(shell.panel, cards.stepCard)}>
-          <h2>Install this skill</h2>
-          <p className={shell.muted}>
-            Install the CLI once, initialize your project, then add this package. Current verified release:{" "}
-            <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
-          </p>
-          <CodeBlock code={CLI_INSTALL_COMMAND} />
-          <CodeBlock code="aipm init" />
-          <CodeBlock code={command} />
-        </article>
+        <div className={shell.detailMain}>
+          <article className={cn(shell.panel, cards.stepCard, shell.installPanel)}>
+            <h2>Install Skill</h2>
+            <CodeBlock code={command} />
+          </article>
+
+          <article className={cn(shell.panel, cards.stepCard, shell.howToUsePanel)}>
+            <h2>How to use</h2>
+            <p className={shell.usageText}>{usage}</p>
+          </article>
+        </div>
 
         <aside className={cn(shell.panel, cards.stepCard)}>
           <h2>Package details</h2>

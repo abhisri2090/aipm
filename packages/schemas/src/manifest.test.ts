@@ -30,4 +30,18 @@ describe("PackageManifestSchema", () => {
     });
     expect(manifest.targets).toEqual(["*"]);
   });
+
+  it("parses optional usage guidance", () => {
+    const manifest = PackageManifestSchema.parse({
+      schemaVersion: "0.1",
+      name: "@team/sample",
+      version: "1.0.0",
+      type: "skill",
+      description: "test",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+      usage: "Ask the assistant to review your diff before opening a PR.",
+    });
+    expect(manifest.usage).toBe("Ask the assistant to review your diff before opening a PR.");
+  });
 });

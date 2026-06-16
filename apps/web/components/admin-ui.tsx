@@ -62,10 +62,11 @@ export function AdminPanel() {
   const [unavailable, setUnavailable] = useState<string | null>(null);
 
   async function api<T>(path: string, init?: RequestInit): Promise<T> {
+    const hasBody = init?.body != null && init.body !== "";
     const response = await fetchWithTimeout(path, {
       ...init,
       headers: {
-        "content-type": "application/json",
+        ...(hasBody ? { "content-type": "application/json" } : {}),
         ...init?.headers,
       },
     });
@@ -74,7 +75,10 @@ export function AdminPanel() {
       const body = (await response.json().catch(() => ({}))) as { error?: string };
       throw new Error(body.error ?? `Request failed: ${response.status}`);
     }
-    return response.json() as Promise<T>;
+    if (response.status === 204) return undefined as T;
+    const text = await response.text();
+    if (!text) return undefined as T;
+    return JSON.parse(text) as T;
   }
 
   const loadStats = useCallback(async () => {

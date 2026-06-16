@@ -5,6 +5,7 @@ import {
   nextPatchVersion,
   parseGitHubFolderUrl,
   resolveImportVersion,
+  resolveUsage,
 } from "./import-from-github.js";
 
 describe("import-from-github helpers", () => {
@@ -47,5 +48,21 @@ describe("import-from-github helpers", () => {
     const hashA = computeContentHash({ "SKILL.md": "hello", LICENSE: "Apache" });
     const hashB = computeContentHash({ LICENSE: "Apache", "SKILL.md": "hello" });
     expect(hashA).toBe(hashB);
+  });
+
+  it("prefers usage frontmatter and falls back to the first skill paragraph", () => {
+    expect(
+      resolveUsage({
+        frontmatter: { usage: "Ask the assistant to grill your plan." },
+        entryContent: "# Grill me\n\nOther text.",
+      }),
+    ).toBe("Ask the assistant to grill your plan.");
+
+    expect(
+      resolveUsage({
+        frontmatter: {},
+        entryContent: "---\ndescription: Grill me\n---\n# Grill me\n\nStress-test your idea before you build it.",
+      }),
+    ).toBe("Stress-test your idea before you build it.");
   });
 });

@@ -143,12 +143,13 @@ function publicApiError(error: unknown): string {
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 6000);
+  const hasBody = init?.body != null && init.body !== "";
   const response = await fetch(path, {
     ...init,
     credentials: "include",
     signal: init?.signal ?? controller.signal,
     headers: {
-      "content-type": "application/json",
+      ...(hasBody ? { "content-type": "application/json" } : {}),
       ...init?.headers,
     },
   }).finally(() => window.clearTimeout(timeout));
@@ -157,7 +158,10 @@ async function api<T>(path: string, init?: RequestInit): Promise<T> {
     if (response.status === 401) throw new Error("Login required");
     throw new Error(error.error ?? `Request failed: ${response.status}`);
   }
-  return response.json() as Promise<T>;
+  if (response.status === 204) return undefined as T;
+  const text = await response.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 function shortDate(value: string): string {
@@ -2196,6 +2200,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const [deprecatedAt, setDeprecatedAt] = useState<string | null>(null);
   const [deprecationMessage, setDeprecationMessage] = useState("");
   const [packageStatus, setPackageStatus] = useState("");
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams({ q: packageName, limit: "20" });
@@ -2515,6 +2520,38 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
               </div>
             )}
           </article>
+          {canManageMembers ? (
+            <article className={dash.dashboardPanel}>
+              <p className={shell.eyebrow}>Danger zone</p>
+              <h2>Delete skill</h2>
+              <p className={shell.muted}>
+                Permanently removes all published versions, blobs, and the reserved name. This cannot be undone.
+              </p>
+              <label htmlFor="delete-package-name">Type {packageName} to confirm</label>
+              <input
+                id="delete-package-name"
+                value={deleteConfirmName}
+                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                placeholder={packageName}
+              />
+              <button
+                className={dash.secondaryButton}
+                disabled={deleteConfirmName !== packageName}
+                type="button"
+                onClick={async () => {
+                  setPackageStatus("");
+                  try {
+                    await api<void>(`/v1/packages/${encodeURIComponent(packageName)}`, { method: "DELETE" });
+                    window.location.href = "/dashboard/packages";
+                  } catch (err) {
+                    setPackageStatus((err as Error).message);
+                  }
+                }}
+              >
+                Delete skill
+              </button>
+            </article>
+          ) : null}
         </section>
       )}
     </DashboardShell>
