@@ -140,9 +140,11 @@ function publicApiError(error: unknown): string {
   return "AIPM API is unavailable.";
 }
 
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
+const EMAIL_API_TIMEOUT_MS = 30_000;
+
+async function api<T>(path: string, init?: RequestInit, options?: { timeoutMs?: number }): Promise<T> {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 6000);
+  const timeout = window.setTimeout(() => controller.abort(), options?.timeoutMs ?? 6000);
   const hasBody = init?.body != null && init.body !== "";
   const response = await fetch(path, {
     ...init,
@@ -470,6 +472,7 @@ export function LoginPanel() {
       const result = await api<{ ok: boolean; devCode?: string; emailSent: boolean }>(
         "/v1/auth/email/request-code",
         { method: "POST", body: JSON.stringify({ email }) },
+        { timeoutMs: EMAIL_API_TIMEOUT_MS },
       );
       setEmailStep("code_sent");
       setResendAvailableAt(Date.now() + 60_000);
@@ -492,10 +495,11 @@ export function LoginPanel() {
     setEmailBusy(true);
     setEmailError(null);
     try {
-      await api("/v1/auth/email/verify-code", {
-        method: "POST",
-        body: JSON.stringify({ email, code }),
-      });
+      await api(
+        "/v1/auth/email/verify-code",
+        { method: "POST", body: JSON.stringify({ email, code }) },
+        { timeoutMs: EMAIL_API_TIMEOUT_MS },
+      );
       window.location.href = consumeAuthReturnPath();
     } catch (error) {
       setEmailError(publicApiError(error));
@@ -2797,6 +2801,7 @@ function EmailVerificationPanel({ me }: { me: Me }) {
               const result = await api<{ expiresAt: string; emailSent: boolean; devCode?: string }>(
                 "/v1/me/email/verify-request",
                 { method: "POST", body: JSON.stringify({ email }) },
+                { timeoutMs: EMAIL_API_TIMEOUT_MS },
               );
               setCodeRequested(true);
               setStatus(

@@ -203,7 +203,7 @@ export function createEmailSender(config: EmailConfig = resolveEmailConfig()): E
   return {
     isEnabled: true,
     async sendInviteEmail(input) {
-      const poller = await client.beginSend({
+      await client.beginSend({
         senderAddress,
         recipients: {
           to: [{ address: input.to }],
@@ -214,11 +214,10 @@ export function createEmailSender(config: EmailConfig = resolveEmailConfig()): E
           html: htmlInvite(input),
         },
       });
-      await poller.pollUntilDone();
       return { sent: true, provider: "azure" };
     },
     async sendVerificationEmail(input) {
-      const poller = await client.beginSend({
+      await client.beginSend({
         senderAddress,
         recipients: {
           to: [{ address: input.to }],
@@ -229,11 +228,10 @@ export function createEmailSender(config: EmailConfig = resolveEmailConfig()): E
           html: htmlVerification(input),
         },
       });
-      await poller.pollUntilDone();
       return { sent: true, provider: "azure" };
     },
     async sendAuthCodeEmail(input) {
-      const poller = await client.beginSend({
+      await client.beginSend({
         senderAddress,
         recipients: {
           to: [{ address: input.to }],
@@ -244,7 +242,6 @@ export function createEmailSender(config: EmailConfig = resolveEmailConfig()): E
           html: htmlAuthCode(input),
         },
       });
-      await poller.pollUntilDone();
       return { sent: true, provider: "azure" };
     },
   };
