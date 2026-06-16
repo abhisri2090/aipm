@@ -129,7 +129,6 @@ cat <<EOF
 Azure email service is ready.
 
 GitHub/Vercel/VM env:
-  AIPM_EMAIL_PROVIDER=azure
   AIPM_EMAIL_FROM_NAME=${SENDER_DISPLAY_NAME}
 EOF
 
@@ -151,5 +150,5 @@ Secret:
 Recommended:
   Store the connection string as Key Vault secret 'aipm-email-connection-string'.
   Store the sender address as Key Vault secret 'aipm-email-sender-address'.
-  Set GitHub environment variable AIPM_EMAIL_PROVIDER=azure.
+  Email turns on automatically when both secrets are present on the VM.
 EOF

@@ -40,16 +40,18 @@ export type EmailSender = {
 };
 
 export function resolveEmailConfig(env: NodeJS.ProcessEnv = process.env): EmailConfig {
-  const provider = (env.AIPM_EMAIL_PROVIDER?.trim().toLowerCase() || "disabled") as EmailProvider;
-  if (provider !== "azure") {
-    return { provider: "disabled", senderName: env.AIPM_EMAIL_FROM_NAME ?? "AIPM Registry" };
+  const senderName = env.AIPM_EMAIL_FROM_NAME ?? "AIPM Registry";
+  const connectionString = env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING?.trim();
+  const senderAddress = env.AIPM_EMAIL_SENDER_ADDRESS?.trim();
+  if (connectionString && senderAddress) {
+    return {
+      provider: "azure",
+      connectionString,
+      senderAddress,
+      senderName,
+    };
   }
-  return {
-    provider,
-    connectionString: env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING,
-    senderAddress: env.AIPM_EMAIL_SENDER_ADDRESS,
-    senderName: env.AIPM_EMAIL_FROM_NAME ?? "AIPM Registry",
-  };
+  return { provider: "disabled", senderName };
 }
 
 function assertAzureEmailConfig(config: EmailConfig): asserts config is EmailConfig & {

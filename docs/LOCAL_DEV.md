@@ -61,9 +61,9 @@ This is disabled in production and blocked when `NODE_ENV=production`.
 
 ### Email OTP sign-in (local, no Azure)
 
-When `AIPM_DEV_AUTH=1` and email is disabled (`AIPM_EMAIL_PROVIDER` unset or
-`disabled`), the login page also shows email sign-in. Request a code, then use
-the inline `devCode` from the API response:
+When `AIPM_DEV_AUTH=1` and Azure email credentials are not configured,
+the login page still shows email sign-in. Request a code, then use the inline
+`devCode` from the API response:
 
 ```bash
 curl -s -X POST http://127.0.0.1:8080/v1/auth/email/request-code \

@@ -33,7 +33,6 @@ type Me = {
 type AuthConfig = {
   devAuth: boolean;
   githubAuth: boolean;
-  emailAuth: boolean;
 };
 
 const AUTH_RETURN_KEY = "aipm-auth-return";
@@ -437,7 +436,7 @@ export function LoginPanel() {
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setAuthConfig({ devAuth: false, githubAuth: false, emailAuth: false });
+          setAuthConfig({ devAuth: false, githubAuth: false });
           setConfigError(publicApiError(error));
         }
       });
@@ -460,8 +459,7 @@ export function LoginPanel() {
 
   const showDevLogin = localDev || authConfig?.devAuth === true;
   const showGithubLogin = authConfig?.githubAuth === true;
-  const showEmailLogin = authConfig?.emailAuth === true || (localDev && authConfig?.devAuth === true);
-  const showAuthDivider = (showGithubLogin || showDevLogin) && showEmailLogin;
+  const showAuthDivider = showGithubLogin || showDevLogin;
 
   async function requestEmailCode() {
     setEmailBusy(true);
@@ -548,8 +546,7 @@ export function LoginPanel() {
               </a>
             ) : null}
             {showAuthDivider ? <p className={dash.loginOrDivider}>or</p> : null}
-            {showEmailLogin ? (
-              <div className={dash.emailAuthBlock}>
+            <div className={dash.emailAuthBlock}>
                 {emailStep === "idle" ? (
                   <form
                     className={dash.compactForm}
@@ -620,11 +617,7 @@ export function LoginPanel() {
                 )}
                 {emailError ? <p className={shell.notice}>{emailError}</p> : null}
                 {emailNotice && !emailError ? <p className={shell.muted}>{emailNotice}</p> : null}
-              </div>
-            ) : null}
-            {!showDevLogin && !showGithubLogin && !showEmailLogin && authConfig !== null ? (
-              <p className={shell.muted}>Publisher sign-in is not configured on this API.</p>
-            ) : null}
+            </div>
             {configError && localDev ? (
               <p className={shell.muted}>
                 {configError} Start the registry API with <code>pnpm local:api</code>, then retry.

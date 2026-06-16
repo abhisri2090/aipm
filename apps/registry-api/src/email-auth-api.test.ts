@@ -13,7 +13,8 @@ beforeEach(async () => {
   process.env.DATABASE_URL = databaseUrl;
   process.env.AIPM_DEV_AUTH = "1";
   process.env.NODE_ENV = "development";
-  delete process.env.AIPM_EMAIL_PROVIDER;
+  delete process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING;
+  delete process.env.AIPM_EMAIL_SENDER_ADDRESS;
   app = await createApp();
 });
 
@@ -24,7 +25,8 @@ afterEach(async () => {
   else delete process.env.DATABASE_URL;
   delete process.env.AIPM_DEV_AUTH;
   delete process.env.NODE_ENV;
-  delete process.env.AIPM_EMAIL_PROVIDER;
+  delete process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING;
+  delete process.env.AIPM_EMAIL_SENDER_ADDRESS;
 });
 
 describe.skipIf(!databaseUrl)("email auth API routes", () => {
@@ -66,8 +68,7 @@ describe.skipIf(!databaseUrl)("email auth API routes", () => {
     });
   });
 
-  it("exposes emailAuth in auth config when Azure email is configured", async () => {
-    process.env.AIPM_EMAIL_PROVIDER = "azure";
+  it("exposes emailAuth in auth config when Azure email credentials are present", async () => {
     process.env.AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING =
       "endpoint=https://example.communication.azure.com/;accesskey=fake";
     process.env.AIPM_EMAIL_SENDER_ADDRESS = "noreply@example.com";

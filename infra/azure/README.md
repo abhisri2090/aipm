@@ -72,10 +72,11 @@ AIPM_API_DOMAIN=api.aipm-registry.com
 AIPM_API_URL=https://api.aipm-registry.com
 AIPM_PUBLIC_SITE_URL=https://aipm-registry.com
 AIPM_COOKIE_DOMAIN=.aipm-registry.com
-AIPM_EMAIL_PROVIDER=disabled
-AIPM_EMAIL_SENDER_ADDRESS=<sender-address-if-email-enabled>
 AIPM_EMAIL_FROM_NAME=AIPM Registry
 ```
+
+Email is enabled automatically when the VM loads `aipm-email-connection-string` and
+`aipm-email-sender-address` from Key Vault.
 
 `AZURE_CREDENTIALS` is the JSON credentials object consumed by `azure/login@v2`.
 If Key Vault already stores `aipm-publish-token-sha256`, `AIPM_PUBLISH_TOKEN`
@@ -116,10 +117,12 @@ KEY_VAULT_NAME=<key-vault-name>
 AZURE_STORAGE_CONTAINER=packages
 AIPM_REQUIRE_PUBLISH_TOKEN=true
 AIPM_PUBLISH_TOKEN_SHA256=<sha256-hex>
-AIPM_EMAIL_PROVIDER=disabled|azure
-AIPM_EMAIL_SENDER_ADDRESS=<azure-communication-email-sender-address>
 AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING=<acs-connection-string>
+AIPM_EMAIL_SENDER_ADDRESS=<azure-communication-email-sender-address>
 ```
+
+With Key Vault, the connection string and sender address are loaded from
+`aipm-email-connection-string` and `aipm-email-sender-address` at service start.
 
 Publishing is closed by default. Pass `AIPM_PUBLISH_TOKEN=<raw-token>` or
 `AIPM_PUBLISH_TOKEN_SHA256=<sha256-hex>` to the deploy script to set the admin
@@ -216,13 +219,11 @@ aipm-email-sender-address
 aipm-email-from-name
 ```
 
-Then set the GitHub production environment variable:
+Once those Key Vault secrets exist, redeploy or restart the API service. Email
+is enabled automatically when both the connection string and sender address are
+available to the process.
 
-```txt
-AIPM_EMAIL_PROVIDER=azure
-```
-
-Keep `AIPM_EMAIL_PROVIDER=disabled` until the Azure sender address exists.
+Keep email disabled until the Azure sender address exists.
 Azure-managed domains are simplest for v1. Move to a custom sender domain later
 when DNS verification and sender reputation are ready.
 

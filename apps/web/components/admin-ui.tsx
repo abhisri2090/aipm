@@ -22,7 +22,6 @@ type AdminSession = Me;
 type AuthConfig = {
   devAuth: boolean;
   githubAuth: boolean;
-  emailAuth: boolean;
 };
 
 function publicApiError(error: unknown): string {
@@ -95,7 +94,7 @@ export function AdminPanel() {
       if (configResponse.ok) {
         setAuthConfig((await configResponse.json()) as AuthConfig);
       } else {
-        setAuthConfig({ devAuth: false, githubAuth: false, emailAuth: false });
+        setAuthConfig({ devAuth: false, githubAuth: false });
       }
 
       const meResponse = await fetchWithTimeout("/v1/me");
