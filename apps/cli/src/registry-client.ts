@@ -144,3 +144,21 @@ export async function fetchPackageTarball(
   const ab = await res.arrayBuffer();
   return Buffer.from(ab);
 }
+
+export async function recordPackageInstall(
+  registry: string,
+  name: string,
+  token?: string,
+): Promise<{ installCount: number }> {
+  const base = registry.replace(/\/$/, "");
+  const url = `${base}/v1/packages/${encodePackageName(name)}/installs`;
+  const res = await registryFetch(url, base, {
+    method: "POST",
+    headers: registryAuthHeaders(token),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `Install recording failed: ${res.status}`);
+  }
+  return res.json() as Promise<{ installCount: number }>;
+}

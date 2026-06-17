@@ -8,6 +8,13 @@ import cards from "../app/cards.module.css";
 import shell from "../app/page-shell.module.css";
 import styles from "./registry-search.module.css";
 
+const QUICK_FILTERS = [
+  { label: "Code review", query: "code review" },
+  { label: "Issue summarizer", query: "issue summarizer" },
+  { label: "Testing", query: "testing" },
+  { label: "Documentation", query: "documentation" },
+] as const;
+
 function publicSearchError(error: unknown): string {
   if (error instanceof DOMException && error.name === "AbortError") {
     return "Registry API timed out. It may be offline or starting.";
@@ -98,18 +105,41 @@ export function RegistrySearch({
       </form>
 
       {!compact ? (
-        <div className={styles.filters} aria-label="Target filters">
-          {["all", "cursor", "claude"].map((filter) => (
-            <button
-              className={cn(styles.chip, target === filter && styles.chipActive)}
-              key={filter}
-              type="button"
-              onClick={() => setTarget(filter)}
-            >
-              {filter === "all" ? "All" : filter[0]?.toUpperCase() + filter.slice(1)}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Tool</span>
+            <div className={styles.filters} aria-label="Target filters">
+              {["all", "cursor", "claude"].map((filter) => (
+                <button
+                  className={cn(styles.chip, target === filter && styles.chipActive)}
+                  key={filter}
+                  type="button"
+                  onClick={() => setTarget(filter)}
+                >
+                  {filter === "all" ? "All" : filter[0]?.toUpperCase() + filter.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Intent</span>
+            <div className={styles.filters} aria-label="Skill intent filters">
+              {QUICK_FILTERS.map((filter) => (
+                <button
+                  className={cn(styles.chip, query === filter.query && styles.chipActive)}
+                  key={filter.query}
+                  type="button"
+                  onClick={() => {
+                    setQuery(filter.query);
+                    void search(filter.query);
+                  }}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
       ) : null}
 
       <p className={shell.muted}>{status}</p>

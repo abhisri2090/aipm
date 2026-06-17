@@ -120,11 +120,25 @@
   min-width: 104px;
 }
 
+.copyLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .detailGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 24px;
   margin-top: 42px;
+}
+
+.detailGridFlush {
+  margin-top: 0;
+}
+
+.panelSectionFlush {
+  margin-top: 24px;
 }
 
 .detailMain {

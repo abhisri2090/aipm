@@ -268,7 +268,7 @@ export default function PopularSkillsPage() {
         </p>
         <CodeBlock code={CLI_INSTALL_COMMAND} />
         <p className={shell.muted}>Initialize the project, then install a package into the Cursor target.</p>
-        <CodeBlock code={`aipm init\naipm add @aipm-starters/code-review --target cursor --ci`} />
+        <CodeBlock code={`aipm init --target cursor\naipm add @aipm-starters/code-review@1.0.0 --target cursor --ci`} />
       </section>
 
       <section className={cards.popularGrid} aria-label="Popular AI skill starter catalog">

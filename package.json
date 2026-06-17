@@ -26,6 +26,7 @@
     "local:api": "pnpm --filter @aipm-registry/registry-api build && node --env-file=.env --watch apps/registry-api/dist/index.js",
     "local:web": "pnpm --filter @aipm-registry/web dev",
     "local:seed": "node scripts/seed-from-public-registry.mjs",
+    "local:db:pull": "node scripts/pull-prod-db-to-local.mjs",
     "local:check": "node scripts/check-local-safety-docs.mjs",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "aipm": "node apps/cli/dist/bin.cjs",

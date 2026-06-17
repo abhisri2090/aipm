@@ -44,4 +44,33 @@ describe("PackageManifestSchema", () => {
     });
     expect(manifest.usage).toBe("Ask the assistant to review your diff before opening a PR.");
   });
+
+  it("parses optional quality metadata for public package pages", () => {
+    const manifest = PackageManifestSchema.parse({
+      schemaVersion: "0.1",
+      name: "@team/sample",
+      version: "1.0.0",
+      type: "skill",
+      description: "Review code changes before opening a pull request.",
+      entry: "SKILL.md",
+      targets: ["cursor", "claude"],
+      usage: "Ask the assistant to review the current diff and return findings first.",
+      tags: ["code-review", "pull-requests"],
+      categories: ["Engineering", "Quality"],
+      sourceUrl: "https://github.com/team/sample-skill",
+      examples: [
+        {
+          title: "Review staged changes",
+          description: "Use before opening a pull request.",
+          prompt: "Review my staged changes for regressions and missing tests.",
+        },
+      ],
+      releaseNotes: "Initial release with code review guidance.",
+    });
+
+    expect(manifest.tags).toEqual(["code-review", "pull-requests"]);
+    expect(manifest.categories).toEqual(["Engineering", "Quality"]);
+    expect(manifest.examples?.[0]?.prompt).toContain("staged changes");
+    expect(manifest.releaseNotes).toBe("Initial release with code review guidance.");
+  });
 });

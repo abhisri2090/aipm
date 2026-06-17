@@ -44,7 +44,7 @@ export default function UsePage() {
 
         <h2>Initialize a project</h2>
         <p>This creates aipm.package.json and points it at the public registry.</p>
-        <CodeBlock code="aipm init" />
+        <CodeBlock code="aipm init --target cursor" />
 
         <h2>Install a skill</h2>
         <p>Choose a package from the registry and install it for the AI tool you use.</p>

@@ -87,12 +87,23 @@ export class FileMetadataStore implements MetadataStore {
     for (const [name, versions] of Object.entries(index.packages)) {
       for (const [version, entry] of Object.entries(versions)) {
         const manifest = PackageManifestSchema.parse(entry.manifest);
+        const examples = manifest.examples?.flatMap((example) => [
+          example.title,
+          example.description ?? "",
+          example.prompt,
+        ]) ?? [];
         const haystack = [
           name,
           version,
           manifest.description,
           manifest.type,
+          manifest.usage ?? "",
+          manifest.sourceUrl ?? "",
+          manifest.releaseNotes ?? "",
           ...manifest.targets,
+          ...(manifest.tags ?? []),
+          ...(manifest.categories ?? []),
+          ...examples,
         ]
           .join(" ")
           .toLowerCase();

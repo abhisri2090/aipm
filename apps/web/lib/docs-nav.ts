@@ -33,6 +33,12 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
     items: [
       { href: "/ai-practices", label: "AI best practices" },
       { href: "/discoverability", label: "Discoverability" },
+      { href: "/skills/cursor", label: "Cursor skills" },
+      { href: "/skills/claude", label: "Claude skills" },
+      { href: "/skills/code-review", label: "Code review skills" },
+      { href: "/skills/issue-summarizer", label: "Issue summarizer skills" },
+      { href: "/skills/testing", label: "Testing skills" },
+      { href: "/skills/documentation", label: "Documentation skills" },
       { href: "/security", label: "Security & safety" },
     ],
   },

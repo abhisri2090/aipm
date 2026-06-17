@@ -4,8 +4,10 @@ import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const DEFAULT_URL = "https://aipm-registry.com";
-const baseUrl = new URL(process.argv[2] ?? process.env.WEB_URL ?? DEFAULT_URL);
+const DEFAULT_URL = "https://www.aipm-registry.com";
+const positionalUrl = process.argv.find((arg, index) => index > 1 && !arg.startsWith("--"));
+const baseUrl = new URL(positionalUrl ?? process.env.WEB_URL ?? DEFAULT_URL);
+const expectedCanonicalUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_URL).replace(/\/$/, "");
 const allowHttp = process.argv.includes("--allow-http") || baseUrl.hostname === "127.0.0.1" || baseUrl.hostname === "localhost";
 const timeoutMs = Number(process.env.VERIFY_TIMEOUT_MS ?? 8000);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -61,6 +63,48 @@ const requiredPages = [
     includes: [".cursor/aipm/skills/&lt;skill&gt;.md", ".claude/aipm/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
   },
   { path: "/resources", title: "AI Skill Resources", h1: "Find the guide you need.", jsonLd: false },
+  {
+    path: "/skills/cursor",
+    title: "Cursor Skills",
+    h1: "Find Cursor skills for project-ready AI workflows.",
+    jsonLd: true,
+    includes: ["Search registry", "Browse more skill categories"],
+  },
+  {
+    path: "/skills/claude",
+    title: "Claude Skills",
+    h1: "Find Claude skills for repeatable assistant workflows.",
+    jsonLd: true,
+    includes: ["Search registry", "Browse more skill categories"],
+  },
+  {
+    path: "/skills/code-review",
+    title: "Code Review AI Skills",
+    h1: "Find AI skills for code review.",
+    jsonLd: true,
+    includes: ["Search registry", "Browse more skill categories"],
+  },
+  {
+    path: "/skills/issue-summarizer",
+    title: "Issue Summarizer AI Skills",
+    h1: "Find AI skills for issue summaries and triage.",
+    jsonLd: true,
+    includes: ["Search registry", "Browse more skill categories"],
+  },
+  {
+    path: "/skills/testing",
+    title: "Testing AI Skills",
+    h1: "Find AI skills for test writing and verification.",
+    jsonLd: true,
+    includes: ["Search registry", "Browse more skill categories"],
+  },
+  {
+    path: "/skills/documentation",
+    title: "Documentation AI Skills",
+    h1: "Find AI skills for documentation.",
+    jsonLd: true,
+    includes: ["Search registry", "Browse more skill categories"],
+  },
   {
     path: "/examples",
     title: "AIPM Skill Examples",
@@ -192,6 +236,11 @@ function extractJsonLd(html) {
   return Array.from(matches, (match) => match[1]?.trim()).filter(Boolean);
 }
 
+function packagePath(packageName, version) {
+  const [scope, name] = packageName.replace(/^@/, "").split("/");
+  return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+}
+
 console.log(`Verifying web app: ${baseUrl.href.replace(/\/$/, "")}`);
 
 const homeHead = await fetchText("/", { method: "HEAD" });
@@ -212,7 +261,7 @@ for (const page of requiredPages) {
   assertIncludes(page.path, text, `<title>${renderedTitle}</title>`);
   assertIncludes(page.path, text, page.h1);
 
-  const canonical = `${DEFAULT_URL}${page.path === "/" ? "" : page.path}`;
+  const canonical = `${expectedCanonicalUrl}${page.path === "/" ? "" : page.path}`;
   assertIncludes(page.path, text, `rel="canonical" href="${canonical}"`);
 
   if (page.jsonLd && extractJsonLd(text).length === 0) {
@@ -246,33 +295,55 @@ for (const path of privatePages) {
 
 const robots = await fetchText("/robots.txt");
 assertStatus("/robots.txt", robots.response);
-assertIncludes("/robots.txt", robots.text, `Sitemap: ${DEFAULT_URL}/sitemap.xml`);
-assertIncludes("/robots.txt", robots.text, `Sitemap: ${DEFAULT_URL}/package-sitemap.xml`);
+assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/sitemap.xml`);
+assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/package-sitemap.xml`);
 assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
-for (const path of ["/registry", "/publish", "/publish/guide", "/targets", "/resources", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
-  assertIncludes("/sitemap.xml", sitemap.text, `<loc>${DEFAULT_URL}${path}</loc>`);
+for (const path of ["/registry", "/publish", "/publish/guide", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
+  assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
 
 const packageSitemap = await fetchText("/package-sitemap.xml");
 assertStatus("/package-sitemap.xml", packageSitemap.response);
 assertIncludes("/package-sitemap.xml", packageSitemap.text, '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
 
+const packageList = await fetchText("/v1/packages?limit=1");
+if (packageList.response.ok) {
+  const data = JSON.parse(packageList.text);
+  const pkg = data.packages?.[0];
+  if (pkg?.name && pkg?.version) {
+    const path = packagePath(pkg.name, pkg.version);
+    const page = await fetchText(path);
+    assertStatus(path, page.response);
+    assertIncludes(path, page.text, `<title>${pkg.name}@${pkg.version} | AIPM</title>`);
+    assertIncludes(path, page.text, `rel="canonical" href="${expectedCanonicalUrl}${path}"`);
+    assertIncludes(path, page.text, `aipm add ${pkg.name}@${pkg.version}`);
+    assertIncludes(path, page.text, "AI assistant context");
+    assertIncludes(path, page.text, "Package FAQ");
+    assertIncludes(path, page.text, 'id="aipm-package-context"');
+    const jsonLd = extractJsonLd(page.text).join("\n");
+    assertIncludes(path, jsonLd, '"@type":"WebPage"');
+    assertIncludes(path, jsonLd, '"@type":"SoftwareSourceCode"');
+    assertIncludes(path, jsonLd, '"@type":"HowTo"');
+    assertIncludes(path, jsonLd, '"@type":"FAQPage"');
+  }
+}
+
 const llms = await fetchText("/llms.txt");
 assertStatus("/llms.txt", llms.response);
 assertIncludes("/llms.txt", llms.text, "AIPM is a registry and command line workflow");
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/security`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/privacy`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/terms`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/status`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/roadmap`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/changelog`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/templates`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/targets`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/examples`);
-assertIncludes("/llms.txt", llms.text, `${DEFAULT_URL}/glossary`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/security`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/privacy`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/terms`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/status`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/roadmap`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/changelog`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/templates`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/targets`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/examples`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/glossary`);
 
 const securityPolicy = await readFile(resolve(repoRoot, "SECURITY.md"), "utf8");
 assertIncludes("SECURITY.md", securityPolicy, "aipm publish preview");

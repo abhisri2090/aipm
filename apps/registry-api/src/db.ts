@@ -64,7 +64,7 @@ const USER_ROW_SELECT = `users.${USER_ROW_FIELDS.replace(/, /g, ", users.")}`;
 const ORG_ROW_FIELDS =
   "id, slug, name, owner_user_id, created_at, default_package_visibility, description, website_url, avatar_url, default_member_role, invite_ttl_hours, auto_join_domain, deleted_at";
 const PACKAGE_RESERVATION_FIELDS =
-  "id, name, org_id, owner_user_id, created_at, visibility, deprecated_at, deprecation_message";
+  "id, name, org_id, owner_user_id, created_at, visibility, deprecated_at, deprecation_message, install_count";
 const PACKAGE_VERSION_FIELDS =
   "id, name, version, manifest, integrity, blob_path, size_bytes, created_at, yanked_at";
 
@@ -162,6 +162,7 @@ export interface PackageReservationRow {
   visibility: PackageVisibility;
   deprecated_at: Date | null;
   deprecation_message: string | null;
+  install_count: number;
 }
 
 export interface InstallTokenRow {
@@ -440,6 +441,7 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     ALTER TABLE package_reservations ADD CONSTRAINT package_reservations_visibility_check CHECK (visibility IN ('public', 'private'));
     ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS deprecated_at TIMESTAMPTZ;
     ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS deprecation_message TEXT;
+    ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS install_count BIGINT NOT NULL DEFAULT 0;
 
     ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS yanked_at TIMESTAMPTZ;
 
@@ -597,7 +599,13 @@ export async function listPackageVersions(
         OR version ILIKE $1
         OR manifest->>'description' ILIKE $1
         OR manifest->>'type' ILIKE $1
+        OR manifest->>'usage' ILIKE $1
+        OR manifest->>'sourceUrl' ILIKE $1
+        OR manifest->>'releaseNotes' ILIKE $1
         OR (manifest->'targets')::text ILIKE $1
+        OR (manifest->'tags')::text ILIKE $1
+        OR (manifest->'categories')::text ILIKE $1
+        OR (manifest->'examples')::text ILIKE $1
     `;
   }
 
@@ -1001,6 +1009,35 @@ export async function getPackageReservationByName(
   return result.rows[0] ?? null;
 }
 
+export async function incrementPackageInstallCount(
+  pool: pg.Pool,
+  name: string,
+): Promise<number | null> {
+  const result = await pool.query<{ install_count: string }>(
+    `UPDATE package_reservations
+     SET install_count = install_count + 1
+     WHERE name = $1
+     RETURNING install_count`,
+    [name],
+  );
+  const row = result.rows[0];
+  return row ? Number(row.install_count) : null;
+}
+
+export async function getPackageInstallCountMap(
+  pool: pg.Pool,
+  names: string[],
+): Promise<Map<string, number>> {
+  if (names.length === 0) return new Map();
+  const result = await pool.query<{ name: string; install_count: string }>(
+    `SELECT name, install_count
+     FROM package_reservations
+     WHERE name = ANY($1::text[])`,
+    [names],
+  );
+  return new Map(result.rows.map((row) => [row.name, Number(row.install_count)]));
+}
+
 export async function getOwnedPackageReservation(
   pool: pg.Pool,
   name: string,
@@ -1029,6 +1066,7 @@ export async function getPackageReservationForUser(
             package_reservations.visibility,
             package_reservations.deprecated_at,
             package_reservations.deprecation_message,
+            package_reservations.install_count,
             org_memberships.role AS org_role,
             package_memberships.role AS package_role
      FROM package_reservations

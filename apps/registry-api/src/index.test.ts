@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import type { FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./index.js";
+import { createOrg, createPool, ensureSchema, reservePackageName, upsertGithubUser } from "./db.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
@@ -18,7 +19,11 @@ function tokenHash(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-async function createTarball(version: string, name = "@team/api-skill"): Promise<Buffer> {
+async function createTarball(
+  version: string,
+  name = "@team/api-skill",
+  manifestExtras: Record<string, unknown> = {},
+): Promise<Buffer> {
   const dir = await mkdtemp(join(tmpdir(), "aipm-api-skill-"));
   tempDirs.push(dir);
   await writeFile(join(dir, "SKILL.md"), "Skill body\n");
@@ -32,6 +37,7 @@ async function createTarball(version: string, name = "@team/api-skill"): Promise
       description: "API skill",
       entry: "SKILL.md",
       targets: ["cursor"],
+      ...manifestExtras,
     }),
   );
   const { stdout } = await execFileAsync("tar", ["-czf", "-", "-C", dir, "."], {
@@ -141,6 +147,125 @@ describe("registry API production behavior", () => {
     });
   });
 
+  it("returns and searches package quality metadata", async () => {
+    const tarball = await createTarball("1.0.4", "@team/quality-skill", {
+      usage: "Use this skill to summarize production issues for handoff.",
+      tags: ["issue-summarizer", "handoff"],
+      categories: ["Support", "Engineering"],
+      sourceUrl: "https://github.com/team/quality-skill",
+      examples: [{ title: "Summarize issue", prompt: "Summarize this Sentry issue." }],
+      releaseNotes: "Adds issue summarizer guidance.",
+    });
+    const payload = multipartPayload(tarball);
+    const publish = await app!.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent("@team/quality-skill")}/versions`,
+      headers: {
+        "content-type": payload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: payload.body,
+    });
+    expect(publish.statusCode).toBe(201);
+
+    const list = await app!.inject({ method: "GET", url: "/v1/packages?q=issue-summarizer" });
+    expect(list.statusCode).toBe(200);
+    expect(list.json().packages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "@team/quality-skill",
+          tags: ["issue-summarizer", "handoff"],
+          categories: ["Support", "Engineering"],
+          sourceUrl: "https://github.com/team/quality-skill",
+        }),
+      ]),
+    );
+
+    const detail = await app!.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent("@team/quality-skill")}/versions/1.0.4`,
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json().manifest).toMatchObject({
+      usage: "Use this skill to summarize production issues for handoff.",
+      examples: [{ title: "Summarize issue", prompt: "Summarize this Sentry issue." }],
+      releaseNotes: "Adds issue summarizer guidance.",
+    });
+  });
+
+  it.each(["0", "-5", "abc", "101"])("rejects invalid list limit %s", async (limit) => {
+    const response = await app!.inject({ method: "GET", url: `/v1/packages?limit=${encodeURIComponent(limit)}` });
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: "Invalid limit; use an integer from 1 to 100",
+    });
+  });
+
+  it("rejects invalid list cursors without leaking storage errors", async () => {
+    const response = await app!.inject({ method: "GET", url: "/v1/packages?cursor=not-a-date" });
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: "Invalid cursor; use an ISO timestamp returned as nextCursor",
+    });
+  });
+
+  it.skipIf(!savedDatabaseUrl)("requires reserved package names for admin-token publishing when accounts are enabled", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.NODE_ENV = "production";
+
+    const pool = createPool(savedDatabaseUrl!);
+    await ensureSchema(pool);
+    const suffix = `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
+    const owner = await upsertGithubUser(pool, {
+      githubId: `publish-owner-${suffix}`,
+      githubLogin: `publish-owner-${suffix}`,
+      name: "Publish Owner",
+    });
+    const org = await createOrg(pool, {
+      slug: `publish-${suffix}`,
+      name: "Publish Test",
+      ownerUserId: owner.id,
+    });
+    const reservedName = `@${org.slug}/reserved-skill`;
+    await reservePackageName(pool, {
+      name: reservedName,
+      orgId: org.id,
+      ownerUserId: owner.id,
+    });
+    await pool.end();
+
+    app = await createApp();
+
+    const unreservedTarball = await createTarball("1.0.0", `@${org.slug}/unreserved-skill`);
+    const unreservedPayload = multipartPayload(unreservedTarball);
+    const unreserved = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(`@${org.slug}/unreserved-skill`)}/versions`,
+      headers: {
+        "content-type": unreservedPayload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: unreservedPayload.body,
+    });
+    expect(unreserved.statusCode).toBe(403);
+    expect(unreserved.json()).toMatchObject({ error: "Package name must be reserved before publishing" });
+
+    const reservedTarball = await createTarball("1.0.0", reservedName);
+    const reservedPayload = multipartPayload(reservedTarball);
+    const reserved = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(reservedName)}/versions`,
+      headers: {
+        "content-type": reservedPayload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: reservedPayload.body,
+    });
+    expect(reserved.statusCode).toBe(201);
+  });
+
   it("keeps admin stats behind account services", async () => {
     const response = await app!.inject({ method: "GET", url: "/v1/admin/stats" });
     expect(response.statusCode).toBe(503);
@@ -183,6 +308,147 @@ describe("registry API production behavior", () => {
 
   it("rejects dev login when dev auth is disabled", async () => {
     const response = await app!.inject({ method: "GET", url: "/v1/auth/dev/login" });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("rejects install recording when account services are not configured", async () => {
+    const response = await app!.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/installs`,
+    });
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({ error: "Account services are not configured" });
+  });
+});
+
+describe("package install counter", () => {
+  it.skipIf(!savedDatabaseUrl)("records installs and exposes installCount", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.NODE_ENV = "production";
+
+    const pool = createPool(savedDatabaseUrl!);
+    await ensureSchema(pool);
+    const suffix = `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
+    const owner = await upsertGithubUser(pool, {
+      githubId: `install-owner-${suffix}`,
+      githubLogin: `install-owner-${suffix}`,
+      name: "Install Owner",
+    });
+    const org = await createOrg(pool, {
+      slug: `install-${suffix}`,
+      name: "Install Test",
+      ownerUserId: owner.id,
+    });
+    const packageName = `@${org.slug}/install-count-skill`;
+    await reservePackageName(pool, {
+      name: packageName,
+      orgId: org.id,
+      ownerUserId: owner.id,
+    });
+    await pool.end();
+
+    app = await createApp();
+
+    const tarball = await createTarball("1.0.0", packageName);
+    const payload = multipartPayload(tarball);
+    const publish = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      headers: {
+        "content-type": payload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: payload.body,
+    });
+    expect(publish.statusCode).toBe(201);
+
+    const record = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/installs`,
+    });
+    expect(record.statusCode).toBe(200);
+    expect(record.json()).toEqual({ installCount: 1 });
+
+    const detail = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+    });
+    expect(detail.statusCode).toBe(200);
+    expect(detail.json()).toMatchObject({ installCount: 1 });
+
+    const list = await app.inject({
+      method: "GET",
+      url: `/v1/packages?q=${encodeURIComponent(org.slug)}`,
+    });
+    expect(list.statusCode).toBe(200);
+    expect(list.json().packages).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: packageName, installCount: 1 })]),
+    );
+  });
+
+  it.skipIf(!savedDatabaseUrl)("returns 404 for unknown packages", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.NODE_ENV = "production";
+    app = await createApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent("@missing/pkg")}/installs`,
+    });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it.skipIf(!savedDatabaseUrl)("returns 404 for private packages without access", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.NODE_ENV = "production";
+
+    const pool = createPool(savedDatabaseUrl!);
+    await ensureSchema(pool);
+    const suffix = `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
+    const owner = await upsertGithubUser(pool, {
+      githubId: `private-owner-${suffix}`,
+      githubLogin: `private-owner-${suffix}`,
+      name: "Private Owner",
+    });
+    const org = await createOrg(pool, {
+      slug: `private-${suffix}`,
+      name: "Private Test",
+      ownerUserId: owner.id,
+    });
+    const packageName = `@${org.slug}/private-skill`;
+    await reservePackageName(pool, {
+      name: packageName,
+      orgId: org.id,
+      ownerUserId: owner.id,
+      visibility: "private",
+    });
+    await pool.end();
+
+    app = await createApp();
+
+    const tarball = await createTarball("1.0.0", packageName);
+    const payload = multipartPayload(tarball);
+    const publish = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      headers: {
+        "content-type": payload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: payload.body,
+    });
+    expect(publish.statusCode).toBe(201);
+
+    const response = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/installs`,
+    });
     expect(response.statusCode).toBe(404);
   });
 });

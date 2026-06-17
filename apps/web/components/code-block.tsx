@@ -7,6 +7,7 @@ import styles from "./code-block.module.css";
 type CodeBlockProps = {
   code: string;
   className?: string;
+  muted?: boolean;
 };
 
 function CopyIcon({ copied }: { copied: boolean }) {
@@ -37,11 +38,11 @@ function CopyIcon({ copied }: { copied: boolean }) {
   );
 }
 
-export function CodeBlock({ code, className }: CodeBlockProps) {
+export function CodeBlock({ code, className, muted = false }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <div className={cn(styles.codeBlock, className)}>
+    <div className={cn(styles.codeBlock, muted && styles.codeBlockMuted, className)}>
       <div className={styles.codeBlockShell}>
         <button
           type="button"

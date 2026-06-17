@@ -44,12 +44,14 @@ import {
   getOrgMembership,
   getPackageReservationByName,
   getPackageReservationForUser,
+  getPackageInstallCountMap,
   getPackageVisibilityMap,
   getPendingInviteByTokenHash,
   getProvenance,
   getProvenanceByPackageNames,
   getPublicPackagePublisher,
   incrementEmailVerificationAttempts,
+  incrementPackageInstallCount,
   listAccessiblePrivatePackageNames,
   listJoinableOrgsByDomain,
   listOrgAuditEvents,
@@ -138,14 +140,34 @@ const MAX_LIST_LIMIT = 100;
 const DEFAULT_LIST_LIMIT = 50;
 const HIDDEN_PUBLIC_PACKAGE_NAMES = new Set(["@team/sample-skill"]);
 
+type ParsedQueryValue<T> = { ok: true; value: T } | { ok: false; error: string };
+
 function decodePackageName(encoded: string): string {
   return decodeURIComponent(encoded);
 }
 
-function normalizeListLimit(value: unknown): number {
-  const parsed = Number(value ?? DEFAULT_LIST_LIMIT);
-  if (!Number.isFinite(parsed)) return DEFAULT_LIST_LIMIT;
-  return Math.min(Math.max(Math.trunc(parsed), 1), MAX_LIST_LIMIT);
+function parseListLimit(value: unknown): ParsedQueryValue<number> {
+  if (value === undefined) return { ok: true, value: DEFAULT_LIST_LIMIT };
+  const raw = String(value).trim();
+  if (!/^\d+$/.test(raw)) {
+    return { ok: false, error: "Invalid limit; use an integer from 1 to 100" };
+  }
+  const parsed = Number(raw);
+  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > MAX_LIST_LIMIT) {
+    return { ok: false, error: "Invalid limit; use an integer from 1 to 100" };
+  }
+  return { ok: true, value: parsed };
+}
+
+function parseListCursor(value: unknown): ParsedQueryValue<string | undefined> {
+  if (value === undefined) return { ok: true, value: undefined };
+  const raw = String(value).trim();
+  if (!raw) return { ok: false, error: "Invalid cursor; use an ISO timestamp returned as nextCursor" };
+  const timestamp = Date.parse(raw);
+  if (!Number.isFinite(timestamp)) {
+    return { ok: false, error: "Invalid cursor; use an ISO timestamp returned as nextCursor" };
+  }
+  return { ok: true, value: new Date(timestamp).toISOString() };
 }
 
 function publicError(error: unknown, fallback: string): string {
@@ -1072,6 +1094,7 @@ export async function createApp(): Promise<FastifyInstance> {
         deprecatedAt: pkg.deprecated_at,
         deprecationMessage: pkg.deprecation_message,
         publishedVersionCount: versionCountByName.get(pkg.name) ?? 0,
+        installCount: Number(pkg.install_count),
       })),
     };
   });
@@ -1701,6 +1724,11 @@ export async function createApp(): Promise<FastifyInstance> {
       if (!adminAuth.ok) {
         const scopedAuth = await verifyScopedPublishToken(accountAuth, request, name);
         if (!scopedAuth) return reply.status(adminAuth.status).send({ error: adminAuth.error });
+      } else if (accountAuth) {
+        const reservation = await getPackageReservationByName(accountAuth.pool, name);
+        if (!reservation) {
+          return reply.status(403).send({ error: "Package name must be reserved before publishing" });
+        }
       }
 
       const data = await request.file();
@@ -1892,7 +1920,39 @@ export async function createApp(): Promise<FastifyInstance> {
               contentHash: provenance.content_hash,
             }
           : { imported: false, sourceUrl: null },
+        installCount: reservation ? Number(reservation.install_count) : 0,
       };
+    },
+  );
+
+  app.post<{ Params: { name: string } }>(
+    "/v1/packages/:name/installs",
+    {
+      config: {
+        rateLimit: {
+          max: 60,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!accountAuth) {
+        return reply.status(503).send({ error: "Account services are not configured" });
+      }
+      const name = decodePackageName(request.params.name);
+      const readAccess = await resolveReadAccess(accountAuth, request);
+      if (!(await canViewPackage(accountAuth, name, readAccess))) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      const versionCount = await countPackageVersions(accountAuth.pool, name);
+      if (versionCount === 0) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      const installCount = await incrementPackageInstallCount(accountAuth.pool, name);
+      if (installCount === null) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      return { installCount };
     },
   );
 
@@ -1906,14 +1966,19 @@ export async function createApp(): Promise<FastifyInstance> {
         },
       },
     },
-    async (request) => {
-      const limit = normalizeListLimit(request.query.limit);
+    async (request, reply) => {
+      const parsedLimit = parseListLimit(request.query.limit);
+      if (!parsedLimit.ok) return reply.status(400).send({ error: parsedLimit.error });
+      const parsedCursor = parseListCursor(request.query.cursor);
+      if (!parsedCursor.ok) return reply.status(400).send({ error: parsedCursor.error });
+
+      const limit = parsedLimit.value;
       const includeDemo = request.query.includeDemo === "true";
       const query = request.query.q?.trim() ?? "";
       const readAccess = await resolveReadAccess(accountAuth, request);
       const rows = await metadata.list(query, {
         limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT,
-        cursor: request.query.cursor,
+        cursor: parsedCursor.value,
       });
       let visibleRows = includeDemo ? rows : rows.filter((row) => !isHiddenPublicPackage(row.name));
       visibleRows = visibleRows.filter((row) => !row.yanked_at);
@@ -1944,6 +2009,9 @@ export async function createApp(): Promise<FastifyInstance> {
       const provenanceByName = accountAuth
         ? await getProvenanceByPackageNames(accountAuth.pool, [...publisherByName.keys()])
         : new Map();
+      const installCountByName = accountAuth
+        ? await getPackageInstallCountMap(accountAuth.pool, [...new Set(page.map((row) => row.name))])
+        : new Map<string, number>();
       return {
         packages: page.map((row) => {
           const provenance = provenanceByName.get(row.name);
@@ -1954,9 +2022,14 @@ export async function createApp(): Promise<FastifyInstance> {
             type: row.manifest.type,
             targets: row.manifest.targets,
             license: row.manifest.license ?? null,
+            usage: row.manifest.usage ?? null,
+            tags: row.manifest.tags ?? [],
+            categories: row.manifest.categories ?? [],
+            sourceUrl: row.manifest.sourceUrl ?? null,
             integrity: row.integrity,
             sizeBytes: Number(row.size_bytes),
             createdAt: row.created_at,
+            installCount: installCountByName.get(row.name) ?? 0,
             publisher: serializePublisher(publisherByName.get(row.name) ?? null),
             import: provenance
               ? { imported: true, sourceUrl: provenance.source_url }

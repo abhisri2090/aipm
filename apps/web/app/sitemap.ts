@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "../lib/registry";
+import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths = [
@@ -26,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/changelog",
     "/templates",
     "/thanks",
+    ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
   ];
   const now = new Date();
 

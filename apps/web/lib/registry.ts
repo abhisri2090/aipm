@@ -26,9 +26,14 @@ export type PackageSummary = {
   type: string;
   targets: string[];
   license: string | null;
+  usage?: string | null;
+  tags?: string[];
+  categories?: string[];
+  sourceUrl?: string | null;
   integrity: string;
   sizeBytes: number;
   createdAt: string;
+  installCount?: number;
   publisher?: PackagePublisher | null;
   import?: PackageImportMeta;
 };
@@ -43,10 +48,20 @@ export type PackageDetail = {
     license?: string;
     entry?: string;
     usage?: string;
+    tags?: string[];
+    categories?: string[];
+    sourceUrl?: string;
+    examples?: Array<{
+      title: string;
+      description?: string;
+      prompt: string;
+    }>;
+    releaseNotes?: string;
   };
   integrity: string;
   sizeBytes: number;
   createdAt: string;
+  installCount?: number;
   publisher?: PackagePublisher | null;
   import?: PackageImportMeta;
 };
@@ -65,7 +80,7 @@ export const GITHUB_LOGIN_URL = `${PUBLIC_REGISTRY_API_BASE_URL}/v1/auth/github/
 
 export const DEV_LOGIN_URL = "/v1/auth/dev/login";
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://aipm-registry.com").replace(
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.aipm-registry.com").replace(
   /\/$/,
   "",
 );
@@ -119,6 +134,11 @@ export function packageShortName(name: string): string {
   return parts[parts.length - 1] ?? name;
 }
 
+export function parsePackageName(name: string): { scope: string; skillName: string } {
+  const [scope, skillName] = name.replace(/^@/, "").split("/");
+  return { scope: scope ?? "", skillName: skillName ?? name };
+}
+
 export function resolveSkillUsage(options: {
   name: string;
   description: string;
@@ -128,7 +148,7 @@ export function resolveSkillUsage(options: {
   if (options.usage?.trim()) return options.usage.trim();
 
   const shortName = packageShortName(options.name);
-  const tools = displayTargets(options.targets).filter((target) => target !== "*");
+  const tools = commandTargets(options.targets);
   const toolHint =
     tools.length === 1
       ? `Open ${tools[0] === "cursor" ? "Cursor" : "Claude"} in this project`
@@ -139,12 +159,26 @@ export function resolveSkillUsage(options: {
   return `${toolHint} and ask the assistant to use the ${shortName} skill. For example: "${options.description}".`;
 }
 
-export function installCommand(pkg: Pick<PackageSummary, "name">): string {
-  return `aipm add ${pkg.name}`;
+export function packageKeywords(pkg: Pick<PackageSummary, "name" | "description" | "targets" | "tags" | "categories">): string[] {
+  return [
+    pkg.name,
+    pkg.description,
+    ...displayTargets(pkg.targets),
+    ...(pkg.tags ?? []),
+    ...(pkg.categories ?? []),
+  ].filter(Boolean);
+}
+
+export function installCommand(pkg: Pick<PackageSummary, "name" | "version">): string {
+  return `aipm add ${pkg.name}@${pkg.version}`;
 }
 
 export function displayTargets(targets: string[]): string[] {
-  return targets.includes("*") ? ["cursor", "claude", "*"] : targets;
+  return targets.includes("*") ? ["All tools"] : targets;
+}
+
+export function commandTargets(targets: string[]): string[] {
+  return targets.includes("*") ? ["cursor", "claude"] : targets.filter((target) => target !== "*");
 }
 
 export function isImportedPackage(pkg: Pick<PackageSummary, "import" | "publisher">): boolean {
@@ -156,10 +190,10 @@ export function isUnverifiedImportedPackage(pkg: Pick<PackageSummary, "import" |
 }
 
 export function installCommandForTarget(
-  pkg: Pick<PackageSummary, "name">,
+  pkg: Pick<PackageSummary, "name" | "version">,
   target: string,
 ): string {
-  return `aipm add ${pkg.name} --target ${target} --ci`;
+  return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
 }
 
 export function formatBytes(bytes: number): string {
@@ -174,6 +208,15 @@ export function formatBytes(bytes: number): string {
     unit = nextUnit;
   }
   return `${value.toFixed(value >= 10 ? 1 : 2)} ${unit}`;
+}
+
+export function formatInstallCount(count: number): string {
+  if (!Number.isFinite(count) || count < 0) return "0 installs";
+  if (count === 1) return "1 install";
+  if (count < 1000) return `${count} installs`;
+  const value = count / 1000;
+  const formatted = value >= 10 ? value.toFixed(0) : value.toFixed(1);
+  return `${formatted}K installs`;
 }
 
 export function shortIntegrity(value: string): string {

@@ -34,6 +34,36 @@ export default function ResourcesPage() {
       body: "Use a curated starter catalog for code review, testing, docs, security, MCP setup, and more.",
     },
     {
+      href: "/skills/cursor",
+      title: "Cursor Skills",
+      body: "Find public skills that install reusable AI workflows into Cursor projects.",
+    },
+    {
+      href: "/skills/claude",
+      title: "Claude Skills",
+      body: "Find public skills for Claude and Claude Code project workflows.",
+    },
+    {
+      href: "/skills/code-review",
+      title: "Code Review Skills",
+      body: "Browse skills for pull request reviews, regressions, missing tests, and security checks.",
+    },
+    {
+      href: "/skills/issue-summarizer",
+      title: "Issue Summarizer Skills",
+      body: "Browse skills for bugs, incidents, Sentry issues, support tickets, and handoff notes.",
+    },
+    {
+      href: "/skills/testing",
+      title: "Testing Skills",
+      body: "Browse skills for test writing, verification plans, and regression coverage.",
+    },
+    {
+      href: "/skills/documentation",
+      title: "Documentation Skills",
+      body: "Browse skills for READMEs, changelogs, runbooks, examples, and onboarding docs.",
+    },
+    {
       href: "/security",
       title: "Security and Privacy",
       body: "Publish public skills without leaking secrets, customer data, or private notes.",

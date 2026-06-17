@@ -12,7 +12,7 @@ import {
 } from "@aipm-registry/schemas";
 import { detectToolsInProject } from "@aipm-registry/engine";
 import { packDirectory, packStagedFiles } from "./pack.js";
-import { publishPackage, searchPackages } from "./registry-client.js";
+import { publishPackage, recordPackageInstall, searchPackages } from "./registry-client.js";
 import { installOnePackage } from "./install-one.js";
 import { runDoctor } from "./doctor.js";
 import {
@@ -69,7 +69,7 @@ program
 Examples:
   $ npm install -g @aipm-registry/cli
   $ aipm doctor
-  $ aipm init
+  $ aipm init --target cursor
   $ aipm init -g
   $ aipm search sentry
   $ aipm add @scope/name@1.0.0 --target cursor --ci
@@ -83,6 +83,11 @@ Examples:
 
 function registryFromEnvOrDefault(flag?: string): string {
   return resolveRegistryUrl(null, flag, DEFAULT_REGISTRY);
+}
+
+function packagePageUrl(packageName: string, version: string): string {
+  const [scope, name] = packageName.replace(/^@/, "").split("/");
+  return `${SITE_URL}/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
 function parsePackageArg(value: string): { name: string; version?: string } {
@@ -294,6 +299,62 @@ function parseSkillTemplate(value: string): SkillTemplate {
   throw new Error(`Unknown template "${value}". Use one of: ${Object.keys(SKILL_TEMPLATES).join(", ")}`);
 }
 
+const TEMPLATE_METADATA: Record<
+  SkillTemplate,
+  {
+    tags: string[];
+    categories: string[];
+    examplePrompt: string;
+    exampleTitle: string;
+  }
+> = {
+  blank: {
+    tags: ["ai-skill"],
+    categories: ["AI workflow"],
+    exampleTitle: "Use this skill in a project",
+    examplePrompt: "Use this skill with the current project context and explain the next useful action.",
+  },
+  "code-review": {
+    tags: ["code-review", "pull-requests", "quality"],
+    categories: ["Engineering", "Quality"],
+    exampleTitle: "Review a pull request",
+    examplePrompt: "Review my current diff for correctness, regressions, missing tests, and security risk.",
+  },
+  "issue-summary": {
+    tags: ["issue-summary", "triage", "support"],
+    categories: ["Support", "Engineering"],
+    exampleTitle: "Summarize a production issue",
+    examplePrompt: "Summarize this issue with impact, likely cause, evidence, and next debugging steps.",
+  },
+  "release-notes": {
+    tags: ["release-notes", "changelog", "documentation"],
+    categories: ["Product", "Documentation"],
+    exampleTitle: "Draft release notes",
+    examplePrompt: "Draft release notes from these changes with highlights, fixes, upgrade notes, and known issues.",
+  },
+};
+
+function buildStarterQualityMetadata(options: {
+  name: string;
+  description: string;
+  template: SkillTemplate;
+}): Pick<PackageManifest, "usage" | "tags" | "categories" | "examples" | "releaseNotes"> {
+  const metadata = TEMPLATE_METADATA[options.template];
+  const shortName = skillFolderName(options.name);
+  return {
+    usage: `Install ${options.name}, then ask your AI assistant to use the ${shortName} skill when the project needs: ${options.description}`,
+    tags: metadata.tags,
+    categories: metadata.categories,
+    examples: [
+      {
+        title: metadata.exampleTitle,
+        prompt: metadata.examplePrompt,
+      },
+    ],
+    releaseNotes: "Initial release.",
+  };
+}
+
 async function initSkill(opts: {
   name: string;
   version: string;
@@ -310,6 +371,7 @@ async function initSkill(opts: {
   const cdTarget = opts.here ? null : (opts.dir ?? skillFolderName(opts.name));
   const source = opts.from ? resolve(opts.from) : null;
   const entry = source ? await inferEntryFromSource(source, opts.entry) : opts.entry;
+  const template = parseSkillTemplate(opts.template ?? "blank");
   const manifest: PackageManifest = PackageManifestSchema.parse({
     schemaVersion: "0.1",
     name: opts.name,
@@ -319,6 +381,11 @@ async function initSkill(opts: {
     entry,
     targets: parseTargetsFlag(opts.targets),
     license: "Apache-2.0",
+    ...buildStarterQualityMetadata({
+      name: opts.name,
+      description: opts.description,
+      template,
+    }),
   });
   if (source) {
     await copySourceIntoSkillRoot(source, root, source);
@@ -327,7 +394,6 @@ async function initSkill(opts: {
   }
   await writeStarterFile(join(root, "aipm.manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
   if (!opts.from) {
-    const template = parseSkillTemplate(opts.template ?? "blank");
     await writeStarterFile(
       join(root, entry),
       SKILL_TEMPLATES[template](opts.name),
@@ -369,7 +435,8 @@ program
   .description("Create aipm.package.json in the current project or globally")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Default registry URL")
-  .action(async (opts: { registry?: string; global?: boolean }) => {
+  .option("--target <tool>", "Preferred install target: cursor, claude, or *")
+  .action(async (opts: { registry?: string; global?: boolean; target?: string }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const existing = await readProjectPackageJson(configRoot);
@@ -380,8 +447,8 @@ program
     if (scope.global) await mkdir(configRoot, { recursive: true });
     const installRoot = resolveInstallRoot(scope);
     const detected = await detectToolsInProject(installRoot);
-    let preferredTools: AiTool[] = detected;
-    if (detected.length === 0) {
+    let preferredTools: AiTool[] = opts.target ? [parseTargetFlag(opts.target)] : detected;
+    if (!opts.target && detected.length === 0) {
       const choice = await promptForTool();
       preferredTools = [choice];
     }
@@ -491,6 +558,15 @@ program
       ci: opts.ci,
       token: opts.token ?? process.env.AIPM_TOKEN,
     });
+
+    try {
+      await recordPackageInstall(registry, name, opts.token ?? process.env.AIPM_TOKEN);
+    } catch (error) {
+      if (!opts.ci && !program.opts().quiet) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`Warning: could not record install count: ${message}`);
+      }
+    }
 
     if (!opts.ci && !program.opts().quiet) {
       await notifyCliUpdateIfNeeded(CLI_VERSION);
@@ -604,7 +680,7 @@ const publish = program
     const registry = registryFromEnvOrDefault(opts.registry);
     const result = await publishPackage(registry, manifest.name, tarball, opts.token ?? env.AIPM_TOKEN);
     console.log(`Published ${manifest.name}@${result.version}`);
-    console.log(`View: ${registry.replace(/\/$/, "")}/packages/${manifest.name.replace(/^@/, "").replace("/", "/")}/${result.version}`);
+    console.log(`View: ${packagePageUrl(manifest.name, result.version)}`);
     console.log(`Install: aipm add ${manifest.name}@${result.version} --target ${manifest.targets[0]} --ci`);
     printPublishGuide(
       `Published ${manifest.name}@${result.version} from ${abs}.`,
@@ -816,9 +892,8 @@ publish
     console.log(`Uploading ${staged.length} file${staged.length === 1 ? "" : "s"} to ${registry}.`);
     for (const entry of staged) console.log(`  ${entry.path}`);
     const result = await publishPackage(registry, manifest.name, tarball, opts.token ?? env.AIPM_TOKEN);
-    const base = registry.replace(/\/$/, "");
     console.log(`Published ${manifest.name}@${result.version}`);
-    console.log(`View: ${base}/packages/${manifest.name.replace(/^@/, "")}/${result.version}`);
+    console.log(`View: ${packagePageUrl(manifest.name, result.version)}`);
     console.log(`Install: aipm add ${manifest.name}@${result.version} --target ${manifest.targets[0]} --ci`);
     printPublishGuide(
       `Published ${manifest.name}@${result.version} to ${registry}.`,

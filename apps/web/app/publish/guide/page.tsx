@@ -76,9 +76,27 @@ cd review-helper`}
   "description": "Review checklist for project PRs",
   "entry": "SKILL.md",
   "targets": ["cursor"],
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "usage": "Ask the assistant to review the current diff and return findings first.",
+  "tags": ["code-review", "pull-requests"],
+  "categories": ["Engineering", "Quality"],
+  "sourceUrl": "https://github.com/team/review-helper",
+  "examples": [
+    {
+      "title": "Review staged changes",
+      "prompt": "Review my staged changes for correctness, regressions, missing tests, and security risk."
+    }
+  ],
+  "releaseNotes": "Initial release."
 }`}
         />
+
+        <h2>Metadata that helps users find your skill</h2>
+        <p>
+          Treat the manifest as the public package page source. Write a short description, longer
+          usage guidance, tags, categories, example prompts, a source URL when available, and release
+          notes for every version.
+        </p>
 
         <h2>3. Check and publish from the CLI</h2>
         <CodeBlock

@@ -226,6 +226,7 @@
 .dashboardPanel,
 .metricCard {
   padding: 22px;
+  min-width: 0;
 }
 
 .dashboardPanelSpaced {
@@ -290,6 +291,11 @@
   gap: 10px;
 }
 
+.compactForm + .resourceList,
+.tokenResult + .resourceList {
+  margin-top: 18px;
+}
+
 .resourceRow,
 .resourceButton {
   display: flex;
@@ -297,6 +303,7 @@
   justify-content: space-between;
   gap: 14px;
   width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--control);
@@ -328,6 +335,22 @@
 .resourceButton strong,
 .resourceButton small {
   display: block;
+}
+
+.resourceRow > span,
+.resourceButton > span {
+  min-width: 0;
+  flex: 1;
+}
+
+.resourceRow small,
+.resourceButton small {
+  overflow-wrap: anywhere;
+}
+
+.resourceRow > .textButton,
+.resourceRow > small {
+  flex-shrink: 0;
 }
 
 .formPanel {
@@ -567,15 +590,120 @@
 }
 
 .tokenPanel {
-  align-self: start;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 100%;
+}
+
+.tokenPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.tokenPanelIntro {
+  display: grid;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tokenPanelIntro h2 {
+  margin: 0;
+}
+
+.tokenPanelIntro p {
+  margin: 0;
+}
+
+.tokenPanelAction {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.tokenResult {
+  margin-top: 8px;
 }
 
 .versionsPanel {
   grid-column: 1 / -1;
 }
 
-.tokenResult {
-  margin-top: 18px;
+.publishStepsPanel {
+  grid-column: 1 / -1;
+}
+
+.packageDetailSection {
+  margin-top: 24px;
+  min-width: 0;
+}
+
+.packageManagementGrid {
+  margin-top: 24px;
+}
+
+.dangerPanel {
+  grid-column: 1 / -1;
+}
+
+.commandSteps {
+  display: grid;
+  gap: 32px;
+}
+
+.commandStep h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.commandStepOptional h3 {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.commandStepOptional .commandStepDescription {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.commandStepDescription {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.commandStepDescription code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+
+.dangerActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.dangerAction + .dangerAction {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.dangerAction {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.dangerAction h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dangerAction .secondaryButton {
+  margin-top: 8px;
 }
 
 .tokenResult h3 {

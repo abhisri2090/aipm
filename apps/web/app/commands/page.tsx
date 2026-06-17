@@ -74,8 +74,8 @@ const useCommands: CommandItem[] = [
   {
     title: "Initialize a project",
     description: "Creates aipm.package.json in the current project and records the registry URL.",
-    code: "aipm init",
-    options: ["--registry <url>: set a custom registry", "--global: create global config instead of project config"],
+    code: "aipm init --target cursor",
+    options: ["--target <tool>: set cursor, claude, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
   },
   {
     title: "Search packages",

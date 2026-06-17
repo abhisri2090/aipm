@@ -1,8 +1,9 @@
-import { shell, cn } from "../../lib/page-styles";
+import { shell, cards, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { RegistrySearch } from "../../components/registry-search";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
+import { SKILL_DISCOVERY_PAGES } from "../../lib/skill-discovery";
 
 export const metadata = pageMetadata({
   title: "AI Skills Registry",
@@ -49,6 +50,23 @@ export default async function RegistryPage({
           <Link className={shell.button} href="/popular-skills">
             See popular skill ideas
           </Link>
+        </div>
+      </section>
+
+      <section className={shell.panelSection} aria-labelledby="browse-by-category-title">
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>Browse by tool or intent</p>
+            <h2 id="browse-by-category-title">SEO-ready skill entry points</h2>
+          </div>
+        </div>
+        <div className={cards.templateGrid}>
+          {SKILL_DISCOVERY_PAGES.map((page) => (
+            <Link className={cards.templateCard} href={`/skills/${page.slug}`} key={page.slug}>
+              <h3>{page.title}</h3>
+              <p>{page.description}</p>
+            </Link>
+          ))}
         </div>
       </section>
 

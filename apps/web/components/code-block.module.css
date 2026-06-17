@@ -61,3 +61,20 @@
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--accent-strong);
 }
+
+.codeBlockMuted .codeBlockShell,
+.codeBlockMuted .codeBlockShell pre {
+  background: color-mix(in srgb, var(--code) 72%, var(--panel));
+  color: color-mix(in srgb, var(--code-text) 62%, var(--muted));
+}
+
+.codeBlockMuted .codeBlockCopy {
+  background: color-mix(in srgb, var(--muted) 12%, transparent);
+  color: color-mix(in srgb, var(--muted) 78%, transparent);
+}
+
+.codeBlockMuted .codeBlockCopy:hover,
+.codeBlockMuted .codeBlockCopy:focus-visible {
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+  color: var(--muted);
+}

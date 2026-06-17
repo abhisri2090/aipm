@@ -4,14 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { CodeBlock } from "./code-block";
+import { PackageDetailView } from "./package-detail-view";
 import {
-  CLI_INSTALL_COMMAND,
-  CLI_INSTALL_SCRIPT_COMMAND,
-  CLI_VERSION,
   DEV_LOGIN_URL,
   GITHUB_LOGIN_URL,
   isLocalDevSite,
   packagePath,
+  packageShortName,
+  SITE_URL,
+  type PackageDetail,
 } from "../lib/registry";
 import { cn } from "../lib/class-names";
 import shell from "../app/page-shell.module.css";
@@ -199,6 +200,52 @@ function shellQuote(value: string): string {
   return `'${value.replace(/'/g, "'\\''")}'`;
 }
 
+function isOptionalCommandStep(step: { title: string; code: string; optional?: boolean }): boolean {
+  return step.optional ?? (/(\(optional\))/i.test(step.title) || /# \(optional\)/i.test(step.code));
+}
+
+function DashboardCommandStep({
+  title,
+  code,
+  description,
+  optional,
+}: {
+  title: string;
+  code: string;
+  description?: ReactNode;
+  optional?: boolean;
+}) {
+  const isOptional = optional ?? isOptionalCommandStep({ title, code });
+
+  return (
+    <section className={cn(dash.commandStep, isOptional && dash.commandStepOptional)}>
+      <h3>{title}</h3>
+      <CodeBlock code={code} muted={isOptional} />
+      {description ? <p className={dash.commandStepDescription}>{description}</p> : null}
+    </section>
+  );
+}
+
+function DashboardCommandSteps({
+  steps,
+}: {
+  steps: Array<{ title: string; code: string; description?: ReactNode; optional?: boolean }>;
+}) {
+  return (
+    <div className={dash.commandSteps}>
+      {steps.map((step) => (
+        <DashboardCommandStep
+          key={step.title}
+          code={step.code}
+          description={step.description}
+          optional={step.optional}
+          title={step.title}
+        />
+      ))}
+    </div>
+  );
+}
+
 function Avatar({ user, size = "normal" }: { user: Me | null; size?: "normal" | "large" }) {
   const label = user?.name ?? user?.githubLogin ?? "AIPM user";
   const initial = label.trim().charAt(0).toUpperCase() || "A";
@@ -250,7 +297,7 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "members" | "packages" | "tokens" | "activity" | "settings" | "profile" | "guide";
+  active: "overview" | "orgs" | "members" | "packages" | "tokens" | "activity" | "settings" | "profile";
   children: (context: { me: Me; orgs: Org[]; activeOrg: Org | null; setActiveOrgSlug: (slug: string) => void }) => ReactNode;
   intro?: string;
   title: string;
@@ -296,7 +343,6 @@ function DashboardShell({
     { href: "/dashboard/activity", id: "activity", label: "Activity" },
     { href: "/dashboard/settings", id: "settings", label: "Settings" },
     { href: "/dashboard/profile", id: "profile", label: "Profile" },
-    { href: "/publish/guide", id: "guide", label: "Publishing guide" },
   ];
 
   return (
@@ -1176,6 +1222,7 @@ function MembersContent({ org }: { org: Org }) {
   const [autoJoinDomain, setAutoJoinDomain] = useState(org.autoJoinDomain ?? "");
   const [status, setStatus] = useState("");
   const manageOrg = canManageOrg(org.role);
+  const pendingInvites = invites.filter((invite) => invite.status === "pending");
 
   useEffect(() => {
     if (org.defaultMemberRole) setInviteRole(org.defaultMemberRole);
@@ -1217,7 +1264,7 @@ function MembersContent({ org }: { org: Org }) {
         </article>
         <article className={dash.metricCard}>
           <span>Pending invites</span>
-          <strong>{invites.filter((invite) => invite.status === "pending").length}</strong>
+          <strong>{pendingInvites.length}</strong>
           <p>Invite links expire after 7 days.</p>
         </article>
       </section>
@@ -1419,56 +1466,54 @@ function MembersContent({ org }: { org: Org }) {
                 <h2>Invites</h2>
               </div>
             </div>
-            {invites.length > 0 ? (
+            {pendingInvites.length > 0 ? (
               <div className={dash.resourceList}>
-                {invites.map((invite) => (
+                {pendingInvites.map((invite) => (
                   <div className={dash.resourceRow} key={invite.id}>
                     <span>
                       <strong>{invite.githubLogin ? `@${invite.githubLogin}` : invite.email}</strong>
                       <small>{roleLabel(invite.role)} · {invite.status} · expires {shortDate(invite.expiresAt)}</small>
                     </span>
-                    {invite.status === "pending" ? (
-                      <span className={dash.rowActions}>
-                        <button
-                          className={dash.textButton}
-                          type="button"
-                          onClick={async () => {
-                            setInviteLink("");
-                            try {
-                              const result = await api<{ inviteUrl: string }>(
-                                `/v1/orgs/${org.slug}/invites/${invite.id}/resend`,
-                                { method: "POST", body: "{}" },
-                              );
-                              setInviteLink(result.inviteUrl);
-                              reload();
-                            } catch (err) {
-                              setStatus((err as Error).message);
-                            }
-                          }}
-                        >
-                          New link
-                        </button>
-                        <button
-                          className={dash.textButton}
-                          type="button"
-                          onClick={async () => {
-                            try {
-                              await api<void>(`/v1/orgs/${org.slug}/invites/${invite.id}`, { method: "DELETE" });
-                              reload();
-                            } catch (err) {
-                              setStatus((err as Error).message);
-                            }
-                          }}
-                        >
-                          Revoke
-                        </button>
-                      </span>
-                    ) : null}
+                    <span className={dash.rowActions}>
+                      <button
+                        className={dash.textButton}
+                        type="button"
+                        onClick={async () => {
+                          setInviteLink("");
+                          try {
+                            const result = await api<{ inviteUrl: string }>(
+                              `/v1/orgs/${org.slug}/invites/${invite.id}/resend`,
+                              { method: "POST", body: "{}" },
+                            );
+                            setInviteLink(result.inviteUrl);
+                            reload();
+                          } catch (err) {
+                            setStatus((err as Error).message);
+                          }
+                        }}
+                      >
+                        New link
+                      </button>
+                      <button
+                        className={dash.textButton}
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await api<void>(`/v1/orgs/${org.slug}/invites/${invite.id}`, { method: "DELETE" });
+                            reload();
+                          } catch (err) {
+                            setStatus((err as Error).message);
+                          }
+                        }}
+                      >
+                        Revoke
+                      </button>
+                    </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className={shell.empty}>No invites yet.</div>
+              <div className={shell.empty}>No pending invites</div>
             )}
           </article>
         </section>
@@ -1570,11 +1615,16 @@ function TokensContent({ org }: { org: Org }) {
         <p className={shell.eyebrow}>CLI flow</p>
         <h2>Publish from terminal</h2>
         <p className={shell.muted}>Use this sequence after your package folder exists and your files are ready.</p>
-        <CodeBlock
-          code={`aipm publish add .
-aipm publish validate
-aipm publish token --package ${selectedPackage || `@${org.slug}/your-package`} # optional
-AIPM_TOKEN=<token> aipm publish push --yes`}
+        <DashboardCommandSteps
+          steps={[
+            { title: "Stage files for publish", code: "aipm publish add ." },
+            { title: "Validate before publish", code: "aipm publish validate" },
+            {
+              title: "Generate a publish token (optional)",
+              code: `aipm publish token --package ${selectedPackage || `@${org.slug}/your-package`} # optional`,
+            },
+            { title: "Push the release", code: "AIPM_TOKEN=<token> aipm publish push --yes" },
+          ]}
         />
       </article>
 
@@ -1790,6 +1840,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
   }, [reload]);
 
   const manageOrg = canManageOrg(org?.role);
+  const pendingInvites = invites.filter((invite) => invite.status === "pending");
 
   return (
     <DashboardShell
@@ -2050,58 +2101,56 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
                     <h2>Invites</h2>
                   </div>
                 </div>
-                {invites.length > 0 ? (
+                {pendingInvites.length > 0 ? (
                   <div className={dash.resourceList}>
-                    {invites.map((invite) => (
+                    {pendingInvites.map((invite) => (
                       <div className={dash.resourceRow} key={invite.id}>
                         <span>
                           <strong>{invite.githubLogin ? `@${invite.githubLogin}` : invite.email}</strong>
                           <small>{roleLabel(invite.role)} · {invite.status} · expires {shortDate(invite.expiresAt)}</small>
                         </span>
-                        {invite.status === "pending" ? (
-                          <span className={dash.rowActions}>
-                            <button
-                              className={dash.textButton}
-                              type="button"
-                              onClick={async () => {
-                                setStatus("");
-                                setInviteLink("");
-                                try {
-                                  const result = await api<{ inviteUrl: string }>(
-                                    `/v1/orgs/${orgSlug}/invites/${invite.id}/resend`,
-                                    { method: "POST", body: "{}" },
-                                  );
-                                  setInviteLink(result.inviteUrl);
-                                  reload();
-                                } catch (err) {
-                                  setStatus((err as Error).message);
-                                }
-                              }}
-                            >
-                              New link
-                            </button>
-                            <button
-                              className={dash.textButton}
-                              type="button"
-                              onClick={async () => {
-                                setStatus("");
-                                try {
-                                  await api<void>(`/v1/orgs/${orgSlug}/invites/${invite.id}`, { method: "DELETE" });
-                                  reload();
-                                } catch (err) {
-                                  setStatus((err as Error).message);
-                                }
-                              }}
-                            >
-                              Revoke
-                            </button>
-                          </span>
-                        ) : null}
+                        <span className={dash.rowActions}>
+                          <button
+                            className={dash.textButton}
+                            type="button"
+                            onClick={async () => {
+                              setStatus("");
+                              setInviteLink("");
+                              try {
+                                const result = await api<{ inviteUrl: string }>(
+                                  `/v1/orgs/${orgSlug}/invites/${invite.id}/resend`,
+                                  { method: "POST", body: "{}" },
+                                );
+                                setInviteLink(result.inviteUrl);
+                                reload();
+                              } catch (err) {
+                                setStatus((err as Error).message);
+                              }
+                            }}
+                          >
+                            New link
+                          </button>
+                          <button
+                            className={dash.textButton}
+                            type="button"
+                            onClick={async () => {
+                              setStatus("");
+                              try {
+                                await api<void>(`/v1/orgs/${orgSlug}/invites/${invite.id}`, { method: "DELETE" });
+                                reload();
+                              } catch (err) {
+                                setStatus((err as Error).message);
+                              }
+                            }}
+                          >
+                            Revoke
+                          </button>
+                        </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className={shell.empty}>No invites yet.</div>
+                  <div className={shell.empty}>No pending invites</div>
                 )}
               </article>
 
@@ -2198,6 +2247,15 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const [deprecationMessage, setDeprecationMessage] = useState("");
   const [packageStatus, setPackageStatus] = useState("");
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [packageDetail, setPackageDetail] = useState<PackageDetail | null>(null);
+  const [packageDetailError, setPackageDetailError] = useState("");
+
+  const latestVersion = useMemo(() => {
+    if (versions.length === 0) return null;
+    return [...versions].sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    )[0];
+  }, [versions]);
 
   useEffect(() => {
     const params = new URLSearchParams({ q: packageName, limit: "20" });
@@ -2238,132 +2296,142 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
       .catch(() => undefined);
   }, [packageName, scope]);
 
+  useEffect(() => {
+    if (!latestVersion) {
+      setPackageDetail(null);
+      setPackageDetailError("");
+      return;
+    }
+    api<PackageDetail>(
+      `/v1/packages/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(latestVersion.version)}`,
+    )
+      .then((detail) => {
+        setPackageDetail(detail);
+        setPackageDetailError("");
+      })
+      .catch((err: unknown) => {
+        setPackageDetail(null);
+        setPackageDetailError(publicApiError(err));
+      });
+  }, [packageName, latestVersion]);
+
   const canManageMembers = access?.orgRole === "owner" || access?.orgRole === "admin";
 
-  const command = useMemo(
-    () => `# Install AIPM CLI ${CLI_VERSION} via npm
-${CLI_INSTALL_COMMAND}
-
-# Install AIPM CLI ${CLI_VERSION} via macOS/Linux standalone
-${CLI_INSTALL_SCRIPT_COMMAND}
-
-# Check the install
-aipm --version
-aipm doctor # (optional)
-
-aipm publish init --name ${packageName} --template code-review
-cd ${packageFolderName(packageName)}
-aipm publish explain # (optional)
-aipm publish add .
-aipm publish status # (optional)
-aipm publish preview # (optional)
-aipm publish validate # (optional)
-aipm publish token --package ${packageName} # (optional)
-AIPM_TOKEN=<token> aipm publish push --yes`,
+  const publishCommandSteps = useMemo(
+    () => [
+      {
+        title: "Initialize this package",
+        description: (
+          <>
+            <code>--template</code> chooses the starter SKILL.md layout.{" "}
+            <Link className={shell.textLink} href="/templates">
+              See template options
+            </Link>
+          </>
+        ),
+        code: `aipm publish init --name ${packageName} --template code-review`,
+      },
+      {
+        title: "Enter the package folder",
+        code: `cd ${packageFolderName(packageName)}`,
+      },
+      {
+        title: "Review generated files (optional)",
+        code: "aipm publish explain # (optional)",
+      },
+      {
+        title: "Stage files for publish",
+        code: "aipm publish add .",
+      },
+      {
+        title: "Review staged files (optional)",
+        code: "aipm publish status # (optional)",
+      },
+      {
+        title: "Preview the release (optional)",
+        code: "aipm publish preview # (optional)",
+      },
+      {
+        title: "Validate before publish",
+        code: "aipm publish validate # (optional)",
+      },
+      {
+        title: "Generate a publish token (optional)",
+        code: `aipm publish token --package ${packageName} # (optional)`,
+      },
+      {
+        title: "Push the release",
+        code: "AIPM_TOKEN=<token> aipm publish push --yes",
+      },
+    ],
     [packageName],
   );
   const tokenPushCommand = token
     ? `AIPM_TOKEN=${shellQuote(token.token)} aipm publish push --yes`
     : "";
+  const hasPublishedVersions = versions.length > 0;
+  const dashboardTitle = hasPublishedVersions && packageDetail ? packageShortName(packageName) : packageName;
+  const dashboardIntro =
+    hasPublishedVersions && packageDetail
+      ? packageDetail.manifest.description
+      : "Generate a short-lived token, then push a staged skill from the CLI.";
+  const publicPackageUrl =
+    latestVersion != null ? `${SITE_URL}${packagePath(packageName, latestVersion.version)}` : `${SITE_URL}${packagePath(packageName, "latest")}`;
 
   return (
     <DashboardShell
       active="packages"
-      intro="Generate a short-lived token, then push a staged skill from the CLI."
-      title={packageName}
+      intro={dashboardIntro}
+      title={dashboardTitle}
     >
       {() => (
-        <section className={dash.dashboardGrid}>
-          <article className={dash.dashboardPanel}>
-            <p className={shell.eyebrow}>Package settings</p>
-            <h2>Visibility and lifecycle</h2>
-            {deprecatedAt ? <p className={shell.notice}>Deprecated{deprecationMessage ? `: ${deprecationMessage}` : ""}</p> : null}
-            {canManageMembers ? (
-              <>
-                <label htmlFor="package-visibility">Visibility</label>
-                <select
-                  id="package-visibility"
-                  value={visibility}
-                  onChange={async (event) => {
-                    const next = event.target.value as "public" | "private";
-                    if (next === "public" && visibility === "private" && !window.confirm("Make this package public?")) return;
-                    setPackageStatus("");
-                    try {
-                      await api<{ visibility: "public" | "private" }>(`/v1/packages/${encodeURIComponent(packageName)}`, {
-                        method: "PATCH",
-                        body: JSON.stringify({ visibility: next }),
-                      });
-                      setVisibility(next);
-                    } catch (err) {
-                      setPackageStatus((err as Error).message);
-                    }
-                  }}
-                >
-                  <option value="public">Public</option>
-                  <option value="private">Private</option>
-                </select>
-                {!deprecatedAt ? (
-                  <form
-                    className={dash.compactForm}
-                    onSubmit={async (event) => {
-                      event.preventDefault();
-                      setPackageStatus("");
-                      try {
-                        await api<{ deprecatedAt: string }>(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, {
-                          method: "POST",
-                          body: JSON.stringify({ message: deprecationMessage || null }),
-                        });
-                        setDeprecatedAt(new Date().toISOString());
-                      } catch (err) {
-                        setPackageStatus((err as Error).message);
-                      }
-                    }}
-                  >
-                    <label htmlFor="deprecation-message">Deprecation message</label>
-                    <input id="deprecation-message" value={deprecationMessage} onChange={(e) => setDeprecationMessage(e.target.value)} />
-                    <button type="submit">Deprecate package</button>
-                  </form>
-                ) : (
-                  <button
-                    className={dash.secondaryButton}
-                    type="button"
-                    onClick={async () => {
-                      setPackageStatus("");
-                      try {
-                        await api(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, { method: "DELETE" });
-                        setDeprecatedAt(null);
-                        setDeprecationMessage("");
-                      } catch (err) {
-                        setPackageStatus((err as Error).message);
-                      }
-                    }}
-                  >
-                    Remove deprecation
-                  </button>
-                )}
-              </>
-            ) : (
-              <p className={shell.muted}>{visibility === "private" ? "Private package" : "Public package"}</p>
-            )}
-            {packageStatus ? <p className={shell.notice}>{packageStatus}</p> : null}
-          </article>
-          <article className={dash.dashboardPanel}>
-            <div className={shell.sectionHeading}>
-              <div>
-                <p className={shell.eyebrow}>CLI release</p>
-                <h2>Publish steps</h2>
+        <>
+          {hasPublishedVersions ? (
+            <section className={dash.packageDetailSection}>
+              {packageDetail ? (
+                <PackageDetailView canonicalUrl={publicPackageUrl} pkg={packageDetail} showHeader={false} />
+              ) : packageDetailError ? (
+                <p className={shell.notice}>{packageDetailError}</p>
+              ) : (
+                <p className={shell.muted}>Loading package details...</p>
+              )}
+            </section>
+          ) : null}
+          <section className={cn(dash.dashboardGrid, hasPublishedVersions && dash.packageManagementGrid)}>
+          {!hasPublishedVersions ? (
+            <article className={cn(dash.dashboardPanel, dash.publishStepsPanel)}>
+              <div className={shell.sectionHeading}>
+                <div>
+                  <p className={shell.eyebrow}>CLI release</p>
+                  <h2>Publish Skill in 3 Steps</h2>
+                </div>
               </div>
-            </div>
-            <p className={shell.muted}>Copy this flow when preparing and publishing this package from your terminal.</p>
-            <CodeBlock code={command} />
-          </article>
+              <p className={shell.muted}>Copy this flow when preparing and publishing this package from your terminal.</p>
+              <DashboardCommandSteps steps={publishCommandSteps} />
+            </article>
+          ) : null}
           <article className={cn(dash.dashboardPanel, dash.tokenPanel)}>
-            <p className={shell.eyebrow}>Token</p>
-            <h2>Generate publish token</h2>
-            <p className={shell.muted}>
-              Tokens are shown once, scoped to this package, and expire after 5 minutes. Members need package maintainer access.
-            </p>
+            <div className={dash.tokenPanelContent}>
+              <div className={dash.tokenPanelIntro}>
+                <p className={shell.eyebrow}>Token</p>
+                <h2>Generate publish token</h2>
+                <p className={shell.muted}>
+                  Tokens are shown once, scoped to this package, and expire after 5 minutes. Members need package maintainer access.
+                </p>
+              </div>
+              {error ? <p className={shell.notice}>{error}</p> : null}
+              {token ? (
+                <section className={dash.tokenResult}>
+                  <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
+                  <CodeBlock code={token.token} />
+                  <h3>Ready-to-run push command</h3>
+                  <p>Run this inside the package folder after staging and validating files.</p>
+                  <CodeBlock code={tokenPushCommand} />
+                </section>
+              ) : null}
+            </div>
             <button
+              className={dash.tokenPanelAction}
               type="button"
               onClick={async () => {
                 setError("");
@@ -2381,16 +2449,6 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
             >
               Generate token
             </button>
-            {error ? <p className={shell.notice}>{error}</p> : null}
-            {token ? (
-              <section className={dash.tokenResult}>
-                <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
-                <CodeBlock code={token.token} />
-                <h3>Ready-to-run push command</h3>
-                <p>Run this inside the package folder after staging and validating files.</p>
-                <CodeBlock code={tokenPushCommand} />
-              </section>
-            ) : null}
           </article>
           <article className={dash.dashboardPanel}>
             <div className={shell.sectionHeading}>
@@ -2467,12 +2525,19 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
           <article className={cn(dash.dashboardPanel, dash.versionsPanel)}>
             <div className={shell.sectionHeading}>
               <div>
-                <p className={shell.eyebrow}>Public registry</p>
+                <p className={shell.eyebrow}>{visibility === "private" ? "Private package" : "Public registry"}</p>
                 <h2>Published versions</h2>
+                <p className={shell.muted}>
+                  {visibility === "private"
+                    ? "Versions stay off the public registry. Install with an org install token."
+                    : "Published versions appear on the public registry for anyone to discover and install."}
+                </p>
               </div>
-              <Link className={shell.textLink} href="/registry">
-                Open registry
-              </Link>
+              {visibility === "public" ? (
+                <Link className={shell.textLink} href="/registry">
+                  Open registry
+                </Link>
+              ) : null}
             </div>
             {versionsError ? <p className={shell.notice}>{versionsError}</p> : null}
             {versions.length > 0 ? (
@@ -2513,43 +2578,140 @@ AIPM_TOKEN=<token> aipm publish push --yes`,
               </div>
             ) : (
               <div className={shell.empty}>
-                No public versions yet. Generate a token, publish from the CLI, then refresh this page.
+                {visibility === "private"
+                  ? "No versions published yet. Generate a publish token, push from the CLI, then refresh this page. Installs require an org install token."
+                  : "No public versions yet. Generate a token, publish from the CLI, then refresh this page."}
               </div>
             )}
           </article>
-          {canManageMembers ? (
-            <article className={dash.dashboardPanel}>
-              <p className={shell.eyebrow}>Danger zone</p>
-              <h2>Delete skill</h2>
-              <p className={shell.muted}>
-                Permanently removes all published versions, blobs, and the reserved name. This cannot be undone.
-              </p>
-              <label htmlFor="delete-package-name">Type {packageName} to confirm</label>
-              <input
-                id="delete-package-name"
-                value={deleteConfirmName}
-                onChange={(e) => setDeleteConfirmName(e.target.value)}
-                placeholder={packageName}
-              />
-              <button
-                className={dash.secondaryButton}
-                disabled={deleteConfirmName !== packageName}
-                type="button"
-                onClick={async () => {
-                  setPackageStatus("");
-                  try {
-                    await api<void>(`/v1/packages/${encodeURIComponent(packageName)}`, { method: "DELETE" });
-                    window.location.href = "/dashboard/packages";
-                  } catch (err) {
-                    setPackageStatus((err as Error).message);
-                  }
-                }}
-              >
-                Delete skill
-              </button>
-            </article>
-          ) : null}
+          <article className={cn(dash.dashboardPanel, dash.dangerPanel)}>
+            <p className={shell.eyebrow}>{canManageMembers ? "Package lifecycle" : "Package settings"}</p>
+            <div className={dash.dangerActions}>
+              <section className={dash.dangerAction}>
+                <h2>Visibility and lifecycle</h2>
+                {canManageMembers ? (
+                  <div className={dash.compactForm}>
+                    <label htmlFor="package-visibility">Visibility</label>
+                    <select
+                      id="package-visibility"
+                      value={visibility}
+                      onChange={async (event) => {
+                        const next = event.target.value as "public" | "private";
+                        if (next === "public" && visibility === "private" && !window.confirm("Make this package public?")) return;
+                        setPackageStatus("");
+                        try {
+                          await api<{ visibility: "public" | "private" }>(`/v1/packages/${encodeURIComponent(packageName)}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({ visibility: next }),
+                          });
+                          setVisibility(next);
+                        } catch (err) {
+                          setPackageStatus((err as Error).message);
+                        }
+                      }}
+                    >
+                      <option value="public">Public</option>
+                      <option value="private">Private</option>
+                    </select>
+                    <p className={dash.fieldHelp}>
+                      {visibility === "private"
+                        ? "Hidden from the public registry. Installs require an org install token."
+                        : "Listed on the public registry for anyone to discover and install."}
+                    </p>
+                  </div>
+                ) : (
+                  <p className={shell.muted}>{visibility === "private" ? "Private package" : "Public package"}</p>
+                )}
+              </section>
+              {canManageMembers ? (
+                <>
+                  <section className={dash.dangerAction}>
+                    <h2>Deprecate skill</h2>
+                  {deprecatedAt ? (
+                    <>
+                      <p className={shell.muted}>
+                        Deprecated{deprecationMessage ? `: ${deprecationMessage}` : ""}
+                      </p>
+                      <button
+                        className={dash.secondaryButton}
+                        type="button"
+                        onClick={async () => {
+                          setPackageStatus("");
+                          try {
+                            await api(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, { method: "DELETE" });
+                            setDeprecatedAt(null);
+                            setDeprecationMessage("");
+                          } catch (err) {
+                            setPackageStatus((err as Error).message);
+                          }
+                        }}
+                      >
+                        Remove deprecation
+                      </button>
+                    </>
+                  ) : (
+                    <form
+                      className={dash.compactForm}
+                      onSubmit={async (event) => {
+                        event.preventDefault();
+                        setPackageStatus("");
+                        try {
+                          await api<{ deprecatedAt: string }>(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, {
+                            method: "POST",
+                            body: JSON.stringify({ message: deprecationMessage || null }),
+                          });
+                          setDeprecatedAt(new Date().toISOString());
+                        } catch (err) {
+                          setPackageStatus((err as Error).message);
+                        }
+                      }}
+                    >
+                      <label htmlFor="deprecation-message">Deprecation message</label>
+                      <input
+                        id="deprecation-message"
+                        value={deprecationMessage}
+                        onChange={(e) => setDeprecationMessage(e.target.value)}
+                      />
+                      <button type="submit">Deprecate package</button>
+                    </form>
+                  )}
+                </section>
+                <section className={dash.dangerAction}>
+                  <h2>Delete skill</h2>
+                  <p className={shell.muted}>
+                    Permanently removes all published versions, blobs, and the reserved name. This cannot be undone.
+                  </p>
+                  <label htmlFor="delete-package-name">Type {packageName} to confirm</label>
+                  <input
+                    id="delete-package-name"
+                    value={deleteConfirmName}
+                    onChange={(e) => setDeleteConfirmName(e.target.value)}
+                    placeholder={packageName}
+                  />
+                  <button
+                    className={dash.secondaryButton}
+                    disabled={deleteConfirmName !== packageName}
+                    type="button"
+                    onClick={async () => {
+                      setPackageStatus("");
+                      try {
+                        await api<void>(`/v1/packages/${encodeURIComponent(packageName)}`, { method: "DELETE" });
+                        window.location.href = "/dashboard/packages";
+                      } catch (err) {
+                        setPackageStatus((err as Error).message);
+                      }
+                    }}
+                  >
+                    Delete skill
+                  </button>
+                </section>
+                </>
+              ) : null}
+            </div>
+            {packageStatus ? <p className={shell.notice}>{packageStatus}</p> : null}
+          </article>
         </section>
+        </>
       )}
     </DashboardShell>
   );
@@ -2642,26 +2804,28 @@ function SettingsContent({ org }: { org: Org }) {
       {details.role === "owner" ? (
         <article className={dash.dashboardPanel}>
           <p className={shell.eyebrow}>Danger zone</p>
-          <h2>Delete organization</h2>
-          <p className={shell.muted}>Soft-deletes @{org.slug}. Slug stays reserved for 30 days. Blocked if any package has published versions.</p>
-          <label htmlFor="delete-org-slug">Type @{org.slug} to confirm</label>
-          <input id="delete-org-slug" value={deleteSlug} onChange={(e) => setDeleteSlug(e.target.value)} placeholder={`@${org.slug}`} />
-          <button
-            className={dash.secondaryButton}
-            disabled={deleteSlug !== `@${org.slug}`}
-            type="button"
-            onClick={async () => {
-              setStatus("");
-              try {
-                await api<void>(`/v1/orgs/${org.slug}`, { method: "DELETE" });
-                window.location.href = "/dashboard";
-              } catch (err) {
-                setStatus((err as Error).message);
-              }
-            }}
-          >
-            Delete organization
-          </button>
+          <section className={dash.dangerAction}>
+            <h2>Delete organization</h2>
+            <p className={shell.muted}>Soft-deletes @{org.slug}. Slug stays reserved for 30 days. Blocked if any package has published versions.</p>
+            <label htmlFor="delete-org-slug">Type @{org.slug} to confirm</label>
+            <input id="delete-org-slug" value={deleteSlug} onChange={(e) => setDeleteSlug(e.target.value)} placeholder={`@${org.slug}`} />
+            <button
+              className={dash.secondaryButton}
+              disabled={deleteSlug !== `@${org.slug}`}
+              type="button"
+              onClick={async () => {
+                setStatus("");
+                try {
+                  await api<void>(`/v1/orgs/${org.slug}`, { method: "DELETE" });
+                  window.location.href = "/dashboard";
+                } catch (err) {
+                  setStatus((err as Error).message);
+                }
+              }}
+            >
+              Delete organization
+            </button>
+          </section>
         </article>
       ) : null}
     </section>

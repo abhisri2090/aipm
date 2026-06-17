@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -22,6 +23,82 @@ async function readJson(path: string): Promise<unknown> {
 }
 
 describe("CLI publish commands", () => {
+  it("initializes a project non-interactively with an explicit target", async () => {
+    const root = await tempWorkspace();
+
+    const result = await runCli(root, [
+      "init",
+      "--registry",
+      "https://api.example.test",
+      "--target",
+      "cursor",
+    ]);
+
+    const config = await readJson(join(root, "aipm.package.json"));
+    expect(config).toMatchObject({
+      schemaVersion: "0.1",
+      registry: "https://api.example.test",
+      preferredTools: ["cursor"],
+      packages: {},
+    });
+    expect(result.stdout).toContain("Created aipm.package.json");
+  });
+
+  it("rejects invalid init targets", async () => {
+    const root = await tempWorkspace();
+
+    await expect(runCli(root, ["init", "--target", "vscode"])).rejects.toMatchObject({
+      stderr: expect.stringContaining('--target must be "cursor", "claude", or "*"'),
+    });
+  });
+
+  it("prints website package links after direct publish", async () => {
+    const root = await tempWorkspace();
+    const skillRoot = join(root, "url-check");
+    await mkdir(skillRoot);
+    await writeFile(join(skillRoot, "SKILL.md"), "# URL check\n");
+    await writeFile(
+      join(skillRoot, "aipm.manifest.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "@team/url-check",
+        version: "2.0.0",
+        type: "skill",
+        description: "URL check skill",
+        entry: "SKILL.md",
+        targets: ["cursor"],
+      }),
+    );
+
+    const server = createServer((request, response) => {
+      expect(request.url).toBe(`/v1/packages/${encodeURIComponent("@team/url-check")}/versions`);
+      response.writeHead(201, { "content-type": "application/json" });
+      response.end(JSON.stringify({ name: "@team/url-check", version: "2.0.0", integrity: "sha256-test" }));
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+
+    try {
+      const result = await runCli(root, [
+        "publish",
+        skillRoot,
+        "--registry",
+        `http://127.0.0.1:${address.port}`,
+        "--token",
+        "test-token",
+      ]);
+
+      expect(result.stdout).toContain("View: https://aipm-registry.com/packages/team/url-check/2.0.0");
+      expect(result.stdout).toContain("Install: aipm add @team/url-check@2.0.0 --target cursor --ci");
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
   it("creates a skill-named package folder by default", async () => {
     const root = await tempWorkspace();
 
@@ -50,6 +127,11 @@ describe("CLI publish commands", () => {
       description: "Review helper skill",
       entry: "SKILL.md",
       targets: ["cursor", "claude"],
+      usage: expect.stringContaining("Review helper skill"),
+      tags: ["ai-skill"],
+      categories: ["AI workflow"],
+      examples: [expect.objectContaining({ title: "Use this skill in a project" })],
+      releaseNotes: "Initial release.",
     });
     expect(result.stdout).toContain("Created @team/review-helper skill folder:");
     expect(result.stdout).toContain("Next: Run cd review-helper");
@@ -117,6 +199,9 @@ describe("CLI publish commands", () => {
       description: "Imported helper skill",
       entry: "SKILL.md",
       targets: ["cursor"],
+      usage: expect.stringContaining("Imported helper skill"),
+      tags: ["ai-skill"],
+      categories: ["AI workflow"],
     });
     expect(skill).toContain("Existing skill");
     expect(notes).toContain("Notes");

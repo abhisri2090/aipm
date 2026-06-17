@@ -127,6 +127,12 @@ export default function DiscoverabilityPage() {
 Weak:
 "AI-powered productivity helper for better workflows."`}
           />
+          <p>
+            Add the supporting fields too: <code>usage</code> for longer guidance,{" "}
+            <code>tags</code> and <code>categories</code> for discovery pages,{" "}
+            <code>sourceUrl</code> for imported or open-source packages, <code>examples</code> for
+            real prompts, and <code>releaseNotes</code> for every published version.
+          </p>
         </section>
 
         <section>

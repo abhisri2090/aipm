@@ -36,7 +36,7 @@ aipm doctor
 Start in any project folder:
 
 ```bash
-aipm init
+aipm init --target cursor
 ```
 
 *Search the registry at [aipm-registry.com](https://aipm-registry.com) for a skill:*
@@ -132,4 +132,3 @@ For a local or private registry, use `--registry <url>`, or set `AIPM_REGISTRY_U
 - **Publishing guide:** [aipm-registry.com/publish](https://aipm-registry.com/publish)
 - **Docs & examples:** [aipm-registry.com/examples](https://aipm-registry.com/examples)
 - **Source code:** [github.com/aipm-registry/aipm](https://github.com/aipm-registry/aipm)
-
