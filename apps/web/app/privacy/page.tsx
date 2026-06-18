@@ -14,11 +14,15 @@ const dataItems = [
   },
   {
     title: "Organization and package records",
-    body: "Org names, package names, metadata, versions, and public package files are stored by the registry.",
+    body: "Org names, package names, metadata, versions, visibility settings, and package files are stored by the registry.",
   },
   {
     title: "Short-lived publish tokens",
     body: "Publish tokens are used by the CLI, expire quickly, and should not be saved in project files.",
+  },
+  {
+    title: "CLI login sessions",
+    body: "CLI login stores a local session on your machine so private package reads do not require pasting a token into every command.",
   },
   {
     title: "Operational logs",
@@ -31,7 +35,7 @@ const dataItems = [
 ];
 
 const packageRules = [
-  "Published packages are public by default.",
+  "Packages can be public or private. Public packages are visible to everyone; private packages are visible to org members with access.",
   "Do not publish credentials, private prompts, customer data, internal documents, or private project notes.",
   "Use aipm publish preview and .aipmignore before publishing.",
   "Rotate any exposed secret immediately. Removing a package does not make a leaked secret safe again.",
@@ -73,8 +77,8 @@ export default function PrivacyPage() {
         <p className={shell.eyebrow}>Privacy</p>
         <h1>Know what is public and what should stay private.</h1>
         <p className={shell.lede}>
-          AIPM is built for public AI skill packages. This page explains what data is used for
-          accounts, publisher profiles, package metadata, tokens, and project files.
+          AIPM supports public registry packages and private org packages. This page explains what
+          data is used for accounts, publisher profiles, package metadata, tokens, and project files.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/security">
@@ -99,8 +103,8 @@ export default function PrivacyPage() {
         <section>
           <h2>What becomes public</h2>
           <p>
-            Package names, descriptions, targets, versions, manifests, and included skill files are
-            public registry content. Check them before you publish.
+            Public package names, descriptions, targets, versions, manifests, and included skill
+            files are public registry content. Check them before you publish.
           </p>
           <ul className={docs.checkList}>
             {packageRules.map((rule) => (
@@ -122,7 +126,7 @@ export default function PrivacyPage() {
           <h2>Privacy work still planned</h2>
           <p>
             AIPM should add account deletion, package owner transfer, stronger audit logs, verified
-            publisher labels, private packages, and a privacy contact channel.
+            publisher labels, package access exports, and a privacy contact channel.
           </p>
         </section>
       </article>

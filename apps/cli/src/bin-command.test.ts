@@ -14,8 +14,15 @@ async function tempWorkspace(): Promise<string> {
   return mkdtemp(join(tmpdir(), "aipm-cli-command-"));
 }
 
-async function runCli(cwd: string, args: string[]): Promise<{ stderr: string; stdout: string }> {
-  return execFileAsync(process.execPath, [cliPath, ...args], { cwd });
+async function runCli(
+  cwd: string,
+  args: string[],
+  env?: NodeJS.ProcessEnv,
+): Promise<{ stderr: string; stdout: string }> {
+  return execFileAsync(process.execPath, [cliPath, ...args], {
+    cwd,
+    env: { ...process.env, ...env },
+  });
 }
 
 async function readJson(path: string): Promise<unknown> {
@@ -207,5 +214,265 @@ describe("CLI publish commands", () => {
     expect(notes).toContain("Notes");
     expect(result.stdout).toContain("Copied");
     expect(result.stdout).toContain("Next: Run cd existing-helper");
+  });
+
+  it("uses stored CLI login when no install token is passed", async () => {
+    const root = await tempWorkspace();
+    const home = await tempWorkspace();
+    await mkdir(join(home, ".aipm"), { recursive: true });
+    await writeFile(
+      join(home, ".aipm", "auth.json"),
+      JSON.stringify({
+        registries: {
+          "http://127.0.0.1:0": {
+            refreshToken: "aipm_cli_refresh_test",
+            refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      }),
+    );
+
+    let sawRefresh = false;
+    let sawSearchAuth = false;
+    const server = createServer((request, response) => {
+      if (request.url === "/v1/cli-auth/refresh") {
+        sawRefresh = true;
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(
+          JSON.stringify({
+            tokenType: "Bearer",
+            accessToken: "aipm_cli_access_refreshed",
+            accessTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          }),
+        );
+        return;
+      }
+      if (request.url?.startsWith("/v1/packages?")) {
+        sawSearchAuth = request.headers.authorization === "Bearer aipm_cli_access_refreshed";
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ packages: [] }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    await writeFile(
+      join(home, ".aipm", "auth.json"),
+      JSON.stringify({
+        registries: {
+          [registry]: {
+            refreshToken: "aipm_cli_refresh_test",
+            refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      }),
+    );
+
+    try {
+      await runCli(root, ["search", "private", "--registry", registry], { HOME: home });
+      expect(sawRefresh).toBe(true);
+      expect(sawSearchAuth).toBe(true);
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("prefers an explicit install token over stored CLI login", async () => {
+    const root = await tempWorkspace();
+    const home = await tempWorkspace();
+    await mkdir(join(home, ".aipm"), { recursive: true });
+
+    let sawRefresh = false;
+    let sawExplicitAuth = false;
+    const server = createServer((request, response) => {
+      if (request.url === "/v1/cli-auth/refresh") {
+        sawRefresh = true;
+        response.writeHead(500);
+        response.end();
+        return;
+      }
+      if (request.url?.startsWith("/v1/packages?")) {
+        sawExplicitAuth = request.headers.authorization === "Bearer explicit-install-token";
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ packages: [] }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    await writeFile(
+      join(home, ".aipm", "auth.json"),
+      JSON.stringify({
+        registries: {
+          [registry]: {
+            refreshToken: "aipm_cli_refresh_should_not_be_used",
+            refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      }),
+    );
+
+    try {
+      await runCli(root, ["search", "private", "--registry", registry, "--token", "explicit-install-token"], {
+        HOME: home,
+      });
+      expect(sawRefresh).toBe(false);
+      expect(sawExplicitAuth).toBe(true);
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("warns and falls back to public search when stored CLI login is expired", async () => {
+    const root = await tempWorkspace();
+    const home = await tempWorkspace();
+    await mkdir(join(home, ".aipm"), { recursive: true });
+
+    const server = createServer((request, response) => {
+      if (request.url === "/v1/cli-auth/refresh") {
+        response.writeHead(401, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: "CLI session expired or revoked" }));
+        return;
+      }
+      if (request.url?.startsWith("/v1/packages?")) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ packages: [] }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    await writeFile(
+      join(home, ".aipm", "auth.json"),
+      JSON.stringify({
+        registries: {
+          [registry]: {
+            refreshToken: "aipm_cli_refresh_expired",
+            refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      }),
+    );
+
+    try {
+      const result = await runCli(root, ["search", "private", "--registry", registry], { HOME: home });
+      expect(result.stdout).toContain("No packages found.");
+      expect(result.stderr).toContain("Run aipm login to access private packages.");
+      const auth = await readJson(join(home, ".aipm", "auth.json"));
+      expect(auth).toMatchObject({ registries: {} });
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("fails whoami clearly when stored CLI login is expired", async () => {
+    const root = await tempWorkspace();
+    const home = await tempWorkspace();
+    await mkdir(join(home, ".aipm"), { recursive: true });
+
+    const server = createServer((request, response) => {
+      if (request.url === "/v1/cli-auth/refresh") {
+        response.writeHead(401, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: "CLI session expired or revoked" }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    await writeFile(
+      join(home, ".aipm", "auth.json"),
+      JSON.stringify({
+        registries: {
+          [registry]: {
+            refreshToken: "aipm_cli_refresh_expired",
+            refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      }),
+    );
+
+    try {
+      await expect(runCli(root, ["whoami", "--registry", registry], { HOME: home })).rejects.toMatchObject({
+        stderr: expect.stringContaining("Run aipm login to access private packages."),
+      });
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("logout revokes and removes the stored CLI session", async () => {
+    const root = await tempWorkspace();
+    const home = await tempWorkspace();
+    await mkdir(join(home, ".aipm"), { recursive: true });
+
+    let sawLogout = false;
+    const server = createServer((request, response) => {
+      if (request.url === "/v1/cli-auth/logout") {
+        sawLogout = request.method === "POST";
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    await writeFile(
+      join(home, ".aipm", "auth.json"),
+      JSON.stringify({
+        registries: {
+          [registry]: {
+            refreshToken: "aipm_cli_refresh_logout",
+            refreshTokenExpiresAt: new Date(Date.now() + 60_000).toISOString(),
+          },
+        },
+      }),
+    );
+
+    try {
+      const result = await runCli(root, ["logout", "--registry", registry], { HOME: home });
+      expect(result.stdout).toContain(`Logged out of ${registry}.`);
+      expect(sawLogout).toBe(true);
+      const auth = await readJson(join(home, ".aipm", "auth.json"));
+      expect(auth).toMatchObject({ registries: {} });
+      const mode = (await stat(join(home, ".aipm", "auth.json"))).mode & 0o777;
+      expect(mode).toBe(0o600);
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
   });
 });

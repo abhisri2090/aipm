@@ -71,6 +71,37 @@ const PACKAGE_VERSION_FIELDS =
 export type OrgRole = "owner" | "admin" | "member" | "viewer";
 export type PackageVisibility = "public" | "private";
 
+export type CliAuthorizationCodeRow = {
+  id: string;
+  user_id: string;
+  code_hash: string;
+  code_challenge: string;
+  redirect_uri: string;
+  expires_at: Date;
+  consumed_at: Date | null;
+  created_at: Date;
+};
+
+export type CliRefreshTokenRow = {
+  id: string;
+  user_id: string;
+  token_hash: string;
+  name: string | null;
+  expires_at: Date;
+  revoked_at: Date | null;
+  last_used_at: Date | null;
+  created_at: Date;
+};
+
+export type CliAccessTokenRow = {
+  id: string;
+  user_id: string;
+  refresh_token_id: string;
+  token_hash: string;
+  expires_at: Date;
+  created_at: Date;
+};
+
 export interface OrgRow {
   id: string;
   slug: string;
@@ -498,6 +529,43 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_auth_events_created_at ON auth_events (created_at DESC);
+
+    CREATE TABLE IF NOT EXISTS cli_authorization_codes (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      code_hash TEXT NOT NULL UNIQUE,
+      code_challenge TEXT NOT NULL,
+      redirect_uri TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      consumed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_cli_authorization_codes_hash ON cli_authorization_codes (code_hash);
+    CREATE INDEX IF NOT EXISTS idx_cli_authorization_codes_expires_at ON cli_authorization_codes (expires_at);
+
+    CREATE TABLE IF NOT EXISTS cli_refresh_tokens (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      name TEXT,
+      expires_at TIMESTAMPTZ NOT NULL,
+      revoked_at TIMESTAMPTZ,
+      last_used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_cli_refresh_tokens_hash ON cli_refresh_tokens (token_hash);
+    CREATE INDEX IF NOT EXISTS idx_cli_refresh_tokens_user_id ON cli_refresh_tokens (user_id);
+
+    CREATE TABLE IF NOT EXISTS cli_access_tokens (
+      id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      refresh_token_id TEXT NOT NULL REFERENCES cli_refresh_tokens(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_cli_access_tokens_hash ON cli_access_tokens (token_hash);
+    CREATE INDEX IF NOT EXISTS idx_cli_access_tokens_expires_at ON cli_access_tokens (expires_at);
   `);
   await backfillPackageMaintainers(pool);
   await backfillMissingUsernames(pool);
@@ -733,6 +801,163 @@ export async function getUserBySession(pool: pg.Pool, sessionId: string): Promis
     [sessionId],
   );
   return result.rows[0] ?? null;
+}
+
+export async function getUserById(pool: pg.Pool, userId: string): Promise<UserRow | null> {
+  const result = await pool.query<UserRow>(
+    `SELECT ${USER_ROW_FIELDS}
+     FROM users
+     WHERE id = $1`,
+    [userId],
+  );
+  const user = result.rows[0] ?? null;
+  return user ? ensureUserUsername(pool, user) : null;
+}
+
+export async function createCliAuthorizationCode(
+  pool: pg.Pool,
+  input: {
+    userId: string;
+    codeHash: string;
+    codeChallenge: string;
+    redirectUri: string;
+    expiresAt: Date;
+  },
+): Promise<CliAuthorizationCodeRow> {
+  const result = await pool.query<CliAuthorizationCodeRow>(
+    `INSERT INTO cli_authorization_codes (user_id, code_hash, code_challenge, redirect_uri, expires_at)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, user_id, code_hash, code_challenge, redirect_uri, expires_at, consumed_at, created_at`,
+    [input.userId, input.codeHash, input.codeChallenge, input.redirectUri, input.expiresAt],
+  );
+  return result.rows[0]!;
+}
+
+export async function consumeCliAuthorizationCode(
+  pool: pg.Pool,
+  codeHash: string,
+): Promise<CliAuthorizationCodeRow | null> {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const result = await client.query<CliAuthorizationCodeRow>(
+      `SELECT id, user_id, code_hash, code_challenge, redirect_uri, expires_at, consumed_at, created_at
+       FROM cli_authorization_codes
+       WHERE code_hash = $1 AND consumed_at IS NULL AND expires_at > NOW()
+       FOR UPDATE`,
+      [codeHash],
+    );
+    const row = result.rows[0];
+    if (!row) {
+      await client.query("ROLLBACK");
+      return null;
+    }
+    await client.query(`UPDATE cli_authorization_codes SET consumed_at = NOW() WHERE id = $1`, [row.id]);
+    await client.query("COMMIT");
+    return row;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function createCliRefreshToken(
+  pool: pg.Pool,
+  input: { userId: string; tokenHash: string; name?: string | null; expiresAt: Date },
+): Promise<CliRefreshTokenRow> {
+  const result = await pool.query<CliRefreshTokenRow>(
+    `INSERT INTO cli_refresh_tokens (user_id, token_hash, name, expires_at)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, user_id, token_hash, name, expires_at, revoked_at, last_used_at, created_at`,
+    [input.userId, input.tokenHash, input.name ?? null, input.expiresAt],
+  );
+  return result.rows[0]!;
+}
+
+export async function getActiveCliRefreshTokenByHash(
+  pool: pg.Pool,
+  tokenHash: string,
+): Promise<CliRefreshTokenRow | null> {
+  const result = await pool.query<CliRefreshTokenRow>(
+    `SELECT id, user_id, token_hash, name, expires_at, revoked_at, last_used_at, created_at
+     FROM cli_refresh_tokens
+     WHERE token_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()`,
+    [tokenHash],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function touchCliRefreshToken(pool: pg.Pool, tokenId: string): Promise<void> {
+  await pool.query(
+    `UPDATE cli_refresh_tokens SET last_used_at = NOW()
+     WHERE id = $1 AND (last_used_at IS NULL OR last_used_at < NOW() - INTERVAL '1 minute')`,
+    [tokenId],
+  );
+}
+
+export async function revokeCliRefreshToken(pool: pg.Pool, tokenId: string, userId: string): Promise<boolean> {
+  const result = await pool.query(
+    `UPDATE cli_refresh_tokens SET revoked_at = NOW()
+     WHERE id = $1 AND user_id = $2 AND revoked_at IS NULL`,
+    [tokenId, userId],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function revokeCliRefreshTokenByHash(pool: pg.Pool, tokenHash: string): Promise<boolean> {
+  const result = await pool.query(
+    `UPDATE cli_refresh_tokens SET revoked_at = NOW()
+     WHERE token_hash = $1 AND revoked_at IS NULL`,
+    [tokenHash],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function createCliAccessToken(
+  pool: pg.Pool,
+  input: { userId: string; refreshTokenId: string; tokenHash: string; expiresAt: Date },
+): Promise<CliAccessTokenRow> {
+  const result = await pool.query<CliAccessTokenRow>(
+    `INSERT INTO cli_access_tokens (user_id, refresh_token_id, token_hash, expires_at)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, user_id, refresh_token_id, token_hash, expires_at, created_at`,
+    [input.userId, input.refreshTokenId, input.tokenHash, input.expiresAt],
+  );
+  return result.rows[0]!;
+}
+
+export async function getActiveCliAccessTokenByHash(
+  pool: pg.Pool,
+  tokenHash: string,
+): Promise<CliAccessTokenRow | null> {
+  const result = await pool.query<CliAccessTokenRow>(
+    `SELECT cli_access_tokens.id, cli_access_tokens.user_id, cli_access_tokens.refresh_token_id,
+            cli_access_tokens.token_hash, cli_access_tokens.expires_at, cli_access_tokens.created_at
+     FROM cli_access_tokens
+     JOIN cli_refresh_tokens ON cli_refresh_tokens.id = cli_access_tokens.refresh_token_id
+     WHERE cli_access_tokens.token_hash = $1
+       AND cli_access_tokens.expires_at > NOW()
+       AND cli_refresh_tokens.revoked_at IS NULL
+       AND cli_refresh_tokens.expires_at > NOW()`,
+    [tokenHash],
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function listCliRefreshTokensForUser(
+  pool: pg.Pool,
+  userId: string,
+): Promise<CliRefreshTokenRow[]> {
+  const result = await pool.query<CliRefreshTokenRow>(
+    `SELECT id, user_id, token_hash, name, expires_at, revoked_at, last_used_at, created_at
+     FROM cli_refresh_tokens
+     WHERE user_id = $1 AND revoked_at IS NULL
+     ORDER BY created_at DESC`,
+    [userId],
+  );
+  return result.rows;
 }
 
 export async function createAdminSession(

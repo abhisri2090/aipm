@@ -180,7 +180,7 @@ const requiredPages = [
   { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: true },
 ];
 
-const privatePages = ["/login", "/dashboard", "/dashboard/profile", "/dashboard/orgs/new"];
+const privatePages = ["/login", "/cli/login", "/dashboard", "/dashboard/profile", "/dashboard/orgs/new"];
 
 const requiredHeaders = [
   "strict-transport-security",

@@ -116,9 +116,14 @@ pnpm build
 pnpm aipm init --registry https://aipm-registry.com
 ```
 
-Public registry reads and installs do not need a token. Publishing uses the
-website dashboard for GitHub sign-in, org/package reservation, and short-lived
-publish tokens. Pass the token with `--token` or `AIPM_TOKEN`.
+Public registry reads and installs do not need a token. For private org
+packages, run `aipm login` once; the CLI opens the website, stores a local
+session in `~/.aipm/auth.json`, and then automatically authenticates
+`aipm search`, `aipm add`, `aipm install`, and `aipm update`.
+
+Publishing is separate from CLI login. Publishing uses the website dashboard
+for GitHub sign-in, org/package reservation, and short-lived 5-minute publish
+tokens. Pass the publish token with `--token` or `AIPM_TOKEN`.
 
 **Option C — npm package**
 
@@ -190,13 +195,13 @@ Work is ordered so each step is usable on its own. Full plan: `InitialDesignPlan
 - **Dependencies** — semver resolve, conflict detection, lockfile-driven installs
 - **Security layer** — server-side scan on publish, risk levels, signing, `install --strict`
 - **Trust workflows** — abuse reporting, takedown/appeal, owner transfer, verified publisher labels
-- **Private packages** — org access controls and private `@company/` scopes
+- **Private package polish** — package-level permissions, access exports, and stronger audit views
 - **Local cache** — `~/.aipm/cache/`, offline reinstall from lockfile
 
 ### Later — product surfaces
 
 - **Desktop GUI** (`apps/desktop`) — Tauri + React, same engine as CLI
-- **Enterprise registry** — Docker/Helm, SSO, RBAC, audit logs, private `@company/`* scopes
+- **Enterprise registry** — Docker/Helm, SSO, advanced RBAC, audit logs, private `@company/` scopes
 - **More adapters** — Continue, Cline, Aider, OpenAI Custom GPTs, etc.
 - **AIPM MCP server** — agents can install missing skills mid-task
 - **Global scope** — `aipm install -g` for user-wide packages

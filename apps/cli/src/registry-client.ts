@@ -41,7 +41,7 @@ function privateInstallHint(name: string, status: number, token?: string): strin
   if (status !== 404 || !name.startsWith("@") || token) {
     return `Package not found: ${name} (${status})`;
   }
-  return `Package not found: ${name} (${status}). If @org/pkg is private, set AIPM_TOKEN with an install token from the dashboard.`;
+  return `Package not found: ${name} (${status}). If @org/pkg is private, run aipm login, or set AIPM_TOKEN for CI.`;
 }
 
 /** Fail fast before install/publish if the registry API is not listening. */
@@ -98,15 +98,100 @@ export async function searchPackages(
   registry: string,
   query: string,
   limit = 20,
+  token?: string,
 ): Promise<PackageSummary[]> {
   const base = registry.replace(/\/$/, "");
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   params.set("limit", String(limit));
-  const res = await registryFetch(`${base}/v1/packages?${params}`, base);
+  const res = await registryFetch(`${base}/v1/packages?${params}`, base, {
+    headers: registryAuthHeaders(token),
+  });
   if (!res.ok) throw new Error(`Search failed: ${res.status}`);
   const data = (await res.json()) as { packages?: PackageSummary[] };
   return data.packages ?? [];
+}
+
+export type CliAuthUser = {
+  userId?: string;
+  username?: string | null;
+  githubLogin?: string | null;
+  name?: string | null;
+  avatarUrl?: string | null;
+  email?: string | null;
+};
+
+export type CliTokenResponse = {
+  tokenType: "Bearer";
+  accessToken: string;
+  accessTokenExpiresAt: string;
+  refreshToken?: string;
+  refreshTokenExpiresAt?: string;
+  userId?: string;
+  user?: CliAuthUser | null;
+};
+
+export async function exchangeCliAuthCode(
+  registry: string,
+  input: {
+    code: string;
+    codeVerifier: string;
+    redirectUri: string;
+    deviceName?: string;
+  },
+): Promise<CliTokenResponse> {
+  const base = registry.replace(/\/$/, "");
+  const res = await registryFetch(`${base}/v1/cli-auth/token`, base, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `CLI login failed: ${res.status}`);
+  }
+  return res.json() as Promise<CliTokenResponse>;
+}
+
+export async function refreshCliAuth(
+  registry: string,
+  refreshToken: string,
+): Promise<CliTokenResponse> {
+  const base = registry.replace(/\/$/, "");
+  const res = await registryFetch(`${base}/v1/cli-auth/refresh`, base, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `CLI session refresh failed: ${res.status}`);
+  }
+  return res.json() as Promise<CliTokenResponse>;
+}
+
+export async function fetchCliAuthMe(
+  registry: string,
+  accessToken: string,
+): Promise<{ user: CliAuthUser | null; orgs: Array<{ slug: string; name: string; role: string }> }> {
+  const base = registry.replace(/\/$/, "");
+  const res = await registryFetch(`${base}/v1/cli-auth/me`, base, {
+    headers: registryAuthHeaders(accessToken),
+  });
+  if (!res.ok) {
+    const err = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `CLI auth check failed: ${res.status}`);
+  }
+  return res.json() as Promise<{ user: CliAuthUser | null; orgs: Array<{ slug: string; name: string; role: string }> }>;
+}
+
+export async function logoutCliAuth(registry: string, refreshToken: string): Promise<void> {
+  const base = registry.replace(/\/$/, "");
+  await registryFetch(`${base}/v1/cli-auth/logout`, base, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
 }
 
 export async function fetchPackageMetadata(

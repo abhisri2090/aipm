@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { createHash, randomBytes } from "node:crypto";
 import { execFile } from "node:child_process";
+import { createServer } from "node:http";
 import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
 import { cwd, env } from "node:process";
+import type { AddressInfo } from "node:net";
 import {
   PackageManifestSchema,
   isValidScopeName,
@@ -12,7 +15,22 @@ import {
 } from "@aipm-registry/schemas";
 import { detectToolsInProject } from "@aipm-registry/engine";
 import { packDirectory, packStagedFiles } from "./pack.js";
-import { publishPackage, recordPackageInstall, searchPackages } from "./registry-client.js";
+import {
+  exchangeCliAuthCode,
+  fetchCliAuthMe,
+  logoutCliAuth,
+  publishPackage,
+  recordPackageInstall,
+  refreshCliAuth,
+  searchPackages,
+} from "./registry-client.js";
+import {
+  authFilePath,
+  clearStoredRegistryAuth,
+  getStoredRegistryAuth,
+  isAccessTokenFresh,
+  setStoredRegistryAuth,
+} from "./auth-store.js";
 import { installOnePackage } from "./install-one.js";
 import { runDoctor } from "./doctor.js";
 import {
@@ -69,6 +87,8 @@ program
 Examples:
   $ npm install -g @aipm-registry/cli
   $ aipm doctor
+  $ aipm login
+  $ aipm whoami
   $ aipm init --target cursor
   $ aipm init -g
   $ aipm search sentry
@@ -139,8 +159,8 @@ async function copySourceIntoSkillRoot(source: string, root: string, sourceLabel
   throw new Error(`Unsupported source path: ${sourceLabel}`);
 }
 
-async function latestVersionForPackage(registry: string, name: string): Promise<string> {
-  const packages = await searchPackages(registry, name, 20);
+async function latestVersionForPackage(registry: string, name: string, token?: string): Promise<string> {
+  const packages = await searchPackages(registry, name, 20, token);
   const exact = packages.find((pkg) => pkg.name === name);
   if (!exact) throw new Error(`Package not found in registry: ${name}`);
   return exact.version;
@@ -179,6 +199,130 @@ async function openUrl(url: string): Promise<void> {
     execFile(command, args, { timeout: 5000 }, () => resolveOpen());
   });
   console.log(`Open: ${url}`);
+}
+
+function randomBase64Url(bytes = 32): string {
+  return randomBytes(bytes).toString("base64url");
+}
+
+function sha256Base64Url(value: string): string {
+  return createHash("sha256").update(value).digest("base64url");
+}
+
+function deviceName(): string {
+  return `AIPM CLI on ${process.platform}`;
+}
+
+async function authTokenForRegistry(
+  registry: string,
+  options: { quiet?: boolean; throwOnFailure?: boolean } = {},
+): Promise<string | undefined> {
+  const stored = await getStoredRegistryAuth(registry);
+  if (!stored?.refreshToken) return undefined;
+  if (isAccessTokenFresh(stored)) return stored.accessToken;
+  try {
+    const refreshed = await refreshCliAuth(registry, stored.refreshToken);
+    await setStoredRegistryAuth(registry, {
+      ...stored,
+      accessToken: refreshed.accessToken,
+      accessTokenExpiresAt: refreshed.accessTokenExpiresAt,
+    });
+    return refreshed.accessToken;
+  } catch {
+    await clearStoredRegistryAuth(registry);
+    const message = `CLI login for ${registry} expired or was revoked. Run aipm login to access private packages.`;
+    if (options.throwOnFailure) throw new Error(message);
+    if (!options.quiet) console.warn(`Warning: ${message}`);
+    return undefined;
+  }
+}
+
+async function tokenForRead(
+  registry: string,
+  explicitToken?: string,
+  options: { quiet?: boolean } = {},
+): Promise<string | undefined> {
+  return explicitToken ?? env.AIPM_TOKEN ?? (await authTokenForRegistry(registry, options));
+}
+
+async function runLoopbackLogin(options: {
+  registry: string;
+  siteUrl: string;
+  open: boolean;
+}): Promise<void> {
+  const state = randomBase64Url(24);
+  const verifier = randomBase64Url(48);
+  const challenge = sha256Base64Url(verifier);
+
+  const result = await new Promise<{ code: string; redirectUri: string }>((resolveLogin, rejectLogin) => {
+    const server = createServer((request, response) => {
+      const host = request.headers.host ?? "127.0.0.1";
+      const url = new URL(request.url ?? "/", `http://${host}`);
+      if (url.pathname !== "/callback") {
+        response.writeHead(404, { "content-type": "text/plain" });
+        response.end("Not found");
+        return;
+      }
+      if (url.searchParams.get("state") !== state) {
+        response.writeHead(400, { "content-type": "text/html" });
+        response.end("<h1>AIPM login failed</h1><p>Invalid state. Return to the terminal and try again.</p>");
+        rejectLogin(new Error("Invalid CLI login state"));
+        server.close();
+        return;
+      }
+      const code = url.searchParams.get("code");
+      if (!code) {
+        response.writeHead(400, { "content-type": "text/html" });
+        response.end("<h1>AIPM login failed</h1><p>Missing code. Return to the terminal and try again.</p>");
+        rejectLogin(new Error("Missing CLI authorization code"));
+        server.close();
+        return;
+      }
+      response.writeHead(200, { "content-type": "text/html" });
+      response.end("<h1>AIPM CLI is signed in</h1><p>You can close this window and return to the terminal.</p>");
+      const address = server.address();
+      if (!address || typeof address === "string") {
+        rejectLogin(new Error("Could not read CLI callback address"));
+      } else {
+        resolveLogin({ code, redirectUri: `http://127.0.0.1:${address.port}/callback` });
+      }
+      server.close();
+    });
+    server.once("error", rejectLogin);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address() as AddressInfo;
+      const redirectUri = `http://127.0.0.1:${address.port}/callback`;
+      const loginUrl = new URL("/cli/login", options.siteUrl);
+      loginUrl.searchParams.set("redirect_uri", redirectUri);
+      loginUrl.searchParams.set("state", state);
+      loginUrl.searchParams.set("code_challenge", challenge);
+      loginUrl.searchParams.set("device", deviceName());
+      console.log("Authorize the AIPM CLI in your browser.");
+      if (options.open) void openUrl(loginUrl.toString());
+      else console.log(`Open: ${loginUrl.toString()}`);
+    });
+    server.setTimeout(5 * 60 * 1000, () => {
+      rejectLogin(new Error("CLI login timed out"));
+      server.close();
+    });
+  });
+
+  const tokens = await exchangeCliAuthCode(options.registry, {
+    code: result.code,
+    codeVerifier: verifier,
+    redirectUri: result.redirectUri,
+    deviceName: deviceName(),
+  });
+  await setStoredRegistryAuth(options.registry, {
+    accessToken: tokens.accessToken,
+    accessTokenExpiresAt: tokens.accessTokenExpiresAt,
+    refreshToken: tokens.refreshToken,
+    refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
+    user: tokens.user,
+  });
+  const label = tokens.user?.username ?? tokens.user?.githubLogin ?? tokens.user?.email ?? "AIPM user";
+  console.log(`Logged in as ${label}.`);
+  console.log(`Credentials saved to ${authFilePath()}`);
 }
 
 function printPublishFlow(): void {
@@ -447,7 +591,8 @@ program
     if (scope.global) await mkdir(configRoot, { recursive: true });
     const installRoot = resolveInstallRoot(scope);
     const detected = await detectToolsInProject(installRoot);
-    let preferredTools: AiTool[] = opts.target ? [parseTargetFlag(opts.target)] : detected;
+    const parsedTarget = parseTargetFlag(opts.target);
+    let preferredTools: AiTool[] = parsedTarget ? [parsedTarget] : detected;
     if (!opts.target && detected.length === 0) {
       const choice = await promptForTool();
       preferredTools = [choice];
@@ -464,14 +609,59 @@ program
 
 program
   .command("login")
-  .description("Open the AIPM dashboard sign-in page")
+  .description("Sign in and store a local CLI session for private installs")
+  .option("--registry <url>", "Registry API base URL")
+  .option("--site <url>", "Website base URL", SITE_URL)
   .option("--no-open", "Print the URL without opening a browser")
-  .action(async (opts: { open: boolean }) => {
-    const url = `${SITE_URL}/login`;
-    console.log("AIPM uses the website dashboard for account sign-in and short-lived publish tokens.");
-    console.log("After signing in, create or open an organization, reserve a package, and generate a token.");
-    if (opts.open) await openUrl(url);
-    else console.log(`Open: ${url}`);
+  .action(async (opts: { registry?: string; site: string; open: boolean }) => {
+    const registry = registryFromEnvOrDefault(opts.registry);
+    await runLoopbackLogin({
+      registry,
+      siteUrl: opts.site.replace(/\/$/, ""),
+      open: opts.open,
+    });
+  });
+
+program
+  .command("whoami")
+  .description("Show the current AIPM CLI login")
+  .option("--registry <url>", "Registry API base URL")
+  .option("--json", "Print machine-readable JSON")
+  .action(async (opts: { registry?: string; json?: boolean }) => {
+    const registry = registryFromEnvOrDefault(opts.registry);
+    const token = await authTokenForRegistry(registry, { quiet: opts.json, throwOnFailure: true });
+    if (!token) {
+      if (opts.json) console.log(JSON.stringify({ loggedIn: false }, null, 2));
+      else console.log("Not logged in. Run aipm login.");
+      return;
+    }
+    const me = await fetchCliAuthMe(registry, token);
+    if (opts.json) {
+      console.log(JSON.stringify({ loggedIn: true, registry, ...me }, null, 2));
+      return;
+    }
+    const label = me.user?.username ?? me.user?.githubLogin ?? me.user?.email ?? me.user?.userId ?? "AIPM user";
+    console.log(`Logged in as ${label}`);
+    console.log(`Registry: ${registry}`);
+    if (me.orgs.length > 0) {
+      console.log("Organizations:");
+      for (const org of me.orgs) console.log(`  @${org.slug} (${org.role})`);
+    } else {
+      console.log("Organizations: none");
+    }
+  });
+
+program
+  .command("logout")
+  .description("Revoke and remove the local AIPM CLI session")
+  .option("--registry <url>", "Registry API base URL")
+  .action(async (opts: { registry?: string }) => {
+    const registry = registryFromEnvOrDefault(opts.registry);
+    const existing = await clearStoredRegistryAuth(registry);
+    if (existing?.refreshToken) {
+      await logoutCliAuth(registry, existing.refreshToken).catch(() => undefined);
+    }
+    console.log(`Logged out of ${registry}.`);
   });
 
 program
@@ -487,6 +677,7 @@ program
     const project = await readProjectPackageJson(configRoot);
     const lock = await readLockfile(configRoot);
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
+    const storedAuth = await getStoredRegistryAuth(registry);
     const data = {
       cliVersion: CLI_VERSION,
       nodeVersion: process.versions.node,
@@ -500,6 +691,8 @@ program
       projectPackages: project ? Object.keys(project.packages) : [],
       hasLockfile: Boolean(lock),
       installedPackages: lock ? Object.keys(lock.packages) : [],
+      loggedIn: Boolean(storedAuth?.refreshToken),
+      authFile: authFilePath(),
       publishDoc: PUBLISH_DOC_URL,
     };
     if (opts.json) {
@@ -518,6 +711,8 @@ program
     console.log(`Configured packages: ${data.projectPackages.length}`);
     console.log(`Lockfile: ${data.hasLockfile ? "found" : "not found"}`);
     console.log(`Installed packages: ${data.installedPackages.length}`);
+    console.log(`CLI login: ${data.loggedIn ? "found" : "not found"}`);
+    console.log(`Auth file: ${data.authFile}`);
     console.log(`Publish guide: ${data.publishDoc}`);
   });
 
@@ -538,7 +733,8 @@ program
     let project = await readProjectPackageJson(configRoot);
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
-    const version = requestedVersion ?? project.packages[name] ?? (await latestVersionForPackage(registry, name));
+    const token = await tokenForRead(registry, opts.token);
+    const version = requestedVersion ?? project.packages[name] ?? (await latestVersionForPackage(registry, name, token));
     if (!version) throw new Error("Specify version: aipm add @scope/pkg@1.0.0");
 
     project = {
@@ -556,11 +752,11 @@ program
       project,
       explicitTarget: parseTargetFlag(opts.target),
       ci: opts.ci,
-      token: opts.token ?? process.env.AIPM_TOKEN,
+      token,
     });
 
     try {
-      await recordPackageInstall(registry, name, opts.token ?? process.env.AIPM_TOKEN);
+      await recordPackageInstall(registry, name, token);
     } catch (error) {
       if (!opts.ci && !program.opts().quiet) {
         const message = error instanceof Error ? error.message : String(error);
@@ -578,10 +774,12 @@ program
   .description("Search public registry packages")
   .option("--registry <url>", "Registry base URL")
   .option("--limit <number>", "Maximum results", "20")
+  .option("--token <token>", "Install token for private package search")
   .option("--json", "Print machine-readable JSON")
-  .action(async (query = "", opts: { registry?: string; limit: string; json?: boolean }) => {
+  .action(async (query = "", opts: { registry?: string; limit: string; token?: string; json?: boolean }) => {
     const registry = registryFromEnvOrDefault(opts.registry);
-    const packages = await searchPackages(registry, query, Number(opts.limit));
+    const token = await tokenForRead(registry, opts.token, { quiet: opts.json });
+    const packages = await searchPackages(registry, query, Number(opts.limit), token);
     if (opts.json) {
       console.log(JSON.stringify({ packages }, null, 2));
       return;
@@ -619,6 +817,7 @@ program
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const target = parseTargetFlag(opts.target);
+    const token = await tokenForRead(registry, opts.token);
 
     for (const [name, version] of Object.entries(project.packages)) {
       await installOnePackage({
@@ -630,7 +829,7 @@ program
         project,
         explicitTarget: target,
         ci: opts.ci,
-        token: opts.token ?? process.env.AIPM_TOKEN,
+        token,
       });
     }
   });
@@ -948,14 +1147,16 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, or *")
+  .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
-  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; ci?: boolean }) => {
+  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     let project = await readProjectPackageJson(configRoot);
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
+    const token = await tokenForRead(registry, opts.token);
     const names = pkgArg ? [parsePackageArg(pkgArg).name] : Object.keys(project.packages);
     if (names.length === 0) {
       console.log("No packages configured.");
@@ -963,7 +1164,7 @@ program
     }
 
     for (const name of names) {
-      const version = await latestVersionForPackage(registry, name);
+      const version = await latestVersionForPackage(registry, name, token);
       project = {
         ...project,
         packages: { ...project.packages, [name]: version },
@@ -978,6 +1179,7 @@ program
         project,
         explicitTarget: parseTargetFlag(opts.target),
         ci: opts.ci,
+        token,
       });
     }
   });

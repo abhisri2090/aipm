@@ -22,7 +22,7 @@ const faqs = [
   ],
   [
     "Package not found.",
-    "Check the exact scoped name and version. AIPM package names use @scope/name.",
+    "Check the exact scoped name and version. If the package is private, run aipm login and retry, or pass an explicit install token in CI.",
   ],
   [
     "Version already published.",
@@ -38,7 +38,7 @@ const faqs = [
   ],
   [
     "Can I publish private skills?",
-    "Not yet. Packages are public today. Keep private prompts, credentials, customer data, and internal files out of published skills.",
+    "Yes. Reserve the package under an org and set package visibility to private. Members install private packages after aipm login; CI can use an org install token.",
   ],
   [
     "How do I avoid leaking files while publishing?",

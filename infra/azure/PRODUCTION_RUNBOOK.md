@@ -34,6 +34,17 @@ CONFIRM_DEALLOCATE=true CONFIRM_PRODUCTION_OUTAGE=true ./infra/azure/deallocate-
 `/health` confirms the process is alive. `/ready` confirms the metadata and
 package storage backends are reachable.
 
+For CLI auth and private package readiness, run these from a clean shell after
+the backend and web deploys:
+
+```bash
+aipm login --registry https://api.aipm-registry.com --site https://aipm-registry.com
+aipm whoami --registry https://api.aipm-registry.com
+aipm add @<org>/<private-package>@<version> --registry https://api.aipm-registry.com --target cursor --ci
+aipm logout --registry https://api.aipm-registry.com
+AIPM_TOKEN=<org-install-token> aipm add @<org>/<private-package>@<version> --registry https://api.aipm-registry.com --target cursor --ci
+```
+
 ## Deploy
 
 ```bash
@@ -42,6 +53,11 @@ LETSENCRYPT_EMAIL=<email> \
 AIPM_PUBLISH_TOKEN=<admin-token> \
 ./infra/azure/deploy-registry-vm.sh
 ```
+
+Deploy the backend before publishing or announcing a CLI build that uses
+`aipm login`. The CLI login command requires the production API to expose the
+`/v1/cli-auth/*` endpoints and to have the CLI auth tables created in
+PostgreSQL by schema bootstrap.
 
 If `AIPM_PUBLISH_TOKEN` is omitted, the script preserves the existing token
 hash from `/etc/aipm-registry.env`. On the first deploy only, it generates and

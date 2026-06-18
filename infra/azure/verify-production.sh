@@ -37,6 +37,25 @@ process.stdin.on("end", () => {
 });
 '
 
+echo "Checking CLI auth endpoints are present and closed without a valid session"
+CLI_AUTHORIZE_STATUS="$(curl -sS -o /dev/null -w "%{http_code}" \
+  -H "content-type: application/json" \
+  -d '{"redirectUri":"http://127.0.0.1:49152/callback","state":"verify","codeChallenge":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}' \
+  "${REGISTRY_URL}/v1/cli-auth/authorize")"
+if [[ "${CLI_AUTHORIZE_STATUS}" != "401" ]]; then
+  echo "Expected unauthenticated CLI authorize to return 401, got ${CLI_AUTHORIZE_STATUS}" >&2
+  exit 1
+fi
+
+CLI_REFRESH_STATUS="$(curl -sS -o /dev/null -w "%{http_code}" \
+  -H "content-type: application/json" \
+  -d '{"refreshToken":"aipm_cli_refresh_invalid"}' \
+  "${REGISTRY_URL}/v1/cli-auth/refresh")"
+if [[ "${CLI_REFRESH_STATUS}" != "401" ]]; then
+  echo "Expected invalid CLI refresh to return 401, got ${CLI_REFRESH_STATUS}" >&2
+  exit 1
+fi
+
 echo "Checking public package search"
 curl -fsS "${REGISTRY_URL}/v1/packages?limit=1" | node -e '
 let data = "";

@@ -72,16 +72,17 @@ ${CLI_SCOOP_COMMAND}
 - The current verified CLI release is ${CLI_VERSION}: ${CLI_RELEASE_URL}.
 - The CLI package is published on npm as @aipm-registry/cli and standalone binaries are attached to the GitHub release.
 - Public users can browse and install packages.
+- Private org package installs use aipm login for local browser auth, or org install tokens for CI.
 - Publishing uses accounts, organization ownership, package reservations, short-lived publish tokens, and CLI validation.
-- Public package publishing should use aipm publish preview and .aipmignore to avoid leaking private files.
-- Publisher profiles, orgs, package reservations, and public package metadata are part of the publishing workflow.
+- Package publishing should use aipm publish preview and .aipmignore to avoid leaking private files.
+- Publisher profiles, orgs, package reservations, visibility, and package metadata are part of the publishing workflow.
 - Public package publishers should not publish deceptive content, impersonating namespaces, malware, secrets, private prompts, or customer data.
 - The status page explains /health liveness and /ready dependency readiness.
 - The roadmap distinguishes available workflow, near-term reliability work, trust work, and later platform expansion.
 - The changelog summarizes recent product-level updates across the CLI, API, website, dashboard, trust pages, and SEO.
 - Starter templates are blank, code-review, issue-summary, and release-notes.
 - Examples combine templates, targets, publish tokens, and install commands for real scenarios.
-- The glossary defines AIPM package, skill, manifest, target, adapter, org namespace, publish token, template, and .aipmignore.
+- The glossary defines AIPM package, skill, manifest, target, adapter, org namespace, private package, CLI login, install token, publish token, template, and .aipmignore.
 - Current supported install targets are cursor and claude.
 - AIPM currently focuses on Cursor, Claude, Codex-oriented workflows, and project-local AI files.
 

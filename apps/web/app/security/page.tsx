@@ -43,7 +43,7 @@ const reportSteps = [
 export const metadata = pageMetadata({
   title: "AIPM Security and Privacy Guide",
   description:
-    "How to publish public AIPM packages without leaking secrets or private files.",
+    "How to publish AIPM packages without leaking secrets or private files.",
   path: "/security",
   keywords: [
     "AI skill security",
@@ -66,7 +66,7 @@ export default function SecurityPage() {
             "@type": "Article",
             headline: "AIPM Security and Privacy Guide",
             description:
-              "How to publish public AIPM packages without leaking secrets or private files.",
+              "How to publish AIPM packages without leaking secrets or private files.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
             mainEntityOfPage: "https://aipm-registry.com/security",
@@ -78,8 +78,9 @@ export default function SecurityPage() {
         <p className={shell.eyebrow}>Security</p>
         <h1>Publish AI skills without leaking private files.</h1>
         <p className={shell.lede}>
-          AIPM packages are public by default. Treat every package like open-source code. Review the
-          files, remove sensitive details, and publish only what users should install.
+          Public packages are readable by anyone. Private packages are limited to org members with
+          access, but you should still review every file, remove sensitive details, and publish only
+          what users should install.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish">
@@ -95,8 +96,8 @@ export default function SecurityPage() {
         <article className={cards.practiceCard}>
           <h2>Public means anyone can read it</h2>
           <p>
-            Assume package metadata, manifests, instructions, prompts, and bundled files can be read
-            by anyone. Do not publish internal-only context.
+            For public packages, assume package metadata, manifests, instructions, prompts, and
+            bundled files can be read by anyone. Do not publish internal-only context.
           </p>
         </article>
         <article className={cards.practiceCard}>
@@ -147,7 +148,7 @@ export default function SecurityPage() {
           <h2>What AIPM should add next</h2>
           <p>
             AIPM should add package takedowns, owner transfer, verified publisher badges, stronger
-            scanning, private packages, and a security contact channel.
+            scanning, package-level access review, and a security contact channel.
           </p>
         </section>
       </article>

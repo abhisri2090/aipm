@@ -42,10 +42,22 @@ const installCommands: CommandItem[] = [
 
 const useCommands: CommandItem[] = [
   {
-    title: "Open login",
-    description: "Opens the AIPM website login flow used for accounts, orgs, package reservation, and tokens.",
+    title: "CLI login",
+    description: "Opens the browser login flow and stores a local CLI session for private package installs.",
     code: "aipm login",
-    options: ["--no-open: print the login URL instead of opening a browser"],
+    options: ["--registry <url>: login for another registry", "--site <url>: use another website origin", "--no-open: print the login URL instead of opening a browser"],
+  },
+  {
+    title: "Show current login",
+    description: "Shows the stored CLI account and orgs available to this terminal.",
+    code: "aipm whoami",
+    options: ["--registry <url>: inspect another registry login", "--json: print machine-readable output"],
+  },
+  {
+    title: "CLI logout",
+    description: "Revokes the stored CLI session and removes it from this machine.",
+    code: "aipm logout",
+    options: ["--registry <url>: logout from another registry"],
   },
   {
     title: "Show CLI version",
@@ -79,21 +91,21 @@ const useCommands: CommandItem[] = [
   },
   {
     title: "Search packages",
-    description: "Searches the public registry by package name, target, or description.",
+    description: "Searches registry packages. Private matches are included after aipm login.",
     code: "aipm search sentry",
-    options: ["--limit <number>: cap result count", "--json: print machine-readable output", "--registry <url>: search another registry"],
+    options: ["--limit <number>: cap result count", "--json: print machine-readable output", "--registry <url>: search another registry", "--token <token>: use an explicit install token"],
   },
   {
     title: "Install one package",
     description: "Adds a package to aipm.package.json and writes target-specific files into the project.",
     code: "aipm add @scope/name@1.0.0 --target cursor --ci",
-    options: ["--target <tool>: cursor, claude, or *", "--ci: do not prompt interactively", "--token <token>: install private packages", "--global: install globally"],
+    options: ["--target <tool>: cursor, claude, or *", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
   },
   {
     title: "Install configured packages",
     description: "Installs every package already listed in aipm.package.json.",
     code: "aipm install",
-    options: ["--target <tool>: install for one tool", "--ci: do not prompt interactively", "--token <token>: install private packages", "--global: use global config"],
+    options: ["--target <tool>: install for one tool", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: use global config"],
   },
   {
     title: "List installed packages",
@@ -105,7 +117,7 @@ const useCommands: CommandItem[] = [
     title: "Update packages",
     description: "Finds newer registry versions and reinstalls one package or all configured packages.",
     code: "aipm update",
-    options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--ci: do not prompt interactively"],
+    options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--token <token>: override stored login for CI", "--ci: do not prompt interactively"],
   },
   {
     title: "Remove a package",

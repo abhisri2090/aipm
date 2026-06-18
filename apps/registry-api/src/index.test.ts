@@ -7,7 +7,14 @@ import { promisify } from "node:util";
 import type { FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./index.js";
-import { createOrg, createPool, ensureSchema, reservePackageName, upsertGithubUser } from "./db.js";
+import {
+  createInstallToken,
+  createOrg,
+  createPool,
+  ensureSchema,
+  reservePackageName,
+  upsertGithubUser,
+} from "./db.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
@@ -17,6 +24,10 @@ const savedDatabaseUrl = process.env.DATABASE_URL;
 
 function tokenHash(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function pkceChallenge(value: string): string {
+  return createHash("sha256").update(value).digest("base64url");
 }
 
 async function createTarball(
@@ -450,6 +461,273 @@ describe("package install counter", () => {
       url: `/v1/packages/${encodeURIComponent(packageName)}/installs`,
     });
     expect(response.statusCode).toBe(404);
+  });
+});
+
+describe("CLI auth flow", () => {
+  it.skipIf(!savedDatabaseUrl)("issues and refreshes CLI tokens through one-time code exchange", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.AIPM_DEV_AUTH = "1";
+
+    const pool = createPool(savedDatabaseUrl!);
+    await ensureSchema(pool);
+    await pool.end();
+    app = await createApp();
+
+    const login = await app.inject({ method: "GET", url: "/v1/auth/dev/login" });
+    expect(login.statusCode).toBe(302);
+    const cookie = login.headers["set-cookie"];
+    const sessionCookie = Array.isArray(cookie) ? cookie[0] : cookie;
+    expect(sessionCookie).toContain("aipm_session=");
+
+    const verifier = "a".repeat(64);
+    const redirectUri = "http://127.0.0.1:49152/callback";
+    const authorize = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/authorize",
+      headers: { cookie: sessionCookie },
+      payload: {
+        redirectUri,
+        state: "test-state",
+        codeChallenge: pkceChallenge(verifier),
+        deviceName: "Test CLI",
+      },
+    });
+    expect(authorize.statusCode).toBe(200);
+    const redirectTo = new URL(authorize.json().redirectTo);
+    expect(redirectTo.origin).toBe("http://127.0.0.1:49152");
+    expect(redirectTo.searchParams.get("state")).toBe("test-state");
+    const code = redirectTo.searchParams.get("code");
+    expect(code).toMatch(/^aipm_cli_code_/);
+
+    const token = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/token",
+      payload: { code, codeVerifier: verifier, redirectUri, deviceName: "Test CLI" },
+    });
+    expect(token.statusCode).toBe(200);
+    expect(token.json()).toMatchObject({
+      tokenType: "Bearer",
+      accessToken: expect.stringMatching(/^aipm_cli_access_/),
+      refreshToken: expect.stringMatching(/^aipm_cli_refresh_/),
+    });
+
+    const me = await app.inject({
+      method: "GET",
+      url: "/v1/cli-auth/me",
+      headers: { authorization: `Bearer ${token.json().accessToken}` },
+    });
+    expect(me.statusCode).toBe(200);
+    expect(me.json().user).toMatchObject({ githubLogin: "dev-local" });
+
+    const refresh = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/refresh",
+      payload: { refreshToken: token.json().refreshToken },
+    });
+    expect(refresh.statusCode).toBe(200);
+    expect(refresh.json().accessToken).toMatch(/^aipm_cli_access_/);
+
+    const logout = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/logout",
+      payload: { refreshToken: token.json().refreshToken },
+    });
+    expect(logout.statusCode).toBe(200);
+
+    const revokedRefresh = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/refresh",
+      payload: { refreshToken: token.json().refreshToken },
+    });
+    expect(revokedRefresh.statusCode).toBe(401);
+  });
+
+  it.skipIf(!savedDatabaseUrl)("rejects invalid CLI auth inputs and reused codes", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.AIPM_DEV_AUTH = "1";
+
+    const pool = createPool(savedDatabaseUrl!);
+    await ensureSchema(pool);
+    await pool.end();
+    app = await createApp();
+
+    const login = await app.inject({ method: "GET", url: "/v1/auth/dev/login" });
+    const cookie = login.headers["set-cookie"];
+    const sessionCookie = Array.isArray(cookie) ? cookie[0] : cookie;
+    const verifier = "b".repeat(64);
+    const redirectUri = "http://127.0.0.1:49153/callback";
+
+    const invalidRedirect = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/authorize",
+      headers: { cookie: sessionCookie },
+      payload: {
+        redirectUri: "https://example.com/callback",
+        state: "test-state",
+        codeChallenge: pkceChallenge(verifier),
+      },
+    });
+    expect(invalidRedirect.statusCode).toBe(400);
+
+    const authorize = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/authorize",
+      headers: { cookie: sessionCookie },
+      payload: {
+        redirectUri,
+        state: "test-state",
+        codeChallenge: pkceChallenge(verifier),
+      },
+    });
+    const code = new URL(authorize.json().redirectTo).searchParams.get("code");
+
+    const invalidVerifier = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/token",
+      payload: { code, codeVerifier: "short", redirectUri },
+    });
+    expect(invalidVerifier.statusCode).toBe(400);
+
+    const token = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/token",
+      payload: { code, codeVerifier: verifier, redirectUri },
+    });
+    expect(token.statusCode).toBe(200);
+
+    const reused = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/token",
+      payload: { code, codeVerifier: verifier, redirectUri },
+    });
+    expect(reused.statusCode).toBe(400);
+  });
+
+  it.skipIf(!savedDatabaseUrl)("allows private package reads with CLI login and org install token", async () => {
+    await app?.close();
+    app = null;
+    process.env.DATABASE_URL = savedDatabaseUrl!;
+    process.env.AIPM_DEV_AUTH = "1";
+
+    const pool = createPool(savedDatabaseUrl!);
+    await ensureSchema(pool);
+    const suffix = `${Date.now().toString(36)}-${Math.random().toString(16).slice(2, 10)}`;
+    const owner = await upsertGithubUser(pool, {
+      githubId: "dev-local",
+      githubLogin: "dev-local",
+      name: "Dev Local",
+    });
+    const org = await createOrg(pool, {
+      slug: `cli-private-${suffix}`,
+      name: "CLI Private Test",
+      ownerUserId: owner.id,
+    });
+    const packageName = `@${org.slug}/private-skill`;
+    await reservePackageName(pool, {
+      name: packageName,
+      orgId: org.id,
+      ownerUserId: owner.id,
+      visibility: "private",
+    });
+    const installToken = `aipm_install_${suffix}`;
+    await createInstallToken(pool, {
+      orgId: org.id,
+      userId: owner.id,
+      name: "CI",
+      tokenHash: tokenHash(installToken),
+      expiresAt: null,
+    });
+    await pool.end();
+    app = await createApp();
+
+    const tarball = await createTarball("1.0.0", packageName);
+    const payload = multipartPayload(tarball);
+    const publish = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      headers: {
+        "content-type": payload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: payload.body,
+    });
+    expect(publish.statusCode).toBe(201);
+
+    const anonymous = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+    });
+    expect(anonymous.statusCode).toBe(404);
+
+    const withInstallToken = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+      headers: { authorization: `Bearer ${installToken}` },
+    });
+    expect(withInstallToken.statusCode).toBe(200);
+    expect(withInstallToken.json()).toMatchObject({ name: packageName, visibility: "private" });
+
+    const login = await app.inject({ method: "GET", url: "/v1/auth/dev/login" });
+    const cookie = login.headers["set-cookie"];
+    const sessionCookie = Array.isArray(cookie) ? cookie[0] : cookie;
+    const verifier = "c".repeat(64);
+    const redirectUri = "http://127.0.0.1:49154/callback";
+    const authorize = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/authorize",
+      headers: { cookie: sessionCookie },
+      payload: {
+        redirectUri,
+        state: "test-state",
+        codeChallenge: pkceChallenge(verifier),
+      },
+    });
+    const code = new URL(authorize.json().redirectTo).searchParams.get("code");
+    const cliToken = await app.inject({
+      method: "POST",
+      url: "/v1/cli-auth/token",
+      payload: { code, codeVerifier: verifier, redirectUri },
+    });
+    expect(cliToken.statusCode).toBe(200);
+
+    const withCliLogin = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+      headers: { authorization: `Bearer ${cliToken.json().accessToken}` },
+    });
+    expect(withCliLogin.statusCode).toBe(200);
+
+    const publicTarball = await createTarball("1.0.0", `@${org.slug}/public-skill`);
+    const publicPackageName = `@${org.slug}/public-skill`;
+    const publicPool = createPool(savedDatabaseUrl!);
+    await reservePackageName(publicPool, {
+      name: publicPackageName,
+      orgId: org.id,
+      ownerUserId: owner.id,
+      visibility: "public",
+    });
+    await publicPool.end();
+    const publicPayload = multipartPayload(publicTarball);
+    const publicPublish = await app.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent(publicPackageName)}/versions`,
+      headers: {
+        "content-type": publicPayload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: publicPayload.body,
+    });
+    expect(publicPublish.statusCode).toBe(201);
+    const publicRead = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(publicPackageName)}/versions/1.0.0`,
+    });
+    expect(publicRead.statusCode).toBe(200);
   });
 });
 

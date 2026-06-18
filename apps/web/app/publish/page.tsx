@@ -46,10 +46,10 @@ export default function PublishPage() {
     "Create an org namespace, such as @team.",
     "Reserve a skill package name, such as @team/review-helper.",
     "Create or import a local skill folder.",
-    "Stage, preview, and validate the files that will become public.",
+    "Stage, preview, and validate the files that will become the package version.",
     "Generate a 5-minute publish token in the dashboard.",
     "Push the staged files from the CLI.",
-    "Open the public package page and verify the install command.",
+    "Open the package page and verify the install command.",
   ];
 
   return (

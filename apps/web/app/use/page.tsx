@@ -46,10 +46,19 @@ export default function UsePage() {
         <p>This creates aipm.package.json and points it at the public registry.</p>
         <CodeBlock code="aipm init --target cursor" />
 
+        <h2>Sign in for private packages</h2>
+        <p>
+          Public packages install without an account. If your org has private packages, sign in
+          once from the CLI. AIPM opens the browser, confirms your account, and stores a local
+          session so future installs do not need a token pasted into every command.
+        </p>
+        <CodeBlock code={`aipm login\naipm whoami # (optional)`} />
+
         <h2>Install a skill</h2>
         <p>Choose a package from the registry and install it for the AI tool you use.</p>
         <p>
-          To install for one tool, choose a target like Cursor or Claude. See <a href="/targets">supported targets</a> for the folders AIPM writes to.
+          To install for one tool, choose a target like Cursor or Claude. Private org packages
+          work the same way after <code>aipm login</code>. See <a href="/targets">supported targets</a> for the folders AIPM writes to.
         </p>
         <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
 
@@ -60,6 +69,13 @@ export default function UsePage() {
         <h2>Search and update installed skills</h2>
         <p>Search finds registry packages; update checks configured packages for newer versions.</p>
         <CodeBlock code={`aipm search sentry\naipm update`} />
+
+        <h2>Use install tokens in CI</h2>
+        <p>
+          Browser login is best for people working locally. For CI or automation, use an org install
+          token with <code>--token</code> or <code>AIPM_TOKEN</code> so the job can read private packages.
+        </p>
+        <CodeBlock code="AIPM_TOKEN=<install-token> aipm add @scope/private-skill@1.0.0 --target cursor --ci" />
 
         <h2>Where files go</h2>
         <p>
@@ -75,6 +91,10 @@ export default function UsePage() {
           Install the newer version with the same add command. The version is written down, so
           your team can review what changed.
         </p>
+
+        <h2>Sign out</h2>
+        <p>Use this when you want to remove the local CLI session from your machine.</p>
+        <CodeBlock code="aipm logout" />
       </article>
     </DocLayout>
   );

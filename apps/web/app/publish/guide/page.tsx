@@ -108,6 +108,11 @@ aipm publish validate # (optional)
 aipm publish token --package @team/review-helper # (optional)
 AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
         />
+        <p>
+          Publish tokens are short lived and only used for uploading package versions.{" "}
+          <code>aipm login</code> is for reading and installing private packages; it does not
+          replace publish tokens.
+        </p>
 
         <h2>Starter templates</h2>
         <p>
@@ -152,6 +157,7 @@ aipm publish preview # (optional)`}
         <ol className={docs.flowList}>
           <li>Create an AIPM account.</li>
           <li>Register an organization and reserve a package name such as @team/review-helper.</li>
+          <li>Choose whether the package should be public or private.</li>
           <li>Generate a publish token that is valid for 5 minutes.</li>
           <li>Use the CLI to check, stage, and push the skill files to the registry.</li>
           <li>Open the package page and confirm the install command works for the expected target.</li>

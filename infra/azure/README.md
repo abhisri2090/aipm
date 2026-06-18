@@ -38,6 +38,12 @@ Let's Encrypt TLS. The deploy script packages `@aipm-registry/registry-api`,
 uploads the artifact to the private `deploy` blob container, and uses Azure VM
 Run Command to install or update the `systemd` service on the VM.
 
+Deploy the backend before promoting any CLI release that advertises
+`aipm login`. The CLI login flow depends on the production API exposing
+`/v1/cli-auth/authorize`, `/token`, `/refresh`, `/me`, and `/logout`, plus the
+PostgreSQL tables created by the API schema bootstrap for CLI authorization
+codes, access tokens, and refresh tokens.
+
 ```bash
 STORAGE_ACCOUNT=<storage-account-name> ./infra/azure/deploy-registry-vm.sh
 ```
@@ -245,6 +251,17 @@ For production smoke checks:
 
 ```bash
 ./infra/azure/verify-production.sh https://api.aipm-registry.com
+```
+
+After a CLI-auth backend deploy, also run a real private package smoke from a
+clean shell:
+
+```bash
+aipm login --registry https://api.aipm-registry.com --site https://aipm-registry.com
+aipm whoami --registry https://api.aipm-registry.com
+aipm add @<org>/<private-package>@<version> --registry https://api.aipm-registry.com --target cursor --ci
+aipm logout --registry https://api.aipm-registry.com
+AIPM_TOKEN=<org-install-token> aipm add @<org>/<private-package>@<version> --registry https://api.aipm-registry.com --target cursor --ci
 ```
 
 For a publish/install staging-style verification against the VM, provide a valid

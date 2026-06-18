@@ -1633,7 +1633,10 @@ function TokensContent({ org }: { org: Org }) {
         <h2>Install tokens</h2>
         {canInstallTokens ? (
           <>
-            <p className={shell.muted}>Long-lived read tokens for installing private packages from the CLI.</p>
+            <p className={shell.muted}>
+              Long-lived read tokens for CI and automation. People should use <code>aipm login</code>
+              for private installs on their own machines.
+            </p>
             <form
               className={dash.compactForm}
               onSubmit={async (event) => {
@@ -2377,6 +2380,9 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
       : "Generate a short-lived token, then push a staged skill from the CLI.";
   const publicPackageUrl =
     latestVersion != null ? `${SITE_URL}${packagePath(packageName, latestVersion.version)}` : `${SITE_URL}${packagePath(packageName, "latest")}`;
+  const installVersion = latestVersion?.version ?? "<version>";
+  const humanPrivateInstallCommand = `aipm login\naipm add ${packageName}@${installVersion} --target cursor --ci`;
+  const ciPrivateInstallCommand = `AIPM_TOKEN=<install-token> aipm add ${packageName}@${installVersion} --target cursor --ci`;
 
   return (
     <DashboardShell
@@ -2529,7 +2535,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                 <h2>Published versions</h2>
                 <p className={shell.muted}>
                   {visibility === "private"
-                    ? "Versions stay off the public registry. Install with an org install token."
+                    ? "Versions stay off the public registry. People install after aipm login; CI uses an org install token."
                     : "Published versions appear on the public registry for anyone to discover and install."}
                 </p>
               </div>
@@ -2579,11 +2585,28 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
             ) : (
               <div className={shell.empty}>
                 {visibility === "private"
-                  ? "No versions published yet. Generate a publish token, push from the CLI, then refresh this page. Installs require an org install token."
+                  ? "No versions published yet. Generate a publish token, push from the CLI, then refresh this page. People install after aipm login; CI uses an org install token."
                   : "No public versions yet. Generate a token, publish from the CLI, then refresh this page."}
               </div>
             )}
           </article>
+          {visibility === "private" ? (
+            <article className={dash.dashboardPanel}>
+              <p className={shell.eyebrow}>Private install</p>
+              <h2>Install this package</h2>
+              <p className={shell.muted}>
+                Org members should sign in once from the CLI. AIPM stores a local session, so they
+                do not need to paste a token for every private install.
+              </p>
+              <CodeBlock code={humanPrivateInstallCommand} />
+              <h3>CI and automation</h3>
+              <p className={shell.muted}>
+                Use an org install token for jobs and bots. Create one from the Tokens page, then
+                pass it as <code>AIPM_TOKEN</code>.
+              </p>
+              <CodeBlock code={ciPrivateInstallCommand} />
+            </article>
+          ) : null}
           <article className={cn(dash.dashboardPanel, dash.dangerPanel)}>
             <p className={shell.eyebrow}>{canManageMembers ? "Package lifecycle" : "Package settings"}</p>
             <div className={dash.dangerActions}>
@@ -2615,7 +2638,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                     </select>
                     <p className={dash.fieldHelp}>
                       {visibility === "private"
-                        ? "Hidden from the public registry. Installs require an org install token."
+                        ? "Hidden from the public registry. Org members install after aipm login; CI uses an org install token."
                         : "Listed on the public registry for anyone to discover and install."}
                     </p>
                   </div>

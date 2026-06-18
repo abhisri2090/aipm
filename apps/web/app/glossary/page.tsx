@@ -5,7 +5,7 @@ import { DocLayout } from "../../components/doc-layout";
 const terms = [
   {
     term: "AIPM package",
-    definition: "A public package with a version number, a manifest, and the files needed to install an AI skill.",
+    definition: "A versioned package with a manifest, visibility setting, and the files needed to install an AI skill.",
   },
   {
     term: "Skill",
@@ -30,6 +30,22 @@ const terms = [
   {
     term: "Package reservation",
     definition: "A package name reserved in the dashboard so an org can publish versions for it.",
+  },
+  {
+    term: "Private package",
+    definition: "An org package that only authenticated members with access can discover, inspect, and install.",
+  },
+  {
+    term: "CLI login",
+    definition: "The browser-based aipm login flow that stores a local CLI session for private package reads and installs.",
+  },
+  {
+    term: "CLI session",
+    definition: "A local auth record stored in ~/.aipm/auth.json so the CLI can refresh access without asking for a token each time.",
+  },
+  {
+    term: "Install token",
+    definition: "An org-scoped read token used by CI or automation to install private packages without browser login.",
   },
   {
     term: "Publish token",

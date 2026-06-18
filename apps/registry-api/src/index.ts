@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -19,6 +19,10 @@ import { importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
   addOrgMember,
   confirmEmailVerification,
+  consumeCliAuthorizationCode,
+  createCliAccessToken,
+  createCliAuthorizationCode,
+  createCliRefreshToken,
   countPackageVersions,
   countPublishedVersionsForOrg,
   createEmailVerification,
@@ -32,6 +36,8 @@ import {
   acceptOrgInvite,
   deprecatePackage,
   getActiveEmailVerification,
+  getActiveCliAccessTokenByHash,
+  getActiveCliRefreshTokenByHash,
   getActiveInstallTokenByHash,
   getDeprecatedPackageNames,
   getInstallTokenById,
@@ -50,6 +56,7 @@ import {
   getProvenance,
   getProvenanceByPackageNames,
   getPublicPackagePublisher,
+  getUserById,
   incrementEmailVerificationAttempts,
   incrementPackageInstallCount,
   listAccessiblePrivatePackageNames,
@@ -70,10 +77,12 @@ import {
   removePackageMaintainer,
   resendOrgInvite,
   revokeInstallToken,
+  revokeCliRefreshTokenByHash,
   revokeOrgInvite,
   setPackageMaintainer,
   softDeleteOrg,
   touchInstallToken,
+  touchCliRefreshToken,
   transferOrgOwnership,
   undeprecatePackage,
   updateOrgSettings,
@@ -183,6 +192,10 @@ const ORG_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 const INVITE_ROLES = new Set<Exclude<OrgRole, "owner">>(["admin", "member", "viewer"]);
 const PACKAGE_VISIBILITIES = new Set<PackageVisibility>(["public", "private"]);
 const YANK_WINDOW_MS = 72 * 60 * 60 * 1000;
+const CLI_AUTH_CODE_TTL_MS = 5 * 60 * 1000;
+const CLI_ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
+const CLI_REFRESH_TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+const CLI_CODE_CHALLENGE_REGEX = /^[A-Za-z0-9_-]{43,128}$/;
 
 function normalizeOrgSlug(value: string): string {
   return value.trim().toLowerCase();
@@ -219,6 +232,83 @@ function newInstallToken(): string {
   return `aipm_read_${randomBytes(32).toString("base64url")}`;
 }
 
+function newCliCode(): string {
+  return `aipm_cli_code_${randomBytes(32).toString("base64url")}`;
+}
+
+function newCliAccessToken(): string {
+  return `aipm_cli_access_${randomBytes(32).toString("base64url")}`;
+}
+
+function newCliRefreshToken(): string {
+  return `aipm_cli_refresh_${randomBytes(32).toString("base64url")}`;
+}
+
+function pkceChallenge(verifier: string): string {
+  return createHash("sha256").update(verifier).digest("base64url");
+}
+
+function validateCliRedirectUri(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.toLowerCase();
+    const isLoopback = hostname === "127.0.0.1" || hostname === "localhost" || hostname === "::1" || hostname === "[::1]";
+    if (url.protocol !== "http:" || !isLoopback || !url.port) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function bearerToken(request: FastifyRequest): string | null {
+  const header = request.headers.authorization;
+  if (!header) return null;
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() || null;
+}
+
+async function issueCliTokenPair(
+  accountAuth: AccountAuth,
+  input: { userId: string; refreshTokenId?: string; name?: string | null },
+): Promise<{
+  accessToken: string;
+  accessTokenExpiresAt: Date;
+  refreshToken?: string;
+  refreshTokenExpiresAt?: Date;
+  refreshTokenId: string;
+}> {
+  let refreshTokenId = input.refreshTokenId;
+  let refreshToken: string | undefined;
+  let refreshTokenExpiresAt: Date | undefined;
+  if (!refreshTokenId) {
+    refreshToken = newCliRefreshToken();
+    refreshTokenExpiresAt = new Date(Date.now() + CLI_REFRESH_TOKEN_TTL_MS);
+    const refreshRow = await createCliRefreshToken(accountAuth.pool, {
+      userId: input.userId,
+      tokenHash: sha256Hex(refreshToken),
+      name: input.name ?? "AIPM CLI",
+      expiresAt: refreshTokenExpiresAt,
+    });
+    refreshTokenId = refreshRow.id;
+  }
+  const accessToken = newCliAccessToken();
+  const accessTokenExpiresAt = new Date(Date.now() + CLI_ACCESS_TOKEN_TTL_MS);
+  await createCliAccessToken(accountAuth.pool, {
+    userId: input.userId,
+    refreshTokenId,
+    tokenHash: sha256Hex(accessToken),
+    expiresAt: accessTokenExpiresAt,
+  });
+  return {
+    accessToken,
+    accessTokenExpiresAt,
+    refreshToken,
+    refreshTokenExpiresAt,
+    refreshTokenId,
+  };
+}
+
 type ReadAccess = {
   userId: string | null;
   orgIds: string[];
@@ -243,6 +333,14 @@ async function resolveReadAccess(
       void touchInstallToken(accountAuth.pool, row.id);
       const orgIds = await listOrgIdsForUser(accountAuth.pool, row.user_id);
       return { userId: row.user_id, orgIds, installTokenId: row.id };
+    }
+  }
+  if (authHeader?.startsWith("Bearer aipm_cli_access_")) {
+    const token = authHeader.slice("Bearer ".length).trim();
+    const row = await getActiveCliAccessTokenByHash(accountAuth.pool, sha256Hex(token));
+    if (row) {
+      const orgIds = await listOrgIdsForUser(accountAuth.pool, row.user_id);
+      return { userId: row.user_id, orgIds, installTokenId: null };
     }
   }
   return { userId: null, orgIds: [], installTokenId: null };
@@ -676,6 +774,140 @@ export async function createApp(): Promise<FastifyInstance> {
     const { sessionId, sessionExpiresAt, ...body } = result.body;
     setAuthCookie(reply, accountAuth.config, SESSION_COOKIE, sessionId, 30 * 24 * 60 * 60);
     return reply.status(result.status).send(body);
+  });
+
+  app.post<{
+    Body: {
+      redirectUri?: string;
+      state?: string;
+      codeChallenge?: string;
+      deviceName?: string;
+    };
+  }>("/v1/cli-auth/authorize", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const redirectUri = validateCliRedirectUri(request.body?.redirectUri);
+    if (!redirectUri) return reply.status(400).send({ error: "Invalid CLI redirect URI" });
+    const state = request.body?.state?.trim();
+    if (!state || state.length > 256) return reply.status(400).send({ error: "Invalid CLI state" });
+    const codeChallenge = request.body?.codeChallenge?.trim();
+    if (!codeChallenge || !CLI_CODE_CHALLENGE_REGEX.test(codeChallenge)) {
+      return reply.status(400).send({ error: "Invalid PKCE code challenge" });
+    }
+
+    const code = newCliCode();
+    await createCliAuthorizationCode(accountAuth.pool, {
+      userId: user.id,
+      codeHash: sha256Hex(code),
+      codeChallenge,
+      redirectUri,
+      expiresAt: new Date(Date.now() + CLI_AUTH_CODE_TTL_MS),
+    });
+    const callback = new URL(redirectUri);
+    callback.searchParams.set("code", code);
+    callback.searchParams.set("state", state);
+    if (request.body?.deviceName?.trim()) callback.searchParams.set("device", request.body.deviceName.trim().slice(0, 80));
+    return { redirectTo: callback.toString() };
+  });
+
+  app.post<{
+    Body: {
+      code?: string;
+      codeVerifier?: string;
+      redirectUri?: string;
+      deviceName?: string;
+    };
+  }>("/v1/cli-auth/token", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const code = request.body?.code?.trim();
+    const codeVerifier = request.body?.codeVerifier?.trim();
+    const redirectUri = validateCliRedirectUri(request.body?.redirectUri);
+    if (!code || !code.startsWith("aipm_cli_code_")) return reply.status(400).send({ error: "Invalid CLI authorization code" });
+    if (!codeVerifier || codeVerifier.length < 43 || codeVerifier.length > 128) {
+      return reply.status(400).send({ error: "Invalid PKCE code verifier" });
+    }
+    if (!redirectUri) return reply.status(400).send({ error: "Invalid CLI redirect URI" });
+    const row = await consumeCliAuthorizationCode(accountAuth.pool, sha256Hex(code));
+    if (!row) return reply.status(400).send({ error: "CLI authorization code expired or already used" });
+    if (row.redirect_uri !== redirectUri) return reply.status(400).send({ error: "CLI redirect URI mismatch" });
+    if (row.code_challenge !== pkceChallenge(codeVerifier)) {
+      return reply.status(400).send({ error: "Invalid PKCE code verifier" });
+    }
+    const issued = await issueCliTokenPair(accountAuth, {
+      userId: row.user_id,
+      name: request.body?.deviceName?.trim().slice(0, 80) || "AIPM CLI",
+    });
+    const user = await getUserById(accountAuth.pool, row.user_id);
+    return {
+      tokenType: "Bearer",
+      accessToken: issued.accessToken,
+      accessTokenExpiresAt: issued.accessTokenExpiresAt,
+      refreshToken: issued.refreshToken,
+      refreshTokenExpiresAt: issued.refreshTokenExpiresAt,
+      userId: row.user_id,
+      user: user
+        ? {
+            username: user.username,
+            githubLogin: user.github_login,
+            name: user.name,
+            avatarUrl: user.avatar_url,
+            email: user.primary_email ?? user.contact_email ?? null,
+          }
+        : null,
+    };
+  });
+
+  app.post<{ Body: { refreshToken?: string } }>("/v1/cli-auth/refresh", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const refreshToken = request.body?.refreshToken?.trim() || bearerToken(request);
+    if (!refreshToken || !refreshToken.startsWith("aipm_cli_refresh_")) {
+      return reply.status(401).send({ error: "CLI refresh token required" });
+    }
+    const row = await getActiveCliRefreshTokenByHash(accountAuth.pool, sha256Hex(refreshToken));
+    if (!row) return reply.status(401).send({ error: "CLI session expired or revoked" });
+    await touchCliRefreshToken(accountAuth.pool, row.id);
+    const issued = await issueCliTokenPair(accountAuth, {
+      userId: row.user_id,
+      refreshTokenId: row.id,
+    });
+    return {
+      tokenType: "Bearer",
+      accessToken: issued.accessToken,
+      accessTokenExpiresAt: issued.accessTokenExpiresAt,
+    };
+  });
+
+  app.get("/v1/cli-auth/me", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const token = bearerToken(request);
+    if (!token || !token.startsWith("aipm_cli_access_")) return reply.status(401).send({ error: "CLI login required" });
+    const access = await getActiveCliAccessTokenByHash(accountAuth.pool, sha256Hex(token));
+    if (!access) return reply.status(401).send({ error: "CLI session expired" });
+    const user = await getUserById(accountAuth.pool, access.user_id);
+    const orgs = await listUserOrgs(accountAuth.pool, access.user_id);
+    return {
+      userId: access.user_id,
+      user: user
+        ? {
+            userId: user.id,
+            username: user.username,
+            githubLogin: user.github_login,
+            name: user.name,
+            avatarUrl: user.avatar_url,
+            email: user.primary_email ?? user.contact_email ?? null,
+          }
+        : null,
+      orgs: orgs.map((org) => ({ slug: org.slug, name: org.name, role: org.role })),
+    };
+  });
+
+  app.post<{ Body: { refreshToken?: string } }>("/v1/cli-auth/logout", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const refreshToken = request.body?.refreshToken?.trim() || bearerToken(request);
+    if (refreshToken?.startsWith("aipm_cli_refresh_")) {
+      await revokeCliRefreshTokenByHash(accountAuth.pool, sha256Hex(refreshToken));
+    }
+    return { ok: true };
   });
 
   app.get("/v1/admin/session", async (request, reply) => {

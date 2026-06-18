@@ -47,6 +47,15 @@ aipm search sentry
 
 Results show version, supported tools, description, publisher, license, and size.
 
+For private organization packages, sign in once from the CLI:
+
+```bash
+aipm login
+aipm whoami
+```
+
+After login, `aipm add`, `aipm install`, `aipm update`, and `aipm search` automatically use your account access. Use `--token` or `AIPM_TOKEN` only for CI or bot installs.
+
 Install a skill:
 
 ```bash
@@ -120,6 +129,7 @@ Full publishing guide: **[aipm-registry.com/publish](https://aipm-registry.com/p
 
 ```bash
 aipm config
+aipm logout
 ```
 
 Default registry API: `https://api.aipm-registry.com`
