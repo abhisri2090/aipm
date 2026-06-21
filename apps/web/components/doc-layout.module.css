@@ -16,6 +16,9 @@
 
 .docMain {
   min-width: 0;
+  gap: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 760px) {

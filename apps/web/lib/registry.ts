@@ -1,3 +1,5 @@
+import cliPackage from "../../cli/package.json";
+
 export type PackagePublisher = {
   org: {
     slug: string;
@@ -92,7 +94,7 @@ export function isLocalDevSite(siteUrl: string = SITE_URL): boolean {
 }
 
 export const CLI_INSTALL_COMMAND = "npm install -g @aipm-registry/cli";
-export const CLI_VERSION = "0.2.12";
+export const CLI_VERSION = cliPackage.version;
 export const CLI_RELEASE_TAG = `cli-v${CLI_VERSION}`;
 export const CLI_RELEASE_URL = `https://github.com/abhisri2090/aipm/releases/tag/${CLI_RELEASE_TAG}`;
 export const CLI_RELEASE_DOWNLOAD_URL = `https://github.com/abhisri2090/aipm/releases/download/${CLI_RELEASE_TAG}`;
@@ -103,14 +105,9 @@ export const CLI_SCOOP_COMMAND = `scoop install ${CLI_RELEASE_DOWNLOAD_URL}/aipm
 
 export const CLI_INSTALL_OPTIONS = [
   {
-    label: "via npm",
+    label: "npm",
     slug: "via-npm",
     code: CLI_INSTALL_COMMAND,
-  },
-  {
-    label: "via macOS/Linux standalone",
-    slug: "via-macos-linux-standalone",
-    code: CLI_INSTALL_SCRIPT_COMMAND,
   },
   {
     label: "via Homebrew",
@@ -121,6 +118,11 @@ export const CLI_INSTALL_OPTIONS = [
     label: "via Windows PowerShell",
     slug: "via-windows-powershell",
     code: CLI_WINDOWS_INSTALL_COMMAND,
+  },
+  {
+    label: "via macOS",
+    slug: "via-macos-linux-standalone",
+    code: CLI_INSTALL_SCRIPT_COMMAND,
   },
 ] as const;
 

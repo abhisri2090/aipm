@@ -5,6 +5,58 @@ import { RegistrySearch } from "../components/registry-search";
 import { CLI_INSTALL_OPTIONS } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
+const PACKAGE_TAGS = [
+  { label: "Skills", status: "done" },
+  { label: "Rules", status: "pending" },
+  { label: "Prompts", status: "pending" },
+  { label: "MCP servers", status: "pending" },
+  { label: "Hooks", status: "pending" },
+  { label: "Context packs", status: "pending" },
+  { label: "Policies", status: "pending" },
+  { label: "Workflows", status: "pending" },
+  { label: "Memory config", status: "pending" },
+  { label: "Tool configs", status: "pending" },
+  { label: "Environment bundles", status: "pending" },
+  { label: "Agent instructions", status: "pending" },
+] as const;
+
+function TagStatusIcon({ status }: { status: "done" | "pending" }) {
+  if (status === "done") {
+    return (
+      <svg
+        aria-hidden="true"
+        className={home.heroTagIconDone}
+        fill="none"
+        height="14"
+        viewBox="0 0 24 24"
+        width="14"
+      >
+        <path
+          d="M20 6L9 17l-5-5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="3"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg
+      aria-hidden="true"
+      className={home.heroTagIconPending}
+      fill="none"
+      height="14"
+      viewBox="0 0 24 24"
+      width="14"
+    >
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7v5l3 2" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    </svg>
+  );
+}
+
 export const metadata = pageMetadata({
   title: "AIPM Registry",
   description: "Install AI skills, prompts, and tool files into Cursor, Claude, and other assistants.",
@@ -40,11 +92,71 @@ export default async function HomePage() {
       <section className={home.hero} aria-labelledby="hero-title">
         <p className={shell.eyebrow}>AIPM — AI Package Manager</p>
         <h1 id="hero-title">Install AI skills like packages.</h1>
+        <div className={home.heroManifestoRow}>
+          <ul className={home.heroManifesto} aria-label="Why AIPM exists">
+            <li>Software got npm.</li>
+            <li>Infrastructure got Terraform.</li>
+            <li>Containers got Docker.</li>
+            <li>AI has nothing.</li>
+            <li>That&apos;s the problem AIPM solves.</li>
+          </ul>
+          <aside className={home.heroAuthor} aria-label="Author">
+            <img
+              alt="Author profile"
+              className={home.heroAvatar}
+              height={88}
+              src="/author.png"
+              width={88}
+            />
+            <div className={home.heroAuthorMeta}>
+              <p className={home.heroAuthorName}>Your Name</p>
+              <p className={home.heroAuthorBio}>
+                Building the package manager AI was missing.
+                <br />
+                Looking for contributors
+              </p>
+              <div className={home.heroSocials}>
+                <a
+                  className={home.heroSocialLink}
+                  href="https://linkedin.com/in/abhisri2090"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  LinkedIn
+                </a>
+                <a
+                  className={home.heroSocialLink}
+                  href="https://x.com/abhisri2090"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  X
+                </a>
+                <a
+                  className={home.heroSocialLink}
+                  href="mailto:2abhisri@gmail.com"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Email: 2abhisri@gmail.com
+                </a>
+              </div>
+            </div>
+          </aside>
+        </div>
         <p className={shell.lede}>
           AIPM gives you a registry and CLI for AI skills. Install prompts, rules, MCP setup, and
           tool files into a repo for Cursor, Claude, Codex, and more. Start with one command, then
           keep reusable AI setup with your project.
         </p>
+        <div className={home.heroTagRow} aria-label="Package types AIPM manages">
+          {PACKAGE_TAGS.map((tag) => (
+            <span className={home.heroTag} key={tag.label}>
+              <TagStatusIcon status={tag.status} />
+              {tag.label}
+            </span>
+          ))}
+        </div>
         <div className={shell.actions}>
           <Link className={shell.button} href="#get-started">
             Get started
@@ -77,11 +189,11 @@ export default async function HomePage() {
             </div>
             <CodeBlock code={CLI_INSTALL_OPTIONS[0].code} />
             <p className={cards.stepInstallMethods}>
-              {CLI_INSTALL_OPTIONS.map((option, index) => (
+              {"Other install methods ->"} {CLI_INSTALL_OPTIONS.map((option, index) => index == 0 ? null : (
                 <span key={option.slug}>
-                  {index > 0 ? " · " : null}
+                  {index > 1 ? " · " : null}
                   <Link className={shell.textLink} href={`/commands#${option.slug}`}>
-                    {option.label}
+                    {option.label.replace('via ', '')}
                   </Link>
                 </span>
               ))}

@@ -1,0 +1,62 @@
+.commandSection {
+  margin-top: 42px;
+}
+
+.commandSection:first-of-type {
+  margin-top: 4px;
+}
+
+.commandDetails {
+  display: grid;
+  gap: 18px;
+}
+
+.commandSummary {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+
+.commandSummary::-webkit-details-marker {
+  display: none;
+}
+
+.commandSummaryLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.commandSummary h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.commandSummary:hover h2,
+.commandDetails[open] .commandSummary h2 {
+  color: var(--accent-strong);
+}
+
+.chevron {
+  flex-shrink: 0;
+  width: 0;
+  height: 0;
+  margin-top: 4px;
+  border-top: 9px solid var(--text);
+  border-right: 7px solid transparent;
+  border-left: 7px solid transparent;
+  transition: transform 0.15s ease;
+}
+
+.commandDetails[open] .chevron {
+  transform: rotate(180deg);
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
+.commandBody {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1fr;
+}

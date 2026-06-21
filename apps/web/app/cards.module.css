@@ -12,7 +12,6 @@
 }
 
 .guideGrid,
-.exampleGrid,
 .practiceGrid,
 .popularGrid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -23,6 +22,7 @@
 }
 
 .exampleGrid {
+  grid-template-columns: 1fr;
   margin: 4px 0 0;
 }
 

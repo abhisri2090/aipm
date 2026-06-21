@@ -1,6 +1,7 @@
-import { shell, cards, docs, cn } from "../../lib/page-styles";
+import { shell, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { CodeBlock } from "../../components/code-block";
+import { CommandSection, type CommandItem } from "../../components/command-section";
 import { DocLayout } from "../../components/doc-layout";
 import {
   CLI_INSTALL_OPTIONS,
@@ -10,14 +11,6 @@ import {
 } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
-type CommandItem = {
-  title: string;
-  slug?: string;
-  description: string;
-  code: string;
-  options?: string[];
-};
-
 const installCommands: CommandItem[] = [
   ...CLI_INSTALL_OPTIONS.map((option) => ({
     title: option.label,
@@ -25,11 +18,7 @@ const installCommands: CommandItem[] = [
     description:
       option.slug === "via-npm"
         ? "Installs the AIPM CLI from npm for users who already have Node.js and npm."
-        : option.slug === "via-macos-linux-standalone"
-          ? "Downloads the standalone binary and installs it into your local command path."
-          : option.slug === "via-homebrew"
-            ? "Installs the downloadable Homebrew formula directly from the CLI release."
-            : "Downloads the Windows installer script and installs aipm.exe.",
+        : "Put this command in your terminal to install the AIPM CLI",
     code: option.code,
   })),
   {
@@ -40,7 +29,7 @@ const installCommands: CommandItem[] = [
   },
 ];
 
-const useCommands: CommandItem[] = [
+const privatePackageCommands: CommandItem[] = [
   {
     title: "CLI login",
     description: "Opens the browser login flow and stores a local CLI session for private package installs.",
@@ -58,6 +47,51 @@ const useCommands: CommandItem[] = [
     description: "Revokes the stored CLI session and removes it from this machine.",
     code: "aipm logout",
     options: ["--registry <url>: logout from another registry"],
+  },
+];
+
+const useCommands: CommandItem[] = [
+  {
+    title: "Install configured packages",
+    description: "Installs every package already listed in aipm.package.json.",
+    code: "aipm install",
+    options: ["--target <tool>: install for one tool", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: use global config"],
+  },
+  {
+    title: "Update packages",
+    description: "Finds newer registry versions and reinstalls one package or all configured packages.",
+    code: "aipm update",
+    options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--token <token>: override stored login for CI", "--ci: do not prompt interactively"],
+  },
+  {
+    title: "Initialize a project",
+    description: "Creates aipm.package.json in the current project and records the registry URL.",
+    code: "aipm init --target cursor",
+    options: ["--target <tool>: set cursor, claude, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
+  },
+  {
+    title: "Install one package",
+    description: "Adds a package to aipm.package.json and writes target-specific files into the project.",
+    code: "aipm add @scope/name@1.0.0 --target cursor --ci",
+    options: ["--target <tool>: cursor, claude, or *", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
+  },
+  {
+    title: "Search packages",
+    description: "Searches registry packages. Private matches are included after aipm login.",
+    code: "aipm search sentry",
+    options: ["--limit <number>: cap result count", "--json: print machine-readable output", "--registry <url>: search another registry", "--token <token>: use an explicit install token"],
+  },
+  {
+    title: "List installed packages",
+    description: "Reads aipm-lock.json and shows the package versions installed for this project.",
+    code: "aipm list",
+    options: ["--global: list global packages"],
+  },
+  {
+    title: "Remove a package",
+    description: "Removes a package from AIPM config and lock files; review tool-written files before committing.",
+    code: "aipm remove @scope/name",
+    options: ["Alias: aipm rm @scope/name", "--global: remove from global config"],
   },
   {
     title: "Show CLI version",
@@ -82,48 +116,6 @@ const useCommands: CommandItem[] = [
     description: "Prints the registry, project config path, install root, and installed packages.",
     code: "aipm config",
     options: ["--registry <url>: override registry for this check", "--global: inspect global AIPM config", "--json: print machine-readable output"],
-  },
-  {
-    title: "Initialize a project",
-    description: "Creates aipm.package.json in the current project and records the registry URL.",
-    code: "aipm init --target cursor",
-    options: ["--target <tool>: set cursor, claude, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
-  },
-  {
-    title: "Search packages",
-    description: "Searches registry packages. Private matches are included after aipm login.",
-    code: "aipm search sentry",
-    options: ["--limit <number>: cap result count", "--json: print machine-readable output", "--registry <url>: search another registry", "--token <token>: use an explicit install token"],
-  },
-  {
-    title: "Install one package",
-    description: "Adds a package to aipm.package.json and writes target-specific files into the project.",
-    code: "aipm add @scope/name@1.0.0 --target cursor --ci",
-    options: ["--target <tool>: cursor, claude, or *", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
-  },
-  {
-    title: "Install configured packages",
-    description: "Installs every package already listed in aipm.package.json.",
-    code: "aipm install",
-    options: ["--target <tool>: install for one tool", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: use global config"],
-  },
-  {
-    title: "List installed packages",
-    description: "Reads aipm-lock.json and shows the package versions installed for this project.",
-    code: "aipm list",
-    options: ["--global: list global packages"],
-  },
-  {
-    title: "Update packages",
-    description: "Finds newer registry versions and reinstalls one package or all configured packages.",
-    code: "aipm update",
-    options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--token <token>: override stored login for CI", "--ci: do not prompt interactively"],
-  },
-  {
-    title: "Remove a package",
-    description: "Removes a package from AIPM config and lock files; review tool-written files before committing.",
-    code: "aipm remove @scope/name",
-    options: ["Alias: aipm rm @scope/name", "--global: remove from global config"],
   },
 ];
 
@@ -222,34 +214,6 @@ export const metadata = pageMetadata({
   keywords: ["AIPM CLI commands", "aipm command reference", "AI package manager CLI", "publish AI skill command"],
 });
 
-function CommandSection({ title, commands }: { title: string; commands: CommandItem[] }) {
-  return (
-    <section className={cards.exampleGrid} aria-labelledby={`${title.toLowerCase().replace(/\s+/g, "-")}-title`}>
-      <h2 id={`${title.toLowerCase().replace(/\s+/g, "-")}-title`} className={cards.fullWidth}>
-        {title}
-      </h2>
-      {commands.map((command) => (
-        <article
-          className={cards.exampleCard}
-          id={command.slug}
-          key={command.title}
-        >
-          <h3>{command.title}</h3>
-          <p>{command.description}</p>
-          <CodeBlock code={command.code} />
-          {command.options ? (
-            <ul className={docs.checkList}>
-              {command.options.map((option) => (
-                <li key={option}>{option}</li>
-              ))}
-            </ul>
-          ) : null}
-        </article>
-      ))}
-    </section>
-  );
-}
-
 export default function CommandsPage() {
   return (
     <DocLayout wide>
@@ -280,6 +244,7 @@ export default function CommandsPage() {
 
       <CommandSection title="Install AIPM" commands={installCommands} />
       <CommandSection title="Use Packages" commands={useCommands} />
+      <CommandSection title="Private Packages" commands={privatePackageCommands} />
       <CommandSection title="Publish Packages" commands={publishCommands} />
     </DocLayout>
   );
