@@ -42,6 +42,7 @@ import {
   getDeprecatedPackageNames,
   getInstallTokenById,
   getInternalStats,
+  listAdminPackages,
   getLatestProvenance,
   getOrgBySlug,
   getOrgBySlugForMember,
@@ -671,6 +672,18 @@ export async function createApp(): Promise<FastifyInstance> {
   const adminAuthConfig = resolveAdminAuthConfig();
   const emailSender = createEmailSender(resolveEmailConfig());
 
+  async function deletePackageCompletely(name: string) {
+    const deletedVersions = await metadata.deletePackage(name);
+    for (const version of deletedVersions) {
+      await storage.delete(version.blob_path).catch(() => undefined);
+    }
+    if (accountAuth) {
+      await deletePackageProvenance(accountAuth.pool, name);
+      await deletePackageReservation(accountAuth.pool, name);
+    }
+    return deletedVersions;
+  }
+
   const app = Fastify({
     logger: true,
     bodyLimit: MAX_PACKAGE_BYTES,
@@ -963,6 +976,44 @@ export async function createApp(): Promise<FastifyInstance> {
     const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
     if (!user) return;
     return getInternalStats(accountAuth.pool);
+  });
+
+  app.get<{ Querystring: { q?: string; limit?: string } }>("/v1/admin/packages", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+    if (!user) return;
+
+    const parsedLimit = parseListLimit(request.query.limit);
+    if (!parsedLimit.ok) return reply.status(400).send({ error: parsedLimit.error });
+    const query = request.query.q?.trim() ?? "";
+    const packages = await listAdminPackages(accountAuth.pool, query, parsedLimit.value);
+    return {
+      packages: packages.map((pkg) => ({
+        name: pkg.name,
+        version: pkg.version,
+        description: pkg.description,
+        visibility: pkg.visibility,
+        versionCount: pkg.versionCount,
+        createdAt: pkg.createdAt.toISOString(),
+      })),
+    };
+  });
+
+  app.delete<{ Params: { name: string } }>("/v1/admin/packages/:name", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+    if (!user) return;
+
+    const name = decodePackageName(request.params.name);
+    if (!isValidScopeName(name)) {
+      return reply.status(400).send({ error: "Invalid package name; use @scope/name" });
+    }
+
+    const deletedVersions = await deletePackageCompletely(name);
+    if (deletedVersions.length === 0) {
+      return reply.status(404).send({ error: "Package not found" });
+    }
+    return reply.status(204).send();
   });
 
   app.post<{ Body: { sourceUrl?: string } }>(
@@ -2097,13 +2148,9 @@ export async function createApp(): Promise<FastifyInstance> {
       return reply.status(403).send({ error: "Not allowed to delete this package" });
     }
 
-    const deletedVersions = await metadata.deletePackage(name);
-    for (const version of deletedVersions) {
-      await storage.delete(version.blob_path).catch(() => undefined);
-    }
-    if (accountAuth) {
-      await deletePackageProvenance(accountAuth.pool, name);
-      await deletePackageReservation(accountAuth.pool, name);
+    const deletedVersions = await deletePackageCompletely(name);
+    if (deletedVersions.length === 0) {
+      return reply.status(404).send({ error: "Package not found" });
     }
     return reply.status(204).send();
   });
@@ -2188,7 +2235,7 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string; includeDemo?: string } }>(
+  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string; includeDemo?: string; includePrivate?: string } }>(
     "/v1/packages",
     {
       config: {
@@ -2206,6 +2253,7 @@ export async function createApp(): Promise<FastifyInstance> {
 
       const limit = parsedLimit.value;
       const includeDemo = request.query.includeDemo === "true";
+      const includePrivate = request.query.includePrivate === "true";
       const query = request.query.q?.trim() ?? "";
       const readAccess = await resolveReadAccess(accountAuth, request);
       const rows = await metadata.list(query, {
@@ -2225,7 +2273,10 @@ export async function createApp(): Promise<FastifyInstance> {
         const exactNameQuery = query.startsWith("@") ? query.toLowerCase() : null;
         visibleRows = visibleRows.filter((row) => {
           const visibility = visibilityMap.get(row.name) ?? "public";
-          if (visibility === "private" && !accessiblePrivate.has(row.name)) return false;
+          if (visibility === "private") {
+            if (!includePrivate) return false;
+            if (!accessiblePrivate.has(row.name)) return false;
+          }
           if (deprecatedMap.has(row.name) && row.name.toLowerCase() !== exactNameQuery) return false;
           return true;
         });

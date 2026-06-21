@@ -1596,6 +1596,90 @@ export async function getPublicPackagePublisher(
   return result.rows[0] ?? null;
 }
 
+export type AdminPackageSummary = {
+  name: string;
+  version: string;
+  description: string;
+  visibility: PackageVisibility;
+  versionCount: number;
+  createdAt: Date;
+};
+
+export async function listAdminPackages(
+  pool: pg.Pool,
+  query = "",
+  limit = 50,
+): Promise<AdminPackageSummary[]> {
+  const normalizedQuery = query.trim();
+  const boundedLimit = Math.min(Math.max(limit, 1), 100);
+  const values: Array<string | number> = [];
+  let filter = "";
+
+  if (normalizedQuery) {
+    values.push(`%${normalizedQuery}%`);
+    filter = `
+      AND (
+        latest.name ILIKE $1
+        OR latest.version ILIKE $1
+        OR latest.description ILIKE $1
+      )
+    `;
+  }
+
+  values.push(boundedLimit);
+  const limitParam = `$${values.length}`;
+
+  const result = await pool.query<{
+    name: string;
+    version: string;
+    description: string | null;
+    visibility: PackageVisibility | null;
+    version_count: string;
+    created_at: Date;
+  }>(
+    `WITH latest AS (
+       SELECT DISTINCT ON (pv.name)
+         pv.name,
+         pv.version,
+         pv.manifest->>'description' AS description,
+         pv.created_at
+       FROM package_versions pv
+       WHERE pv.yanked_at IS NULL
+       ORDER BY pv.name, pv.created_at DESC
+     ),
+     version_counts AS (
+       SELECT name, COUNT(*)::int AS version_count
+       FROM package_versions
+       WHERE yanked_at IS NULL
+       GROUP BY name
+     )
+     SELECT latest.name,
+            latest.version,
+            latest.description,
+            COALESCE(package_reservations.visibility, 'public') AS visibility,
+            version_counts.version_count,
+            latest.created_at
+     FROM latest
+     JOIN version_counts ON version_counts.name = latest.name
+     LEFT JOIN package_reservations ON package_reservations.name = latest.name
+     LEFT JOIN orgs ON orgs.id = package_reservations.org_id
+     WHERE orgs.deleted_at IS NULL OR orgs.id IS NULL
+     ${filter}
+     ORDER BY latest.created_at DESC
+     LIMIT ${limitParam}`,
+    values,
+  );
+
+  return result.rows.map((row) => ({
+    name: row.name,
+    version: row.version,
+    description: row.description ?? "",
+    visibility: row.visibility ?? "public",
+    versionCount: Number(row.version_count),
+    createdAt: row.created_at,
+  }));
+}
+
 export type InternalStats = {
   users: number;
   orgs: number;

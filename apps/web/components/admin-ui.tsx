@@ -6,6 +6,7 @@ import { DEV_LOGIN_URL, GITHUB_LOGIN_URL, isLocalDevSite } from "../lib/registry
 import { cn, dash, shell } from "../lib/page-styles";
 import { InternalStatsPanel } from "./internal-stats-ui";
 import { AdminImportSkillPanel } from "./admin-import-ui";
+import { AdminDeletePackagePanel } from "./admin-delete-package-ui";
 import type { InternalStats } from "./internal-stats-types";
 
 type Me = {
@@ -319,6 +320,7 @@ export function AdminPanel() {
           </button>
         </div>
         <AdminImportSkillPanel onImported={loadStats} />
+        <AdminDeletePackagePanel onDeleted={loadStats} />
         <InternalStatsPanel stats={stats} />
       </section>
     </main>

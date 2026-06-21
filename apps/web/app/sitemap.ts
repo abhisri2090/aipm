@@ -8,6 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/registry",
     "/publish",
     "/publish/guide",
+    "/install",
     "/use",
     "/commands",
     "/targets",

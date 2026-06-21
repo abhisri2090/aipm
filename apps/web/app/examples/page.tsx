@@ -2,7 +2,6 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
-import { CLI_INSTALL_COMMAND, CLI_RELEASE_URL, CLI_VERSION } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 type ExampleStep = {
@@ -13,7 +12,7 @@ type ExampleStep = {
 
 type Example = {
   title: string;
-  scenario: string;
+  storyline: string;
   publishSteps: ExampleStep[];
   installSteps: ExampleStep[];
   notes: string[];
@@ -22,7 +21,8 @@ type Example = {
 const examples: Example[] = [
   {
     title: "Code review helper for Cursor",
-    scenario: "A team wants the same pull request review checklist in every Cursor project.",
+    storyline:
+      "Maya leads a small backend team. Every pull request gets different review comments because each developer prompts Cursor differently. She packages the team's PR checklist as a skill so every project installs the same review standards.",
     publishSteps: [
       {
         title: "1. Create the skill folder",
@@ -61,7 +61,8 @@ const examples: Example[] = [
   },
   {
     title: "Sentry issue summariser for Claude",
-    scenario: "A product engineer wants Claude to turn error reports into clear triage notes.",
+    storyline:
+      "James gets paged when Sentry fires. He spends the first ten minutes rewriting the same triage prompt in Claude. He publishes one skill so incident summaries follow the same format every time.",
     publishSteps: [
       {
         title: "1. Create the skill folder",
@@ -100,7 +101,8 @@ const examples: Example[] = [
   },
   {
     title: "Release notes skill for Cursor and Claude",
-    scenario: "A maintainer wants one skill that helps Cursor and Claude draft release notes.",
+    storyline:
+      "Priya ships features weekly and uses both Cursor for day-to-day coding and Claude for release drafts. She wants one skill package that works in both tools without maintaining two separate copies.",
     publishSteps: [
       {
         title: "1. Create the skill folder",
@@ -144,7 +146,8 @@ const examples: Example[] = [
   },
   {
     title: "Import an existing Codex skill folder",
-    scenario: "A user already has a local skill folder and wants to publish it.",
+    storyline:
+      "Alex already built a review skill in Codex. The team wants it on the registry so others can install it with aipm add. He imports the folder instead of starting from scratch.",
     publishSteps: [
       {
         title: "1. Import into an AIPM package",
@@ -229,10 +232,11 @@ export default function ExamplesPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Examples</p>
-        <h1>Copy a working flow for a common skill.</h1>
+        <h1>Skill publishing examples.</h1>
         <p className={shell.lede}>
           These examples show the whole path: create a skill, stage it, publish it, and install it
-          into an AI tool. Each step has its own command and a short explanation.
+          into an AI tool. Each step has its own command and a short explanation. Install the AIPM CLI
+          once before you start — see the <Link href="/install">install guide</Link>.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/templates">
@@ -244,24 +248,12 @@ export default function ExamplesPage() {
         </div>
       </section>
 
-      <article className={docs.doc}>
-        <section>
-          <h2>Before any example</h2>
-          <p>
-            Install the CLI once, then sign in on the website to create an org and reserve the package name.
-            Current verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
-          </p>
-          <CodeBlock code={CLI_INSTALL_COMMAND} />
-          <h2>Check the install</h2>
-          <CodeBlock code="aipm --version" />
-        </section>
-      </article>
-
       <section className={cards.exampleList} aria-label="AIPM publishing examples">
-        {examples.map((example) => (
+        {examples.map((example, index) => (
           <article className={cards.exampleCard} key={example.title}>
+            <p className={shell.eyebrow}>Example {index + 1}</p>
             <h2>{example.title}</h2>
-            <p>{example.scenario}</p>
+            <p className={cards.exampleStoryline}>{example.storyline}</p>
             <h3>Publish</h3>
             <ExampleSteps steps={example.publishSteps} />
             <h3>Install</h3>

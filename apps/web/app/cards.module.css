@@ -17,6 +17,27 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.popularGrid {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+.popularCatalog {
+  display: grid;
+  gap: 42px;
+  margin-top: 42px;
+  margin-bottom: 42px;
+}
+
+.popularCategoryBlock .popularGrid {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.popularCategoryTitle {
+  margin: 0 0 18px;
+  font-size: 24px;
+}
+
 .steps {
   grid-template-columns: 1fr;
 }
@@ -151,8 +172,13 @@
 }
 
 .popularCard h2,
+.popularCard h3,
 .popularCard p {
   margin: 0;
+}
+
+.popularCard h3 {
+  font-size: 16px;
 }
 
 .popularCard > p:not(.eyebrow),
@@ -160,6 +186,11 @@
 .whyLine {
   color: var(--muted);
   line-height: 1.6;
+}
+
+.popularPromptBlock {
+  margin-top: auto;
+  padding-top: 12px;
 }
 
 .packageLine {
@@ -242,13 +273,32 @@
 }
 
 .thanksList {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
 .thanksCard {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  min-height: 0;
+}
+
+.thanksCardImage {
+  width: 100%;
+  height: 160px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  object-fit: contain;
+  padding: 14px;
+  image-rendering: auto;
+}
+
+.thanksCardBody {
   display: flex;
-  min-height: 250px;
+  min-height: 160px;
   flex-direction: column;
   align-items: flex-start;
 }
@@ -343,10 +393,13 @@
   margin: 0 0 14px;
 }
 
-.exampleCard > p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.6;
+.exampleStoryline {
+  margin: 0 0 22px;
+  line-height: 1.65;
+}
+
+.exampleCard .eyebrow {
+  margin-bottom: 10px;
 }
 
 .exampleSteps {
@@ -516,6 +569,14 @@
   .statusGrid,
   .sourceList {
     grid-template-columns: 1fr;
+  }
+
+  .thanksCard {
+    grid-template-columns: 1fr;
+  }
+
+  .thanksCardBody {
+    min-height: 0;
   }
 
   .resultCard {

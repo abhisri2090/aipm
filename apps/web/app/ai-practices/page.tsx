@@ -119,7 +119,8 @@ export default function AiPracticesPage() {
         <h1>Build AI skills that are clear, safe, and reusable.</h1>
         <p className={shell.lede}>
           A good AI workflow should not be lost in chat history. Turn it into a small, documented
-          skill that can be installed, tested, and updated.
+          skill that can be installed, tested, and updated. For naming, metadata, and SEO, see the{" "}
+          <Link href="/discoverability">discoverability guide</Link>.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish">

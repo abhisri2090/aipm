@@ -2261,7 +2261,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   }, [versions]);
 
   useEffect(() => {
-    const params = new URLSearchParams({ q: packageName, limit: "20" });
+    const params = new URLSearchParams({ q: packageName, limit: "20", includePrivate: "true" });
     api<{ packages: PublishedPackageVersion[] }>(`/v1/packages?${params}`)
       .then((data) => {
         setVersions(data.packages.filter((pkg) => pkg.name === packageName));
@@ -2650,6 +2650,10 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                 <>
                   <section className={dash.dangerAction}>
                     <h2>Deprecate skill</h2>
+                    <p className={shell.muted}>
+                      Over time, AI may handle the workflows this skill encodes on its own. Deprecate
+                      when the package is no longer needed, and leave a note for teams still using it.
+                    </p>
                   {deprecatedAt ? (
                     <>
                       <p className={shell.muted}>

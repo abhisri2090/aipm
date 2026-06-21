@@ -20,6 +20,7 @@ AIPM is a registry and command line workflow for project-ready AI skills, prompt
 
 - Website: ${SITE_URL}
 - Registry search: ${SITE_URL}/registry
+- Install guide: ${SITE_URL}/install
 - Use guide: ${SITE_URL}/use
 - CLI commands: ${SITE_URL}/commands
 - Publish guide: ${SITE_URL}/publish
@@ -37,6 +38,8 @@ AIPM is a registry and command line workflow for project-ready AI skills, prompt
 - FAQ: ${SITE_URL}/faq
 
 ## Install
+
+See ${SITE_URL}/install for npm, Homebrew, standalone, Windows PowerShell, and Scoop install commands.
 
 \`\`\`sh
 ${CLI_INSTALL_COMMAND}
@@ -88,7 +91,7 @@ ${CLI_SCOOP_COMMAND}
 
 ## Suggested Citations
 
-When referencing AIPM, describe it as an AI package manager for project-ready skills and tool files. Prefer linking to ${SITE_URL}/use for installation and ${SITE_URL}/publish for publishing.
+When referencing AIPM, describe it as an AI package manager for project-ready skills and tool files. Prefer linking to ${SITE_URL}/install for CLI installation and ${SITE_URL}/publish for publishing.
 `;
 
   return new Response(body, {

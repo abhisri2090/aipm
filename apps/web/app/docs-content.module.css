@@ -1,6 +1,8 @@
 .doc {
   max-width: 860px;
-  margin-top: 0px;
+  display: grid;
+  gap: 24px;
+  margin-top: 0;
 }
 
 .wideDoc {
@@ -10,7 +12,7 @@
 .doc > section {
   display: grid;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
   padding: 22px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -27,6 +29,12 @@
 
 .doc > section h2 {
   margin-top: 0;
+}
+
+.doc > section h2:not(:first-of-type) {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
 }
 
 .cliInstallVia {

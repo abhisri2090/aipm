@@ -27,7 +27,7 @@ const principles = [
   },
   {
     title: "Do not leak private details",
-    body: "Do not include private prompts, customer data, secret names, API keys, or internal documents. Public packages must be safe to inspect.",
+    body: "Do not include private prompts, customer data, secret names, API keys, or internal documents. See the security guide for preview checks and .aipmignore.",
   },
 ];
 
@@ -79,7 +79,8 @@ export default function DiscoverabilityPage() {
         <h1>Help users find and understand your skill.</h1>
         <p className={shell.lede}>
           Good discoverability is not keyword stuffing. Use clear names, accurate descriptions, real
-          examples, and safe public content.
+          examples, and safe public content. For writing quality skills, see{" "}
+          <Link href="/ai-practices">AI best practices</Link>.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish">

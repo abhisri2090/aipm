@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="Reinforcement learning">
+  <rect width="320" height="240" rx="12" fill="#eef5f1"/>
+  <rect x="72" y="40" width="176" height="112" rx="10" fill="#ffffff" stroke="#c9d9d1" stroke-width="2"/>
+  <rect x="92" y="58" width="136" height="10" rx="5" fill="#1f7a5c" opacity="0.55"/>
+  <rect x="92" y="78" width="112" height="8" rx="4" fill="#61706a" opacity="0.35"/>
+  <rect x="92" y="94" width="124" height="8" rx="4" fill="#61706a" opacity="0.35"/>
+  <rect x="92" y="110" width="96" height="8" rx="4" fill="#61706a" opacity="0.35"/>
+  <circle cx="104" cy="132" r="12" fill="#1f7a5c" opacity="0.8"/>
+  <path d="M124 132h96" stroke="#1f7a5c" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
+  <text x="160" y="196" text-anchor="middle" fill="#155c46" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="700">Reinforcement Learning</text>
+</svg>

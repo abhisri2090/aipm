@@ -1,9 +1,9 @@
-import { shell, cards, cn } from "../../lib/page-styles";
+import { shell, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { RegistrySearch } from "../../components/registry-search";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
-import { SKILL_DISCOVERY_PAGES } from "../../lib/skill-discovery";
+// import { SKILL_DISCOVERY_PAGES } from "../../lib/skill-discovery";
 
 export const metadata = pageMetadata({
   title: "AI Skills Registry",
@@ -53,6 +53,7 @@ export default async function RegistryPage({
         </div>
       </section>
 
+      {/* Browse-by-category hidden until the catalog has more skills.
       <section className={shell.panelSection} aria-labelledby="browse-by-category-title">
         <div className={shell.sectionHeading}>
           <div>
@@ -69,6 +70,7 @@ export default async function RegistryPage({
           ))}
         </div>
       </section>
+      */}
 
       <section className={shell.panelSection} aria-labelledby="registry-search-title">
         <div className={shell.sectionHeading}>

@@ -58,14 +58,18 @@ function TagStatusIcon({ status }: { status: "done" | "pending" }) {
 }
 
 export const metadata = pageMetadata({
-  title: "AIPM Registry",
-  description: "Install AI skills, prompts, and tool files into Cursor, Claude, and other assistants.",
+  title: "AIPM - AI Package Manager for Skills and Tool Files",
+  description:
+    "AIPM is an AI package manager for installing reusable skills, prompts, MCP setup, rules, and tool files into Cursor, Claude, Codex, and other assistants.",
   keywords: [
     "AI package manager",
     "AI skill registry",
+    "agent package manager",
     "Cursor skills",
     "Claude skills",
+    "Codex skills",
     "prompt packages",
+    "MCP packages",
     "AI tools",
   ],
 });
@@ -78,14 +82,60 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "AIPM Registry",
-            url: "https://aipm-registry.com",
-            potentialAction: {
-              "@type": "SearchAction",
-              target: "https://aipm-registry.com/registry?q={search_term_string}",
-              "query-input": "required name=search_term_string",
-            },
+            "@graph": [
+              {
+                "@type": "WebSite",
+                "@id": "https://www.aipm-registry.com/#website",
+                name: "AIPM Registry",
+                alternateName: "AIPM",
+                url: "https://www.aipm-registry.com",
+                description:
+                  "A registry and CLI for installing reusable AI skills, prompts, rules, MCP setup, and tool files into supported assistants.",
+                publisher: {
+                  "@id": "https://www.aipm-registry.com/#organization",
+                },
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: "https://www.aipm-registry.com/registry?q={search_term_string}",
+                  "query-input": "required name=search_term_string",
+                },
+              },
+              {
+                "@type": "Organization",
+                "@id": "https://www.aipm-registry.com/#organization",
+                name: "AIPM",
+                url: "https://www.aipm-registry.com",
+                logo: "https://www.aipm-registry.com/aipm-logo.svg",
+                founder: {
+                  "@id": "https://www.aipm-registry.com/#abhishek-srivastava",
+                },
+                sameAs: ["https://github.com/abhisri2090/aipm"],
+              },
+              {
+                "@type": "Person",
+                "@id": "https://www.aipm-registry.com/#abhishek-srivastava",
+                name: "Abhishek Srivastava",
+                url: "https://www.linkedin.com/in/abhisri2090",
+                sameAs: ["https://x.com/abhisri2090", "https://github.com/abhisri2090"],
+              },
+              {
+                "@type": "SoftwareApplication",
+                "@id": "https://www.aipm-registry.com/#cli",
+                name: "AIPM CLI",
+                applicationCategory: "DeveloperApplication",
+                operatingSystem: "macOS, Linux, Windows",
+                description:
+                  "Command line tool for installing and publishing project-ready AI skills and tool files.",
+                installUrl: "https://www.aipm-registry.com/use",
+                softwareHelp: "https://www.aipm-registry.com/commands",
+                codeRepository: "https://github.com/abhisri2090/aipm",
+                offers: {
+                  "@type": "Offer",
+                  price: "0",
+                  priceCurrency: "USD",
+                },
+              },
+            ],
           }),
         }}
       />
@@ -109,7 +159,7 @@ export default async function HomePage() {
               width={88}
             />
             <div className={home.heroAuthorMeta}>
-              <p className={home.heroAuthorName}>Your Name</p>
+              <p className={home.heroAuthorName}>Abhishek Srivastava</p>
               <p className={home.heroAuthorBio}>
                 Building the package manager AI was missing.
                 <br />
@@ -149,6 +199,29 @@ export default async function HomePage() {
           tool files into a repo for Cursor, Claude, Codex, and more. Start with one command, then
           keep reusable AI setup with your project.
         </p>
+        <dl className={home.answerGrid} aria-label="AIPM direct answers">
+          <div>
+            <dt>What is AIPM?</dt>
+            <dd>
+              AIPM is an AI package manager: a public registry plus CLI for reusable AI skills,
+              prompts, rules, MCP setup, and tool files.
+            </dd>
+          </div>
+          <div>
+            <dt>Who is it for?</dt>
+            <dd>
+              Developers and teams using Cursor, Claude, Codex, and other assistants who want
+              repeatable project-local AI setup instead of copied instructions.
+            </dd>
+          </div>
+          <div>
+            <dt>How do you start?</dt>
+            <dd>
+              Install the CLI, run <code>aipm init</code>, then add a package with{" "}
+              <code>aipm add @scope/name@version</code>.
+            </dd>
+          </div>
+        </dl>
         <div className={home.heroTagRow} aria-label="Package types AIPM manages">
           {PACKAGE_TAGS.map((tag) => (
             <span className={home.heroTag} key={tag.label}>
@@ -189,14 +262,10 @@ export default async function HomePage() {
             </div>
             <CodeBlock code={CLI_INSTALL_OPTIONS[0].code} />
             <p className={cards.stepInstallMethods}>
-              {"Other install methods ->"} {CLI_INSTALL_OPTIONS.map((option, index) => index == 0 ? null : (
-                <span key={option.slug}>
-                  {index > 1 ? " · " : null}
-                  <Link className={shell.textLink} href={`/commands#${option.slug}`}>
-                    {option.label.replace('via ', '')}
-                  </Link>
-                </span>
-              ))}
+              {"Other install methods ->"}{" "}
+              <Link className={shell.textLink} href="/install">
+                Full install guide
+              </Link>
             </p>
           </article>
           <article className={cards.stepCard}>

@@ -2,7 +2,6 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
-import { CLI_INSTALL_COMMAND, CLI_RELEASE_URL, CLI_VERSION } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 const templates = [
@@ -78,10 +77,11 @@ export default function TemplatesPage() {
         <h1>Start with a template, then edit it.</h1>
         <p className={shell.lede}>
           Templates create starter files for common AI tasks. They are only a starting point. Edit
-          the SKILL.md, manifest, and .aipmignore file before you publish.
+          the SKILL.md, manifest, and .aipmignore file before you publish. Install the AIPM CLI once
+          before running template commands — see the <Link href="/install">install guide</Link>.
         </p>
         <div className={shell.actions}>
-          <Link className={shell.button} href="/publish">
+          <Link className={shell.button} href="/publish/guide">
             Read publishing guide
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/examples">
@@ -109,26 +109,12 @@ export default function TemplatesPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
-          <h2>Install the CLI first</h2>
-          <p>
-            Templates are created by the AIPM CLI, so install it before running template commands.
-            Current verified release: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
-          </p>
-          <CodeBlock code={CLI_INSTALL_COMMAND} />
-        </section>
-        <section>
-          <h2>Check the install</h2>
-          <CodeBlock code="aipm --version" />
-        </section>
-        <section>
           <h2>After you choose a template</h2>
-          <CodeBlock
-            code={`cd review-helper
-aipm publish add .
-aipm publish preview # (optional)
-aipm publish validate # (optional)
-AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
-          />
+          <p>
+            Edit the generated files, then follow the{" "}
+            <Link href="/publish/guide">publishing guide</Link> to stage, preview, validate, and push
+            your package.
+          </p>
         </section>
       </article>
     </DocLayout>

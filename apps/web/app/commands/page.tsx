@@ -4,30 +4,10 @@ import { CodeBlock } from "../../components/code-block";
 import { CommandSection, type CommandItem } from "../../components/command-section";
 import { DocLayout } from "../../components/doc-layout";
 import {
-  CLI_INSTALL_OPTIONS,
   CLI_RELEASE_URL,
-  CLI_SCOOP_COMMAND,
   CLI_VERSION,
 } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
-
-const installCommands: CommandItem[] = [
-  ...CLI_INSTALL_OPTIONS.map((option) => ({
-    title: option.label,
-    slug: option.slug,
-    description:
-      option.slug === "via-npm"
-        ? "Installs the AIPM CLI from npm for users who already have Node.js and npm."
-        : "Put this command in your terminal to install the AIPM CLI",
-    code: option.code,
-  })),
-  {
-    title: "via Scoop",
-    slug: "via-scoop",
-    description: "Installs from the downloadable Scoop manifest attached to the CLI release.",
-    code: CLI_SCOOP_COMMAND,
-  },
-];
 
 const privatePackageCommands: CommandItem[] = [
   {
@@ -225,7 +205,10 @@ export default function CommandsPage() {
           its behavior. The current verified CLI release is <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
         </p>
         <div className={shell.actions}>
-          <Link className={shell.button} href="/use">
+          <Link className={shell.button} href="/install">
+            Install the CLI
+          </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/use">
             Use guide
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/publish/guide">
@@ -242,7 +225,6 @@ export default function CommandsPage() {
         </section>
       </article>
 
-      <CommandSection title="Install AIPM" commands={installCommands} />
       <CommandSection title="Use Packages" commands={useCommands} />
       <CommandSection title="Private Packages" commands={privatePackageCommands} />
       <CommandSection title="Publish Packages" commands={publishCommands} />

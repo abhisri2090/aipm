@@ -1,7 +1,6 @@
 import { shell, cards, docs, cn } from "../../../lib/page-styles";
 import { CodeBlock } from "../../../components/code-block";
 import { DocLayout } from "../../../components/doc-layout";
-import { CLI_INSTALL_OPTIONS, CLI_RELEASE_URL, CLI_VERSION } from "../../../lib/registry";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata = pageMetadata({
@@ -31,21 +30,10 @@ export default function PublishPage() {
       </section>
 
       <article className={docs.doc}>
-        <h2>Install the CLI</h2>
         <p>
-          Install the CLI before running any aipm command. The current verified release is{" "}
-          <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+          Install the AIPM CLI once before running these commands. See the{" "}
+          <a href="/install">install guide</a>.
         </p>
-        {CLI_INSTALL_OPTIONS.map((option) => (
-          <section key={option.label}>
-            <h3>{option.label}</h3>
-            <CodeBlock code={option.code} />
-          </section>
-        ))}
-
-        <h2>Check the install</h2>
-        <p>After installing, confirm the command is available before creating or publishing a skill.</p>
-        <CodeBlock code={`aipm --version\naipm doctor # (optional)`} />
 
         <h2>1. Create an account and reserve a package name</h2>
         <ol className={docs.flowList}>
@@ -117,28 +105,9 @@ AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
         <h2>Starter templates</h2>
         <p>
           Templates only create starter SKILL.md content. Pick the closest one, then edit the
-          generated files before you stage and publish.
+          generated files before you stage and publish. See the{" "}
+          <a href="/templates">skill templates guide</a> for when to use each starter.
         </p>
-        <p>
-          See the <a href="/templates">templates guide</a> for when to use each starter.
-        </p>
-        <div className={cards.exampleGrid}>
-          <article className={cards.exampleCard}>
-            <h3>Code review</h3>
-            <CodeBlock code="aipm publish init --name @team/review-helper --template code-review" />
-            <p>Starts with review goals, a checklist, and a format for findings.</p>
-          </article>
-          <article className={cards.exampleCard}>
-            <h3>Issue summary</h3>
-            <CodeBlock code="aipm publish init --name @team/issue-summary --template issue-summary" />
-            <p>Starts with sections for impact, evidence, likely cause, and next action.</p>
-          </article>
-          <article className={cards.exampleCard}>
-            <h3>Release notes</h3>
-            <CodeBlock code="aipm publish init --name @team/release-notes --template release-notes" />
-            <p>Starts with sections for highlights, fixes, upgrade notes, and known issues.</p>
-          </article>
-        </div>
 
         <h2>Publish an existing AI-tool skill</h2>
         <p>

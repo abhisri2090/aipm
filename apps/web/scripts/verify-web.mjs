@@ -21,7 +21,19 @@ baseUrl.search = "";
 baseUrl.hash = "";
 
 const requiredPages = [
-  { path: "/", renderedTitle: "AIPM Registry", h1: "Install AI skills like packages.", jsonLd: true },
+  {
+    path: "/",
+    title: "AIPM - AI Package Manager for Skills and Tool Files",
+    renderedTitle: "AIPM - AI Package Manager for Skills and Tool Files",
+    h1: "Install AI skills like packages.",
+    jsonLd: true,
+    includes: [
+      "What is AIPM?",
+      "AIPM is an AI package manager",
+      "Abhishek Srivastava",
+      "aipm add @scope/name@version",
+    ],
+  },
   { path: "/registry", title: "AI Skills Registry", h1: "Search public skills.", jsonLd: true },
   {
     path: "/publish",
@@ -41,19 +53,25 @@ const requiredPages = [
     h1: "Create a skill package and publish it.",
     jsonLd: false,
     includes: [
-      "Starter templates",
-      "--template code-review",
-      "--template issue-summary",
-      "--template release-notes",
+      "install guide",
+      "skill templates guide",
+      "aipm publish init",
     ],
   },
   { path: "/use", title: "Use AIPM", h1: "Install AI skills into your project.", jsonLd: false },
+  {
+    path: "/install",
+    title: "Install the AIPM CLI",
+    h1: "Install the AIPM CLI.",
+    jsonLd: false,
+    includes: ["via Homebrew", "via Scoop", "aipm --version", "aipm doctor"],
+  },
   {
     path: "/commands",
     title: "AIPM CLI Commands",
     h1: "Every AIPM command in one place.",
     jsonLd: false,
-    includes: ["via Homebrew", "aipm publish init", "aipm add @scope/name@1.0.0 --target cursor --ci"],
+    includes: ["Install the CLI", "aipm publish init", "aipm add @scope/name@1.0.0 --target cursor --ci"],
   },
   {
     path: "/targets",
@@ -108,7 +126,7 @@ const requiredPages = [
   {
     path: "/examples",
     title: "AIPM Skill Examples",
-    h1: "Copy a working flow for a common skill.",
+    h1: "Skill publishing examples.",
     jsonLd: true,
     includes: ["Code review helper for Cursor", "Sentry issue summariser for Claude", "Import an existing Codex skill folder"],
   },
@@ -268,6 +286,14 @@ for (const page of requiredPages) {
     fail(`${page.path} is missing JSON-LD structured data`);
   }
 
+  if (page.path === "/") {
+    const jsonLd = extractJsonLd(text).join("\n");
+    assertIncludes("/", jsonLd, '"@type":"Organization"');
+    assertIncludes("/", jsonLd, '"@type":"Person"');
+    assertIncludes("/", jsonLd, '"@type":"SoftwareApplication"');
+    assertIncludes("/", jsonLd, '"name":"AIPM CLI"');
+  }
+
   for (const expected of page.includes ?? []) {
     assertIncludes(page.path, text, expected);
   }
@@ -301,7 +327,7 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
-for (const path of ["/registry", "/publish", "/publish/guide", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
+for (const path of ["/registry", "/publish", "/publish/guide", "/install", "/use", "/commands", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
 

@@ -1,6 +1,7 @@
 export type DocNavItem = {
   href: string;
   label: string;
+  body: string;
 };
 
 export type DocNavSection = {
@@ -12,57 +13,171 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
   {
     title: "Getting started",
     items: [
-      { href: "/resources", label: "Documentation home" },
-      { href: "/use", label: "Use AIPM" },
-      { href: "/publish/guide", label: "Publishing guide" },
-      { href: "/commands", label: "CLI commands" },
+      {
+        href: "/resources",
+        label: "Documentation home",
+        body: "Start here for all AIPM guides, references, and troubleshooting.",
+      },
+      {
+        href: "/install",
+        label: "Install the CLI",
+        body: "Install the AIPM CLI with npm, Homebrew, standalone scripts, Windows PowerShell, or Scoop.",
+      },
+      {
+        href: "/use",
+        label: "Use AIPM",
+        body: "Install skills into a project and keep them with your code.",
+      },
+      {
+        href: "/commands",
+        label: "CLI commands",
+        body: "See every use, publish, token, and diagnostic command with options.",
+      },
+    ],
+  },
+  {
+    title: "Publish package",
+    items: [
+      {
+        href: "/publish/guide",
+        label: "Publishing guide",
+        body: "Create a package, reserve a name, get a token, and publish with the CLI.",
+      },
+      {
+        href: "/examples",
+        label: "Skill publishing examples",
+        body: "Copy full scenario walkthroughs for publishing and installing common skills.",
+      },
+      {
+        href: "/popular-skills",
+        label: "Starter ideas to publish",
+        body: "Browse a curated catalog of popular skill ideas with copy-ready prompts.",
+      },
+      {
+        href: "/templates",
+        label: "Skill templates",
+        body: "Start from a blank, code review, issue summary, or release notes template.",
+      },
     ],
   },
   {
     title: "Guides",
     items: [
-      { href: "/targets", label: "Supported targets" },
-      { href: "/popular-skills", label: "Popular skill ideas" },
-      { href: "/templates", label: "Skill templates" },
-      { href: "/examples", label: "Workflow examples" },
-      { href: "/glossary", label: "Glossary" },
+      {
+        href: "/targets",
+        label: "Supported targets",
+        body: "See where AIPM installs files for Cursor and Claude.",
+      },
+      {
+        href: "/glossary",
+        label: "Glossary",
+        body: "Learn simple meanings for skills, manifests, targets, orgs, and tokens.",
+      },
     ],
   },
   {
     title: "Quality & discovery",
     items: [
-      { href: "/ai-practices", label: "AI best practices" },
-      { href: "/discoverability", label: "Discoverability" },
-      { href: "/skills/cursor", label: "Cursor skills" },
-      { href: "/skills/claude", label: "Claude skills" },
-      { href: "/skills/code-review", label: "Code review skills" },
-      { href: "/skills/issue-summarizer", label: "Issue summarizer skills" },
-      { href: "/skills/testing", label: "Testing skills" },
-      { href: "/skills/documentation", label: "Documentation skills" },
-      { href: "/security", label: "Security & safety" },
+      {
+        href: "/ai-practices",
+        label: "AI best practices",
+        body: "How to write AI skills that are clear, safe, and easy to reuse.",
+      },
+      {
+        href: "/discoverability",
+        label: "Discoverability",
+        body: "Write names, descriptions, and examples that help users find the right skill.",
+      },
+      {
+        href: "/skills/cursor",
+        label: "Browse Cursor packages",
+        body: "Find public skills that install reusable AI workflows into Cursor projects.",
+      },
+      {
+        href: "/skills/claude",
+        label: "Browse Claude packages",
+        body: "Find public skills for Claude and Claude Code project workflows.",
+      },
+      {
+        href: "/skills/code-review",
+        label: "Browse code review packages",
+        body: "Browse skills for pull request reviews, regressions, missing tests, and security checks.",
+      },
+      {
+        href: "/skills/issue-summarizer",
+        label: "Browse issue summarizer packages",
+        body: "Browse skills for bugs, incidents, Sentry issues, support tickets, and handoff notes.",
+      },
+      {
+        href: "/skills/testing",
+        label: "Browse testing packages",
+        body: "Browse skills for test writing, verification plans, and regression coverage.",
+      },
+      {
+        href: "/skills/documentation",
+        label: "Browse documentation packages",
+        body: "Browse skills for READMEs, changelogs, runbooks, examples, and onboarding docs.",
+      },
+      {
+        href: "/security",
+        label: "Security & safety",
+        body: "Publish public skills without leaking secrets, customer data, or private notes.",
+      },
     ],
   },
   {
     title: "Reference",
     items: [
-      { href: "/faq", label: "FAQ & troubleshooting" },
-      { href: "/status", label: "Service status" },
-      { href: "/changelog", label: "Changelog" },
-      { href: "/roadmap", label: "Roadmap" },
+      {
+        href: "/faq",
+        label: "FAQ & troubleshooting",
+        body: "Answers for install, registry, package, token, and publishing issues.",
+      },
+      {
+        href: "/status",
+        label: "Service status",
+        body: "Check registry health and dependency readiness.",
+      },
+      {
+        href: "/changelog",
+        label: "Changelog",
+        body: "See recent changes to the CLI, registry API, website, and dashboard.",
+      },
+      {
+        href: "/roadmap",
+        label: "Roadmap",
+        body: "See what works now and what is planned next.",
+      },
     ],
   },
   {
     title: "Legal",
     items: [
-      { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms of use" },
+      {
+        href: "/privacy",
+        label: "Privacy",
+        body: "Learn what data AIPM uses for accounts, packages, tokens, and local settings.",
+      },
+      {
+        href: "/terms",
+        label: "Terms of use",
+        body: "Understand what is allowed when publishing public packages.",
+      },
     ],
   },
   {
     title: "Project",
     items: [
-      { href: "/about", label: "About AIPM" },
-      { href: "/thanks", label: "Acknowledgements" },
+      {
+        href: "/about",
+        label: "About AIPM",
+        body: "Learn what AIPM is, what it is for, and what it is not.",
+      },
+      {
+        href: "/thanks",
+        label: "Acknowledgements",
+        body: "People, research, and public work that helped make modern AI tools possible.",
+      },
     ],
   },
 ];

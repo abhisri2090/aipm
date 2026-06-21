@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { CodeBlock } from "../../components/code-block";
+import { CopySkillPromptButton } from "../../components/copy-skill-prompt-button";
+import { DocLayout } from "../../components/doc-layout";
 import { shell, cards, docs, cn } from "../../lib/page-styles";
-import { CLI_INSTALL_COMMAND, CLI_RELEASE_URL, CLI_VERSION, SITE_URL } from "../../lib/registry";
+import { POPULAR_SKILL_PROMPTS } from "../../lib/popular-skill-prompts";
+import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 const popularSkills = [
@@ -169,6 +171,37 @@ const popularSkills = [
   },
 ];
 
+const CATEGORY_ORDER = [
+  "Engineering",
+  "Frontend",
+  "Security",
+  "QA",
+  "Data",
+  "Support",
+  "Product",
+  "Growth",
+  "Knowledge",
+  "Tools",
+  "Operations",
+  "Creative",
+] as const;
+
+function groupPopularSkillsByCategory(skills: typeof popularSkills) {
+  const grouped = new Map<string, typeof popularSkills>();
+  for (const skill of skills) {
+    const existing = grouped.get(skill.category) ?? [];
+    existing.push(skill);
+    grouped.set(skill.category, existing);
+  }
+
+  return CATEGORY_ORDER.filter((category) => grouped.has(category)).map((category) => ({
+    category,
+    skills: grouped.get(category)!,
+  }));
+}
+
+const popularSkillGroups = groupPopularSkillsByCategory(popularSkills);
+
 const sources = [
   {
     label: "Cursor Rules",
@@ -210,7 +243,7 @@ export const metadata = pageMetadata({
 
 export default function PopularSkillsPage() {
   return (
-    <main>
+    <DocLayout wide>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -232,63 +265,53 @@ export default function PopularSkillsPage() {
         }}
       />
 
-      <section className={shell.pageHeader}>
+      <section className={cn(shell.pageHeader, shell.compactPageHeader, shell.pageHeaderNoBorder)}>
         <p className={shell.eyebrow}>Starter catalog</p>
         <h1>Popular AI skills worth publishing first.</h1>
+      </section>
+
+      <section className={shell.panelSection} aria-labelledby="publish-motivation-title">
+        <p className={shell.eyebrow}>Share what already works</p>
+        <h2 id="publish-motivation-title">Turn daily workflows into reusable packages</h2>
         <p className={shell.lede}>
-          These are practical starter package ideas for the AIPM registry. They are not copied from
-          other projects. Use them as names, templates, and briefs for skills the community can
-          publish and improve.
+          If your team already relies on a skill every day — for code review, testing, docs, or
+          onboarding — publish it to AIPM. One package gives every project the same setup, every
+          teammate the same assistant behavior, and your org a simple way to improve and ship updates
+          without copying files by hand. Not sure where to start? Each starter below includes a
+          copy-ready prompt — paste it into Cursor, Claude, or Codex to generate the skill package,
+          then publish it with{" "}
+          <Link className={shell.textLink} href="/publish/guide">
+            aipm publish
+          </Link>
+          .
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish">
-            Publish one
+            Start publishing
           </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/templates">
-            Use templates
-          </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/registry">
-            Browse live registry
+          <Link className={cn(shell.button, shell.secondary)} href="/publish/guide">
+            Read the guide
           </Link>
         </div>
       </section>
 
-      <section className={shell.panelSection} aria-labelledby="popular-install-title">
-        <div className={shell.sectionHeading}>
-          <div>
-            <p className={shell.eyebrow}>Command pattern</p>
-            <h2 id="popular-install-title">How a real package will install</h2>
-          </div>
-          <Link className={shell.textLink} href="/publish/guide">
-            Publishing guide
-          </Link>
-        </div>
-        <p className={shell.muted}>
-          Install the current verified CLI release first: <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
-        </p>
-        <CodeBlock code={CLI_INSTALL_COMMAND} />
-        <p className={shell.muted}>Initialize the project, then install a package into the Cursor target.</p>
-        <CodeBlock code={`aipm init --target cursor\naipm add @aipm-starters/code-review@1.0.0 --target cursor --ci`} />
-      </section>
-
-      <section className={cards.popularGrid} aria-label="Popular AI skill starter catalog">
-        {popularSkills.map((skill) => (
-          <article className={cards.popularCard} key={skill.packageName}>
-            <div>
-              <p className={shell.eyebrow}>{skill.category}</p>
-              <h2>{skill.name}</h2>
-              <p className={cards.packageLine}>{skill.packageName}</p>
-            </div>
-            <p>{skill.description}</p>
-            <div className={cards.meta} aria-label={`Targets for ${skill.name}`}>
-              {skill.targets.map((target) => (
-                <span className={cards.pill} key={target}>
-                  {target}
-                </span>
+      <section className={cards.popularCatalog} aria-label="Popular AI skill starter catalog">
+        {popularSkillGroups.map(({ category, skills }) => (
+          <div className={cards.popularCategoryBlock} key={category}>
+            <h2 className={cards.popularCategoryTitle}>{category}</h2>
+            <div className={cards.popularGrid}>
+              {skills.map((skill) => (
+                <article className={cards.popularCard} key={skill.packageName}>
+                  <h3>{skill.name}</h3>
+                  <p>{skill.description}</p>
+                  <p className={cards.whyLine}>{skill.whyPopular}</p>
+                  <div className={cards.popularPromptBlock}>
+                    <CopySkillPromptButton prompt={POPULAR_SKILL_PROMPTS[skill.packageName]} />
+                  </div>
+                </article>
               ))}
             </div>
-            <p className={cards.whyLine}>{skill.whyPopular}</p>
-          </article>
+          </div>
         ))}
       </section>
 
@@ -319,6 +342,6 @@ export default function PopularSkillsPage() {
           </div>
         </section>
       </article>
-    </main>
+    </DocLayout>
   );
 }

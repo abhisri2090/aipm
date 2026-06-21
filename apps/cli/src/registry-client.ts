@@ -104,6 +104,7 @@ export async function searchPackages(
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   params.set("limit", String(limit));
+  if (token) params.set("includePrivate", "true");
   const res = await registryFetch(`${base}/v1/packages?${params}`, base, {
     headers: registryAuthHeaders(token),
   });

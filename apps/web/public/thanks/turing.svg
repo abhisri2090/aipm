@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="ACM A.M. Turing Award">
+  <rect width="320" height="240" rx="12" fill="#f4f6f8"/>
+  <circle cx="160" cy="96" r="52" fill="#ffffff" stroke="#c8d0d8" stroke-width="2"/>
+  <path d="M160 58c21 0 38 17 38 38s-17 38-38 38-38-17-38-38 17-38 38-38z" fill="none" stroke="#1a4f8c" stroke-width="4"/>
+  <path d="M132 96h56M160 68v56" stroke="#1a4f8c" stroke-width="4" stroke-linecap="round"/>
+  <text x="160" y="188" text-anchor="middle" fill="#1a4f8c" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="700">A.M. Turing Award</text>
+  <text x="160" y="214" text-anchor="middle" fill="#61707d" font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="600">ACM</text>
+</svg>
