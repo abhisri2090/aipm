@@ -9,6 +9,21 @@ import { PackageManifestSchema } from "@aipm-registry/schemas";
 
 const execFileAsync = promisify(execFile);
 const MAX_TARBALL_BYTES = 50 * 1024 * 1024;
+export const MAX_PACKAGE_FILE_BYTES = 512 * 1024;
+
+export class PackageFileNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PackageFileNotFoundError";
+  }
+}
+
+export class PackageFileTooLargeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PackageFileTooLargeError";
+  }
+}
 
 function normalizeTarEntry(entry: string): string {
   return entry.replace(/^\.\//, "");
@@ -43,6 +58,89 @@ export function validateTarballEntries(entries: string[]): void {
 
   if (manifestCount !== 1) {
     throw new Error("Package must contain exactly one aipm.manifest.json");
+  }
+}
+
+export function validatePackageFilePath(path: string): string {
+  const normalized = normalizeTarEntry(path.trim());
+  if (!normalized || normalized === ".") {
+    throw new Error("Invalid file path");
+  }
+  if (
+    normalized.startsWith("/") ||
+    normalized === ".." ||
+    normalized.startsWith("../") ||
+    normalized.includes("/../")
+  ) {
+    throw new Error(`Unsafe file path: ${path}`);
+  }
+  return normalized;
+}
+
+async function writeTarballToTemp(tarball: Buffer): Promise<{ tempDir: string; tgzPath: string }> {
+  if (tarball.length > MAX_TARBALL_BYTES) {
+    throw new Error("Package tarball exceeds 50 MB limit");
+  }
+  const tempDir = await mkdtemp(join(tmpdir(), "aipm-files-"));
+  const tgzPath = join(tempDir, "package.tgz");
+  const { writeFile } = await import("node:fs/promises");
+  await writeFile(tgzPath, tarball);
+  return { tempDir, tgzPath };
+}
+
+export async function listTarballFiles(tarball: Buffer): Promise<{ path: string; sizeBytes: number }[]> {
+  const { tempDir, tgzPath } = await writeTarballToTemp(tarball);
+  try {
+    const entries = await listTarballEntries(tgzPath);
+    validateTarballEntries(entries);
+    await execFileAsync("tar", ["-xzf", tgzPath, "-C", tempDir]);
+    const files: { path: string; sizeBytes: number }[] = [];
+    for (const entry of entries) {
+      const normalized = normalizeTarEntry(entry);
+      if (!normalized || normalized.endsWith("/")) continue;
+      const fileStat = await stat(join(tempDir, normalized)).catch(() => null);
+      if (fileStat?.isFile()) {
+        files.push({ path: normalized, sizeBytes: fileStat.size });
+      }
+    }
+    return files.sort((left, right) => left.path.localeCompare(right.path));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+export async function readTarballFile(
+  tarball: Buffer,
+  filePath: string,
+): Promise<{ content: string; sizeBytes: number; binary: boolean }> {
+  const path = validatePackageFilePath(filePath);
+  const { tempDir, tgzPath } = await writeTarballToTemp(tarball);
+  try {
+    const entries = await listTarballEntries(tgzPath);
+    validateTarballEntries(entries);
+    const fileEntries = new Set(
+      entries
+        .map((entry) => normalizeTarEntry(entry))
+        .filter((entry) => entry && !entry.endsWith("/")),
+    );
+    if (!fileEntries.has(path)) {
+      throw new PackageFileNotFoundError(`File not found: ${path}`);
+    }
+    const { stdout } = await execFileAsync("tar", ["-xOzf", tgzPath, path], {
+      encoding: "buffer",
+      maxBuffer: MAX_PACKAGE_FILE_BYTES + 1,
+    });
+    const buffer = Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
+    const sizeBytes = buffer.length;
+    if (buffer.includes(0)) {
+      return { content: "", sizeBytes, binary: true };
+    }
+    if (sizeBytes > MAX_PACKAGE_FILE_BYTES) {
+      throw new PackageFileTooLargeError(`File exceeds ${MAX_PACKAGE_FILE_BYTES} byte limit: ${path}`);
+    }
+    return { content: buffer.toString("utf8"), sizeBytes, binary: false };
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
   }
 }
 

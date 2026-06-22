@@ -93,6 +93,10 @@
   object-fit: cover;
 }
 
+img.avatar {
+  display: block;
+}
+
 .avatarLarge {
   width: 88px;
   height: 88px;

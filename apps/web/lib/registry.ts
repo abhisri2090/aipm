@@ -50,6 +50,7 @@ export type PackageDetail = {
     license?: string;
     entry?: string;
     usage?: string;
+    agentDescription?: string;
     tags?: string[];
     categories?: string[];
     sourceUrl?: string;
@@ -131,6 +132,10 @@ export function packagePath(packageName: string, version: string): string {
   return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
+export function packageFilesPath(packageName: string, version: string): string {
+  return `${packagePath(packageName, version)}/files`;
+}
+
 export function packageShortName(name: string): string {
   const parts = name.replace(/^@/, "").split("/");
   return parts[parts.length - 1] ?? name;
@@ -141,24 +146,36 @@ export function parsePackageName(name: string): { scope: string; skillName: stri
   return { scope: scope ?? "", skillName: skillName ?? name };
 }
 
+function firstMarkdownParagraph(content: string): string | null {
+  let body = content.replace(/^---[\s\S]*?---\r?\n?/, "").trim();
+  body = body.replace(/^#\s+[^\n]+\n+/, "").trim();
+  return body.split(/\n\s*\n/).find((block) => block.trim())?.trim() ?? null;
+}
+
+/** Longer skill overview copied from import (legacy usage field or SKILL.md body). */
+export function resolveSkillAbout(options: {
+  usage?: string | null;
+  agentDescription?: string | null;
+}): string | null {
+  if (options.usage?.trim()) return options.usage.trim();
+  if (options.agentDescription?.trim()) return firstMarkdownParagraph(options.agentDescription);
+  return null;
+}
+
+/** Slash command to invoke the skill in any supported AI tool. */
+export function resolveSkillInvokeCommand(name: string): string {
+  return `/${packageShortName(name)} <your description>`;
+}
+
+/** @deprecated Use resolveSkillInvokeCommand */
 export function resolveSkillUsage(options: {
   name: string;
   description: string;
   targets: string[];
   usage?: string | null;
+  examplePrompt?: string | null;
 }): string {
-  if (options.usage?.trim()) return options.usage.trim();
-
-  const shortName = packageShortName(options.name);
-  const tools = commandTargets(options.targets);
-  const toolHint =
-    tools.length === 1
-      ? `Open ${tools[0] === "cursor" ? "Cursor" : "Claude"} in this project`
-      : tools.length > 1
-        ? "Open Cursor or Claude in this project"
-        : "Open your AI tool in this project";
-
-  return `${toolHint} and ask the assistant to use the ${shortName} skill. For example: "${options.description}".`;
+  return resolveSkillInvokeCommand(options.name);
 }
 
 export function packageKeywords(pkg: Pick<PackageSummary, "name" | "description" | "targets" | "tags" | "categories">): string[] {

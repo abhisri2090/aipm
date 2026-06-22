@@ -45,6 +45,20 @@ describe("PackageManifestSchema", () => {
     expect(manifest.usage).toBe("Ask the assistant to review your diff before opening a PR.");
   });
 
+  it("parses optional agent description copied from skill.md", () => {
+    const manifest = PackageManifestSchema.parse({
+      schemaVersion: "0.1",
+      name: "@team/sample",
+      version: "1.0.0",
+      type: "skill",
+      description: "Review code changes before opening a pull request.",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+      agentDescription: "# Review helper\n\nReview diffs for regressions and missing tests.",
+    });
+    expect(manifest.agentDescription).toContain("Review diffs");
+  });
+
   it("parses optional quality metadata for public package pages", () => {
     const manifest = PackageManifestSchema.parse({
       schemaVersion: "0.1",

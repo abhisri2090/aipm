@@ -2,6 +2,8 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { api } from "../lib/api-client";
+import { publicApiError } from "../lib/public-api-error";
 import { packagePath } from "../lib/registry";
 import { dash, shell } from "../lib/page-styles";
 
@@ -15,24 +17,10 @@ type ImportResult = {
 };
 
 async function importFromUrl(sourceUrl: string): Promise<ImportResult> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 120_000);
-  try {
-    const response = await fetch("/v1/admin/import-from-url", {
-      method: "POST",
-      credentials: "include",
-      signal: controller.signal,
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ sourceUrl }),
-    });
-    const body = (await response.json().catch(() => ({}))) as ImportResult & { error?: string };
-    if (!response.ok) {
-      throw new Error(body.error ?? `Import failed: ${response.status}`);
-    }
-    return body;
-  } finally {
-    window.clearTimeout(timeout);
-  }
+  return api<ImportResult>("/v1/admin/import-from-url", {
+    method: "POST",
+    body: JSON.stringify({ sourceUrl }),
+  }, { timeoutMs: 120_000 });
 }
 
 export function AdminImportSkillPanel({ onImported }: { onImported: () => Promise<void> }) {
@@ -51,13 +39,7 @@ export function AdminImportSkillPanel({ onImported }: { onImported: () => Promis
       setResult(importResult);
       await onImported();
     } catch (requestError) {
-      setError(
-        requestError instanceof DOMException && requestError.name === "AbortError"
-          ? "Import timed out. Try again or use the CLI script for large folders."
-          : requestError instanceof Error
-            ? requestError.message
-            : "Import failed.",
-      );
+      setError(publicApiError(requestError));
     } finally {
       setSubmitting(false);
     }
@@ -67,8 +49,8 @@ export function AdminImportSkillPanel({ onImported }: { onImported: () => Promis
     <article className={dash.dashboardPanel} style={{ marginBottom: 24 }}>
         <h2>Import skill from GitHub</h2>
         <p className={shell.muted}>
-          Paste a GitHub folder URL (tree view). The registry fetches the skill, creates an unverified
-          publisher account if needed, and publishes at version 1.0.0 with all-tool targets.
+          Paste a GitHub folder URL (tree or blob view). The registry fetches the skill, creates an
+          unverified publisher account if needed, and publishes at version 1.0.0 with all-tool targets.
         </p>
         <form className={dash.formPanel} onSubmit={(event) => void onSubmit(event)}>
           <label htmlFor="admin-import-url">GitHub folder URL</label>

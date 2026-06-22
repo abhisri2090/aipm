@@ -24,6 +24,19 @@ describe("parseGitHubFolderUrl", () => {
       path: "skills/productivity/grill-me",
     });
   });
+
+  it("parses a github blob folder url", () => {
+    expect(
+      parseGitHubFolderUrl(
+        "https://github.com/anthropics/skills/blob/main/skills/frontend-design",
+      ),
+    ).toEqual({
+      owner: "anthropics",
+      repo: "skills",
+      branch: "main",
+      path: "skills/frontend-design",
+    });
+  });
 });
 
 describe("slug normalization", () => {

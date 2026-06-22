@@ -15,6 +15,7 @@ import {
   type ImportAuthorPayload,
   type ImportProvenancePayload,
 } from "./admin-import.js";
+import { bulkImportSkillsFromGitHubFolder } from "./bulk-import-from-github.js";
 import { importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
   addOrgMember,
@@ -139,7 +140,14 @@ import {
 import { createMetadataStore } from "./create-metadata-store.js";
 import { createEmailSender, resolveEmailConfig, type InviteEmailResult } from "./email.js";
 import { blobKeyForPackage, createStorage } from "./storage.js";
-import { extractManifestFromTarball } from "./publish.js";
+import {
+  extractManifestFromTarball,
+  listTarballFiles,
+  PackageFileNotFoundError,
+  PackageFileTooLargeError,
+  readTarballFile,
+  validatePackageFilePath,
+} from "./publish.js";
 import { ensureSchema } from "./db.js";
 import { assertSafeLocalRuntime } from "./local-safety.js";
 
@@ -1055,6 +1063,52 @@ export async function createApp(): Promise<FastifyInstance> {
         }
         request.log.error(error);
         return reply.status(400).send({ error: publicError(error, "Failed to import skill") });
+      }
+    },
+  );
+
+  app.post<{ Body: { sourceUrl?: string; maxSkills?: number } }>(
+    "/v1/admin/bulk-import-from-url",
+    {
+      config: {
+        rateLimit: {
+          max: 3,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!accountAuth) {
+        return reply.status(503).send({ error: "Account services are not configured" });
+      }
+      const adminUser = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+      if (!adminUser) return;
+
+      const sourceUrl = request.body?.sourceUrl?.trim();
+      if (!sourceUrl) {
+        return reply.status(400).send({ error: "Missing sourceUrl" });
+      }
+
+      const maxSkills =
+        typeof request.body?.maxSkills === "number" && Number.isFinite(request.body.maxSkills)
+          ? Math.max(1, Math.floor(request.body.maxSkills))
+          : undefined;
+
+      try {
+        const result = await bulkImportSkillsFromGitHubFolder({
+          pool: accountAuth.pool,
+          metadata,
+          storage,
+          sourceUrl,
+          maxSkills,
+        });
+        if (result.aborted) {
+          return reply.status(400).send(result);
+        }
+        return reply.status(200).send(result);
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(400).send({ error: publicError(error, "Failed to bulk import skills") });
       }
     },
   );
@@ -2321,6 +2375,69 @@ export async function createApp(): Promise<FastifyInstance> {
         }),
         nextCursor,
       };
+    },
+  );
+
+  app.get<{ Params: { name: string; version: string } }>(
+    "/v1/packages/:name/versions/:version/files",
+    async (request, reply) => {
+      const name = decodePackageName(request.params.name);
+      const readAccess = await resolveReadAccess(accountAuth, request);
+      if (!(await canViewPackage(accountAuth, name, readAccess))) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      const row = await metadata.get(name, request.params.version);
+      if (!row || row.yanked_at) return reply.status(404).send({ error: "Not found" });
+      const tarball = await storage.get(row.blob_path);
+      try {
+        const files = await listTarballFiles(tarball);
+        return {
+          entry: row.manifest.entry ?? null,
+          files,
+        };
+      } catch (error) {
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to read package files" });
+      }
+    },
+  );
+
+  app.get<{ Params: { name: string; version: string }; Querystring: { path?: string } }>(
+    "/v1/packages/:name/versions/:version/files/content",
+    async (request, reply) => {
+      const name = decodePackageName(request.params.name);
+      const readAccess = await resolveReadAccess(accountAuth, request);
+      if (!(await canViewPackage(accountAuth, name, readAccess))) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+      const row = await metadata.get(name, request.params.version);
+      if (!row || row.yanked_at) return reply.status(404).send({ error: "Not found" });
+      const filePath = request.query.path?.trim();
+      if (!filePath) return reply.status(400).send({ error: "Missing path query parameter" });
+      try {
+        validatePackageFilePath(filePath);
+      } catch {
+        return reply.status(400).send({ error: "Invalid file path" });
+      }
+      const tarball = await storage.get(row.blob_path);
+      try {
+        const file = await readTarballFile(tarball, filePath);
+        return {
+          path: validatePackageFilePath(filePath),
+          sizeBytes: file.sizeBytes,
+          binary: file.binary,
+          content: file.binary ? undefined : file.content,
+        };
+      } catch (error) {
+        if (error instanceof PackageFileNotFoundError) {
+          return reply.status(404).send({ error: "File not found" });
+        }
+        if (error instanceof PackageFileTooLargeError) {
+          return reply.status(413).send({ error: error.message });
+        }
+        request.log.error(error);
+        return reply.status(500).send({ error: "Failed to read package file" });
+      }
     },
   );
 

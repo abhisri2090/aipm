@@ -20,6 +20,8 @@ const execFileAsync = promisify(execFile);
 
 const GITHUB_TREE_URL =
   /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+?)\/?$/;
+const GITHUB_BLOB_URL =
+  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+?)\/?$/;
 
 export type GitHubFolderRef = {
   owner: string;
@@ -28,16 +30,31 @@ export type GitHubFolderRef = {
   path: string;
 };
 
+function normalizeGitHubFolderPath(path: string): string {
+  const cleaned = path.replace(/\/$/, "");
+  const segments = cleaned.split("/");
+  const last = segments[segments.length - 1] ?? "";
+  if (/\.(md|markdown|txt|json|yaml|yml)$/i.test(last)) {
+    return segments.slice(0, -1).join("/");
+  }
+  return cleaned;
+}
+
 export function parseGitHubFolderUrl(url: string): GitHubFolderRef {
-  const match = url.trim().match(GITHUB_TREE_URL);
+  const trimmed = url.trim();
+  const treeMatch = trimmed.match(GITHUB_TREE_URL);
+  const blobMatch = trimmed.match(GITHUB_BLOB_URL);
+  const match = treeMatch ?? blobMatch;
   if (!match) {
-    throw new Error("Expected https://github.com/{owner}/{repo}/tree/{branch}/{path}");
+    throw new Error(
+      "Expected https://github.com/{owner}/{repo}/tree/{branch}/{path} or .../blob/{branch}/{path}",
+    );
   }
   return {
     owner: match[1]!,
     repo: match[2]!,
     branch: match[3]!,
-    path: match[4]!.replace(/\/$/, ""),
+    path: normalizeGitHubFolderPath(match[4]!),
   };
 }
 
@@ -97,19 +114,14 @@ export function resolveDescription(options: {
   return options.fallbackName;
 }
 
-export function resolveUsage(options: {
-  frontmatter: Record<string, string>;
-  entryContent?: string;
-}): string | undefined {
-  if (options.frontmatter.usage?.trim()) return options.frontmatter.usage.trim();
-  if (!options.entryContent) return undefined;
+const MAX_AGENT_DESCRIPTION_CHARS = 12000;
 
-  let body = options.entryContent.replace(/^---[\s\S]*?---\r?\n?/, "").trim();
-  body = body.replace(/^#\s+[^\n]+\n+/, "").trim();
-  const paragraph = body.split(/\n\s*\n/).find((block) => block.trim())?.trim();
-  if (!paragraph) return undefined;
-  if (paragraph.length <= 500) return paragraph;
-  return `${paragraph.slice(0, 497).trimEnd()}...`;
+export function resolveAgentDescription(entryContent?: string): string | undefined {
+  if (!entryContent) return undefined;
+  const body = entryContent.replace(/^---[\s\S]*?---\r?\n?/, "").trim();
+  if (!body) return undefined;
+  if (body.length <= MAX_AGENT_DESCRIPTION_CHARS) return body;
+  return `${body.slice(0, MAX_AGENT_DESCRIPTION_CHARS - 3).trimEnd()}...`;
 }
 
 export function computeContentHash(files: Record<string, string>): string {
@@ -171,6 +183,35 @@ type GitHubUser = {
   html_url?: string | null;
 };
 type GitHubRepo = { license?: { spdx_id?: string } | null };
+type GitHubContentEntry = {
+  name: string;
+  path: string;
+  type: "file" | "dir" | "submodule" | "symlink";
+};
+
+export function buildGitHubTreeUrl(ref: GitHubFolderRef, subfolderName: string): string {
+  const path = ref.path ? `${ref.path}/${subfolderName}` : subfolderName;
+  return `https://github.com/${ref.owner}/${ref.repo}/tree/${ref.branch}/${path}`;
+}
+
+export async function listGitHubSubfolders(
+  ref: GitHubFolderRef,
+  token?: string,
+): Promise<string[]> {
+  const contentsPath = `/repos/${ref.owner}/${ref.repo}/contents/${ref.path}?ref=${encodeURIComponent(ref.branch)}`;
+  const entries = await githubRequest<GitHubContentEntry[] | GitHubContentEntry>(
+    contentsPath,
+    token,
+  );
+  if (!Array.isArray(entries)) {
+    throw new Error("URL points to a file, not a folder");
+  }
+  const dirs = entries.filter((entry) => entry.type === "dir").map((entry) => entry.name).sort();
+  if (dirs.length === 0) {
+    throw new Error("No subfolders found");
+  }
+  return dirs;
+}
 
 export async function fetchGitHubFolder(
   ref: GitHubFolderRef,
@@ -283,10 +324,7 @@ export async function importSkillFromGitHubUrl(options: {
     readmeContent,
     fallbackName: folderName,
   });
-  const usage = resolveUsage({
-    frontmatter,
-    entryContent: files[entry],
-  });
+  const agentDescription = resolveAgentDescription(files[entry]);
   const license = detectLicense(files, repoMeta.license);
   const contentHash = computeContentHash(files);
 
@@ -325,7 +363,7 @@ export async function importSkillFromGitHubUrl(options: {
           entry,
           targets: ["*"],
           license,
-          ...(usage ? { usage } : {}),
+          ...(agentDescription ? { agentDescription } : {}),
         },
         null,
         2,

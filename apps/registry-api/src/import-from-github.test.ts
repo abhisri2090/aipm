@@ -1,11 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import * as githubImport from "./import-from-github.js";
 import {
+  buildGitHubTreeUrl,
   buildPackageName,
   computeContentHash,
   nextPatchVersion,
   parseGitHubFolderUrl,
+  resolveAgentDescription,
   resolveImportVersion,
-  resolveUsage,
 } from "./import-from-github.js";
 
 describe("import-from-github helpers", () => {
@@ -19,6 +21,28 @@ describe("import-from-github helpers", () => {
       repo: "skills",
       branch: "main",
       path: "skills/productivity/grill-me",
+    });
+
+    expect(
+      parseGitHubFolderUrl(
+        "https://github.com/anthropics/skills/blob/main/skills/frontend-design",
+      ),
+    ).toEqual({
+      owner: "anthropics",
+      repo: "skills",
+      branch: "main",
+      path: "skills/frontend-design",
+    });
+
+    expect(
+      parseGitHubFolderUrl(
+        "https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md",
+      ),
+    ).toEqual({
+      owner: "anthropics",
+      repo: "skills",
+      branch: "main",
+      path: "skills/frontend-design",
     });
   });
 
@@ -50,19 +74,91 @@ describe("import-from-github helpers", () => {
     expect(hashA).toBe(hashB);
   });
 
-  it("prefers usage frontmatter and falls back to the first skill paragraph", () => {
+  it("extracts the skill body as agent description", () => {
     expect(
-      resolveUsage({
-        frontmatter: { usage: "Ask the assistant to grill your plan." },
-        entryContent: "# Grill me\n\nOther text.",
-      }),
-    ).toBe("Ask the assistant to grill your plan.");
+      resolveAgentDescription(
+        "---\ndescription: Grill me\n---\n# Grill me\n\nStress-test your idea before you build it.\n\nAsk follow-up questions.",
+      ),
+    ).toBe(
+      "# Grill me\n\nStress-test your idea before you build it.\n\nAsk follow-up questions.",
+    );
 
+    expect(resolveAgentDescription("---\ndescription: Empty\n---\n")).toBeUndefined();
+  });
+
+  it("builds child github tree urls", () => {
     expect(
-      resolveUsage({
-        frontmatter: {},
-        entryContent: "---\ndescription: Grill me\n---\n# Grill me\n\nStress-test your idea before you build it.",
+      buildGitHubTreeUrl(
+        {
+          owner: "anthropics",
+          repo: "skills",
+          branch: "main",
+          path: "skills",
+        },
+        "frontend-design",
+      ),
+    ).toBe("https://github.com/anthropics/skills/tree/main/skills/frontend-design");
+  });
+});
+
+describe("listGitHubSubfolders", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns sorted immediate subfolder names", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify([
+          { name: "beta-skill", path: "skills/beta-skill", type: "dir" },
+          { name: "alpha-skill", path: "skills/alpha-skill", type: "dir" },
+          { name: "README.md", path: "skills/README.md", type: "file" },
+        ]),
+        { status: 200 },
+      ),
+    );
+
+    await expect(
+      githubImport.listGitHubSubfolders({
+        owner: "anthropics",
+        repo: "skills",
+        branch: "main",
+        path: "skills",
       }),
-    ).toBe("Stress-test your idea before you build it.");
+    ).resolves.toEqual(["alpha-skill", "beta-skill"]);
+  });
+
+  it("rejects file urls", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ name: "SKILL.md", path: "skills/foo/SKILL.md", type: "file" }), {
+        status: 200,
+      }),
+    );
+
+    await expect(
+      githubImport.listGitHubSubfolders({
+        owner: "anthropics",
+        repo: "skills",
+        branch: "main",
+        path: "skills/foo",
+      }),
+    ).rejects.toThrow("URL points to a file, not a folder");
+  });
+
+  it("rejects folders with no subdirectories", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify([{ name: "SKILL.md", path: "skills/foo/SKILL.md", type: "file" }]), {
+        status: 200,
+      }),
+    );
+
+    await expect(
+      githubImport.listGitHubSubfolders({
+        owner: "anthropics",
+        repo: "skills",
+        branch: "main",
+        path: "skills/foo",
+      }),
+    ).rejects.toThrow("No subfolders found");
   });
 });

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer } from "../components/footer";
 import { Header } from "../components/header";
+import { ToastProvider } from "../components/toast-provider";
 import { SITE_URL } from "../lib/registry";
 import "./globals.css";
 
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <ToastProvider />
         <Header />
         {children}
         <Footer />

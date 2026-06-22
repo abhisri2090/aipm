@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { api } from "../lib/api-client";
+import { publicApiError } from "../lib/public-api-error";
 import { cn, dash, shell } from "../lib/page-styles";
 
 type AdminPackage = {
@@ -15,22 +17,12 @@ type AdminPackage = {
 async function fetchAdminPackages(query: string): Promise<AdminPackage[]> {
   const params = new URLSearchParams({ limit: "50" });
   if (query) params.set("q", query);
-  const response = await fetch(`/v1/admin/packages?${params}`, { credentials: "include" });
-  const body = (await response.json().catch(() => ({}))) as { packages?: AdminPackage[]; error?: string };
-  if (!response.ok) {
-    throw new Error(body.error ?? `Failed to load packages: ${response.status}`);
-  }
-  return body.packages ?? [];
+  const data = await api<{ packages?: AdminPackage[] }>(`/v1/admin/packages?${params}`);
+  return data.packages ?? [];
 }
 
 async function deleteAdminPackage(name: string): Promise<void> {
-  const response = await fetch(`/v1/admin/packages/${encodeURIComponent(name)}`, {
-    method: "DELETE",
-    credentials: "include",
-  });
-  if (response.status === 204) return;
-  const body = (await response.json().catch(() => ({}))) as { error?: string };
-  throw new Error(body.error ?? `Delete failed: ${response.status}`);
+  await api<void>(`/v1/admin/packages/${encodeURIComponent(name)}`, { method: "DELETE" });
 }
 
 export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promise<void> }) {
@@ -50,7 +42,7 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
       setPackages(await fetchAdminPackages(nextQuery.trim()));
     } catch (requestError) {
       setPackages([]);
-      setError(requestError instanceof Error ? requestError.message : "Failed to load packages.");
+      setError(publicApiError(requestError));
     } finally {
       setLoading(false);
     }
@@ -78,7 +70,7 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
       await loadPackages(query);
       await onDeleted();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Delete failed.");
+      setError(publicApiError(requestError));
     } finally {
       setSubmitting(false);
     }

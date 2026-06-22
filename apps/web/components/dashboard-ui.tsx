@@ -14,7 +14,9 @@ import {
   SITE_URL,
   type PackageDetail,
 } from "../lib/registry";
+import { api } from "../lib/api-client";
 import { cn } from "../lib/class-names";
+import { publicApiError } from "../lib/public-api-error";
 import shell from "../app/page-shell.module.css";
 import dash from "./dashboard-ui.module.css";
 
@@ -129,42 +131,7 @@ type PublishedPackageVersion = {
   createdAt: string;
 };
 
-function publicApiError(error: unknown): string {
-  if (error instanceof DOMException && error.name === "AbortError") {
-    return "AIPM API timed out. The registry host may be offline or starting.";
-  }
-  if (error instanceof TypeError) {
-    return "AIPM API is unreachable. The website can still load, but account and publishing actions need the API online.";
-  }
-  if (error instanceof Error && error.message) return error.message;
-  return "AIPM API is unavailable.";
-}
-
 const EMAIL_API_TIMEOUT_MS = 30_000;
-
-async function api<T>(path: string, init?: RequestInit, options?: { timeoutMs?: number }): Promise<T> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), options?.timeoutMs ?? 6000);
-  const hasBody = init?.body != null && init.body !== "";
-  const response = await fetch(path, {
-    ...init,
-    credentials: "include",
-    signal: init?.signal ?? controller.signal,
-    headers: {
-      ...(hasBody ? { "content-type": "application/json" } : {}),
-      ...init?.headers,
-    },
-  }).finally(() => window.clearTimeout(timeout));
-  if (!response.ok) {
-    const error = (await response.json().catch(() => ({}))) as { error?: string };
-    if (response.status === 401) throw new Error("Login required");
-    throw new Error(error.error ?? `Request failed: ${response.status}`);
-  }
-  if (response.status === 204) return undefined as T;
-  const text = await response.text();
-  if (!text) return undefined as T;
-  return JSON.parse(text) as T;
-}
 
 function shortDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
@@ -308,7 +275,10 @@ function DashboardShell({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([api<Me>("/v1/me"), api<{ orgs: Org[] }>("/v1/orgs")])
+    Promise.all([
+      api<Me>("/v1/me", undefined, { silent: true }),
+      api<{ orgs: Org[] }>("/v1/orgs", undefined, { silent: true }),
+    ])
       .then(([user, orgData]) => {
         setMe(user);
         setOrgs(orgData.orgs);
@@ -473,7 +443,7 @@ export function LoginPanel() {
 
   useEffect(() => {
     let cancelled = false;
-    void api<AuthConfig>("/v1/auth/config")
+    void api<AuthConfig>("/v1/auth/config", undefined, { silent: true })
       .then((config) => {
         if (!cancelled) {
           setAuthConfig(config);
@@ -978,12 +948,12 @@ export function OrgsDashboard() {
             <input
               id="org-slug"
               onChange={(event) => setSlug(event.target.value)}
-              placeholder="bazzigames"
+              placeholder="acme-corp"
               value={slug}
             />
             <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
             <label htmlFor="org-name">Display name</label>
-            <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Bazzi Games" value={name} />
+            <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Acme Corp" value={name} />
             {error ? <p className={shell.notice}>{error}</p> : null}
             <button type="submit">Create organization</button>
           </form>
@@ -1000,7 +970,7 @@ function JoinableOrgsPanel() {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    api<{ orgs: Org[] }>("/v1/me/joinable-orgs")
+    api<{ orgs: Org[] }>("/v1/me/joinable-orgs", undefined, { silent: true })
       .then((data) => setJoinable(data.orgs))
       .catch(() => setJoinable([]));
   }, []);
@@ -1194,12 +1164,12 @@ export function NewOrgForm() {
           <input
             id="org-slug"
             onChange={(event) => setSlug(event.target.value)}
-            placeholder="Company name"
+            placeholder="acme-corp"
             value={slug}
           />
           <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
           <label htmlFor="org-name">Display name</label>
-          <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Company display name" value={name} />
+          <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Acme Corp" value={name} />
           {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Create organization</button>
           <p className={dash.fieldHelp}>
@@ -2287,7 +2257,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   }, [loadMembers]);
 
   useEffect(() => {
-    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${scope}/packages`)
+    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${scope}/packages`, undefined, { silent: true })
       .then((data) => {
         const pkg = data.packages.find((item) => item.name === packageName);
         if (pkg) {

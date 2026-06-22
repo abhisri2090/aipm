@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { shell, cards, dash, cn } from "../lib/page-styles";
 import { CodeBlock } from "./code-block";
+import { PackageReadmePreview } from "./package-readme-preview";
 import {
   commandTargets,
   displayTargets,
@@ -11,8 +12,10 @@ import {
   installCommandForTarget,
   isUnverifiedImportedPackage,
   packagePath,
+  packageFilesPath,
   packageShortName,
-  resolveSkillUsage,
+  resolveSkillAbout,
+  resolveSkillInvokeCommand,
   shortIntegrity,
   type PackageDetail,
   type PackageSummary,
@@ -48,12 +51,11 @@ type PackageDetailViewProps = {
 export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: PackageDetailViewProps) {
   const summary = toSummary(pkg);
   const command = installCommand(summary);
-  const usage = resolveSkillUsage({
-    name: summary.name,
-    description: summary.description,
-    targets: summary.targets,
+  const about = resolveSkillAbout({
     usage: pkg.manifest.usage,
+    agentDescription: pkg.manifest.agentDescription,
   });
+  const invokeCommand = resolveSkillInvokeCommand(summary.name);
   const allTargetCommands = commandTargets(summary.targets).map((target) => ({
     target,
     command: installCommandForTarget(summary, target),
@@ -92,8 +94,18 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
 
           <article className={cn(shell.panel, cards.stepCard, shell.howToUsePanel)}>
             <h2>How to use</h2>
-            <p className={shell.usageText}>{usage}</p>
+            <p className={shell.muted}>Install the skill above, then run this in your AI tool:</p>
+            <CodeBlock code={invokeCommand} />
           </article>
+
+          {about ? (
+            <article className={cn(shell.panel, cards.stepCard)}>
+              <h2>About</h2>
+              <p className={shell.usageText}>{about}</p>
+            </article>
+          ) : null}
+
+          <PackageReadmePreview packageName={summary.name} version={summary.version} />
         </div>
 
         <aside className={cn(shell.panel, cards.stepCard)}>
@@ -177,8 +189,28 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         </aside>
       </section>
 
+      <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="package-content-title">
+        <article className={cn(shell.panel, cards.stepCard)}>
+          <p className={shell.eyebrow}>Source</p>
+          <h2 id="package-content-title">Package content</h2>
+          <p className={shell.muted}>Browse manifest, skill files, and license bundled in this package.</p>
+          <div className={shell.actions}>
+            <Link className={shell.button} href={packageFilesPath(summary.name, summary.version)}>
+              View package content
+            </Link>
+          </div>
+        </article>
+      </section>
+
       <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="publisher-title">
-        <article className={cn(shell.panel, cards.stepCard, shell.publisherPanel)}>
+        <article className={cn(shell.panel, shell.publisherPanel)}>
+          {summary.publisher?.user.avatarUrl ? (
+            <img alt="" className={cn(dash.avatar, dash.avatarLarge)} src={summary.publisher.user.avatarUrl} />
+          ) : (
+            <span className={cn(dash.avatar, dash.avatarLarge)}>
+              {(summary.publisher?.user.name ?? summary.publisher?.user.githubLogin ?? "A").charAt(0).toUpperCase()}
+            </span>
+          )}
           <div>
             <p className={shell.eyebrow}>Publisher</p>
             <h2 id="publisher-title">
@@ -196,13 +228,6 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               </p>
             )}
           </div>
-          {summary.publisher?.user.avatarUrl ? (
-            <img alt="" className={cn(dash.avatar, dash.avatarLarge)} src={summary.publisher.user.avatarUrl} />
-          ) : (
-            <span className={cn(dash.avatar, dash.avatarLarge)}>
-              {(summary.publisher?.user.name ?? summary.publisher?.user.githubLogin ?? "A").charAt(0).toUpperCase()}
-            </span>
-          )}
         </article>
       </section>
 
@@ -251,7 +276,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             </div>
             <div className={shell.packageDetailItem}>
               <dt>Use after install</dt>
-              <dd>{usage}</dd>
+              <dd>{invokeCommand}</dd>
             </div>
             {summary.tags && summary.tags.length > 0 ? (
               <div className={shell.packageDetailItem}>

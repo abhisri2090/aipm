@@ -158,6 +158,45 @@ describe("registry API production behavior", () => {
     });
   });
 
+  it("lists and reads package files for public packages", async () => {
+    const tarball = await createTarball("2.0.0", "@team/files-skill");
+    const payload = multipartPayload(tarball);
+    const publish = await app!.inject({
+      method: "POST",
+      url: `/v1/packages/${encodeURIComponent("@team/files-skill")}/versions`,
+      headers: {
+        "content-type": payload.contentType,
+        authorization: `Bearer ${token}`,
+      },
+      payload: payload.body,
+    });
+    expect(publish.statusCode).toBe(201);
+
+    const files = await app!.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent("@team/files-skill")}/versions/2.0.0/files`,
+    });
+    expect(files.statusCode).toBe(200);
+    expect(files.json()).toMatchObject({
+      entry: "SKILL.md",
+      files: expect.arrayContaining([
+        expect.objectContaining({ path: "SKILL.md" }),
+        expect.objectContaining({ path: "aipm.manifest.json" }),
+      ]),
+    });
+
+    const content = await app!.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent("@team/files-skill")}/versions/2.0.0/files/content?path=${encodeURIComponent("SKILL.md")}`,
+    });
+    expect(content.statusCode).toBe(200);
+    expect(content.json()).toMatchObject({
+      path: "SKILL.md",
+      binary: false,
+      content: "Skill body\n",
+    });
+  });
+
   it("returns and searches package quality metadata", async () => {
     const tarball = await createTarball("1.0.4", "@team/quality-skill", {
       usage: "Use this skill to summarize production issues for handoff.",
@@ -701,6 +740,35 @@ describe("CLI auth flow", () => {
       headers: { authorization: `Bearer ${cliToken.json().accessToken}` },
     });
     expect(withCliLogin.statusCode).toBe(200);
+
+    const anonymousFiles = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0/files`,
+    });
+    expect(anonymousFiles.statusCode).toBe(404);
+
+    const privateFiles = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0/files`,
+      headers: { cookie: sessionCookie },
+    });
+    expect(privateFiles.statusCode).toBe(200);
+    expect(privateFiles.json()).toMatchObject({
+      entry: "SKILL.md",
+      files: expect.arrayContaining([expect.objectContaining({ path: "SKILL.md" })]),
+    });
+
+    const privateContent = await app.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0/files/content?path=${encodeURIComponent("SKILL.md")}`,
+      headers: { cookie: sessionCookie },
+    });
+    expect(privateContent.statusCode).toBe(200);
+    expect(privateContent.json()).toMatchObject({
+      path: "SKILL.md",
+      binary: false,
+      content: "Skill body\n",
+    });
 
     const publicTarball = await createTarball("1.0.0", `@${org.slug}/public-skill`);
     const publicPackageName = `@${org.slug}/public-skill`;

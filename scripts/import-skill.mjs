@@ -16,6 +16,7 @@ import {
   parseGitHubFolderUrl,
   pickEntryFile,
   resolveDescription,
+  resolveAgentDescription,
   resolveImportVersion,
 } from "./import-skill-lib.mjs";
 
@@ -115,6 +116,7 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
     readmeContent: files["README.md"] ?? files["readme.md"],
     fallbackName: folderName,
   });
+  const agentDescription = resolveAgentDescription(files[entry]);
   const license = detectLicense(files, repoMeta.license);
   const contentHash = computeContentHash(files);
   const importMeta = await fetchImportMeta(registryUrl, packageName);
@@ -154,6 +156,7 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
           entry,
           targets: ["*"],
           license,
+          ...(agentDescription ? { agentDescription } : {}),
         },
         null,
         2,

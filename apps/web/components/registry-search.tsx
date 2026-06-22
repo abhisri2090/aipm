@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PackageCard } from "./package-card";
+import { api } from "../lib/api-client";
 import type { PackageSummary } from "../lib/registry";
+import { publicApiError } from "../lib/public-api-error";
 import { cn } from "../lib/class-names";
 import cards from "../app/cards.module.css";
 import shell from "../app/page-shell.module.css";
@@ -14,13 +16,6 @@ const QUICK_FILTERS = [
   { label: "Testing", query: "testing" },
   { label: "Documentation", query: "documentation" },
 ] as const;
-
-function publicSearchError(error: unknown): string {
-  if (error instanceof DOMException && error.name === "AbortError") {
-    return "Registry API timed out. It may be offline or starting.";
-  }
-  return "Search unavailable";
-}
 
 export function RegistrySearch({
   initialPackages,
@@ -56,20 +51,14 @@ export function RegistrySearch({
     setStatus("Searching");
     const params = new URLSearchParams({ limit: compact ? "3" : "50" });
     if (nextQuery) params.set("q", nextQuery);
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 5000);
     try {
-      const response = await fetch(`/v1/packages?${params}`, { signal: controller.signal });
-      if (!response.ok) throw new Error(`Search failed: ${response.status}`);
-      const data = (await response.json()) as { packages?: PackageSummary[] };
+      const data = await api<{ packages?: PackageSummary[] }>(`/v1/packages?${params}`);
       const nextPackages = data.packages ?? [];
       setPackages(nextPackages);
       setStatus(nextPackages.length === 1 ? "1 package found" : `${nextPackages.length} packages found`);
     } catch (error) {
       setPackages([]);
-      setStatus(publicSearchError(error));
-    } finally {
-      window.clearTimeout(timeout);
+      setStatus(publicApiError(error));
     }
   }, [compact]);
 

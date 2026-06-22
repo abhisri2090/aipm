@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { api } from "../lib/api-client";
+import { publicApiError } from "../lib/public-api-error";
 import { shell, cards, cn } from "../lib/page-styles";
 
 type Me = {
@@ -19,23 +21,6 @@ function loginPath(): string {
   return `/login?returnTo=${encodeURIComponent(currentReturnPath())}`;
 }
 
-function publicError(error: unknown): string {
-  return error instanceof Error ? error.message : "CLI authorization failed";
-}
-
-async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: {
-      "content-type": "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
-  const data = (await response.json().catch(() => ({}))) as T & { error?: string };
-  if (!response.ok) throw new Error(data.error ?? `Request failed: ${response.status}`);
-  return data;
-}
-
 export function CliLoginPanel() {
   const params = useMemo(() => {
     if (typeof window === "undefined") return new URLSearchParams();
@@ -52,7 +37,7 @@ export function CliLoginPanel() {
 
   useEffect(() => {
     let cancelled = false;
-    void api<Me>("/v1/me")
+    void api<Me>("/v1/me", undefined, { silent: true })
       .then((user) => {
         if (!cancelled) setMe(user);
       })
@@ -85,7 +70,7 @@ export function CliLoginPanel() {
       });
       window.location.href = result.redirectTo;
     } catch (authError) {
-      setError(publicError(authError));
+      setError(publicApiError(authError));
     } finally {
       setBusy(false);
     }

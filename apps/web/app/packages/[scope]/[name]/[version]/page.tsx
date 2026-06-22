@@ -10,7 +10,7 @@ import {
   installCommand,
   installCommandForTarget,
   packagePath,
-  resolveSkillUsage,
+  resolveSkillInvokeCommand,
   SITE_URL,
   type PackageSummary,
 } from "../../../../../lib/registry";
@@ -140,12 +140,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
 
   const summary = toSummary(pkg);
   const command = installCommand(summary);
-  const usage = resolveSkillUsage({
-    name: summary.name,
-    description: summary.description,
-    targets: summary.targets,
-    usage: pkg.manifest.usage,
-  });
+  const invokeCommand = resolveSkillInvokeCommand(summary.name);
   const canonicalUrl = `${SITE_URL}${packagePath(summary.name, summary.version)}`;
   const targetLabel = displayTargets(summary.targets).join(", ");
   const aiContext = {
@@ -165,7 +160,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
       target,
       command: installCommandForTarget(summary, target),
     })),
-    usage,
+    usage: invokeCommand,
     publisher: summary.publisher
       ? {
           org: summary.publisher.org.slug,
@@ -219,7 +214,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 softwareRequirements: "AIPM CLI",
                 license: summary.license ?? undefined,
                 targetProduct: displayTargets(summary.targets),
-                usageInfo: usage,
+                usageInfo: invokeCommand,
                 datePublished: summary.createdAt,
                 identifier: `${summary.name}@${summary.version}`,
                 isAccessibleForFree: true,

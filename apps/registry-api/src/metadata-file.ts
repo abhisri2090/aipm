@@ -98,6 +98,7 @@ export class FileMetadataStore implements MetadataStore {
           manifest.description,
           manifest.type,
           manifest.usage ?? "",
+          manifest.agentDescription ?? "",
           manifest.sourceUrl ?? "",
           manifest.releaseNotes ?? "",
           ...manifest.targets,

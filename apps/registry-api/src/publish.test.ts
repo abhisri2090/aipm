@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { afterEach, describe, expect, it } from "vitest";
-import { extractManifestFromTarball, validateTarballEntries } from "./publish.js";
+import { extractManifestFromTarball, listTarballFiles, readTarballFile, validatePackageFilePath, validateTarballEntries } from "./publish.js";
 
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
@@ -64,5 +64,47 @@ describe("extractManifestFromTarball", () => {
   it("rejects manifests whose entry file is missing", async () => {
     const tarball = await createSkillTarball({ entry: "missing.md" });
     await expect(extractManifestFromTarball(tarball)).rejects.toThrow("Manifest entry not found");
+  });
+});
+
+describe("validatePackageFilePath", () => {
+  it("rejects path traversal", () => {
+    expect(() => validatePackageFilePath("../secret")).toThrow("Unsafe file path");
+  });
+
+  it("normalizes leading ./", () => {
+    expect(validatePackageFilePath("./SKILL.md")).toBe("SKILL.md");
+  });
+});
+
+describe("listTarballFiles", () => {
+  it("lists files with sizes", async () => {
+    const tarball = await createSkillTarball();
+    const files = await listTarballFiles(tarball);
+    expect(files).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: "SKILL.md" }),
+        expect.objectContaining({ path: "aipm.manifest.json" }),
+      ]),
+    );
+  });
+});
+
+describe("readTarballFile", () => {
+  it("reads entry file content", async () => {
+    const tarball = await createSkillTarball();
+    const file = await readTarballFile(tarball, "SKILL.md");
+    expect(file.binary).toBe(false);
+    expect(file.content).toBe("Skill body\n");
+  });
+
+  it("rejects missing files", async () => {
+    const tarball = await createSkillTarball();
+    await expect(readTarballFile(tarball, "missing.md")).rejects.toThrow("File not found");
+  });
+
+  it("rejects unsafe paths", async () => {
+    const tarball = await createSkillTarball();
+    await expect(readTarballFile(tarball, "../secret")).rejects.toThrow("Unsafe file path");
   });
 });

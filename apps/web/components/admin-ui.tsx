@@ -2,12 +2,16 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { api } from "../lib/api-client";
 import { DEV_LOGIN_URL, GITHUB_LOGIN_URL, isLocalDevSite } from "../lib/registry";
-import { cn, dash, shell } from "../lib/page-styles";
+import { publicApiError } from "../lib/public-api-error";
+import { showErrorToast } from "../lib/toast";
 import { InternalStatsPanel } from "./internal-stats-ui";
 import { AdminImportSkillPanel } from "./admin-import-ui";
+import { AdminBulkImportSkillPanel } from "./admin-bulk-import-ui";
 import { AdminDeletePackagePanel } from "./admin-delete-package-ui";
 import type { InternalStats } from "./internal-stats-types";
+import { cn, dash, shell } from "../lib/page-styles";
 
 type Me = {
   username: string;
@@ -24,17 +28,6 @@ type AuthConfig = {
   devAuth: boolean;
   githubAuth: boolean;
 };
-
-function publicApiError(error: unknown): string {
-  if (error instanceof DOMException && error.name === "AbortError") {
-    return "AIPM API timed out. Start the local registry API with `pnpm local:api`.";
-  }
-  if (error instanceof TypeError) {
-    return "AIPM API is unreachable. Start the local registry API with `pnpm local:api`.";
-  }
-  if (error instanceof Error && error.message) return error.message;
-  return "AIPM API is unavailable.";
-}
 
 async function fetchWithTimeout(path: string, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
@@ -60,26 +53,6 @@ export function AdminPanel() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState<string | null>(null);
-
-  async function api<T>(path: string, init?: RequestInit): Promise<T> {
-    const hasBody = init?.body != null && init.body !== "";
-    const response = await fetchWithTimeout(path, {
-      ...init,
-      headers: {
-        ...(hasBody ? { "content-type": "application/json" } : {}),
-        ...init?.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const body = (await response.json().catch(() => ({}))) as { error?: string };
-      throw new Error(body.error ?? `Request failed: ${response.status}`);
-    }
-    if (response.status === 204) return undefined as T;
-    const text = await response.text();
-    if (!text) return undefined as T;
-    return JSON.parse(text) as T;
-  }
 
   const loadStats = useCallback(async () => {
     const data = await api<InternalStats>("/v1/admin/stats");
@@ -136,6 +109,7 @@ export function AdminPanel() {
         setUnavailable(message);
       } else {
         setError(message);
+        showErrorToast(message);
       }
     } finally {
       setLoading(false);
@@ -320,6 +294,7 @@ export function AdminPanel() {
           </button>
         </div>
         <AdminImportSkillPanel onImported={loadStats} />
+        <AdminBulkImportSkillPanel onImported={loadStats} />
         <AdminDeletePackagePanel onDeleted={loadStats} />
         <InternalStatsPanel stats={stats} />
       </section>

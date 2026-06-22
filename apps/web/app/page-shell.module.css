@@ -225,8 +225,8 @@
 .publisherPanel {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 24px;
+  padding: 22px;
 }
 
 @media (max-width: 760px) {

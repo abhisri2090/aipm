@@ -489,6 +489,10 @@
   object-fit: cover;
 }
 
+img.packageTitleAvatar {
+  display: block;
+}
+
 .packageTitleText {
   min-width: 0;
   overflow-wrap: anywhere;

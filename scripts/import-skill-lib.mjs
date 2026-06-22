@@ -2,17 +2,34 @@ import { createHash } from "node:crypto";
 
 const GITHUB_TREE_URL =
   /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+?)\/?$/;
+const GITHUB_BLOB_URL =
+  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+?)\/?$/;
+
+function normalizeGitHubFolderPath(path) {
+  const cleaned = path.replace(/\/$/, "");
+  const segments = cleaned.split("/");
+  const last = segments[segments.length - 1] ?? "";
+  if (/\.(md|markdown|txt|json|yaml|yml)$/i.test(last)) {
+    return segments.slice(0, -1).join("/");
+  }
+  return cleaned;
+}
 
 export function parseGitHubFolderUrl(url) {
-  const match = url.trim().match(GITHUB_TREE_URL);
+  const trimmed = url.trim();
+  const treeMatch = trimmed.match(GITHUB_TREE_URL);
+  const blobMatch = trimmed.match(GITHUB_BLOB_URL);
+  const match = treeMatch ?? blobMatch;
   if (!match) {
-    throw new Error("Expected https://github.com/{owner}/{repo}/tree/{branch}/{path}");
+    throw new Error(
+      "Expected https://github.com/{owner}/{repo}/tree/{branch}/{path} or .../blob/{branch}/{path}",
+    );
   }
   return {
     owner: match[1],
     repo: match[2],
     branch: match[3],
-    path: match[4].replace(/\/$/, ""),
+    path: normalizeGitHubFolderPath(match[4]),
   };
 }
 
@@ -82,6 +99,16 @@ export function resolveDescription({ frontmatter, readmeContent, fallbackName })
     if (firstLine) return firstLine.replace(/^#\s*/, "").trim();
   }
   return fallbackName;
+}
+
+const MAX_AGENT_DESCRIPTION_CHARS = 12000;
+
+export function resolveAgentDescription(entryContent) {
+  if (!entryContent) return undefined;
+  const body = entryContent.replace(/^---[\s\S]*?---\r?\n?/, "").trim();
+  if (!body) return undefined;
+  if (body.length <= MAX_AGENT_DESCRIPTION_CHARS) return body;
+  return `${body.slice(0, MAX_AGENT_DESCRIPTION_CHARS - 3).trimEnd()}...`;
 }
 
 export function computeContentHash(files) {
