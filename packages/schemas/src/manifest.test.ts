@@ -87,4 +87,69 @@ describe("PackageManifestSchema", () => {
     expect(manifest.examples?.[0]?.prompt).toContain("staged changes");
     expect(manifest.releaseNotes).toBe("Initial release with code review guidance.");
   });
+
+  it("parses manual setup install metadata", () => {
+    const manifest = PackageManifestSchema.parse({
+      schemaVersion: "0.1",
+      name: "@team/debug-helper",
+      version: "1.0.0",
+      type: "skill",
+      description: "Install a debug helper",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+      install: {
+        mainFiles: [{ from: "assets/server.js", to: "debug-log-server/server.js" }],
+        helperFiles: [
+          { from: "setup/SETUP_PROMPT.md", to: "SETUP_PROMPT.md" },
+          { from: "setup/GUIDE.md" },
+        ],
+        postInstall: {
+          mode: "manual_prompt",
+          promptFile: "SETUP_PROMPT.md",
+          cleanup: "after_user_confirmation",
+        },
+      },
+    });
+
+    expect(manifest.install?.postInstall?.mode).toBe("manual_prompt");
+    expect(manifest.install?.mainFiles?.[0]?.to).toBe("debug-log-server/server.js");
+  });
+
+  it("rejects unsafe install paths", () => {
+    expect(() =>
+      PackageManifestSchema.parse({
+        schemaVersion: "0.1",
+        name: "@team/debug-helper",
+        version: "1.0.0",
+        type: "skill",
+        description: "Install a debug helper",
+        entry: "SKILL.md",
+        targets: ["cursor"],
+        install: {
+          mainFiles: [{ from: "../server.js", to: "debug-log-server/server.js" }],
+        },
+      }),
+    ).toThrow(/path must be relative/);
+  });
+
+  it("requires manual prompt files to be installed helper files", () => {
+    expect(() =>
+      PackageManifestSchema.parse({
+        schemaVersion: "0.1",
+        name: "@team/debug-helper",
+        version: "1.0.0",
+        type: "skill",
+        description: "Install a debug helper",
+        entry: "SKILL.md",
+        targets: ["cursor"],
+        install: {
+          helperFiles: [{ from: "setup/GUIDE.md", to: "GUIDE.md" }],
+          postInstall: {
+            mode: "manual_prompt",
+            promptFile: "SETUP_PROMPT.md",
+          },
+        },
+      }),
+    ).toThrow(/postInstall.promptFile/);
+  });
 });

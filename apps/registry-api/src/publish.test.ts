@@ -65,6 +65,36 @@ describe("extractManifestFromTarball", () => {
     const tarball = await createSkillTarball({ entry: "missing.md" });
     await expect(extractManifestFromTarball(tarball)).rejects.toThrow("Manifest entry not found");
   });
+
+  it("rejects manifests whose install files are missing", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "aipm-skill-"));
+    tempDirs.push(dir);
+    await writeFile(join(dir, "SKILL.md"), "Skill body\n");
+    await writeFile(
+      join(dir, "aipm.manifest.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "@team/test-skill",
+        version: "1.0.0",
+        type: "skill",
+        description: "Test skill",
+        entry: "SKILL.md",
+        targets: ["cursor"],
+        install: {
+          helperFiles: [{ from: "setup/SETUP_PROMPT.md", to: "SETUP_PROMPT.md" }],
+          postInstall: { mode: "manual_prompt", promptFile: "SETUP_PROMPT.md" },
+        },
+      }),
+    );
+    const { stdout } = await execFileAsync("tar", ["-czf", "-", "-C", dir, "."], {
+      encoding: "buffer",
+    });
+    const tarball = Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
+
+    await expect(extractManifestFromTarball(tarball)).rejects.toThrow(
+      "Manifest install file not found: setup/SETUP_PROMPT.md",
+    );
+  });
 });
 
 describe("validatePackageFilePath", () => {

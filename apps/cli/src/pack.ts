@@ -40,3 +40,14 @@ export async function unpackTarballToBuffer(tarball: Buffer, entry: string): Pro
     await rm(tempDir, { recursive: true, force: true });
   }
 }
+
+export async function unpackTarballToDirectory(tarball: Buffer): Promise<string> {
+  const { mkdtemp, writeFile } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const tempDir = await mkdtemp(join(tmpdir(), "aipm-install-"));
+  const tgzPath = join(tempDir, "pkg.tgz");
+  await writeFile(tgzPath, tarball);
+  await execFileAsync("tar", ["-xzf", tgzPath, "-C", tempDir]);
+  return tempDir;
+}

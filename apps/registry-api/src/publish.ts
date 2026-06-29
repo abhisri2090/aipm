@@ -77,6 +77,15 @@ export function validatePackageFilePath(path: string): string {
   return normalized;
 }
 
+function installReferencedFiles(manifest: ReturnType<typeof PackageManifestSchema.parse>): string[] {
+  const install = manifest.install;
+  if (!install) return [];
+  return [
+    ...(install.mainFiles ?? []).map((file) => file.from),
+    ...(install.helperFiles ?? []).map((file) => file.from),
+  ];
+}
+
 async function writeTarballToTemp(tarball: Buffer): Promise<{ tempDir: string; tgzPath: string }> {
   if (tarball.length > MAX_TARBALL_BYTES) {
     throw new Error("Package tarball exceeds 50 MB limit");
@@ -167,6 +176,12 @@ export async function extractManifestFromTarball(
     const entryStat = await stat(join(tempDir, manifest.entry)).catch(() => null);
     if (!entryStat?.isFile()) {
       throw new Error(`Manifest entry not found: ${manifest.entry}`);
+    }
+    for (const file of installReferencedFiles(manifest)) {
+      const fileStat = await stat(join(tempDir, file)).catch(() => null);
+      if (!fileStat?.isFile()) {
+        throw new Error(`Manifest install file not found: ${file}`);
+      }
     }
     return { manifest, integrity };
   } finally {

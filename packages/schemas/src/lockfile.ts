@@ -12,6 +12,20 @@ export const LockfilePackageEntrySchema = z.object({
   registry: z.string().url(),
   resolvedTools: z.array(AiToolSchema),
   installed: InstalledPathsSchema,
+  installedAssets: z
+    .object({
+      main: z.array(z.string()),
+      helper: z.array(z.string()),
+    })
+    .optional(),
+  postInstall: z
+    .object({
+      mode: z.literal("manual_prompt"),
+      status: z.enum(["pending", "cleaned"]),
+      promptFile: z.string(),
+      cleanup: z.enum(["manual", "after_user_confirmation"]),
+    })
+    .optional(),
 });
 
 export const LockfileSchema = z.object({

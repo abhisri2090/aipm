@@ -62,6 +62,14 @@ Install a skill:
 aipm add @scope/name@1.0.0 --target cursor
 ```
 
+Some packages include temporary helper files and a manual AI setup prompt. After install, AIPM
+prints the prompt path. You can show it again and clean helper files after setup:
+
+```bash
+aipm show-prompt @scope/name
+aipm cleanup @scope/name
+```
+
 See what is installed:
 
 ```bash

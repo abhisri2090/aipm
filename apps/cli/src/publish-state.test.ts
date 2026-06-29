@@ -80,6 +80,37 @@ describe("publish state", () => {
     await expect(validatePublishState(root)).rejects.toThrow(/looks like it contains a secret/);
   });
 
+  it("requires manifest install files to be staged", async () => {
+    const root = await createSkillFixture();
+    await mkdir(join(root, "setup"));
+    await writeFile(join(root, "setup", "SETUP_PROMPT.md"), "Install the logger.\n", "utf8");
+    await writeFile(join(root, "server.js"), "console.log('debug')\n", "utf8");
+    await writeFile(
+      join(root, "aipm.manifest.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          name: "@team/test-skill",
+          version: "1.0.0",
+          type: "skill",
+          description: "Test skill",
+          entry: "SKILL.md",
+          targets: ["cursor"],
+          install: {
+            mainFiles: [{ from: "server.js", to: "debug-log-server/server.js" }],
+            helperFiles: [{ from: "setup/SETUP_PROMPT.md", to: "SETUP_PROMPT.md" }],
+            postInstall: { mode: "manual_prompt", promptFile: "SETUP_PROMPT.md" },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+    await addPublishFiles(root, ["aipm.manifest.json", "SKILL.md", "setup/SETUP_PROMPT.md"]);
+
+    await expect(validatePublishState(root)).rejects.toThrow(/Manifest install file must be staged: server.js/);
+  });
+
   it("removes and resets staged files", async () => {
     const root = await createSkillFixture();
     await addPublishFiles(root, ["."]);

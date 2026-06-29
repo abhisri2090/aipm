@@ -79,6 +79,39 @@ cd review-helper`}
 }`}
         />
 
+        <h2>Skill packages with setup prompts</h2>
+        <p>
+          Some skills need a one-time setup step, such as adding debug logger files to the
+          installing project. Use helper files for temporary setup docs and prompts. AIPM saves the
+          prompt for the user to copy into their AI tool; it does not execute prompts or scripts.
+        </p>
+        <CodeBlock
+          code={`{
+  "schemaVersion": "0.1",
+  "name": "@aipm/debug-log-server",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Install and use a dev-only debug log server workflow.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude"],
+  "install": {
+    "helperFiles": [
+      { "from": "setup/DEBUGGER_LOG_SETUP.md", "to": "DEBUGGER_LOG_SETUP.md" },
+      { "from": "setup/SETUP_PROMPT.md", "to": "SETUP_PROMPT.md" }
+    ],
+    "postInstall": {
+      "mode": "manual_prompt",
+      "promptFile": "SETUP_PROMPT.md",
+      "cleanup": "after_user_confirmation"
+    }
+  }
+}`}
+        />
+        <p>
+          Permanent files belong in <code>mainFiles</code>. Temporary setup guides, prompts,
+          templates, and migration notes belong in <code>helperFiles</code>.
+        </p>
+
         <h2>Metadata that helps users find your skill</h2>
         <p>
           Treat the manifest as the public package page source. Write a short description, longer

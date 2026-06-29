@@ -3,8 +3,8 @@ import { Command } from "commander";
 import { createHash, randomBytes } from "node:crypto";
 import { execFile } from "node:child_process";
 import { createServer } from "node:http";
-import { cp, mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { basename, join, resolve, sep } from "node:path";
 import { cwd, env } from "node:process";
 import type { AddressInfo } from "node:net";
 import {
@@ -57,7 +57,7 @@ import {
   writeLockfile,
   writeProjectPackageJson,
 } from "./project-files.js";
-import { promptForTool } from "./prompt.js";
+import { promptForConfirmation, promptForTool } from "./prompt.js";
 import { getCliVersion } from "./version.js";
 import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
 
@@ -189,6 +189,84 @@ function formatBytes(bytes?: number): string | null {
 function packageDashboardUrl(name?: string): string {
   if (!name) return DASHBOARD_URL;
   return `${DASHBOARD_URL}/packages/${name.replace(/^@/, "")}`;
+}
+
+function helperRootFromTrackedPath(path: string): string | null {
+  const parts = path.split(sep).filter(Boolean);
+  const helpersIndex = parts.lastIndexOf("helpers");
+  if (helpersIndex === -1 || parts.length <= helpersIndex + 2) return null;
+  const prefix = path.startsWith(sep) ? sep : "";
+  return join(prefix, ...parts.slice(0, helpersIndex + 3));
+}
+
+async function showInstalledPrompt(configRoot: string, packageArg: string): Promise<void> {
+  const { name } = parsePackageArg(packageArg);
+  const lock = await readLockfile(configRoot);
+  const entry = lock?.packages[name];
+  if (!entry) throw new Error(`Package is not installed: ${name}`);
+  if (!entry.postInstall || entry.postInstall.mode !== "manual_prompt") {
+    throw new Error(`Package has no setup prompt: ${name}`);
+  }
+  if (entry.postInstall.status === "cleaned") {
+    throw new Error(`Setup helper files were cleaned for ${name}. Reinstall the package to restore them.`);
+  }
+  const content = await readFile(entry.postInstall.promptFile, "utf8").catch(() => {
+    throw new Error(`Setup prompt file is missing: ${entry.postInstall?.promptFile}`);
+  });
+  console.log(`Prompt file: ${entry.postInstall.promptFile}`);
+  console.log("");
+  console.log(content.trimEnd());
+}
+
+async function cleanupInstalledHelpers(options: {
+  configRoot: string;
+  packageArg: string;
+  yes?: boolean;
+}): Promise<void> {
+  const { name } = parsePackageArg(options.packageArg);
+  const lock = await readLockfile(options.configRoot);
+  const entry = lock?.packages[name];
+  if (!lock || !entry) throw new Error(`Package is not installed: ${name}`);
+  if (!entry.installedAssets?.helper?.length) {
+    throw new Error(`Package has no helper files to clean: ${name}`);
+  }
+  if (!entry.postInstall) {
+    throw new Error(`Package has no post-install helper state: ${name}`);
+  }
+  if (entry.postInstall.status === "cleaned") {
+    console.log(`Helper files already cleaned for ${name}.`);
+    return;
+  }
+  if (!options.yes) {
+    const confirmed = await promptForConfirmation(`Delete tracked helper files for ${name}?`);
+    if (!confirmed) {
+      console.log("Cleanup cancelled.");
+      return;
+    }
+  }
+
+  const roots = new Set(
+    entry.installedAssets.helper
+      .map((path) => helperRootFromTrackedPath(path))
+      .filter((path): path is string => Boolean(path)),
+  );
+  if (roots.size > 0) {
+    for (const root of roots) await rm(root, { recursive: true, force: true });
+  } else {
+    for (const helperPath of entry.installedAssets.helper) await rm(helperPath, { force: true });
+  }
+
+  await writeLockfile(options.configRoot, {
+    ...lock,
+    packages: {
+      ...lock.packages,
+      [name]: {
+        ...entry,
+        postInstall: { ...entry.postInstall, status: "cleaned" },
+      },
+    },
+  });
+  console.log(`Cleaned helper files for ${name}.`);
 }
 
 async function openUrl(url: string): Promise<void> {
@@ -351,6 +429,13 @@ async function printPublishPreview(root: string, json?: boolean): Promise<void> 
     description: manifest.description,
     targets: manifest.targets,
     entry: manifest.entry,
+    install: manifest.install
+      ? {
+          mainFiles: manifest.install.mainFiles ?? [],
+          helperFiles: manifest.install.helperFiles ?? [],
+          postInstall: manifest.install.postInstall ?? null,
+        }
+      : null,
     files: rows.map((row) => ({ path: row.path, size: row.size, changed: row.changed })),
     totalBytes: size,
     warnings: [
@@ -368,6 +453,13 @@ async function printPublishPreview(root: string, json?: boolean): Promise<void> 
   console.log(`Description: ${preview.description}`);
   console.log(`Targets: ${preview.targets.join(", ")}`);
   console.log(`Entry: ${preview.entry}`);
+  if (preview.install) {
+    console.log(`Main files: ${preview.install.mainFiles.length}`);
+    console.log(`Helper files: ${preview.install.helperFiles.length}`);
+    if (preview.install.postInstall) {
+      console.log(`Post-install: ${preview.install.postInstall.mode} (${preview.install.postInstall.promptFile})`);
+    }
+  }
   console.log(`Total: ${preview.files.length} file${preview.files.length === 1 ? "" : "s"}, ${preview.totalBytes} bytes`);
   for (const file of preview.files) {
     console.log(`${file.changed ? "modified" : "staged"} ${file.path} (${file.size} bytes)`);
@@ -832,6 +924,27 @@ program
         token,
       });
     }
+  });
+
+program
+  .command("show-prompt <package>")
+  .description("Show the manual setup prompt installed with a package")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
+  .action(async (pkgArg: string, opts: { global?: boolean }) => {
+    await showInstalledPrompt(resolveConfigRoot({ global: opts.global }), pkgArg);
+  });
+
+program
+  .command("cleanup <package>")
+  .description("Delete temporary helper files installed with a package")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
+  .option("--yes", "Delete helper files without asking for confirmation")
+  .action(async (pkgArg: string, opts: { global?: boolean; yes?: boolean }) => {
+    await cleanupInstalledHelpers({
+      configRoot: resolveConfigRoot({ global: opts.global }),
+      packageArg: pkgArg,
+      yes: opts.yes,
+    });
   });
 
 program

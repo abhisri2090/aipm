@@ -21,6 +21,72 @@ export const PackageExampleSchema = z.object({
   prompt: z.string().trim().min(1).max(1000),
 });
 
+const unsafePathMessage = "path must be relative and must not contain .. segments";
+
+function isSafeRelativePath(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.startsWith("/") || trimmed.startsWith("\\") || /^[A-Za-z]:/.test(trimmed)) {
+    return false;
+  }
+  const normalized = trimmed.replace(/\\/g, "/");
+  return normalized
+    .split("/")
+    .filter(Boolean)
+    .every((segment) => segment !== "." && segment !== "..");
+}
+
+function basename(value: string): string {
+  const parts = value.replace(/\\/g, "/").split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? value;
+}
+
+const InstallPathSchema = z.string().trim().min(1).refine(isSafeRelativePath, unsafePathMessage);
+
+export const InstallOverwriteSchema = z.enum(["fail", "skip", "replace"]);
+export type InstallOverwrite = z.infer<typeof InstallOverwriteSchema>;
+
+export const PackageInstallSchema = z
+  .object({
+    mainFiles: z
+      .array(
+        z.object({
+          from: InstallPathSchema,
+          to: InstallPathSchema,
+          overwrite: InstallOverwriteSchema.optional(),
+        }),
+      )
+      .optional(),
+    helperFiles: z
+      .array(
+        z.object({
+          from: InstallPathSchema,
+          to: InstallPathSchema.optional(),
+        }),
+      )
+      .optional(),
+    postInstall: z
+      .object({
+        mode: z.literal("manual_prompt"),
+        promptFile: InstallPathSchema,
+        cleanup: z.enum(["manual", "after_user_confirmation"]).optional(),
+      })
+      .optional(),
+  })
+  .superRefine((install, ctx) => {
+    if (!install.postInstall) return;
+    const helperTargets = new Set(
+      (install.helperFiles ?? []).map((file) => file.to ?? basename(file.from)),
+    );
+    if (!helperTargets.has(install.postInstall.promptFile)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["postInstall", "promptFile"],
+        message: "postInstall.promptFile must point to an installed helper file",
+      });
+    }
+  });
+export type PackageInstall = z.infer<typeof PackageInstallSchema>;
+
 export const PackageManifestSchema = z.object({
   schemaVersion: z.literal("0.1"),
   name: z.string().regex(SCOPE_NAME_REGEX, "name must be @scope/name"),
@@ -37,6 +103,7 @@ export const PackageManifestSchema = z.object({
   sourceUrl: z.string().trim().url().max(500).optional(),
   examples: z.array(PackageExampleSchema).max(5).optional(),
   releaseNotes: z.string().trim().min(1).max(2000).optional(),
+  install: PackageInstallSchema.optional(),
 });
 
 export type PackageManifest = z.infer<typeof PackageManifestSchema>;

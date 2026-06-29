@@ -182,6 +182,15 @@ export async function readManifest(root: string): Promise<PackageManifest> {
   }
 }
 
+function installReferencedFiles(manifest: PackageManifest): string[] {
+  const install = manifest.install;
+  if (!install) return [];
+  return [
+    ...(install.mainFiles ?? []).map((file) => file.from),
+    ...(install.helperFiles ?? []).map((file) => file.from),
+  ];
+}
+
 export async function validatePublishState(root: string): Promise<{ manifest: PackageManifest; size: number }> {
   const manifest = await readManifest(root);
   const state = await readPublishState(root);
@@ -189,6 +198,9 @@ export async function validatePublishState(root: string): Promise<{ manifest: Pa
   const staged = new Set(state.files.map((entry) => entry.path));
   if (!staged.has("aipm.manifest.json")) throw new Error("aipm.manifest.json must be staged.");
   if (!staged.has(manifest.entry)) throw new Error(`Manifest entry must be staged: ${manifest.entry}`);
+  for (const file of installReferencedFiles(manifest)) {
+    if (!staged.has(file)) throw new Error(`Manifest install file must be staged: ${file}`);
+  }
 
   let size = 0;
   for (const entry of state.files) {

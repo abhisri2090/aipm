@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
+import { packDirectory } from "./pack.js";
 
 const execFileAsync = promisify(execFile);
 const cliPath = resolve(dirname(fileURLToPath(import.meta.url)), "../dist/bin.cjs");
@@ -214,6 +215,114 @@ describe("CLI publish commands", () => {
     expect(notes).toContain("Notes");
     expect(result.stdout).toContain("Copied");
     expect(result.stdout).toContain("Next: Run cd existing-helper");
+  });
+
+  it("installs helper files, shows manual setup prompts, and cleans helpers only", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    const packageRoot = await tempWorkspace();
+    await mkdir(join(packageRoot, "setup"), { recursive: true });
+    await mkdir(join(packageRoot, "assets"), { recursive: true });
+
+    const manifest = {
+      schemaVersion: "0.1",
+      name: "@team/debug-helper",
+      version: "1.0.0",
+      type: "skill",
+      description: "Debug helper skill",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+      install: {
+        mainFiles: [{ from: "assets/server.js", to: "debug-log-server/server.js" }],
+        helperFiles: [
+          { from: "setup/SETUP_PROMPT.md", to: "SETUP_PROMPT.md" },
+          { from: "setup/GUIDE.md", to: "GUIDE.md" },
+        ],
+        postInstall: {
+          mode: "manual_prompt",
+          promptFile: "SETUP_PROMPT.md",
+          cleanup: "after_user_confirmation",
+        },
+      },
+    };
+    await writeFile(join(packageRoot, "aipm.manifest.json"), JSON.stringify(manifest, null, 2));
+    await writeFile(join(packageRoot, "SKILL.md"), "# Debug helper\n\nUse this to set up logging.\n");
+    await writeFile(join(packageRoot, "assets", "server.js"), "console.log('debug server')\n");
+    await writeFile(join(packageRoot, "setup", "SETUP_PROMPT.md"), "Set up the debug logger now.\n");
+    await writeFile(join(packageRoot, "setup", "GUIDE.md"), "# Debug logger guide\n");
+    const tarball = await packDirectory(packageRoot);
+
+    const encoded = encodeURIComponent("@team/debug-helper");
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (request.url === `/v1/packages/${encoded}/versions/1.0.0`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest, integrity: "sha256-test" }));
+        return;
+      }
+      if (request.url === `/v1/packages/${encoded}/versions/1.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarball);
+        return;
+      }
+      if (request.url === `/v1/packages/${encoded}/installs`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ installCount: 1 }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+
+    try {
+      await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      const add = await runCli(root, ["add", "@team/debug-helper@1.0.0", "--ci"]);
+
+      const skillPath = join(root, ".cursor", "aipm", "skills", "debug-helper.md");
+      const mainPath = join(root, "debug-log-server", "server.js");
+      const promptPath = join(root, ".aipm", "helpers", "team__debug-helper", "1.0.0", "SETUP_PROMPT.md");
+      const guidePath = join(root, ".aipm", "helpers", "team__debug-helper", "1.0.0", "GUIDE.md");
+
+      expect(add.stdout).toContain("This package requires AI-assisted setup.");
+      expect(add.stdout).toContain("team__debug-helper/1.0.0/SETUP_PROMPT.md");
+      await expect(stat(skillPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(stat(mainPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(stat(promptPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(stat(guidePath)).resolves.toMatchObject({ size: expect.any(Number) });
+
+      const lock = await readJson(join(root, "aipm-lock.json"));
+      const promptFromLock = (lock as { packages: Record<string, { postInstall: { promptFile: string } }> }).packages[
+        "@team/debug-helper"
+      ].postInstall.promptFile;
+      const showPrompt = await runCli(root, ["show-prompt", "@team/debug-helper"]);
+      expect(showPrompt.stdout).toContain(`Prompt file: ${promptFromLock}`);
+      expect(showPrompt.stdout).toContain("Set up the debug logger now.");
+
+      await runCli(root, ["cleanup", "@team/debug-helper", "--yes"]);
+      await expect(stat(promptPath)).rejects.toThrow();
+      await expect(stat(skillPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(stat(mainPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      expect(await readJson(join(root, "aipm-lock.json"))).toMatchObject({
+        packages: {
+          "@team/debug-helper": {
+            postInstall: { status: "cleaned" },
+          },
+        },
+      });
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
   });
 
   it("uses stored CLI login when no install token is passed", async () => {

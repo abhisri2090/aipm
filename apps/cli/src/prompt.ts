@@ -19,3 +19,14 @@ export async function promptForTool(): Promise<AiTool> {
     rl.close();
   }
 }
+
+export async function promptForConfirmation(question: string): Promise<boolean> {
+  const rl = readline.createInterface({ input, output });
+  try {
+    const answer = await rl.question(`${question} (y/N): `);
+    const normalized = answer.trim().toLowerCase();
+    return normalized === "y" || normalized === "yes";
+  } finally {
+    rl.close();
+  }
+}

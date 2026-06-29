@@ -68,6 +68,18 @@ const useCommands: CommandItem[] = [
     options: ["--global: list global packages"],
   },
   {
+    title: "Show setup prompt",
+    description: "Prints the manual AI setup prompt installed with a package.",
+    code: "aipm show-prompt @scope/name",
+    options: ["--global: read from global AIPM config"],
+  },
+  {
+    title: "Clean helper files",
+    description: "Deletes temporary helper files installed with a package without removing skills or permanent files.",
+    code: "aipm cleanup @scope/name --yes",
+    options: ["--yes: skip confirmation", "--global: clean global helper files"],
+  },
+  {
     title: "Remove a package",
     description: "Removes a package from AIPM config and lock files; review tool-written files before committing.",
     code: "aipm remove @scope/name",
