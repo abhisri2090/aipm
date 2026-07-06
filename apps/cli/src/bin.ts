@@ -1191,17 +1191,22 @@ publish
   .option("--registry <url>", "Registry base URL")
   .option("--token <token>", "Publish token")
   .option("--yes", "Confirm upload without an extra reminder")
-  .action(async (opts: { registry?: string; token?: string; yes?: boolean }) => {
+  .option("--verbose", "Print extra diagnostic output")
+  .action(async (opts: { registry?: string; token?: string; yes?: boolean; verbose?: boolean }) => {
     const root = cwd();
     const { manifest } = await validatePublishState(root);
     const registry = registryFromEnvOrDefault(opts.registry);
     const tarball = await packStagedFiles(root);
     const staged = await statusPublishState(root);
+    const verbose = Boolean(opts.verbose || program.opts<{ verbose?: boolean }>().verbose);
     if (!opts.yes) {
       console.log("Reminder: this publishes an immutable public package version.");
       console.log("Use --yes to skip this reminder in automation.");
     }
     console.log(`Uploading ${staged.length} file${staged.length === 1 ? "" : "s"} to ${registry}.`);
+    if (verbose) {
+      console.log(`Verbose: package ${manifest.name}@${manifest.version}; tarball ${tarball.length} bytes.`);
+    }
     for (const entry of staged) console.log(`  ${entry.path}`);
     const result = await publishPackage(registry, manifest.name, tarball, opts.token ?? env.AIPM_TOKEN);
     console.log(`Published ${manifest.name}@${result.version}`);

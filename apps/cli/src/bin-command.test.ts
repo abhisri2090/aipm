@@ -107,6 +107,102 @@ describe("CLI publish commands", () => {
     }
   });
 
+  it("accepts verbose on publish push", async () => {
+    const root = await tempWorkspace();
+    await writeFile(join(root, "SKILL.md"), "# Verbose publish\n");
+    await writeFile(
+      join(root, "aipm.manifest.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "@team/verbose-publish",
+        version: "1.0.0",
+        type: "skill",
+        description: "Verbose publish skill",
+        entry: "SKILL.md",
+        targets: ["cursor"],
+      }),
+    );
+    await runCli(root, ["publish", "add", "."]);
+
+    const server = createServer((request, response) => {
+      expect(request.url).toBe(`/v1/packages/${encodeURIComponent("@team/verbose-publish")}/versions`);
+      response.writeHead(201, { "content-type": "application/json" });
+      response.end(JSON.stringify({ name: "@team/verbose-publish", version: "1.0.0", integrity: "sha256-test" }));
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+
+    try {
+      const result = await runCli(root, [
+        "publish",
+        "push",
+        "--registry",
+        `http://127.0.0.1:${address.port}`,
+        "--token",
+        "test-token",
+        "--yes",
+        "--verbose",
+      ]);
+
+      expect(result.stdout).toContain("Verbose: package @team/verbose-publish@1.0.0");
+      expect(result.stdout).toContain("Published @team/verbose-publish@1.0.0");
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("explains invalid scoped publish tokens with package-specific recovery steps", async () => {
+    const root = await tempWorkspace();
+    await writeFile(join(root, "SKILL.md"), "# Token hint\n");
+    await writeFile(
+      join(root, "aipm.manifest.json"),
+      JSON.stringify({
+        schemaVersion: "0.1",
+        name: "@team/token-hint",
+        version: "1.0.0",
+        type: "skill",
+        description: "Token hint skill",
+        entry: "SKILL.md",
+        targets: ["cursor"],
+      }),
+    );
+    await runCli(root, ["publish", "add", "."]);
+
+    const server = createServer((request, response) => {
+      expect(request.url).toBe(`/v1/packages/${encodeURIComponent("@team/token-hint")}/versions`);
+      response.writeHead(403, { "content-type": "application/json" });
+      response.end(JSON.stringify({ error: "Invalid publish token" }));
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+
+    try {
+      await expect(
+        runCli(root, [
+          "publish",
+          "push",
+          "--registry",
+          `http://127.0.0.1:${address.port}`,
+          "--token",
+          "wrong-token",
+          "--yes",
+        ]),
+      ).rejects.toMatchObject({
+        stderr: expect.stringContaining("Publish token was rejected for @team/token-hint."),
+      });
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
   it("creates a skill-named package folder by default", async () => {
     const root = await tempWorkspace();
 

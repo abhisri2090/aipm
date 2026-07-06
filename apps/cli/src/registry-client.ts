@@ -44,6 +44,25 @@ function privateInstallHint(name: string, status: number, token?: string): strin
   return `Package not found: ${name} (${status}). If @org/pkg is private, run aipm login, or set AIPM_TOKEN for CI.`;
 }
 
+function publishTokenHint(name: string, error: string): string {
+  if (error === "Publish token required") {
+    return [
+      `Publish token required for ${name}.`,
+      `Generate a fresh 5-minute publish token for ${name} from the package dashboard, then retry with AIPM_TOKEN=<token> aipm publish push --yes.`,
+    ].join(" ");
+  }
+
+  if (error === "Invalid publish token") {
+    return [
+      `Publish token was rejected for ${name}.`,
+      `Generate a fresh 5-minute token for this exact package name, make sure aipm.manifest.json still says "${name}", and confirm your account can publish to that reserved package.`,
+      "If you recently renamed the package or generated the token from another package page, create a new token from the matching package dashboard.",
+    ].join(" ");
+  }
+
+  return error;
+}
+
 /** Fail fast before install/publish if the registry API is not listening. */
 export async function assertRegistryReachable(registry: string): Promise<void> {
   const base = registry.replace(/\/$/, "");
@@ -68,7 +87,7 @@ export async function publishPackage(
   const res = await registryFetch(url, base, { method: "POST", body: form, headers });
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? `Publish failed: ${res.status}`);
+    throw new Error(err.error ? publishTokenHint(name, err.error) : `Publish failed: ${res.status}`);
   }
   return res.json() as Promise<{ version: string; integrity: string }>;
 }

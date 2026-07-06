@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile, access } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdtemp, mkdir, readFile, rm, writeFile, access } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { promisify } from "node:util";
 import {
@@ -142,7 +142,9 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
   const tempDir = await mkdtemp(join(tmpdir(), "aipm-import-"));
   try {
     for (const [name, content] of Object.entries(files)) {
-      await writeFile(join(tempDir, name), content, "utf8");
+      const filePath = join(tempDir, name);
+      await mkdir(dirname(filePath), { recursive: true });
+      await writeFile(filePath, content, "utf8");
     }
     await writeFile(
       join(tempDir, "aipm.manifest.json"),

@@ -9,6 +9,7 @@ import {
   parseGitHubFolderUrl,
   resolveDescription,
   resolveImportVersion,
+  truncateDescription,
 } from "./import-skill-lib.mjs";
 
 describe("parseGitHubFolderUrl", () => {
@@ -77,5 +78,10 @@ describe("frontmatter + version logic", () => {
     const hashA = computeContentHash({ "SKILL.md": "hello", LICENSE: "Apache" });
     const hashB = computeContentHash({ LICENSE: "Apache", "SKILL.md": "hello" });
     expect(hashA).toBe(hashB);
+  });
+
+  it("truncates long descriptions", () => {
+    const long = "a".repeat(300);
+    expect(truncateDescription(long).length).toBe(240);
   });
 });

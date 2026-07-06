@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { access, mkdtemp, readFile, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import * as githubImport from "./import-from-github.js";
 import {
   buildGitHubTreeUrl,
@@ -8,6 +11,8 @@ import {
   parseGitHubFolderUrl,
   resolveAgentDescription,
   resolveImportVersion,
+  truncateDescription,
+  writeImportedFilesToDirectory,
 } from "./import-from-github.js";
 
 describe("import-from-github helpers", () => {
@@ -48,6 +53,7 @@ describe("import-from-github helpers", () => {
 
   it("builds package names from owner and folder", () => {
     expect(buildPackageName("mattpocock", "grill-me")).toBe("@mattpocock/grill-me");
+    expect(buildPackageName("my-org", "frontend-design")).toBe("@my-org/frontend-design");
   });
 
   it("skips unchanged imports and bumps patch versions", () => {
@@ -68,10 +74,11 @@ describe("import-from-github helpers", () => {
     ).toMatchObject({ action: "publish", version: "1.0.1" });
   });
 
-  it("hashes folder contents deterministically", () => {
-    const hashA = computeContentHash({ "SKILL.md": "hello", LICENSE: "Apache" });
-    const hashB = computeContentHash({ LICENSE: "Apache", "SKILL.md": "hello" });
-    expect(hashA).toBe(hashB);
+  it("truncates descriptions to the manifest limit", () => {
+    const long = "a".repeat(300);
+    expect(truncateDescription(long).length).toBe(240);
+    expect(truncateDescription(long).endsWith("...")).toBe(true);
+    expect(truncateDescription("short")).toBe("short");
   });
 
   it("extracts the skill body as agent description", () => {
@@ -86,6 +93,12 @@ describe("import-from-github helpers", () => {
     expect(resolveAgentDescription("---\ndescription: Empty\n---\n")).toBeUndefined();
   });
 
+  it("hashes folder contents deterministically", () => {
+    const hashA = computeContentHash({ "SKILL.md": "hello", LICENSE: "Apache" });
+    const hashB = computeContentHash({ LICENSE: "Apache", "SKILL.md": "hello" });
+    expect(hashA).toBe(hashB);
+  });
+
   it("builds child github tree urls", () => {
     expect(
       buildGitHubTreeUrl(
@@ -98,6 +111,22 @@ describe("import-from-github helpers", () => {
         "frontend-design",
       ),
     ).toBe("https://github.com/anthropics/skills/tree/main/skills/frontend-design");
+  });
+
+  it("writes nested skill files to a temp directory", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "aipm-import-test-"));
+    try {
+      await writeImportedFilesToDirectory(tempDir, {
+        "SKILL.md": "# Skill",
+        "templates/generator_template.js": "export default {};",
+      });
+      await expect(access(join(tempDir, "templates/generator_template.js"))).resolves.toBeUndefined();
+      await expect(readFile(join(tempDir, "templates/generator_template.js"), "utf8")).resolves.toBe(
+        "export default {};",
+      );
+    } finally {
+      await rm(tempDir, { recursive: true, force: true });
+    }
   });
 });
 

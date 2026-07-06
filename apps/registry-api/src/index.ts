@@ -1067,7 +1067,7 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.post<{ Body: { sourceUrl?: string; maxSkills?: number } }>(
+  app.post<{ Body: { sourceUrl?: string; orgName?: string; maxSkills?: number } }>(
     "/v1/admin/bulk-import-from-url",
     {
       config: {
@@ -1089,6 +1089,11 @@ export async function createApp(): Promise<FastifyInstance> {
         return reply.status(400).send({ error: "Missing sourceUrl" });
       }
 
+      const orgName = request.body?.orgName?.trim();
+      if (!orgName) {
+        return reply.status(400).send({ error: "Missing orgName" });
+      }
+
       const maxSkills =
         typeof request.body?.maxSkills === "number" && Number.isFinite(request.body.maxSkills)
           ? Math.max(1, Math.floor(request.body.maxSkills))
@@ -1100,6 +1105,7 @@ export async function createApp(): Promise<FastifyInstance> {
           metadata,
           storage,
           sourceUrl,
+          orgName,
           maxSkills,
         });
         if (result.aborted) {

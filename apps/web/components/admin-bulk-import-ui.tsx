@@ -18,13 +18,14 @@ type BulkImportItem = {
 
 type BulkImportResult = {
   parentUrl: string;
+  orgName: string;
   subfolders: string[];
   results: BulkImportItem[];
   summary: { published: number; skipped: number; failed: number };
   aborted?: { subfolder: string; error: string };
 };
 
-async function bulkImportFromUrl(sourceUrl: string): Promise<BulkImportResult> {
+async function bulkImportFromUrl(sourceUrl: string, orgName: string): Promise<BulkImportResult> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 600_000);
 
@@ -34,7 +35,7 @@ async function bulkImportFromUrl(sourceUrl: string): Promise<BulkImportResult> {
       credentials: "include",
       signal: controller.signal,
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ sourceUrl }),
+      body: JSON.stringify({ sourceUrl, orgName }),
     });
     const body = (await response.json().catch(() => ({}))) as BulkImportResult & { error?: string };
 
@@ -48,6 +49,7 @@ async function bulkImportFromUrl(sourceUrl: string): Promise<BulkImportResult> {
 
 export function AdminBulkImportSkillPanel({ onImported }: { onImported: () => Promise<void> }) {
   const [sourceUrl, setSourceUrl] = useState("");
+  const [orgName, setOrgName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<BulkImportResult | null>(null);
@@ -58,7 +60,7 @@ export function AdminBulkImportSkillPanel({ onImported }: { onImported: () => Pr
     setError(null);
     setResult(null);
     try {
-      const importResult = await bulkImportFromUrl(sourceUrl.trim());
+      const importResult = await bulkImportFromUrl(sourceUrl.trim(), orgName.trim());
       setResult(importResult);
       if (importResult.summary.published > 0 || importResult.summary.skipped > 0) {
         await onImported();
@@ -74,10 +76,20 @@ export function AdminBulkImportSkillPanel({ onImported }: { onImported: () => Pr
     <article className={dash.dashboardPanel} style={{ marginBottom: 24 }}>
       <h2>Bulk import skills from GitHub</h2>
       <p className={shell.muted}>
-        Paste a GitHub folder URL containing skill subfolders. Each immediate subfolder is imported
-        as a separate skill. Import stops on the first failure.
+        Paste a GitHub folder URL containing skill subfolders. Specify the org name — each immediate
+        subfolder is imported as <code>@org/subfolder</code>. Import stops on the first failure.
       </p>
       <form className={dash.formPanel} onSubmit={(event) => void onSubmit(event)}>
+        <label htmlFor="admin-bulk-import-org">Org name</label>
+        <input
+          id="admin-bulk-import-org"
+          name="orgName"
+          type="text"
+          placeholder="anthropics"
+          value={orgName}
+          onChange={(event) => setOrgName(event.target.value)}
+          required
+        />
         <label htmlFor="admin-bulk-import-url">GitHub parent folder URL</label>
         <input
           id="admin-bulk-import-url"
@@ -137,7 +149,11 @@ export function AdminBulkImportSkillPanel({ onImported }: { onImported: () => Pr
           </>
         ) : null}
         <div className={shell.actions}>
-          <button className={shell.button} type="submit" disabled={submitting || !sourceUrl.trim()}>
+          <button
+            className={shell.button}
+            type="submit"
+            disabled={submitting || !sourceUrl.trim() || !orgName.trim()}
+          >
             {submitting ? "Importing…" : "Bulk import skills"}
           </button>
         </div>

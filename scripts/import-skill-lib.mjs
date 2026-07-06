@@ -91,14 +91,27 @@ export function pickEntryFile(fileNames) {
 }
 
 export function resolveDescription({ frontmatter, readmeContent, fallbackName }) {
-  if (frontmatter.description?.trim()) return frontmatter.description.trim();
-  if (frontmatter.name?.trim()) return frontmatter.name.trim();
-  if (readmeContent) {
+  let description;
+  if (frontmatter.description?.trim()) {
+    description = frontmatter.description.trim();
+  } else if (frontmatter.name?.trim()) {
+    description = frontmatter.name.trim();
+  } else if (readmeContent) {
     const stripped = readmeContent.replace(/^---[\s\S]*?---\s*/m, "").trim();
     const firstLine = stripped.split("\n").find((line) => line.trim());
-    if (firstLine) return firstLine.replace(/^#\s*/, "").trim();
+    description = firstLine ? firstLine.replace(/^#\s*/, "").trim() : fallbackName;
+  } else {
+    description = fallbackName;
   }
-  return fallbackName;
+  return truncateDescription(description);
+}
+
+const MAX_DESCRIPTION_CHARS = 240;
+
+export function truncateDescription(value) {
+  const trimmed = value.trim();
+  if (trimmed.length <= MAX_DESCRIPTION_CHARS) return trimmed;
+  return `${trimmed.slice(0, MAX_DESCRIPTION_CHARS - 3).trimEnd()}...`;
 }
 
 const MAX_AGENT_DESCRIPTION_CHARS = 12000;

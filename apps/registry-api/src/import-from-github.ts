@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { promisify } from "node:util";
 import type pg from "pg";
 import { getLatestProvenance, listPackageVersionsForName } from "./db.js";
@@ -104,14 +104,27 @@ export function resolveDescription(options: {
   readmeContent?: string;
   fallbackName: string;
 }): string {
-  if (options.frontmatter.description?.trim()) return options.frontmatter.description.trim();
-  if (options.frontmatter.name?.trim()) return options.frontmatter.name.trim();
-  if (options.readmeContent) {
+  let description: string;
+  if (options.frontmatter.description?.trim()) {
+    description = options.frontmatter.description.trim();
+  } else if (options.frontmatter.name?.trim()) {
+    description = options.frontmatter.name.trim();
+  } else if (options.readmeContent) {
     const stripped = options.readmeContent.replace(/^---[\s\S]*?---\s*/m, "").trim();
     const firstLine = stripped.split("\n").find((line) => line.trim());
-    if (firstLine) return firstLine.replace(/^#\s*/, "").trim();
+    description = firstLine ? firstLine.replace(/^#\s*/, "").trim() : options.fallbackName;
+  } else {
+    description = options.fallbackName;
   }
-  return options.fallbackName;
+  return truncateDescription(description);
+}
+
+const MAX_DESCRIPTION_CHARS = 240;
+
+export function truncateDescription(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length <= MAX_DESCRIPTION_CHARS) return trimmed;
+  return `${trimmed.slice(0, MAX_DESCRIPTION_CHARS - 3).trimEnd()}...`;
 }
 
 const MAX_AGENT_DESCRIPTION_CHARS = 12000;
@@ -278,6 +291,17 @@ async function packDirectory(dir: string): Promise<Buffer> {
   return Buffer.isBuffer(stdout) ? stdout : Buffer.from(stdout);
 }
 
+export async function writeImportedFilesToDirectory(
+  dir: string,
+  files: Record<string, string>,
+): Promise<void> {
+  for (const [name, content] of Object.entries(files)) {
+    const filePath = join(dir, name);
+    await mkdir(dirname(filePath), { recursive: true });
+    await writeFile(filePath, content, "utf8");
+  }
+}
+
 export type ImportFromUrlResult =
   | {
       action: "skipped";
@@ -302,11 +326,12 @@ export async function importSkillFromGitHubUrl(options: {
   storage: BlobStorage;
   sourceUrl: string;
   githubToken?: string;
+  orgName?: string;
 }): Promise<ImportFromUrlResult> {
   const token = options.githubToken?.trim() || process.env.GITHUB_TOKEN?.trim();
   const parsed = parseGitHubFolderUrl(options.sourceUrl);
   const folderName = parsed.path.split("/").pop() ?? "skill";
-  const packageName = buildPackageName(parsed.owner, folderName);
+  const packageName = buildPackageName(options.orgName?.trim() || parsed.owner, folderName);
 
   const [{ files, commitSha }, user, repoMeta] = await Promise.all([
     fetchGitHubFolder(parsed, token),
@@ -348,9 +373,7 @@ export async function importSkillFromGitHubUrl(options: {
 
   const tempDir = await mkdtemp(join(tmpdir(), "aipm-import-"));
   try {
-    for (const [name, content] of Object.entries(files)) {
-      await writeFile(join(tempDir, name), content, "utf8");
-    }
+    await writeImportedFilesToDirectory(tempDir, files);
     await writeFile(
       join(tempDir, "aipm.manifest.json"),
       `${JSON.stringify(

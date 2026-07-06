@@ -13,6 +13,7 @@ export const DEFAULT_BULK_IMPORT_MAX_SKILLS = 50;
 
 export type BulkImportFromUrlResult = {
   parentUrl: string;
+  orgName: string;
   subfolders: string[];
   results: Array<ImportFromUrlResult & { subfolder: string }>;
   summary: { published: number; skipped: number; failed: number };
@@ -24,11 +25,13 @@ export async function bulkImportSkillsFromGitHubFolder(options: {
   metadata: MetadataStore;
   storage: BlobStorage;
   sourceUrl: string;
+  orgName: string;
   githubToken?: string;
   maxSkills?: number;
 }): Promise<BulkImportFromUrlResult> {
   const token = options.githubToken?.trim() || process.env.GITHUB_TOKEN?.trim();
   const parentUrl = options.sourceUrl.trim();
+  const orgName = options.orgName.trim();
   const parsed = parseGitHubFolderUrl(parentUrl);
   const maxSkills = options.maxSkills ?? DEFAULT_BULK_IMPORT_MAX_SKILLS;
 
@@ -50,6 +53,7 @@ export async function bulkImportSkillsFromGitHubFolder(options: {
         storage: options.storage,
         sourceUrl: childUrl,
         githubToken: token,
+        orgName,
       });
       results.push({ ...result, subfolder });
       if (result.action === "published") {
@@ -61,6 +65,7 @@ export async function bulkImportSkillsFromGitHubFolder(options: {
       const message = error instanceof Error ? error.message : String(error);
       return {
         parentUrl,
+        orgName,
         subfolders,
         results,
         summary: { published, skipped, failed: 1 },
@@ -71,6 +76,7 @@ export async function bulkImportSkillsFromGitHubFolder(options: {
 
   return {
     parentUrl,
+    orgName,
     subfolders,
     results,
     summary: { published, skipped, failed: 0 },

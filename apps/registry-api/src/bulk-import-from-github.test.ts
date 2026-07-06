@@ -51,12 +51,18 @@ describe("bulkImportSkillsFromGitHubFolder", () => {
         metadata: {} as never,
         storage: {} as never,
         sourceUrl: "https://github.com/anthropics/skills/tree/main/skills",
+        orgName: "my-org",
       }),
     ).resolves.toMatchObject({
       parentUrl: "https://github.com/anthropics/skills/tree/main/skills",
+      orgName: "my-org",
       subfolders: ["alpha-skill", "beta-skill"],
       summary: { published: 1, skipped: 1, failed: 0 },
     });
+
+    expect(importSkillFromGitHubUrl).toHaveBeenCalledWith(
+      expect.objectContaining({ orgName: "my-org" }),
+    );
   });
 
   it("aborts on first failure and returns partial results", async () => {
@@ -79,6 +85,7 @@ describe("bulkImportSkillsFromGitHubFolder", () => {
         metadata: {} as never,
         storage: {} as never,
         sourceUrl: "https://github.com/anthropics/skills/tree/main/skills",
+        orgName: "my-org",
       }),
     ).resolves.toMatchObject({
       summary: { published: 1, skipped: 0, failed: 1 },
