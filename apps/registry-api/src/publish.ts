@@ -127,15 +127,16 @@ export async function readTarballFile(
   try {
     const entries = await listTarballEntries(tgzPath);
     validateTarballEntries(entries);
-    const fileEntries = new Set(
+    const fileEntries = new Map(
       entries
-        .map((entry) => normalizeTarEntry(entry))
-        .filter((entry) => entry && !entry.endsWith("/")),
+        .map((entry) => [normalizeTarEntry(entry), entry] as const)
+        .filter(([normalized]) => normalized && !normalized.endsWith("/")),
     );
-    if (!fileEntries.has(path)) {
+    const tarEntry = fileEntries.get(path);
+    if (!tarEntry) {
       throw new PackageFileNotFoundError(`File not found: ${path}`);
     }
-    const { stdout } = await execFileAsync("tar", ["-xOzf", tgzPath, path], {
+    const { stdout } = await execFileAsync("tar", ["-xOzf", tgzPath, tarEntry], {
       encoding: "buffer",
       maxBuffer: MAX_PACKAGE_FILE_BYTES + 1,
     });

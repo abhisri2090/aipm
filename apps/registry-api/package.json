@@ -1,6 +1,6 @@
 {
   "name": "@aipm-registry/registry-api",
-  "version": "0.2.4",
+  "version": "0.2.10",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
