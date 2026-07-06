@@ -20,16 +20,16 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
-function PackageTitle({ pkg }: { pkg: PackageSummary }) {
+function PackageHeader({ pkg }: { pkg: PackageSummary }) {
   const { scope, skillName } = parsePackageName(pkg.name);
   const orgName = pkg.publisher?.org.name ?? scope;
-  const avatarUrl = pkg.publisher?.user.avatarUrl;
+  const avatarUrl = pkg.publisher?.user?.avatarUrl;
   const avatarLabel =
     pkg.publisher?.user.name ?? pkg.publisher?.user.githubLogin ?? pkg.publisher?.org.name ?? scope;
   const initial = avatarLabel.trim().charAt(0).toUpperCase() || "A";
 
   return (
-    <h3 className={cards.packageTitle}>
+    <div className={cards.packageHeader}>
       {avatarUrl ? (
         <img alt="" className={cards.packageTitleAvatar} src={avatarUrl} />
       ) : (
@@ -37,11 +37,14 @@ function PackageTitle({ pkg }: { pkg: PackageSummary }) {
           {initial}
         </span>
       )}
-      <span className={cards.packageTitleText}>
-        <span className={cards.packageTitleOrg}>{orgName}/</span>
-        <span>{skillName}</span>
-      </span>
-    </h3>
+      <div className={cards.packageHeaderContent}>
+        <h3 className={cards.packageTitle}>
+          <span className={cards.packageTitleOrg}>{orgName}/</span>
+          <span>{skillName}</span>
+        </h3>
+        <p className={cards.resultDescription}>{pkg.description}</p>
+      </div>
+    </div>
   );
 }
 
@@ -53,8 +56,7 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
     <article className={cards.resultCard}>
       <Link href={skillPath} className={cards.resultCardOverlay} aria-label={`View ${pkg.name}`} />
       <div className={cards.resultCardBody}>
-        <PackageTitle pkg={pkg} />
-        <p className={cards.resultDescription}>{pkg.description}</p>
+        <PackageHeader pkg={pkg} />
         {pkg.publisher ? (
           <p className={cards.publisherLine}>
             Published by {pkg.publisher.user.name ?? `@${pkg.publisher.user.githubLogin}`}
@@ -64,6 +66,9 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
         )}
         <div className={cards.meta}>
           <span className={cards.pill}>{pkg.type}</span>
+          {pkg.installCount && pkg.installCount > 0 ? (
+            <span className={cards.pill}>{formatInstallCount(pkg.installCount)}</span>
+          ) : null}
           {isUnverifiedImportedPackage(pkg) ? (
             <span className={cards.pill}>Imported · Unverified</span>
           ) : null}
@@ -83,9 +88,6 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
             </span>
           ))}
           <span className={cards.pill}>{formatDate(pkg.createdAt)}</span>
-          {pkg.installCount && pkg.installCount > 0 ? (
-            <span className={cards.pill}>{formatInstallCount(pkg.installCount)}</span>
-          ) : null}
           <span className={cards.pill}>{formatBytes(pkg.sizeBytes)}</span>
           <span className={cards.pill}>{pkg.license ?? "No license"}</span>
         </div>
