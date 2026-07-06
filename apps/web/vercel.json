@@ -20,7 +20,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com; connect-src 'self' https://www.aipm-registry.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com; connect-src 'self' https://api.aipm-registry.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         }
       ]
     }
@@ -28,22 +28,22 @@
   "redirects": [
     {
       "source": "/v1/auth/github/start",
-      "destination": "https://www.aipm-registry.com/v1/auth/github/start",
+      "destination": "https://api.aipm-registry.com/v1/auth/github/start",
       "permanent": false
     }
   ],
   "rewrites": [
     {
       "source": "/v1/:path*",
-      "destination": "https://www.aipm-registry.com/v1/:path*"
+      "destination": "https://api.aipm-registry.com/v1/:path*"
     },
     {
       "source": "/health",
-      "destination": "https://www.aipm-registry.com/health"
+      "destination": "https://api.aipm-registry.com/health"
     },
     {
       "source": "/ready",
-      "destination": "https://www.aipm-registry.com/ready"
+      "destination": "https://api.aipm-registry.com/ready"
     }
   ]
 }

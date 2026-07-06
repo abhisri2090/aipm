@@ -69,7 +69,7 @@ export type PackageDetail = {
   import?: PackageImportMeta;
 };
 
-export const REGISTRY_API_BASE_URL = (process.env.AIPM_API_BASE_URL ?? "https://www.aipm-registry.com").replace(
+export const REGISTRY_API_BASE_URL = (process.env.AIPM_API_BASE_URL ?? "https://api.aipm-registry.com").replace(
   /\/$/,
   "",
 );

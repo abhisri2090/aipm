@@ -1,15 +1,15 @@
 import type { NextConfig } from "next";
 
 const repoRoot = new URL("../..", import.meta.url).pathname;
-const apiProxyOrigin = process.env.AIPM_API_PROXY_ORIGIN ?? "https://www.aipm-registry.com";
+const apiProxyOrigin = process.env.AIPM_API_PROXY_ORIGIN ?? "https://api.aipm-registry.com";
 const isDev = process.env.NODE_ENV !== "production";
 
 function contentSecurityPolicy(): string {
   // Next.js dev bundles use eval for HMR/source maps; production stays strict.
   const scriptSrc = isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
   const connectSrc = isDev
-    ? "'self' http://127.0.0.1:8080 http://localhost:8080 https://www.aipm-registry.com ws: wss:"
-    : "'self' https://www.aipm-registry.com";
+    ? "'self' http://127.0.0.1:8080 http://localhost:8080 https://api.aipm-registry.com ws: wss:"
+    : "'self' https://api.aipm-registry.com";
   return [
     "default-src 'self'",
     `script-src ${scriptSrc}`,
