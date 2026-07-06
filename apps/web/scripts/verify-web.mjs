@@ -193,7 +193,7 @@ const requiredPages = [
     title: "Special Thanks to the AI Community",
     h1: "AI tools are built on shared work.",
     jsonLd: true,
-    includes: ["NeurIPS 2025 invited speakers", "ICLR 2026 keynotes", "CVPR 2025 keynotes"],
+    includes: ["Global conferences &amp; communities", "NeurIPS", "ICLR", "CVPR", "AI Engineer"],
   },
   { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: true },
 ];
