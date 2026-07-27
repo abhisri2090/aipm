@@ -232,6 +232,7 @@ sudo chmod 600 /etc/aipm-registry.env
 if [ "\$EFFECTIVE_METADATA_BACKEND" = "postgres" ]; then
   DATABASE_URL="\$EFFECTIVE_DATABASE_URL" AIPM_DATA_DIR=/var/lib/aipm node /opt/aipm/registry/dist/migrate-file-to-postgres.js
 fi
+sudo npm install -g pm2@latest
 sudo tee /usr/local/bin/aipm-refresh-secrets >/dev/null <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -279,25 +280,82 @@ tmp="\$(mktemp /run/aipm-registry-secrets.env.XXXXXX)"
   printf 'AIPM_METADATA_BACKEND=postgres\n'
 } > "\$tmp"
 mv "\$tmp" /run/aipm-registry-secrets.env
+chown root:aipm /run/aipm-registry-secrets.env
+chmod 640 /run/aipm-registry-secrets.env
 EOF
 sudo chmod 750 /usr/local/bin/aipm-refresh-secrets
-sudo tee /etc/systemd/system/aipm-registry.service >/dev/null <<'EOF'
+sudo tee /usr/local/bin/aipm-registry-start.mjs >/dev/null <<'EOF'
+#!/usr/bin/env node
+import { readFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+
+for (const file of ['/etc/aipm-registry.env', '/run/aipm-registry-secrets.env']) {
+  let text = '';
+  try {
+    text = readFileSync(file, 'utf8');
+  } catch {
+    continue;
+  }
+  for (const line of text.split('\n')) {
+    if (!line || line.startsWith('#')) continue;
+    const index = line.indexOf('=');
+    if (index <= 0) continue;
+    process.env[line.slice(0, index)] = line.slice(index + 1);
+  }
+}
+
+process.chdir('/opt/aipm/registry');
+const child = spawn('/usr/bin/node', ['/opt/aipm/registry/dist/index.js'], {
+  cwd: '/opt/aipm/registry',
+  env: process.env,
+  stdio: 'inherit',
+});
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => child.kill(signal));
+}
+
+child.on('exit', (code, signal) => {
+  if (signal) process.kill(process.pid, signal);
+  process.exit(code ?? 0);
+});
+EOF
+sudo chmod 755 /usr/local/bin/aipm-registry-start.mjs
+sudo mkdir -p /var/log/aipm-registry
+sudo chown -R aipm:aipm /var/log/aipm-registry
+sudo tee /opt/aipm/aipm-registry.ecosystem.config.cjs >/dev/null <<'EOF'
+module.exports = {
+  apps: [
+    {
+      name: "aipm-registry",
+      cwd: "/opt/aipm/registry",
+      script: "/usr/local/bin/aipm-registry-start.mjs",
+      interpreter: "/usr/bin/node",
+      exec_mode: "fork",
+      instances: 1,
+      time: true,
+      max_memory_restart: "512M",
+      out_file: "/var/log/aipm-registry/out.log",
+      error_file: "/var/log/aipm-registry/error.log",
+      uid: "aipm",
+      gid: "aipm",
+      env: {
+        NODE_ENV: "production",
+      },
+    },
+  ],
+};
+EOF
+sudo chown aipm:aipm /opt/aipm/aipm-registry.ecosystem.config.cjs
+sudo tee /etc/systemd/system/aipm-registry-secrets.service >/dev/null <<'EOF'
 [Unit]
-Description=AIPM Registry API
+Description=Refresh AIPM registry runtime secrets
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
-User=aipm
-Group=aipm
-WorkingDirectory=/opt/aipm/registry
-EnvironmentFile=/etc/aipm-registry.env
-EnvironmentFile=-/run/aipm-registry-secrets.env
-ExecStartPre=+/usr/local/bin/aipm-refresh-secrets
-ExecStart=/usr/bin/node /opt/aipm/registry/dist/index.js
-Restart=always
-RestartSec=5
+Type=oneshot
+ExecStart=/usr/local/bin/aipm-refresh-secrets
 
 [Install]
 WantedBy=multi-user.target
@@ -365,8 +423,24 @@ Persistent=true
 WantedBy=timers.target
 EOF
 sudo systemctl daemon-reload
-sudo systemctl enable aipm-registry >/dev/null
-sudo systemctl restart aipm-registry
+sudo systemctl stop aipm-registry >/dev/null 2>&1 || true
+sudo systemctl disable aipm-registry >/dev/null 2>&1 || true
+sudo systemctl stop pm2-aipm >/dev/null 2>&1 || true
+sudo systemctl disable pm2-aipm >/dev/null 2>&1 || true
+sudo systemctl enable aipm-registry-secrets >/dev/null
+sudo systemctl start aipm-registry-secrets
+sudo env PATH="\$PATH:/usr/bin:/usr/local/bin" pm2 startup systemd -u root --hp /root >/dev/null
+sudo mkdir -p /etc/systemd/system/pm2-root.service.d
+sudo tee /etc/systemd/system/pm2-root.service.d/override.conf >/dev/null <<'EOF'
+[Unit]
+After=network-online.target aipm-registry-secrets.service
+Wants=network-online.target aipm-registry-secrets.service
+EOF
+sudo systemctl daemon-reload
+sudo pm2 delete aipm-registry >/dev/null 2>&1 || true
+sudo pm2 start /opt/aipm/aipm-registry.ecosystem.config.cjs --update-env
+sudo pm2 save
+sudo systemctl enable --now pm2-root >/dev/null
 sudo systemctl enable --now aipm-metadata-backup.timer >/dev/null
 sudo tee /etc/nginx/sites-available/aipm-registry >/dev/null <<'NGINX'
 server {

@@ -6,6 +6,7 @@
 curl https://api.aipm-registry.com/health
 curl https://api.aipm-registry.com/ready
 ./infra/azure/verify-web-cutover.sh
+pnpm prod:smoke
 ```
 
 If `api.aipm-registry.com` times out, check the VM state without starting
@@ -44,6 +45,63 @@ aipm add @<org>/<private-package>@<version> --registry https://api.aipm-registry
 aipm logout --registry https://api.aipm-registry.com
 AIPM_TOKEN=<org-install-token> aipm add @<org>/<private-package>@<version> --registry https://api.aipm-registry.com --target cursor --ci
 ```
+
+## Production Smoke Tests
+
+Run the smoke script after production deploys, CLI releases, auth changes,
+package file handling changes, or website cutovers:
+
+```bash
+pnpm prod:smoke
+```
+
+The default read-only smoke checks:
+
+- Website HTTPS response, security headers, title, public routes, `robots.txt`,
+  and `sitemap.xml`.
+- Website rewrite to the registry API through `/v1/packages`.
+- API `/health`, `/ready`, auth config, and public package search.
+- Public package detail, package file listing, entry file content, tarball
+  download, and website package page.
+- Publish auth: unauthenticated publish must return `401` or `403`.
+- CLI clone/install path: `aipm init` plus `aipm add` into a clean project with
+  a Cursor target.
+
+Print the checklist without running network checks:
+
+```bash
+pnpm prod:smoke:list
+```
+
+For staging or local checks:
+
+```bash
+WEB_URL=https://staging.example.com API_URL=https://api-staging.example.com pnpm prod:smoke
+WEB_URL=http://127.0.0.1:3000 API_URL=http://127.0.0.1:8080 pnpm prod:smoke -- --allow-http
+```
+
+Publish smoke is intentionally opt-in because published versions are immutable.
+Reserve a dedicated package such as `@aipm/prod-smoke`, generate a fresh
+5-minute publish token for that exact package, then run:
+
+```bash
+AIPM_SMOKE_PACKAGE=@aipm/prod-smoke \
+AIPM_TOKEN=<fresh-publish-token> \
+pnpm prod:smoke -- --require-publish
+```
+
+The script publishes a timestamped `0.0.<epoch>` version and installs that exact
+version into a temporary project.
+
+Private package install smoke is also optional:
+
+```bash
+AIPM_PRIVATE_PACKAGE=@org/private-skill@1.0.0 \
+AIPM_INSTALL_TOKEN=<org-install-token> \
+pnpm prod:smoke
+```
+
+Do not paste tokens into chat, logs, or committed files.
 
 ## Deploy
 
@@ -116,8 +174,8 @@ admin password, and the API checks both the hash and the allowlist before
 issuing a short-lived admin session cookie.
 
 The VM's system-assigned managed identity needs `Key Vault Secrets User` on the
-vault. The deploy script fetches the secrets through that identity during the
-VM update and writes a root-readable environment file for the systemd service.
+vault. The deploy script installs a secrets refresh service that writes
+`/run/aipm-registry-secrets.env` as `root:aipm` before PM2 starts the API.
 
 ## Rollback
 
@@ -145,7 +203,7 @@ artifact.
 5. Restart the service:
 
 ```bash
-sudo systemctl restart aipm-registry
+sudo pm2 restart aipm-registry
 curl http://127.0.0.1:8080/ready
 ```
 
@@ -171,9 +229,31 @@ sudo certbot renew --dry-run
 ## Useful VM Commands
 
 ```bash
-sudo systemctl status aipm-registry
-sudo journalctl -u aipm-registry -n 200 --no-pager
+sudo systemctl status pm2-root
+sudo pm2 status
+sudo pm2 logs aipm-registry --lines 200
+sudo pm2 monit
 sudo nginx -t
 sudo tail -n 100 /var/log/nginx/error.log
 sudo systemctl status aipm-metadata-backup.timer
+```
+
+## PM2 Runtime
+
+Production runs PM2 under `pm2-root.service`; the app process itself drops to
+the `aipm` user through the PM2 ecosystem `uid`/`gid` settings. The old direct
+`aipm-registry.service` is disabled by the deploy script to avoid two Node
+processes fighting for port 8080.
+
+Typical PM2 commands:
+
+```bash
+sudo systemctl status pm2-root
+sudo systemctl restart pm2-root
+sudo systemctl status aipm-registry-secrets
+sudo systemctl start aipm-registry-secrets
+sudo pm2 status
+sudo pm2 logs aipm-registry --lines 200
+sudo pm2 restart aipm-registry
+sudo pm2 save
 ```

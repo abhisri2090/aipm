@@ -28,6 +28,8 @@
     "local:seed": "node scripts/seed-from-public-registry.mjs",
     "local:db:pull": "node scripts/pull-prod-db-to-local.mjs",
     "local:check": "node scripts/check-local-safety-docs.mjs",
+    "prod:smoke": "node scripts/production-smoke.mjs",
+    "prod:smoke:list": "node scripts/production-smoke.mjs --list",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "aipm": "node apps/cli/dist/bin.cjs",
     "registry": "pnpm --filter @aipm-registry/registry-api build && pnpm --filter @aipm-registry/registry-api start",
