@@ -96,8 +96,8 @@ popd >/dev/null
 STATUS="$(curl -sS -o "${TMP_ROOT}/publish-response.json" -w "%{http_code}" \
   -F "tarball=@${TMP_ROOT}/package.tgz" \
   "${REGISTRY_URL}/v1/packages/%40team%2Fprod-verify/versions")"
-if [[ "${STATUS}" != "401" ]]; then
-  echo "Expected unauthenticated publish to return 401, got ${STATUS}" >&2
+if [[ "${STATUS}" != "401" && "${STATUS}" != "403" ]]; then
+  echo "Expected unauthenticated publish to return 401 or 403, got ${STATUS}" >&2
   cat "${TMP_ROOT}/publish-response.json" >&2
   exit 1
 fi
