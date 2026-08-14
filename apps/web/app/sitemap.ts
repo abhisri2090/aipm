@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "../lib/registry";
+import { SEO_GUIDES } from "../lib/seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -28,6 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/changelog",
     "/templates",
     "/thanks",
+    ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
   ];
   const now = new Date();

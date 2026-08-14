@@ -196,6 +196,62 @@ const requiredPages = [
     includes: ["Global conferences &amp; communities", "NeurIPS", "ICLR", "CVPR", "AI Engineer"],
   },
   { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: true },
+  {
+    path: "/guides/ai-package-manager",
+    title: "What Is an AI Package Manager?",
+    h1: "What is an AI package manager?",
+    jsonLd: true,
+    includes: ["Short answer", "AIPM gives you a registry and a CLI", "Is an AI package manager the same as npm?"],
+  },
+  {
+    path: "/guides/agent-package-manager",
+    title: "Agent Package Manager for AI Workflows",
+    h1: "What is an agent package manager?",
+    jsonLd: true,
+    includes: ["Short answer", "Agents need instructions", "Does an agent package manager run the agent?"],
+  },
+  {
+    path: "/guides/prompt-package-manager",
+    title: "Prompt Package Manager for Teams",
+    h1: "How do teams manage prompts like packages?",
+    jsonLd: true,
+    includes: ["Short answer", "Copy-paste does not scale", "Should every prompt become a package?"],
+  },
+  {
+    path: "/guides/mcp-package-manager",
+    title: "MCP Package Manager for AI Tool Setup",
+    h1: "How can teams package MCP setup?",
+    jsonLd: true,
+    includes: ["Short answer", "MCP setup has many small parts", "Should MCP secrets go into a package?"],
+  },
+  {
+    path: "/guides/version-ai-prompts",
+    title: "How to Version AI Prompts in a Repo",
+    h1: "How do you version AI prompts in a repo?",
+    jsonLd: true,
+    includes: ["Short answer", "Move prompts out of chat", "Why not keep prompts only in a shared document?"],
+  },
+  {
+    path: "/guides/share-cursor-rules",
+    title: "How to Share Cursor Rules Across a Team",
+    h1: "How do you share Cursor rules across a team?",
+    jsonLd: true,
+    includes: ["Short answer", "Cursor rules should be visible", "Does AIPM replace Cursor?"],
+  },
+  {
+    path: "/guides/reusable-claude-skills",
+    title: "How to Publish Reusable Claude Skills",
+    h1: "How do you publish reusable Claude skills?",
+    jsonLd: true,
+    includes: ["Short answer", "Start with one repeated job", "What should a beginner include first?"],
+  },
+  {
+    path: "/guides/ai-agent-instructions-git",
+    title: "How to Manage AI Agent Instructions in Git",
+    h1: "How do you manage AI agent instructions in Git?",
+    jsonLd: true,
+    includes: ["Short answer", "Instructions are part of the project", "Why put AI instructions in Git?"],
+  },
 ];
 
 const privatePages = ["/login", "/cli/login", "/dashboard", "/dashboard/profile", "/dashboard/orgs/new"];
@@ -311,6 +367,9 @@ assertIncludes("/", homePage.text, 'href="/templates"');
 assertIncludes("/", homePage.text, 'href="/targets"');
 assertIncludes("/", homePage.text, 'href="/examples"');
 assertIncludes("/", homePage.text, 'href="/glossary"');
+assertIncludes("/", homePage.text, 'href="/guides/ai-package-manager"');
+assertIncludes("/", homePage.text, 'href="/guides/agent-package-manager"');
+assertIncludes("/", homePage.text, 'href="/guides/version-ai-prompts"');
 
 for (const path of privatePages) {
   const { response, text } = await fetchText(path);
@@ -327,7 +386,7 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
-for (const path of ["/registry", "/publish", "/publish/guide", "/install", "/use", "/commands", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
+for (const path of ["/registry", "/publish", "/publish/guide", "/install", "/use", "/commands", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/guides/ai-package-manager", "/guides/agent-package-manager", "/guides/prompt-package-manager", "/guides/mcp-package-manager", "/guides/version-ai-prompts", "/guides/share-cursor-rules", "/guides/reusable-claude-skills", "/guides/ai-agent-instructions-git", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
 
@@ -370,6 +429,14 @@ assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/templates`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/targets`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/examples`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/glossary`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/ai-package-manager`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/agent-package-manager`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/prompt-package-manager`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/mcp-package-manager`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/version-ai-prompts`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/share-cursor-rules`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/reusable-claude-skills`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/ai-agent-instructions-git`);
 
 const securityPolicy = await readFile(resolve(repoRoot, "SECURITY.md"), "utf8");
 assertIncludes("SECURITY.md", securityPolicy, "aipm publish preview");

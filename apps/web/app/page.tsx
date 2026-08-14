@@ -313,6 +313,18 @@ export default async function HomePage() {
           <h2>Learn the basics</h2>
           <p>Read practical guides for creating safe, useful AI skills.</p>
         </Link>
+        <Link className={cards.guideCard} href="/guides/ai-package-manager">
+          <h2>What is an AI package manager?</h2>
+          <p>Understand AIPM, AI skills, prompt packages, and reusable assistant setup.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/agent-package-manager">
+          <h2>Agent package manager guide</h2>
+          <p>Learn how packages help AI agents reuse project workflows safely.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/version-ai-prompts">
+          <h2>Version AI prompts</h2>
+          <p>Keep prompts, rules, and instructions in Git instead of losing them in chat.</p>
+        </Link>
         <Link className={cards.guideCard} href="/popular-skills">
           <h2>Popular skill ideas</h2>
           <p>Start with high-value skills for code review, tests, docs, security, MCP setup, and more.</p>
