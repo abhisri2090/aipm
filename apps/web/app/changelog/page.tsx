@@ -52,8 +52,9 @@ const entries = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Changelog",
-  description: "Recent AIPM updates across the CLI, registry API, website, and dashboard.",
+  title: "AIPM Changelog and AI Package Manager Release Notes",
+  description:
+    "Track AIPM CLI, registry, dashboard, SEO, publishing, and AI skill package updates.",
   path: "/changelog",
   keywords: ["AIPM changelog", "AIPM release notes", "AI package manager updates", "AI skill registry updates"],
 });
@@ -69,7 +70,7 @@ export default function ChangelogPage() {
             "@type": "WebPage",
             name: "AIPM Changelog",
             description:
-              "Recent AIPM updates across the CLI, registry API, website, and dashboard.",
+              "Track AIPM CLI, registry, dashboard, SEO, publishing, and AI skill package updates.",
             url: "https://aipm-registry.com/changelog",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),

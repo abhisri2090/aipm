@@ -80,9 +80,9 @@ const practices = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AI Best Practices for Reusable Skills",
+  title: "AI Skill Best Practices for Reusable Assistant Workflows",
   description:
-    "A simple guide to writing safe and reusable AI skills with AIPM.",
+    "Write safe, testable, reusable AI skills for Cursor, Claude, Codex, and other assistants with AIPM.",
   path: "/ai-practices",
   keywords: [
     "AI best practices",
@@ -106,7 +106,7 @@ export default function AiPracticesPage() {
             "@type": "Article",
             headline: "AI Best Practices for Reusable Skills",
             description:
-              "A simple guide to writing safe and reusable AI skills with AIPM.",
+              "Write safe, testable, reusable AI skills for Cursor, Claude, Codex, and other assistants with AIPM.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
             mainEntityOfPage: "https://aipm-registry.com/ai-practices",

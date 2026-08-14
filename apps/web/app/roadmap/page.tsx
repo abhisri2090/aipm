@@ -37,7 +37,7 @@ const sections = [
   {
     title: "Platform expansion",
     items: [
-      "More adapters for AI tools and editors beyond Cursor, Claude, and Codex workflows.",
+      "More adapters for AI tools, editors, and assistant targets beyond Cursor, Claude, and Codex workflows.",
       "Dependency resolution, lockfiles, conflict detection, and offline reinstall from local cache.",
       "AIPM MCP server so agents can find and install missing skills during work.",
       "Desktop app and enterprise registry options after the CLI and hosted registry are stable.",
@@ -46,9 +46,9 @@ const sections = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Product Roadmap",
+  title: "AIPM Roadmap for AI Package Manager Features",
   description:
-    "See what AIPM has now, what comes next, and what may come later.",
+    "See planned AIPM features for AI skill installs, publishing, package trust, MCP bundles, and assistant targets.",
   path: "/roadmap",
   keywords: [
     "AIPM roadmap",
@@ -70,7 +70,7 @@ export default function RoadmapPage() {
             "@type": "WebPage",
             name: "AIPM Product Roadmap",
             description:
-              "See what AIPM has now, what comes next, and what may come later.",
+              "See planned AIPM features for AI skill installs, publishing, package trust, MCP bundles, and assistant targets.",
             url: "https://aipm-registry.com/roadmap",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),

@@ -29,9 +29,9 @@ const futureWork = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Terms and Acceptable Use",
+  title: "AIPM Acceptable Use Policy for AI Skill Packages",
   description:
-    "Simple rules for publishing and installing public AIPM packages.",
+    "Read AIPM rules for publishing public AI skill packages, avoiding unsafe content, and using package names honestly.",
   path: "/terms",
   keywords: [
     "AIPM terms",
@@ -53,7 +53,7 @@ export default function TermsPage() {
             "@type": "WebPage",
             name: "AIPM Terms and Acceptable Use",
             description:
-              "Simple rules for publishing and installing public AIPM packages.",
+              "Read AIPM rules for publishing public AI skill packages, avoiding unsafe content, and using package names honestly.",
             url: "https://aipm-registry.com/terms",
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),

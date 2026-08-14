@@ -36,9 +36,9 @@ const templates = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Skill Templates",
+  title: "AIPM Skill Templates for Code Review, Issues, and Releases",
   description:
-    "Choose a starter template for an AIPM skill.",
+    "Create reusable AI skills faster with AIPM templates for code review, issue summaries, release notes, and blank packages.",
   path: "/templates",
   keywords: [
     "AIPM templates",
@@ -61,7 +61,7 @@ export default function TemplatesPage() {
             "@type": "CollectionPage",
             name: "AIPM Skill Templates",
             description:
-              "Choose a starter template for an AIPM skill.",
+              "Create reusable AI skills faster with AIPM templates for code review, issue summaries, release notes, and blank packages.",
             url: "https://aipm-registry.com/templates",
             hasPart: templates.map((template) => ({
               "@type": "HowTo",
