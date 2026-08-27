@@ -3,6 +3,7 @@ import type { AuthEmailChallengeRow, UserRow } from "./db.js";
 import {
   requestAuthCode,
   resetAuthRateLimits,
+  resolveTestAuthPin,
   verifyAuthCode,
   VERIFICATION_CODE_TTL_MS,
   VERIFICATION_RESEND_INTERVAL_MS,
@@ -232,5 +233,88 @@ describe("verifyAuthCode", () => {
     if (!signup.ok) return;
     expect(signup.body.isNewUser).toBe(true);
     expect(signup.body.user.authProvider).toBe("email");
+  });
+});
+
+describe("resolveTestAuthPin", () => {
+  it("returns the pin for an exact allowlisted email", () => {
+    expect(
+      resolveTestAuthPin("Test.User@Example.com", {
+        AIPM_TEST_AUTH_EMAILS: "other@example.com, test.user@example.com",
+        AIPM_TEST_AUTH_PIN: "246801",
+      }),
+    ).toBe("246801");
+  });
+
+  it("returns null when env is unset, pin is invalid, or email is not listed", () => {
+    expect(resolveTestAuthPin("test.user@example.com", {})).toBeNull();
+    expect(
+      resolveTestAuthPin("test.user@example.com", {
+        AIPM_TEST_AUTH_EMAILS: "test.user@example.com",
+        AIPM_TEST_AUTH_PIN: "12",
+      }),
+    ).toBeNull();
+    expect(
+      resolveTestAuthPin("other@example.com", {
+        AIPM_TEST_AUTH_EMAILS: "test.user@example.com",
+        AIPM_TEST_AUTH_PIN: "246801",
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("requestAuthCode test pin", () => {
+  it("hashes the test pin, skips email, and omits devCode", async () => {
+    const store = makeStore({});
+    let sent = 0;
+    const sender = {
+      isEnabled: true,
+      async sendAuthCodeEmail() {
+        sent += 1;
+        return { sent: true, provider: "azure" as const };
+      },
+    };
+    const result = await requestAuthCode(
+      store,
+      sender,
+      { email: "test.user@example.com" },
+      { devAuth: true, testAuthPin: "246801" },
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.body.emailSent).toBe(false);
+    expect(result.body.devCode).toBeUndefined();
+    expect(sent).toBe(0);
+    const challenge = await store.getActiveAuthEmailChallenge("test.user@example.com");
+    expect(challenge?.code_hash).toBe(sha256Hex("246801"));
+  });
+
+  it("still verifies the test pin through verifyAuthCode", async () => {
+    const store = makeStore({});
+    const requested = await requestAuthCode(
+      store,
+      disabledSender,
+      { email: "test.user@example.com" },
+      { devAuth: false, testAuthPin: "246801" },
+    );
+    expect(requested.ok).toBe(true);
+    const verify = await verifyAuthCode(store, { email: "test.user@example.com", code: "246801" });
+    expect(verify.ok).toBe(true);
+    const failed = await verifyAuthCode(
+      makeStore({
+        challenge: {
+          id: "challenge-1",
+          email: "test.user@example.com",
+          code_hash: sha256Hex("246801"),
+          attempts: 0,
+          expires_at: new Date(Date.now() + VERIFICATION_CODE_TTL_MS),
+          consumed_at: null,
+          request_ip: null,
+          created_at: new Date(),
+        },
+      }),
+      { email: "test.user@example.com", code: "000000" },
+    );
+    expect(failed).toMatchObject({ ok: false, status: 400 });
   });
 });

@@ -120,6 +120,7 @@ import {
   getVerifiedUserEmail,
   newVerificationCode,
   requestAuthCode,
+  resolveTestAuthPin,
   verifyAuthCode,
   VERIFICATION_CODE_TTL_MS,
   VERIFICATION_MAX_ATTEMPTS,
@@ -770,7 +771,10 @@ export async function createApp(): Promise<FastifyInstance> {
       store,
       emailSender,
       { email: request.body?.email, requestIp: requestIp(request) },
-      { devAuth: isDevAuthEnabled(process.env) },
+      {
+        devAuth: isDevAuthEnabled(process.env),
+        testAuthPin: resolveTestAuthPin(request.body?.email),
+      },
     );
     if (!result.ok) {
       if (result.retryAfter) reply.header("Retry-After", String(result.retryAfter));

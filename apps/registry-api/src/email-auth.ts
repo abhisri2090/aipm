@@ -194,11 +194,28 @@ export type VerifyAuthCodeResult =
     }
   | { ok: false; status: number; error: string; retryAfter?: number };
 
+const TEST_AUTH_PIN_REGEX = /^\d{6}$/;
+
+export function resolveTestAuthPin(
+  email: string | null | undefined,
+  env: NodeJS.Dict<string> = process.env,
+): string | null {
+  const normalized = normalizeAuthEmail(email);
+  if (!normalized) return null;
+  const pin = env.AIPM_TEST_AUTH_PIN?.trim() ?? "";
+  if (!TEST_AUTH_PIN_REGEX.test(pin)) return null;
+  const allowlist = (env.AIPM_TEST_AUTH_EMAILS ?? "")
+    .split(",")
+    .map((value) => normalizeAuthEmail(value))
+    .filter((value): value is string => Boolean(value));
+  return allowlist.includes(normalized) ? pin : null;
+}
+
 export async function requestAuthCode(
   store: EmailAuthStore,
   emailSender: Pick<EmailSender, "sendAuthCodeEmail" | "isEnabled">,
   input: { email?: string | null; requestIp?: string | null },
-  options: { devAuth: boolean; now?: () => number },
+  options: { devAuth: boolean; now?: () => number; testAuthPin?: string | null },
 ): Promise<RequestAuthCodeResult> {
   const now = options.now?.() ?? Date.now();
   const email = normalizeAuthEmail(input.email);
@@ -258,7 +275,9 @@ export async function requestAuthCode(
     };
   }
 
-  const code = newVerificationCode();
+  const testAuthPin =
+    options.testAuthPin && TEST_AUTH_PIN_REGEX.test(options.testAuthPin) ? options.testAuthPin : null;
+  const code = testAuthPin ?? newVerificationCode();
   const expiresAt = new Date(now + VERIFICATION_CODE_TTL_MS);
   await store.createAuthEmailChallenge({
     email,
@@ -268,11 +287,13 @@ export async function requestAuthCode(
   });
 
   let emailSent = false;
-  try {
-    const emailResult = await emailSender.sendAuthCodeEmail({ to: email, code, expiresAt });
-    emailSent = emailResult.sent;
-  } catch {
-    return { ok: false, status: 502, error: "Could not send the verification email. Try again later." };
+  if (!testAuthPin) {
+    try {
+      const emailResult = await emailSender.sendAuthCodeEmail({ to: email, code, expiresAt });
+      emailSent = emailResult.sent;
+    } catch {
+      return { ok: false, status: 502, error: "Could not send the verification email. Try again later." };
+    }
   }
 
   await store.recordAuthEvent({
@@ -282,7 +303,7 @@ export async function requestAuthCode(
     metadata: { emailSent },
   });
 
-  const devCode = !emailSender.isEnabled && options.devAuth ? { devCode: code } : {};
+  const devCode = !testAuthPin && !emailSender.isEnabled && options.devAuth ? { devCode: code } : {};
   return {
     ok: true,
     status: 201,

@@ -269,6 +269,8 @@ tmp="\$(mktemp /run/aipm-registry-secrets.env.XXXXXX)"
   email_connection_string="\$(fetch_secret_optional aipm-email-connection-string)"
   email_sender_address="\$(fetch_secret_optional aipm-email-sender-address)"
   email_from_name="\$(fetch_secret_optional aipm-email-from-name)"
+  test_auth_emails="\$(fetch_secret_optional aipm-test-auth-emails)"
+  test_auth_pin="\$(fetch_secret_optional aipm-test-auth-pin)"
   if [ -n "\$github_client_id" ]; then printf 'GITHUB_CLIENT_ID=%s\n' "\$github_client_id"; fi
   if [ -n "\$github_client_secret" ]; then printf 'GITHUB_CLIENT_SECRET=%s\n' "\$github_client_secret"; fi
   if [ -n "\$session_secret" ]; then printf 'AIPM_SESSION_SECRET=%s\n' "\$session_secret"; fi
@@ -277,6 +279,8 @@ tmp="\$(mktemp /run/aipm-registry-secrets.env.XXXXXX)"
   if [ -n "\$email_connection_string" ]; then printf 'AZURE_COMMUNICATION_EMAIL_CONNECTION_STRING=%s\n' "\$email_connection_string"; fi
   if [ -n "\$email_sender_address" ]; then printf 'AIPM_EMAIL_SENDER_ADDRESS=%s\n' "\$email_sender_address"; fi
   if [ -n "\$email_from_name" ]; then printf 'AIPM_EMAIL_FROM_NAME=%s\n' "\$email_from_name"; fi
+  if [ -n "\$test_auth_emails" ]; then printf 'AIPM_TEST_AUTH_EMAILS=%s\n' "\$test_auth_emails"; fi
+  if [ -n "\$test_auth_pin" ]; then printf 'AIPM_TEST_AUTH_PIN=%s\n' "\$test_auth_pin"; fi
   printf 'AIPM_METADATA_BACKEND=postgres\n'
 } > "\$tmp"
 mv "\$tmp" /run/aipm-registry-secrets.env

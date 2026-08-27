@@ -80,6 +80,33 @@ WEB_URL=https://staging.example.com API_URL=https://api-staging.example.com pnpm
 WEB_URL=http://127.0.0.1:3000 API_URL=http://127.0.0.1:8080 pnpm prod:smoke -- --allow-http
 ```
 
+## Package user-flow e2e
+
+This headed script logs into the dashboard as the dedicated test publisher,
+publishes a disposable `@<org>/e2e-<timestamp>` package, installs it, then
+deletes it. It is not part of `pnpm test` or CI.
+
+Store the API login bypass in Key Vault (same vault as the other runtime
+secrets). The deploy refresh script maps them to `AIPM_TEST_AUTH_EMAILS` and
+`AIPM_TEST_AUTH_PIN`:
+
+    aipm-test-auth-emails=<exact test email, comma-separated if more than one>
+    aipm-test-auth-pin=<6-digit pin>
+
+Then redeploy or refresh secrets and restart the API so the process picks them
+up. Keep the same email and PIN in local `.env.e2e` for the Playwright script.
+Do not commit `.env.e2e`.
+
+Local setup:
+
+    cp .env.e2e.example .env.e2e
+    # fill AIPM_TEST_EMAIL, AIPM_TEST_AUTH_PIN, AIPM_TEST_ORG
+    pnpm exec playwright install chromium
+    pnpm e2e:user
+
+Deploy the API with the test-PIN env vars before the first run. Do not paste
+the PIN or publish tokens into chat, logs, or git.
+
 Publish smoke is intentionally opt-in because published versions are immutable.
 Reserve a dedicated package such as `@aipm/prod-smoke`, generate a fresh
 5-minute publish token for that exact package, then run:
@@ -153,6 +180,8 @@ aipm-github-client-secret
 aipm-session-secret
 AIPM-ADMIN-PASSWORD-SHA256 (Key Vault secret name)
 AIPM-ADMIN-ALLOWED-USERNAMES (Key Vault secret name)
+aipm-test-auth-emails
+aipm-test-auth-pin
 ```
 
 The deploy script maps those vault secrets onto runtime env vars

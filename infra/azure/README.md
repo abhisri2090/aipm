@@ -202,6 +202,13 @@ aipm-email-sender-address
 aipm-email-from-name
 ```
 
+Optional e2e login secret names (allowlisted test emails + 6-digit PIN):
+
+```txt
+aipm-test-auth-emails
+aipm-test-auth-pin
+```
+
 ## Email Invites
 
 AIPM uses Azure Communication Services Email for organization invite emails.
