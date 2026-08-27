@@ -385,6 +385,236 @@ export const SEO_GUIDES: SeoGuide[] = [
       },
     ],
   },
+  {
+    slug: "share-ai-prompts-team",
+    title: "How to Share AI Prompts With a Team",
+    h1: "How do you share AI prompts with a team?",
+    description:
+      "A simple guide for sharing useful AI prompts with teammates without losing context or copying old versions.",
+    answer:
+      "Put important prompts in shared project files, explain when to use them, and publish reusable prompts as AIPM packages.",
+    keywords: ["share AI prompts", "team prompts", "prompt management", "AIPM prompts"],
+    sections: [
+      {
+        title: "A shared prompt needs context",
+        body:
+          "A prompt is not just text. It should also explain when to use it, what input it needs, and what good output looks like.",
+      },
+      {
+        title: "Files are better than chat history",
+        body:
+          "If a teammate has to search chat history to find a prompt, the prompt is already hard to reuse. A file gives the team one clear place to look.",
+      },
+      {
+        title: "Packages help across projects",
+        body:
+          "If the same prompt helps more than one project, make it an AIPM package. Then each project can install the same version.",
+      },
+    ],
+    steps: [
+      "Pick one prompt the team uses often.",
+      "Write the prompt in a project file.",
+      "Add a short note that explains when to use it.",
+      "Add one example input and output.",
+      "Publish it as an AIPM package if more projects need it.",
+    ],
+    faqs: [
+      {
+        question: "Should team prompts be public?",
+        answer:
+          "Only publish prompts that are safe to share. Keep private business details, customer data, and secrets out of public packages.",
+      },
+      {
+        question: "Why not paste prompts in Slack?",
+        answer:
+          "Slack is useful for discussion, but a project file is easier to review, update, and install.",
+      },
+    ],
+  },
+  {
+    slug: "manage-cursor-rules-git",
+    title: "How to Manage Cursor Rules in Git",
+    h1: "How do you manage Cursor rules in Git?",
+    description:
+      "Learn how to keep Cursor rules in Git so a team can review, update, and reuse them safely.",
+    answer:
+      "Save Cursor rules as project files, commit them to Git, and package reusable rules with AIPM when other projects need them.",
+    keywords: ["Cursor rules Git", "manage Cursor rules", "Cursor AI rules", "AIPM Cursor"],
+    sections: [
+      {
+        title: "Rules should be reviewable",
+        body:
+          "Cursor rules can change how AI suggestions behave. A team should be able to read and review those rules before they spread.",
+      },
+      {
+        title: "Git shows what changed",
+        body:
+          "When a rule is in Git, teammates can see the change, discuss it, and roll it back if it causes bad output.",
+      },
+      {
+        title: "Reusable rules can become packages",
+        body:
+          "A rule for code review, tests, release notes, or docs can be published once and installed into other projects with AIPM.",
+      },
+    ],
+    steps: [
+      "Create a clear folder for Cursor rules.",
+      "Use names that explain the task.",
+      "Commit the rules to Git.",
+      "Review rule changes in pull requests.",
+      "Package rules that are useful in many projects.",
+    ],
+    faqs: [
+      {
+        question: "Should every Cursor rule be shared?",
+        answer:
+          "No. Keep project-only rules in that project. Share rules that help many repos.",
+      },
+      {
+        question: "Can AIPM install Cursor rules?",
+        answer:
+          "AIPM can install target-specific AI files for Cursor workflows. The exact package decides which files are included.",
+      },
+    ],
+  },
+  {
+    slug: "reuse-claude-code-workflows",
+    title: "How to Reuse Claude Code Workflows",
+    h1: "How do you reuse Claude Code workflows?",
+    description:
+      "A beginner-friendly guide to turning repeated Claude Code tasks into reusable skill packages.",
+    answer:
+      "Write the repeated Claude Code workflow as a small skill, add examples, and install it with AIPM in each project that needs it.",
+    keywords: ["Claude Code workflows", "reuse Claude workflows", "Claude skills", "AIPM Claude"],
+    sections: [
+      {
+        title: "Start with one job",
+        body:
+          "A reusable workflow should do one clear job. Good examples are code review, bug triage, release notes, test planning, and docs updates.",
+      },
+      {
+        title: "Make the output predictable",
+        body:
+          "Claude works better when the skill says what format to use. Ask for a checklist, short report, or clear sections.",
+      },
+      {
+        title: "Install the same workflow everywhere",
+        body:
+          "After a workflow is packaged, AIPM can install it into each project. The team no longer has to copy the same prompt by hand.",
+      },
+    ],
+    steps: [
+      "Choose one Claude Code task your team repeats.",
+      "Write the goal, input, and output format.",
+      "Add examples and safety limits.",
+      "Publish the workflow as an AIPM package.",
+      "Install it into projects that need the same task.",
+    ],
+    faqs: [
+      {
+        question: "What makes a good Claude Code workflow?",
+        answer:
+          "A good workflow is small, clear, and tested on real work. It tells Claude what to do and what not to do.",
+      },
+      {
+        question: "Can different projects use different versions?",
+        answer:
+          "Yes. AIPM packages have versions, so projects can update when they are ready.",
+      },
+    ],
+  },
+  {
+    slug: "package-mcp-server-setup",
+    title: "How to Package MCP Server Setup",
+    h1: "How do you package MCP server setup?",
+    description:
+      "Learn how to document MCP server setup so teams can install the same AI tool workflow without sharing secrets.",
+    answer:
+      "Package the public MCP setup notes, usage rules, and examples. Keep private tokens and secret values outside the package.",
+    keywords: ["package MCP server setup", "MCP server setup", "MCP config", "AIPM MCP"],
+    sections: [
+      {
+        title: "Separate public setup from secrets",
+        body:
+          "A package can explain which MCP server to use and how the assistant should use it. It should not include real secret values.",
+      },
+      {
+        title: "Explain when to use the server",
+        body:
+          "Tell the assistant what the MCP server is for. Also say when not to use it, especially if it can access private systems.",
+      },
+      {
+        title: "Give users a safe checklist",
+        body:
+          "A good MCP setup package tells users what to install, what to configure locally, and how to test that it works.",
+      },
+    ],
+    steps: [
+      "Write what the MCP server does.",
+      "List config files that are safe to share.",
+      "List private values without including the values.",
+      "Add a simple test command or check.",
+      "Publish the safe setup notes as a package.",
+    ],
+    faqs: [
+      {
+        question: "Can I publish MCP tokens in a package?",
+        answer:
+          "No. Publish instructions, not secret values. Users should add their own tokens locally.",
+      },
+      {
+        question: "Why package MCP setup at all?",
+        answer:
+          "It keeps the setup consistent, so every project does not need to rebuild the same notes from scratch.",
+      },
+    ],
+  },
+  {
+    slug: "aipm-vs-copying-prompts",
+    title: "AIPM vs Copying Prompts Manually",
+    h1: "Why use AIPM instead of copying prompts manually?",
+    description:
+      "Compare AIPM with manual prompt copying and learn when a package manager is worth using.",
+    answer:
+      "Manual copying is fine for one quick prompt. AIPM is better when prompts, skills, rules, or setup files need to be reused, reviewed, and updated.",
+    keywords: ["AIPM vs prompts", "copy prompts manually", "AI prompt management", "AI package manager"],
+    sections: [
+      {
+        title: "Manual copying is fast at first",
+        body:
+          "Copying a prompt is easy when one person needs it once. The problem starts when many people copy different versions.",
+      },
+      {
+        title: "AIPM gives the workflow a version",
+        body:
+          "A package has a name and version. That makes it easier to know which workflow a project uses.",
+      },
+      {
+        title: "Teams need review and updates",
+        body:
+          "When a shared AI workflow changes, teammates should be able to review it. A package makes that change visible.",
+      },
+    ],
+    steps: [
+      "Use manual copying for a one-time experiment.",
+      "Use project files when the prompt matters to one repo.",
+      "Use AIPM when the workflow is reused across projects.",
+      "Publish a new package version when the workflow changes.",
+      "Update projects when the team is ready.",
+    ],
+    faqs: [
+      {
+        question: "Is AIPM always needed?",
+        answer:
+          "No. AIPM is useful when the workflow is shared, repeated, or important enough to review.",
+      },
+      {
+        question: "What is the main benefit over copy-paste?",
+        answer:
+          "AIPM gives reusable AI setup a name, version, install command, and review path.",
+      },
+    ],
+  },
 ] as const;
 
 export function getSeoGuide(slug: string): SeoGuide | null {

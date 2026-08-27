@@ -44,14 +44,39 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Package reusable Cursor rules so teams can install them across projects.",
       },
       {
+        href: "/guides/share-ai-prompts-team",
+        label: "Share team prompts",
+        body: "Share useful AI prompts with teammates without losing context or versions.",
+      },
+      {
+        href: "/guides/manage-cursor-rules-git",
+        label: "Cursor rules in Git",
+        body: "Keep Cursor rules in Git so teams can review, update, and reuse them.",
+      },
+      {
         href: "/guides/reusable-claude-skills",
         label: "Reusable Claude skills",
         body: "Turn repeated Claude workflows into simple skill packages.",
       },
       {
+        href: "/guides/reuse-claude-code-workflows",
+        label: "Reuse Claude Code workflows",
+        body: "Turn repeated Claude Code tasks into reusable skill packages.",
+      },
+      {
+        href: "/guides/package-mcp-server-setup",
+        label: "Package MCP setup",
+        body: "Document MCP server setup without sharing secret values.",
+      },
+      {
         href: "/guides/ai-agent-instructions-git",
         label: "AI instructions in Git",
         body: "Manage agent instructions in Git so teams can review and reuse them.",
+      },
+      {
+        href: "/guides/aipm-vs-copying-prompts",
+        label: "AIPM vs copy-paste",
+        body: "Learn when AIPM is better than copying prompts by hand.",
       },
     ],
   },

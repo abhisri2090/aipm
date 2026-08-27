@@ -325,6 +325,18 @@ export default async function HomePage() {
           <h2>Version AI prompts</h2>
           <p>Keep prompts, rules, and instructions in Git instead of losing them in chat.</p>
         </Link>
+        <Link className={cards.guideCard} href="/guides/share-ai-prompts-team">
+          <h2>Share team prompts</h2>
+          <p>Give teammates one clear prompt source instead of scattered chat copies.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/package-mcp-server-setup">
+          <h2>Package MCP setup</h2>
+          <p>Share MCP setup notes safely without publishing tokens or private values.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/aipm-vs-copying-prompts">
+          <h2>AIPM vs copy-paste</h2>
+          <p>See when a package manager is better than copying prompts by hand.</p>
+        </Link>
         <Link className={cards.guideCard} href="/popular-skills">
           <h2>Popular skill ideas</h2>
           <p>Start with high-value skills for code review, tests, docs, security, MCP setup, and more.</p>
