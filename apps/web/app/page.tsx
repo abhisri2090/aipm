@@ -325,6 +325,18 @@ export default async function HomePage() {
           <h2>Version AI prompts</h2>
           <p>Keep prompts, rules, and instructions in Git instead of losing them in chat.</p>
         </Link>
+        <Link className={cards.guideCard} href="/guides/ai-agent-configuration-files">
+          <h2>Agent config files</h2>
+          <p>Understand AGENTS.md, CLAUDE.md, Cursor rules, MCP config, and skills.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/agents-md-vs-claude-md-vs-cursor-rules">
+          <h2>AGENTS.md vs CLAUDE.md</h2>
+          <p>Choose the right instruction file for Claude Code, Cursor, and other agents.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/mcp-json-guide-cursor-claude">
+          <h2>mcp.json guide</h2>
+          <p>Manage MCP server setup safely across Cursor, Claude Code, and team repos.</p>
+        </Link>
         <Link className={cards.guideCard} href="/guides/share-ai-prompts-team">
           <h2>Share team prompts</h2>
           <p>Give teammates one clear prompt source instead of scattered chat copies.</p>

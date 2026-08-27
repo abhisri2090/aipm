@@ -615,6 +615,248 @@ export const SEO_GUIDES: SeoGuide[] = [
       },
     ],
   },
+  {
+    slug: "ai-agent-configuration-files",
+    title: "AI Agent Configuration Files Explained",
+    h1: "What are AI agent configuration files?",
+    description:
+      "A practical guide to AGENTS.md, CLAUDE.md, Cursor rules, MCP config, skills, and other files used by AI coding agents.",
+    answer:
+      "AI agent configuration files are project files that tell coding agents how to work in a repo. They can define rules, workflows, tools, memory, skills, and MCP server setup.",
+    keywords: [
+      "AI agent configuration files",
+      "coding agent configuration",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "Cursor rules",
+      "MCP config",
+    ],
+    sections: [
+      {
+        title: "The problem developers hit",
+        body:
+          "Modern AI coding tools use many setup files. A project may have AGENTS.md, CLAUDE.md, Cursor rules, MCP JSON files, skill folders, and tool-specific commands. Without a system, these files drift apart.",
+      },
+      {
+        title: "The files have different jobs",
+        body:
+          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. A package manager helps install the right files in the right places.",
+      },
+      {
+        title: "Why AIPM helps",
+        body:
+          "AIPM lets teams package these files with a name and version. That makes AI agent setup easier to review, reuse, and update across repos.",
+      },
+    ],
+    steps: [
+      "List the AI tools your repo supports.",
+      "Find the config files each tool reads.",
+      "Move shared instructions into one reviewed source.",
+      "Keep tool-specific files small and clear.",
+      "Package reusable setup with AIPM.",
+    ],
+    faqs: [
+      {
+        question: "Are AI agent configuration files code?",
+        answer:
+          "They are not normal app code, but they affect how work is done. Treat them like project config and review them in Git.",
+      },
+      {
+        question: "Which file should a team start with?",
+        answer:
+          "Start with one shared instruction file for the repo, then add tool-specific files only when needed.",
+      },
+    ],
+  },
+  {
+    slug: "agents-md-vs-claude-md-vs-cursor-rules",
+    title: "AGENTS.md vs CLAUDE.md vs Cursor Rules",
+    h1: "What is the difference between AGENTS.md, CLAUDE.md, and Cursor rules?",
+    description:
+      "Compare AGENTS.md, CLAUDE.md, and Cursor rules so developers can choose the right instruction files for AI coding agents.",
+    answer:
+      "AGENTS.md is a shared instruction file for coding agents. CLAUDE.md is mainly for Claude Code. Cursor rules are mainly for Cursor. Teams often use one shared source plus small tool-specific files.",
+    keywords: [
+      "AGENTS.md vs CLAUDE.md",
+      "CLAUDE.md vs Cursor rules",
+      "AGENTS.md Cursor",
+      "AI coding agent instructions",
+    ],
+    sections: [
+      {
+        title: "AGENTS.md is the shared layer",
+        body:
+          "AGENTS.md gives coding agents a predictable place to read repo instructions. It is useful when a team wants one common file for agent behavior.",
+      },
+      {
+        title: "CLAUDE.md is for Claude Code",
+        body:
+          "CLAUDE.md is useful when a repo has Claude Code-specific setup. It can include commands, project notes, and expectations that matter for Claude workflows.",
+      },
+      {
+        title: "Cursor rules are for Cursor",
+        body:
+          "Cursor rules guide Cursor inside the editor. They are useful for file patterns, coding style, review behavior, and project-specific rules.",
+      },
+    ],
+    steps: [
+      "Put shared repo rules in one main instruction file.",
+      "Add CLAUDE.md only for Claude-specific behavior.",
+      "Add Cursor rules only for Cursor-specific behavior.",
+      "Keep duplicated text short.",
+      "Package reusable rules with AIPM when several repos need them.",
+    ],
+    faqs: [
+      {
+        question: "Should I copy the same rules into every file?",
+        answer:
+          "No. That creates drift. Keep one shared source and only duplicate short tool-specific notes when needed.",
+      },
+      {
+        question: "Can AIPM install these files?",
+        answer:
+          "Yes. AIPM packages can include target-specific files so a repo gets the right setup for each supported AI tool.",
+      },
+    ],
+  },
+  {
+    slug: "cursor-rules-best-practices",
+    title: "Cursor Rules Best Practices for Teams",
+    h1: "What are the best practices for Cursor rules?",
+    description:
+      "A developer guide to writing Cursor rules that are clear, reviewable, and reusable across projects.",
+    answer:
+      "Good Cursor rules are short, specific, stored in Git, reviewed by the team, and packaged when they are useful in more than one repo.",
+    keywords: ["Cursor rules best practices", "Cursor rules", ".cursor rules", "Cursor AI rules", "AIPM Cursor"],
+    sections: [
+      {
+        title: "Keep rules small",
+        body:
+          "A rule should explain one behavior. Large rule files are harder to review and easier for an AI assistant to misunderstand.",
+      },
+      {
+        title: "Use Git review",
+        body:
+          "Cursor rules can change generated code. Review rule changes like you review lint rules, tests, or build config.",
+      },
+      {
+        title: "Package rules that repeat",
+        body:
+          "If many repos need the same review rule, test rule, or docs rule, package it with AIPM instead of copying it by hand.",
+      },
+    ],
+    steps: [
+      "Write one rule per job.",
+      "Name files by task or code area.",
+      "Avoid secrets and private customer data.",
+      "Review changes in pull requests.",
+      "Publish shared rules as AIPM packages.",
+    ],
+    faqs: [
+      {
+        question: "Should Cursor rules live in Git?",
+        answer:
+          "Yes. If a rule affects project work, the team should be able to review and change it in Git.",
+      },
+      {
+        question: "When should I package a Cursor rule?",
+        answer:
+          "Package it when the same rule is useful in more than one repo or team.",
+      },
+    ],
+  },
+  {
+    slug: "claude-code-skills-guide",
+    title: "Claude Code Skills Guide for Developers",
+    h1: "How do Claude Code skills work?",
+    description:
+      "Learn what Claude Code skills are, when to use them, and how AIPM can help teams share reusable skills.",
+    answer:
+      "Claude Code skills are reusable instruction packages for Claude workflows. They help Claude do a specific job, such as review code, write tests, or update docs.",
+    keywords: ["Claude Code skills", "Claude skills", "Claude Code skill package", "AIPM Claude Code"],
+    sections: [
+      {
+        title: "Skills are for repeatable work",
+        body:
+          "Use a skill when the same task happens often. Good examples are code review, issue triage, release notes, test writing, and migration steps.",
+      },
+      {
+        title: "A skill should be focused",
+        body:
+          "A small skill is easier to trust. It should say what input it needs, what output to produce, and what limits to follow.",
+      },
+      {
+        title: "AIPM helps distribute skills",
+        body:
+          "AIPM gives a skill a package name and version, so teams can install the same Claude Code workflow across repos.",
+      },
+    ],
+    steps: [
+      "Pick one repeated Claude Code task.",
+      "Write the instructions and expected output.",
+      "Add examples from real project work.",
+      "Test the skill in one repo.",
+      "Publish and install it with AIPM when it is ready.",
+    ],
+    faqs: [
+      {
+        question: "Is a Claude Code skill just a prompt?",
+        answer:
+          "It can include prompt-like instructions, but it is packaged as a reusable workflow instead of a one-time chat message.",
+      },
+      {
+        question: "Should every workflow become a skill?",
+        answer:
+          "No. Start with tasks that repeat and have a clear output format.",
+      },
+    ],
+  },
+  {
+    slug: "mcp-json-guide-cursor-claude",
+    title: "mcp.json Guide for Cursor and Claude Code",
+    h1: "How should teams manage mcp.json for Cursor and Claude Code?",
+    description:
+      "A practical guide to managing MCP config files safely across Cursor, Claude Code, and team repos.",
+    answer:
+      "Teams should keep safe MCP config and setup notes in Git, keep secret values local, and package reusable MCP instructions with AIPM.",
+    keywords: ["mcp.json", "MCP config", "Cursor MCP", "Claude Code MCP", "MCP server setup"],
+    sections: [
+      {
+        title: "MCP config connects agents to tools",
+        body:
+          "MCP lets AI coding agents use external tools and data sources. That makes setup powerful, but it also means config needs review.",
+      },
+      {
+        title: "Do not commit secrets",
+        body:
+          "A safe package can explain which server to use and which environment variables are needed. It should not include real tokens, passwords, or private values.",
+      },
+      {
+        title: "Use packages for repeated setup",
+        body:
+          "If several repos need the same MCP server setup, publish the safe config notes as an AIPM package and let each repo add its own local secrets.",
+      },
+    ],
+    steps: [
+      "Write what the MCP server does.",
+      "List the safe config files.",
+      "List required environment variables without values.",
+      "Add a test step so users can confirm setup.",
+      "Package reusable setup with AIPM.",
+    ],
+    faqs: [
+      {
+        question: "Can mcp.json be shared in Git?",
+        answer:
+          "Yes, if it does not include secrets. Keep private values in local environment variables or ignored files.",
+      },
+      {
+        question: "Why use AIPM for MCP setup?",
+        answer:
+          "AIPM helps teams install the same safe setup notes and instructions across many repos without copying them by hand.",
+      },
+    ],
+  },
 ] as const;
 
 export function getSeoGuide(slug: string): SeoGuide | null {

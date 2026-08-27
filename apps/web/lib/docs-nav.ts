@@ -78,6 +78,31 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         label: "AIPM vs copy-paste",
         body: "Learn when AIPM is better than copying prompts by hand.",
       },
+      {
+        href: "/guides/ai-agent-configuration-files",
+        label: "Agent config files",
+        body: "Understand AGENTS.md, CLAUDE.md, Cursor rules, MCP config, and skills.",
+      },
+      {
+        href: "/guides/agents-md-vs-claude-md-vs-cursor-rules",
+        label: "AGENTS.md vs CLAUDE.md",
+        body: "Compare the main instruction files used by AI coding agents.",
+      },
+      {
+        href: "/guides/cursor-rules-best-practices",
+        label: "Cursor rules best practices",
+        body: "Write Cursor rules that are short, reviewable, and reusable.",
+      },
+      {
+        href: "/guides/claude-code-skills-guide",
+        label: "Claude Code skills",
+        body: "Learn when to create skills and how to share them across repos.",
+      },
+      {
+        href: "/guides/mcp-json-guide-cursor-claude",
+        label: "mcp.json guide",
+        body: "Manage MCP config safely for Cursor, Claude Code, and team repos.",
+      },
     ],
   },
   {
