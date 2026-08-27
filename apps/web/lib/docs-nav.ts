@@ -103,6 +103,31 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         label: "mcp.json guide",
         body: "Manage MCP config safely for Cursor, Claude Code, and team repos.",
       },
+      {
+        href: "/guides/cursor-rules-vs-agents-md",
+        label: "Cursor rules vs AGENTS.md",
+        body: "Choose between shared AGENTS.md instructions and scoped Cursor project rules.",
+      },
+      {
+        href: "/guides/claude-code-skills-vs-slash-commands",
+        label: "Claude skills vs commands",
+        body: "Understand how Claude Code skills and custom slash commands now fit together.",
+      },
+      {
+        href: "/guides/share-ai-coding-agent-instructions",
+        label: "Share agent instructions",
+        body: "Keep AI coding instructions aligned across repos without manual copying.",
+      },
+      {
+        href: "/guides/manage-ai-prompts-in-git",
+        label: "Manage prompts in Git",
+        body: "Store, review, version, and share important AI prompts in Git.",
+      },
+      {
+        href: "/guides/mcp-server-config-best-practices",
+        label: "MCP config best practices",
+        body: "Configure MCP servers safely and reuse setup across projects.",
+      },
     ],
   },
   {

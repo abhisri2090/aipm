@@ -337,6 +337,18 @@ export default async function HomePage() {
           <h2>mcp.json guide</h2>
           <p>Manage MCP server setup safely across Cursor, Claude Code, and team repos.</p>
         </Link>
+        <Link className={cards.guideCard} href="/guides/cursor-rules-vs-agents-md">
+          <h2>Cursor rules vs AGENTS.md</h2>
+          <p>Choose the right shared or scoped instruction format for your coding agents.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/claude-code-skills-vs-slash-commands">
+          <h2>Claude skills vs commands</h2>
+          <p>See how Claude Code skills and custom slash commands now work together.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/mcp-server-config-best-practices">
+          <h2>MCP config best practices</h2>
+          <p>Keep MCP server access safe, clear, testable, and easy to reuse.</p>
+        </Link>
         <Link className={cards.guideCard} href="/guides/share-ai-prompts-team">
           <h2>Share team prompts</h2>
           <p>Give teammates one clear prompt source instead of scattered chat copies.</p>

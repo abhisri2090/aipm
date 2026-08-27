@@ -124,6 +124,21 @@ export default async function GuidePage({ params }: GuideRouteProps) {
             </div>
           ))}
         </section>
+
+        {guide.sources && guide.sources.length > 0 ? (
+          <section>
+            <h2>Sources</h2>
+            <ul>
+              {guide.sources.map((source) => (
+                <li key={source.href}>
+                  <a href={source.href} rel="noreferrer" target="_blank">
+                    {source.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </article>
 
       <section className={shell.panelSection} aria-labelledby="related-guides-title">

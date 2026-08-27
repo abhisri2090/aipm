@@ -14,6 +14,10 @@ export type SeoGuide = {
     question: string;
     answer: string;
   }>;
+  sources?: Array<{
+    label: string;
+    href: string;
+  }>;
 };
 
 export const SEO_GUIDES: SeoGuide[] = [
@@ -855,6 +859,274 @@ export const SEO_GUIDES: SeoGuide[] = [
         answer:
           "AIPM helps teams install the same safe setup notes and instructions across many repos without copying them by hand.",
       },
+    ],
+  },
+  {
+    slug: "cursor-rules-vs-agents-md",
+    title: "Cursor Rules vs AGENTS.md: Which Should You Use?",
+    h1: "Should you use Cursor rules or AGENTS.md?",
+    description:
+      "Compare Cursor project rules and AGENTS.md, including scope, file format, team use, and when to use both.",
+    answer:
+      "Use AGENTS.md for simple instructions that several coding agents can read. Use Cursor project rules when you need Cursor-only instructions, file-based scope, or separate rule files. A team can use both without copying every rule twice.",
+    keywords: ["Cursor rules vs AGENTS.md", "AGENTS.md Cursor", "Cursor project rules", ".cursor rules"],
+    sections: [
+      {
+        title: "AGENTS.md is the simple shared option",
+        body:
+          "AGENTS.md is a plain Markdown file. It works well for repo-wide facts such as build commands, coding style, and test expectations. It is easy for people to read and can be used by more than one agent tool.",
+      },
+      {
+        title: "Cursor rules give you more control",
+        body:
+          "Cursor project rules live in .cursor/rules. You can split them by task and apply a rule only to matching files. This is useful when frontend, backend, and database work need different instructions.",
+      },
+      {
+        title: "Use both with one clear owner",
+        body:
+          "Keep shared repo facts in AGENTS.md. Put only Cursor-specific behavior in Cursor rules. If the same setup is used in many repos, package the files with AIPM so each repo gets the same reviewed version.",
+      },
+    ],
+    steps: [
+      "Write the instructions that every coding agent needs.",
+      "Put those shared instructions in AGENTS.md.",
+      "Add Cursor project rules only for scoped or Cursor-specific behavior.",
+      "Review both files in Git and remove repeated text.",
+      "Package the reusable setup with AIPM for other repos.",
+    ],
+    faqs: [
+      {
+        question: "Does Cursor read AGENTS.md?",
+        answer:
+          "Yes. Cursor supports a root-level AGENTS.md file as a simple alternative to project rules.",
+      },
+      {
+        question: "Are .cursorrules files still recommended?",
+        answer:
+          "No. Cursor marks .cursorrules as legacy. New projects should use project rules in .cursor/rules or a simple AGENTS.md file.",
+      },
+    ],
+    sources: [
+      { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
+    ],
+  },
+  {
+    slug: "claude-code-skills-vs-slash-commands",
+    title: "Claude Code Skills vs Slash Commands",
+    h1: "What is the difference between Claude Code skills and slash commands?",
+    description:
+      "Learn how Claude Code skills and custom slash commands now fit together, and which format new workflows should use.",
+    answer:
+      "Claude Code now treats custom slash commands as skills. Existing files in .claude/commands still work, but new reusable workflows should use a SKILL.md file in .claude/skills. A skill can run from a slash command and can also load automatically when relevant.",
+    keywords: [
+      "Claude Code skills vs slash commands",
+      "Claude Code custom commands",
+      "Claude Code SKILL.md",
+      ".claude skills",
+    ],
+    sections: [
+      {
+        title: "The old formats now work together",
+        body:
+          "A command file and a skill can both create a slash command. Existing command files do not need an urgent rewrite, but skills are the current format for new workflows.",
+      },
+      {
+        title: "Skills can hold more than one file",
+        body:
+          "A skill can include a SKILL.md file plus examples, scripts, and reference files. Claude reads the full skill only when it is needed, which keeps normal sessions smaller.",
+      },
+      {
+        title: "Package skills when teams reuse them",
+        body:
+          "Keep a one-repo skill in that repo. When several repos need it, use AIPM to give it a name, version, and repeatable install command.",
+      },
+    ],
+    steps: [
+      "Keep working custom command files if they still do the job.",
+      "Create new workflows in .claude/skills with a SKILL.md file.",
+      "Write a clear name and description so Claude knows when to use the skill.",
+      "Test both direct slash use and automatic use.",
+      "Publish shared skills with AIPM.",
+    ],
+    faqs: [
+      {
+        question: "Do old Claude Code custom commands still work?",
+        answer:
+          "Yes. Files in .claude/commands still work. Claude Code has merged custom commands into the Skills model.",
+      },
+      {
+        question: "Can a skill be called with a slash command?",
+        answer:
+          "Yes. A skill can be called directly with its slash name, and Claude can also choose it when the task matches.",
+      },
+    ],
+    sources: [
+      {
+        label: "Claude Code documentation: Extend Claude with skills",
+        href: "https://code.claude.com/docs/en/slash-commands",
+      },
+    ],
+  },
+  {
+    slug: "share-ai-coding-agent-instructions",
+    title: "How to Share AI Coding Agent Instructions Across Repos",
+    h1: "How do you share AI coding agent instructions across repos?",
+    description:
+      "A practical way to share AGENTS.md, CLAUDE.md, Cursor rules, and skills across repositories without copy-paste drift.",
+    answer:
+      "Keep shared instructions in one versioned package, install that package in each repo, and keep only repo-specific details local. This gives every repo the same base rules without manual copying.",
+    keywords: [
+      "share AI coding agent instructions",
+      "share AGENTS.md across repos",
+      "reuse CLAUDE.md",
+      "sync Cursor rules",
+    ],
+    sections: [
+      {
+        title: "Copy-paste creates different versions",
+        body:
+          "A copied instruction stops receiving updates. After a few months, each repo can have different rules even when the team expects them to match.",
+      },
+      {
+        title: "Split shared and local instructions",
+        body:
+          "Shared instructions should cover common review, testing, security, and documentation work. Repo-specific files should cover local commands, architecture, and limits.",
+      },
+      {
+        title: "Install a reviewed version",
+        body:
+          "An AIPM package can include files for Cursor and Claude targets. Each repo installs a named version, so updates are visible and can be reviewed before they spread.",
+      },
+    ],
+    steps: [
+      "List the instructions repeated in several repos.",
+      "Remove private and repo-specific details.",
+      "Create target files for the AI tools your team uses.",
+      "Publish the shared files as an AIPM package.",
+      "Install and update the package through normal Git review.",
+    ],
+    faqs: [
+      {
+        question: "Should every repo use exactly the same instructions?",
+        answer:
+          "No. Share the common base and keep local commands, architecture, and product rules in each repo.",
+      },
+      {
+        question: "How do teams prevent instruction drift?",
+        answer:
+          "Use one versioned package as the shared source and update repos from that package instead of copying files by hand.",
+      },
+    ],
+    sources: [
+      { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
+      {
+        label: "Claude Code documentation: Memory files",
+        href: "https://code.claude.com/docs/en/memory",
+      },
+    ],
+  },
+  {
+    slug: "manage-ai-prompts-in-git",
+    title: "How to Manage AI Prompts in Git",
+    h1: "What is the best way to manage AI prompts in Git?",
+    description:
+      "Learn how developers store, review, test, version, and share important AI prompts in a Git repository.",
+    answer:
+      "Store important prompts as named files, explain their input and output, review changes in pull requests, and give shared prompts a version. Package prompts that are used in several repos instead of copying them.",
+    keywords: ["manage AI prompts in Git", "prompt version control", "AI prompts GitHub", "version prompts"],
+    sections: [
+      {
+        title: "Treat important prompts like config",
+        body:
+          "A prompt can change generated code, tests, or documents. Put important prompts near the project, use clear file names, and let the team review changes.",
+      },
+      {
+        title: "Record what good output means",
+        body:
+          "A prompt file should explain when to use it, what input it needs, and what the result should contain. Add a small example or test case when possible.",
+      },
+      {
+        title: "Use packages across repositories",
+        body:
+          "Git handles history inside one repo. AIPM adds a package name, version, and install command when the same prompt workflow is needed in several repos.",
+      },
+    ],
+    steps: [
+      "Move repeated prompts out of chat history.",
+      "Give each prompt one clear job and file name.",
+      "Add expected input, output, and a small example.",
+      "Review prompt changes in pull requests.",
+      "Package prompts that need to stay aligned across repos.",
+    ],
+    faqs: [
+      {
+        question: "Can Git version AI prompts?",
+        answer:
+          "Yes. Git records prompt changes, authors, review comments, and earlier versions just like other text files.",
+      },
+      {
+        question: "When is a prompt package useful?",
+        answer:
+          "Use a package when a prompt is important, reused by a team, or installed in more than one repo.",
+      },
+    ],
+  },
+  {
+    slug: "mcp-server-config-best-practices",
+    title: "MCP Server Configuration Best Practices",
+    h1: "What are the best practices for MCP server configuration?",
+    description:
+      "A developer checklist for safe MCP server config, secrets, scope, testing, Git review, and reuse across projects.",
+    answer:
+      "Keep secrets out of MCP config files, give each server the smallest access it needs, document required environment variables, test the connection, and review shared config in Git. Package only safe setup files and instructions.",
+    keywords: [
+      "MCP server configuration best practices",
+      "MCP config security",
+      "mcp.json best practices",
+      "MCP server setup",
+    ],
+    sections: [
+      {
+        title: "Keep secret values local",
+        body:
+          "Config can name the environment variables a server needs, but it should not contain real tokens or passwords. Use local environment settings or a secret manager for values.",
+      },
+      {
+        title: "Limit access and explain the purpose",
+        body:
+          "Add only the servers a project needs. Explain what each server can access, when the agent should use it, and which actions need a person to approve them.",
+      },
+      {
+        title: "Make setup repeatable",
+        body:
+          "Store safe config and test steps in Git. If many repos need the same server, package the public setup with AIPM while each user supplies private values locally.",
+      },
+    ],
+    steps: [
+      "Choose the smallest server access that completes the job.",
+      "Move tokens and passwords into environment variables.",
+      "Document the server purpose and required variables.",
+      "Test a safe read action before allowing write actions.",
+      "Package only public config and setup instructions.",
+    ],
+    faqs: [
+      {
+        question: "Should mcp.json contain API keys?",
+        answer:
+          "No. Refer to environment variable names and keep the real values outside files that can be committed or published.",
+      },
+      {
+        question: "Can MCP configuration be shared across repos?",
+        answer:
+          "Yes. Share safe server definitions, setup notes, and tests. Keep secrets and repo-specific access choices local.",
+      },
+    ],
+    sources: [
+      {
+        label: "Model Context Protocol documentation: Connect to local MCP servers",
+        href: "https://modelcontextprotocol.io/docs/develop/connect-local-servers",
+      },
+      { label: "Cursor documentation: Model Context Protocol", href: "https://docs.cursor.com/context/model-context-protocol" },
     ],
   },
 ] as const;
