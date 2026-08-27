@@ -418,6 +418,15 @@ if (packageList.response.ok) {
 
 const llms = await fetchText("/llms.txt");
 assertStatus("/llms.txt", llms.response);
+if (!/^\s*#\s+.+/m.test(llms.text)) {
+  fail("/llms.txt is missing a Markdown H1 header (e.g., \"# Title\").");
+}
+if (!/\[.+\]\(.+\)/.test(llms.text)) {
+  fail("/llms.txt does not appear to contain Markdown links ([text](url)).");
+}
+if (llms.text.length < 50) {
+  fail("/llms.txt is suspiciously short.");
+}
 assertIncludes("/llms.txt", llms.text, "AIPM is a registry and command line workflow");
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/security`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/privacy`);

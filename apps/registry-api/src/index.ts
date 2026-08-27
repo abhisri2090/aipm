@@ -16,7 +16,7 @@ import {
   type ImportProvenancePayload,
 } from "./admin-import.js";
 import { bulkImportSkillsFromGitHubFolder } from "./bulk-import-from-github.js";
-import { importSkillFromGitHubUrl } from "./import-from-github.js";
+import { GitHubSkillCollectionError, importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
   addOrgMember,
   confirmEmailVerification,
@@ -192,6 +192,11 @@ function parseListCursor(value: unknown): ParsedQueryValue<string | undefined> {
 function publicError(error: unknown, fallback: string): string {
   if (process.env.NODE_ENV === "production") return fallback;
   return error instanceof Error ? error.message : fallback;
+}
+
+function importPublicError(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return fallback;
 }
 
 function isHiddenPublicPackage(name: string): boolean {
@@ -1062,11 +1067,31 @@ export async function createApp(): Promise<FastifyInstance> {
         }
         return reply.status(201).send(result);
       } catch (error) {
+        if (error instanceof GitHubSkillCollectionError) {
+          try {
+            const bulkResult = await bulkImportSkillsFromGitHubFolder({
+              pool: accountAuth.pool,
+              metadata,
+              storage,
+              sourceUrl: error.sourceUrl,
+              orgName: error.owner,
+            });
+            if (bulkResult.aborted) {
+              return reply.status(400).send({ action: "bulk", ...bulkResult });
+            }
+            return reply.status(200).send({ action: "bulk", ...bulkResult });
+          } catch (bulkError) {
+            request.log.error(bulkError);
+            return reply.status(400).send({
+              error: importPublicError(bulkError, "Failed to bulk import skills"),
+            });
+          }
+        }
         if (error instanceof DuplicateVersionError) {
           return reply.status(409).send({ error: error.message });
         }
         request.log.error(error);
-        return reply.status(400).send({ error: publicError(error, "Failed to import skill") });
+        return reply.status(400).send({ error: importPublicError(error, "Failed to import skill") });
       }
     },
   );
@@ -1118,7 +1143,7 @@ export async function createApp(): Promise<FastifyInstance> {
         return reply.status(200).send(result);
       } catch (error) {
         request.log.error(error);
-        return reply.status(400).send({ error: publicError(error, "Failed to bulk import skills") });
+        return reply.status(400).send({ error: importPublicError(error, "Failed to bulk import skills") });
       }
     },
   );

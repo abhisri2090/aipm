@@ -38,6 +38,15 @@ describe("parseGitHubFolderUrl", () => {
       path: "skills/frontend-design",
     });
   });
+
+  it("parses a github repo url", () => {
+    expect(parseGitHubFolderUrl("https://github.com/obra/superpowers")).toEqual({
+      owner: "obra",
+      repo: "superpowers",
+      branch: "",
+      path: "",
+    });
+  });
 });
 
 describe("slug normalization", () => {

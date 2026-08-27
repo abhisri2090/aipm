@@ -110,13 +110,19 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
   const entry = pickEntryFile(Object.keys(files));
   if (!entry) throw new Error("Could not find SKILL.md or README.md in folder");
 
-  const frontmatter = parseFrontmatter(files[entry] ?? "");
+  const entryText = Buffer.isBuffer(files[entry]) ? files[entry].toString("utf8") : String(files[entry] ?? "");
+  const frontmatter = parseFrontmatter(entryText);
+  const readmeRaw = files["README.md"] ?? files["readme.md"];
   const description = resolveDescription({
     frontmatter,
-    readmeContent: files["README.md"] ?? files["readme.md"],
+    readmeContent: readmeRaw
+      ? Buffer.isBuffer(readmeRaw)
+        ? readmeRaw.toString("utf8")
+        : String(readmeRaw)
+      : null,
     fallbackName: folderName,
   });
-  const agentDescription = resolveAgentDescription(files[entry]);
+  const agentDescription = resolveAgentDescription(entryText);
   const license = detectLicense(files, repoMeta.license);
   const contentHash = computeContentHash(files);
   const importMeta = await fetchImportMeta(registryUrl, packageName);
@@ -144,7 +150,7 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
     for (const [name, content] of Object.entries(files)) {
       const filePath = join(tempDir, name);
       await mkdir(dirname(filePath), { recursive: true });
-      await writeFile(filePath, content, "utf8");
+      await writeFile(filePath, content);
     }
     await writeFile(
       join(tempDir, "aipm.manifest.json"),

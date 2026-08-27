@@ -1,10 +1,5 @@
 import { createHash } from "node:crypto";
 
-const GITHUB_TREE_URL =
-  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/tree\/([^/]+)\/(.+?)\/?$/;
-const GITHUB_BLOB_URL =
-  /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+?)\/?$/;
-
 function normalizeGitHubFolderPath(path) {
   const cleaned = path.replace(/\/$/, "");
   const segments = cleaned.split("/");
@@ -16,21 +11,46 @@ function normalizeGitHubFolderPath(path) {
 }
 
 export function parseGitHubFolderUrl(url) {
-  const trimmed = url.trim();
-  const treeMatch = trimmed.match(GITHUB_TREE_URL);
-  const blobMatch = trimmed.match(GITHUB_BLOB_URL);
-  const match = treeMatch ?? blobMatch;
-  if (!match) {
+  let parsed;
+  try {
+    parsed = new URL(url.trim());
+  } catch {
     throw new Error(
-      "Expected https://github.com/{owner}/{repo}/tree/{branch}/{path} or .../blob/{branch}/{path}",
+      "Expected a GitHub repo or folder URL, like https://github.com/owner/repo or https://github.com/owner/repo/tree/main/path/to/skill",
     );
   }
-  return {
-    owner: match[1],
-    repo: match[2],
-    branch: match[3],
-    path: normalizeGitHubFolderPath(match[4]),
-  };
+  const host = parsed.hostname.toLowerCase();
+  if (host !== "github.com" && host !== "www.github.com") {
+    throw new Error(
+      "Expected a GitHub repo or folder URL, like https://github.com/owner/repo or https://github.com/owner/repo/tree/main/path/to/skill",
+    );
+  }
+  const segments = parsed.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+  if (segments.length < 2) {
+    throw new Error(
+      "Expected a GitHub repo or folder URL, like https://github.com/owner/repo or https://github.com/owner/repo/tree/main/path/to/skill",
+    );
+  }
+  const owner = segments[0];
+  let repo = segments[1];
+  if (repo.toLowerCase().endsWith(".git")) {
+    repo = repo.slice(0, -4);
+  }
+  const rest = segments.slice(2);
+  if (rest.length === 0) {
+    return { owner, repo, branch: "", path: "" };
+  }
+  if ((rest[0] === "tree" || rest[0] === "blob") && rest[1]) {
+    return {
+      owner,
+      repo,
+      branch: rest[1],
+      path: normalizeGitHubFolderPath(rest.slice(2).join("/")),
+    };
+  }
+  throw new Error(
+    "Expected a GitHub repo or folder URL, like https://github.com/owner/repo or https://github.com/owner/repo/tree/main/path/to/skill",
+  );
 }
 
 export function normalizeOrgSlug(value) {
@@ -166,35 +186,97 @@ export async function githubRequest(path, token) {
 }
 
 export async function fetchGitHubFolder({ owner, repo, branch, path, token }) {
-  const refData = await githubRequest(`/repos/${owner}/${repo}/git/ref/heads/${branch}`, token);
-  const commitSha = refData.object.sha;
-  const treeData = await githubRequest(
-    `/repos/${owner}/${repo}/git/trees/${commitSha}?recursive=1`,
-    token,
-  );
-  const prefix = `${path.replace(/\/$/, "")}/`;
-  const blobs = treeData.tree.filter(
-    (entry) => entry.type === "blob" && (entry.path === path || entry.path.startsWith(prefix)),
-  );
-  const files = {};
-  for (const blob of blobs) {
-    const relativePath =
-      blob.path === path ? blob.path.split("/").pop() : blob.path.slice(prefix.length);
-    if (!relativePath) continue;
-    const contentResponse = await fetch(blob.url, {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: token ? `Bearer ${token}` : undefined,
-        "User-Agent": "aipm-import-skill",
-      },
-    });
-    if (!contentResponse.ok) {
-      throw new Error(`Failed to download ${blob.path}: ${contentResponse.status}`);
-    }
-    const payload = await contentResponse.json();
-    files[relativePath] = Buffer.from(payload.content, payload.encoding === "base64" ? "base64" : "utf8").toString("utf8");
+  let resolvedBranch = branch;
+  if (!resolvedBranch) {
+    const repoMeta = await githubRequest(`/repos/${owner}/${repo}`, token);
+    resolvedBranch = repoMeta.default_branch;
+    if (!resolvedBranch) throw new Error("Could not resolve the repository default branch");
   }
+
+  let commitSha;
+  try {
+    const refData = await githubRequest(`/repos/${owner}/${repo}/git/ref/heads/${resolvedBranch}`, token);
+    commitSha = refData.object.sha;
+  } catch {
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const execFileAsync = promisify(execFile);
+    const { stdout } = await execFileAsync(
+      "git",
+      ["ls-remote", `https://github.com/${owner}/${repo}.git`, `refs/heads/${resolvedBranch}`],
+      { maxBuffer: 1024 * 1024 },
+    );
+    commitSha = stdout.trim().split(/\s+/)[0];
+    if (!commitSha || !/^[0-9a-f]{40}$/i.test(commitSha)) {
+      throw new Error(`Could not resolve commit for ${owner}/${repo}@${resolvedBranch}`);
+    }
+  }
+
+  const response = await fetch(
+    `https://codeload.github.com/${owner}/${repo}/tar.gz/${commitSha}`,
+    {
+      headers: {
+        "User-Agent": "aipm-import-skill",
+        Authorization: token ? `Bearer ${token}` : undefined,
+      },
+      redirect: "follow",
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`GitHub archive download for ${owner}/${repo}@${commitSha} failed: ${response.status}`);
+  }
+  const tarball = Buffer.from(await response.arrayBuffer());
+  const files = await extractFilesFromGitHubTarball(tarball, path);
   return { files, commitSha };
+}
+
+export async function extractFilesFromGitHubTarball(tarball, folderPath) {
+  const { mkdtemp, readdir, readFile, rm, writeFile, stat } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const execFileAsync = promisify(execFile);
+  const tempDir = await mkdtemp(join(tmpdir(), "aipm-gh-tar-"));
+  const tgzPath = join(tempDir, "repo.tgz");
+  try {
+    await writeFile(tgzPath, tarball);
+    await execFileAsync("tar", ["-xzf", tgzPath, "-C", tempDir]);
+
+    async function walk(dir) {
+      const entries = await readdir(dir, { withFileTypes: true });
+      const paths = [];
+      for (const entry of entries) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) paths.push(...(await walk(full)));
+        else if (entry.isFile()) paths.push(full);
+      }
+      return paths;
+    }
+
+    const normalizedFolder = (folderPath || "").replace(/\/$/, "");
+    const files = {};
+    for (const fullPath of await walk(tempDir)) {
+      if (fullPath === tgzPath) continue;
+      const relativeFromTemp = fullPath.slice(tempDir.length + 1);
+      const slash = relativeFromTemp.indexOf("/");
+      if (slash === -1) continue;
+      const repoRelative = relativeFromTemp.slice(slash + 1);
+      let relativePath = null;
+      if (!normalizedFolder) relativePath = repoRelative || null;
+      else if (repoRelative === normalizedFolder) relativePath = repoRelative.split("/").pop() ?? null;
+      else if (repoRelative.startsWith(`${normalizedFolder}/`)) {
+        relativePath = repoRelative.slice(normalizedFolder.length + 1);
+      }
+      if (!relativePath) continue;
+      const fileStat = await stat(fullPath);
+      if (!fileStat.isFile()) continue;
+      files[relativePath] = await readFile(fullPath);
+    }
+    return files;
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
 }
 
 export async function fetchGitHubUser(owner, token) {
@@ -204,7 +286,9 @@ export async function fetchGitHubUser(owner, token) {
 export function detectLicense(files, repoLicense) {
   const licenseFile = Object.keys(files).find((name) => /^license/i.test(name));
   if (licenseFile) {
-    const firstLine = files[licenseFile].split("\n")[0]?.trim();
+    const raw = files[licenseFile];
+    const text = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw ?? "");
+    const firstLine = text.split("\n")[0]?.trim();
     if (firstLine) return firstLine.replace(/\s+/g, " ");
   }
   if (repoLicense?.spdx_id && repoLicense.spdx_id !== "NOASSERTION") {

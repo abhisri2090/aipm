@@ -9,6 +9,7 @@ deploy/
 .env
 .env.*
 !.env.example
+!.env.e2e.example
 *.pem
 *.key
 *.pub
@@ -25,3 +26,5 @@ coverage/
 .tmp/
 docs/*
 !docs/LOCAL_DEV.md
+!docs/superpowers/
+!docs/superpowers/**
