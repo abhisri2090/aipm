@@ -4,7 +4,7 @@ Use this before making the repository public or before a major public release.
 
 ## Repository
 
-- [ ] Repository URL points to `https://github.com/aipm-registry/aipm`.
+- [x] Repository URL points to `https://github.com/abhisri2090/aipm`.
 - [ ] `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `SUPPORT.md`, and `CODE_OF_CONDUCT.md` are present.
 - [ ] License is present and matches package metadata.
 - [ ] GitHub issues, discussions, and security advisories are configured as desired.

@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aipm-registry/aipm.git"
+    "url": "https://github.com/abhisri2090/aipm.git"
   },
   "engines": {
     "node": ">=20"

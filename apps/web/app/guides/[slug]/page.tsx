@@ -10,6 +10,9 @@ type GuideRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
+const GUIDE_PUBLISHED_AT = "2026-08-27";
+const GUIDE_UPDATED_AT = "2026-08-28";
+
 const PLAIN_ENGLISH_TERMS = [
   { match: "AIPM", term: "AIPM", meaning: "a tool that installs and updates reusable AI instructions" },
   { match: "package", term: "Package", meaning: "a named group of files that people can install and update together" },
@@ -61,12 +64,18 @@ export default async function GuidePage({ params }: GuideRouteProps) {
             "@graph": [
               {
                 "@type": "Article",
+                "@id": `${SITE_URL}/guides/${guide.slug}#article`,
                 headline: guide.title,
                 description: guide.description,
-                author: { "@type": "Organization", name: "AIPM" },
+                url: `${SITE_URL}/guides/${guide.slug}`,
+                datePublished: GUIDE_PUBLISHED_AT,
+                dateModified: GUIDE_UPDATED_AT,
+                inLanguage: "en",
+                author: { "@type": "Person", name: "Abhishek Srivastava" },
                 publisher: { "@type": "Organization", name: "AIPM" },
                 mainEntityOfPage: `${SITE_URL}/guides/${guide.slug}`,
                 isPartOf: { "@type": "WebSite", name: "AIPM Registry", url: SITE_URL },
+                breadcrumb: { "@id": `${SITE_URL}/guides/${guide.slug}#breadcrumbs` },
               },
               {
                 "@type": "FAQPage",
@@ -79,6 +88,20 @@ export default async function GuidePage({ params }: GuideRouteProps) {
                   },
                 })),
               },
+              {
+                "@type": "BreadcrumbList",
+                "@id": `${SITE_URL}/guides/${guide.slug}#breadcrumbs`,
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "AIPM", item: SITE_URL },
+                  { "@type": "ListItem", position: 2, name: "Resources", item: `${SITE_URL}/resources` },
+                  {
+                    "@type": "ListItem",
+                    position: 3,
+                    name: guide.title,
+                    item: `${SITE_URL}/guides/${guide.slug}`,
+                  },
+                ],
+              },
             ],
           }),
         }}
@@ -88,6 +111,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         <p className={shell.eyebrow}>Plain-English guide</p>
         <h1>{guide.h1}</h1>
         <p className={shell.lede}>{guide.description}</p>
+        <p className={shell.muted}>Published 27 August 2026. Last reviewed 28 August 2026.</p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/install">
             Install AIPM

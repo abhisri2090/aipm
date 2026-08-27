@@ -11,9 +11,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint app components lib scripts next.config.ts",
     "verify": "node scripts/verify-web.mjs",
-    "verify:local": "node scripts/verify-web.mjs http://127.0.0.1:3000 --allow-http"
+    "verify:local": "node scripts/verify-web.mjs http://127.0.0.1:3000 --allow-http",
+    "indexnow": "node scripts/submit-indexnow.mjs"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

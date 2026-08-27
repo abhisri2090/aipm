@@ -1,0 +1,66 @@
+.tableWrap {
+  overflow-x: auto;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.matrix {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  background: var(--panel);
+}
+
+.matrix th,
+.matrix td {
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.matrix th:last-child,
+.matrix td:last-child {
+  border-right: 0;
+}
+
+.matrix tbody tr:last-child td,
+.matrix tbody tr:last-child th {
+  border-bottom: 0;
+}
+
+.matrix thead th {
+  background: var(--panel-soft);
+  font-size: 13px;
+}
+
+.formatName {
+  min-width: 150px;
+  font-size: 15px;
+}
+
+.yes {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.limited {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.note {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .matrix th,
+  .matrix td {
+    padding: 12px;
+  }
+}

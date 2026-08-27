@@ -149,4 +149,4 @@ For a local or private registry, use `--registry <url>`, or set `AIPM_REGISTRY_U
 - **Registry & browse skills:** [aipm-registry.com](https://aipm-registry.com)
 - **Publishing guide:** [aipm-registry.com/publish](https://aipm-registry.com/publish)
 - **Docs & examples:** [aipm-registry.com/examples](https://aipm-registry.com/examples)
-- **Source code:** [github.com/aipm-registry/aipm](https://github.com/aipm-registry/aipm)
+- **Source code:** [github.com/abhisri2090/aipm](https://github.com/abhisri2090/aipm)

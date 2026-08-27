@@ -23,6 +23,8 @@ const groups = [
       { href: "/changelog", label: "Changelog" },
       { href: "/ai-practices", label: "AI best practices" },
       { href: "/discoverability", label: "Discoverability" },
+      { href: "/compatibility", label: "Compatibility matrix" },
+      { href: "/stats", label: "Registry statistics" },
       { href: "/thanks", label: "Special thanks" },
     ],
   },

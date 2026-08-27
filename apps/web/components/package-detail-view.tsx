@@ -62,6 +62,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
   }));
   const targetLabel = displayTargets(summary.targets).join(", ");
   const sourceUrl = pkg.manifest.sourceUrl ?? summary.import?.sourceUrl;
+  const badgeMarkdown = `[![Install with AIPM](${new URL(canonicalUrl).origin}/install-with-aipm.svg)](${canonicalUrl})`;
 
   return (
     <>
@@ -201,6 +202,22 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           </div>
         </article>
       </section>
+
+      {showHeader ? (
+        <section className={shell.panelSection} aria-labelledby="package-badge-title">
+          <article className={cn(shell.panel, cards.stepCard)}>
+            <p className={shell.eyebrow}>Share this package</p>
+            <h2 id="package-badge-title">Add an Install with AIPM badge</h2>
+            <p className={shell.muted}>
+              Add this badge to a GitHub README so readers can open the package page and install the same version.
+            </p>
+            <a href={canonicalUrl} aria-label={`Open ${summary.name}@${summary.version} on AIPM`}>
+              <img alt="Install with AIPM" height="28" src="/install-with-aipm.svg" width="154" />
+            </a>
+            <CodeBlock code={badgeMarkdown} />
+          </article>
+        </section>
+      ) : null}
 
       <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="publisher-title">
         <article className={cn(shell.panel, shell.publisherPanel)}>

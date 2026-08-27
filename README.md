@@ -2,7 +2,7 @@
 
 Open-source **AI package manager** — publish and install AI skills into Cursor and Claude project folders.
 
-Repository: [https://github.com/aipm-registry/aipm](https://github.com/aipm-registry/aipm)
+Repository: [https://github.com/abhisri2090/aipm](https://github.com/abhisri2090/aipm)
 
 ## What is open source?
 

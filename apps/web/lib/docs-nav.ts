@@ -184,6 +184,16 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
     title: "Guides",
     items: [
       {
+        href: "/compatibility",
+        label: "Compatibility matrix",
+        body: "Compare the files used by Cursor, Claude Code, Codex, Agent Skills, and MCP.",
+      },
+      {
+        href: "/stats",
+        label: "Registry statistics",
+        body: "See live public counts for packages, installs, AI tools, and categories.",
+      },
+      {
         href: "/targets",
         label: "Supported targets",
         body: "See where AIPM installs files for Cursor and Claude.",

@@ -36,6 +36,8 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Changelog](${site}/changelog)
 - [Skill templates](${site}/templates)
 - [FAQ](${site}/faq)
+- [AI agent configuration compatibility matrix](${site}/compatibility)
+- [AIPM Registry statistics](${site}/stats)
 - [What is an AI package manager?](${site}/guides/ai-package-manager)
 - [Agent package manager guide](${site}/guides/agent-package-manager)
 - [Prompt package manager guide](${site}/guides/prompt-package-manager)

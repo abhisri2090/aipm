@@ -7,11 +7,11 @@
   "homepage": "https://aipm-registry.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aipm-registry/aipm.git",
+    "url": "https://github.com/abhisri2090/aipm.git",
     "directory": "packages/engine"
   },
   "bugs": {
-    "url": "https://github.com/aipm-registry/aipm/issues"
+    "url": "https://github.com/abhisri2090/aipm/issues"
   },
   "files": [
     "dist",

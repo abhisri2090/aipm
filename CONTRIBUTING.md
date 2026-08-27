@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing.
 
-1. Fork [https://github.com/aipm-registry/aipm](https://github.com/aipm-registry/aipm)
+1. Fork [https://github.com/abhisri2090/aipm](https://github.com/abhisri2090/aipm)
 2. Create a branch (`feat/my-change`)
 3. Run `pnpm install && pnpm build && pnpm test && pnpm lint && pnpm scan:secrets && pnpm local:check`
 4. Open a pull request with a clear description

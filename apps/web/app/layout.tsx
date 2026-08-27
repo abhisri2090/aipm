@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "../components/footer";
 import { Header } from "../components/header";
 import { ToastProvider } from "../components/toast-provider";
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Header />
         {children}
         <Footer />
+        <Analytics />
       </body>
     </html>
   );

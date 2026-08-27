@@ -82,6 +82,20 @@ const requiredPages = [
   },
   { path: "/resources", title: "AI Skill Resources", h1: "Find the guide you need.", jsonLd: false },
   {
+    path: "/compatibility",
+    title: "AI Agent Configuration Compatibility Matrix",
+    h1: "AI agent configuration compatibility matrix",
+    jsonLd: true,
+    includes: ["Which file works where?", "AGENTS.md", "CLAUDE.md", "Last checked"],
+  },
+  {
+    path: "/stats",
+    title: "AIPM Registry Statistics",
+    h1: "AIPM Registry statistics",
+    jsonLd: true,
+    includes: ["Public data", "Live numbers from the public registry"],
+  },
+  {
     path: "/skills/cursor",
     title: "Cursor Skills",
     h1: "Find Cursor skills for project-ready AI workflows.",

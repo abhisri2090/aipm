@@ -337,6 +337,14 @@ export default async function HomePage() {
           <h2>mcp.json guide</h2>
           <p>Manage MCP server setup safely across Cursor, Claude Code, and team repos.</p>
         </Link>
+        <Link className={cards.guideCard} href="/compatibility">
+          <h2>Agent file compatibility</h2>
+          <p>Compare AGENTS.md, CLAUDE.md, Cursor rules, skills, and MCP in one verified table.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/stats">
+          <h2>AIPM public statistics</h2>
+          <p>See live package, install, AI tool, and category counts from the registry.</p>
+        </Link>
         <Link className={cards.guideCard} href="/guides/cursor-rules-vs-agents-md">
           <h2>Cursor rules vs AGENTS.md</h2>
           <p>Choose the right shared or scoped instruction format for your coding agents.</p>
