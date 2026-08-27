@@ -10,6 +10,22 @@ type GuideRouteProps = {
   params: Promise<{ slug: string }>;
 };
 
+const PLAIN_ENGLISH_TERMS = [
+  { match: "AIPM", term: "AIPM", meaning: "a tool that installs and updates reusable AI instructions" },
+  { match: "package", term: "Package", meaning: "a named group of files that people can install and update together" },
+  { match: "workflow", term: "Workflow", meaning: "a set of steps used to finish a task" },
+  { match: "repo", term: "Repository or repo", meaning: "a project folder whose changes are saved and tracked" },
+  { match: "Git", term: "Git", meaning: "a tool that records file changes so people can review or undo them" },
+  { match: "config", term: "Config", meaning: "settings that tell a tool how to work" },
+  { match: "MCP", term: "MCP", meaning: "a standard way for an AI tool to connect to other tools and information" },
+  { match: "CLI", term: "CLI", meaning: "a tool that you use by typing commands in a terminal" },
+  {
+    match: "environment variable",
+    term: "Environment variable",
+    meaning: "a private setting stored on your computer, often used for a password or token",
+  },
+] as const;
+
 export function generateStaticParams() {
   return SEO_GUIDES.map((guide) => ({ slug: guide.slug }));
 }
@@ -32,6 +48,8 @@ export default async function GuidePage({ params }: GuideRouteProps) {
   if (!guide) notFound();
 
   const relatedGuides = SEO_GUIDES.filter((item) => item.slug !== guide.slug).slice(0, 4);
+  const guideText = JSON.stringify(guide);
+  const terms = PLAIN_ENGLISH_TERMS.filter((item) => guideText.includes(item.match));
 
   return (
     <DocLayout wide>
@@ -85,6 +103,19 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           <h2>Short answer</h2>
           <p>{guide.answer}</p>
         </section>
+
+        {terms.length > 0 ? (
+          <section>
+            <h2>Words used in this guide</h2>
+            <ul>
+              {terms.map((item) => (
+                <li key={item.term}>
+                  <strong>{item.term}:</strong> {item.meaning}.
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section>
           <h2>What this means</h2>

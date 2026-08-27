@@ -109,7 +109,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         question: "Can one package work for many agents?",
         answer:
-          "Yes, if the package includes files for each supported target. AIPM can install target-specific files.",
+          "Yes. The package can include a different file for each AI tool that it supports. AIPM installs the right file for each tool.",
       },
     ],
   },
@@ -131,7 +131,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Good prompt packages explain the task",
         body:
-          "A useful prompt package should say when to use it, what input it needs, what output it should create, and which AI tools it supports.",
+          "A useful prompt package should answer four questions. When should I use it? What information does it need? What should it create? Which AI tools can use it?",
       },
       {
         title: "Versions prevent confusion",
@@ -172,17 +172,17 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "MCP setup has many small parts",
         body:
-          "A team may need server names, config notes, environment variables, usage rules, and safety notes. These details are easy to miss when they are copied by hand.",
+          "A team may need server names, settings, private values, use instructions, and safety notes. People can easily miss these details when copying them by hand.",
       },
       {
         title: "A package gives the setup a home",
         body:
-          "A package can explain what the MCP server does, when to use it, what secrets are needed, and what files should be installed.",
+          "A package can explain what the MCP server does and when to use it. It can also list the private values and files that users need.",
       },
       {
         title: "AIPM can grow with target support",
         body:
-          "AIPM already installs target-specific AI files. MCP bundles are a natural next step because they also need clear, repeatable setup.",
+          "AIPM can install the right files for each AI tool. MCP setup also needs clear steps that people can use again.",
       },
     ],
     steps: [
@@ -212,7 +212,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     description:
       "A simple guide for keeping AI prompts, rules, and skills in Git so teams can review changes.",
     answer:
-      "Put important prompts in project files, commit them to Git, and publish reusable prompts as versioned packages.",
+      "Save important prompts in project files and record their changes with Git. Put shared prompts in packages with clear version numbers.",
     keywords: ["version AI prompts", "prompts in Git", "AI prompt versioning", "AIPM"],
     sections: [
       {
@@ -304,7 +304,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     description:
       "Learn how to turn a repeated Claude workflow into a simple skill package that teams can install.",
     answer:
-      "Write the Claude workflow as a skill file, add examples, publish it with AIPM, and install it into projects that need the same workflow.",
+      "Save the steps in a skill file and add an example. Publish the skill with AIPM. Then install it in each project that needs it.",
     keywords: ["Claude skills", "Claude Code skills", "publish Claude skills", "AIPM Claude"],
     sections: [
       {
@@ -407,7 +407,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Files are better than chat history",
         body:
-          "If a teammate has to search chat history to find a prompt, the prompt is already hard to reuse. A file gives the team one clear place to look.",
+          "A prompt is hard to reuse when it is hidden in an old chat. A shared file gives the team one clear place to find it.",
       },
       {
         title: "Packages help across projects",
@@ -453,12 +453,12 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Git shows what changed",
         body:
-          "When a rule is in Git, teammates can see the change, discuss it, and roll it back if it causes bad output.",
+          "Git shows the team every change to a rule. People can discuss the change and undo it if the AI starts giving poor answers.",
       },
       {
         title: "Reusable rules can become packages",
         body:
-          "A rule for code review, tests, release notes, or docs can be published once and installed into other projects with AIPM.",
+          "Some rules are useful in many projects. A team can publish one rule with AIPM and then install it in each project.",
       },
     ],
     steps: [
@@ -477,7 +477,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         question: "Can AIPM install Cursor rules?",
         answer:
-          "AIPM can install target-specific AI files for Cursor workflows. The exact package decides which files are included.",
+          "AIPM can install files made for Cursor. The package shows which files it contains.",
       },
     ],
   },
@@ -488,7 +488,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     description:
       "A beginner-friendly guide to turning repeated Claude Code tasks into reusable skill packages.",
     answer:
-      "Write the repeated Claude Code workflow as a small skill, add examples, and install it with AIPM in each project that needs it.",
+      "Save the repeated steps as a small skill and add an example. Use AIPM to install it in each project that needs it.",
     keywords: ["Claude Code workflows", "reuse Claude workflows", "Claude skills", "AIPM Claude"],
     sections: [
       {
@@ -550,7 +550,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Give users a safe checklist",
         body:
-          "A good MCP setup package tells users what to install, what to configure locally, and how to test that it works.",
+          "A good MCP package gives users a short checklist. It says what to install, which settings to add, and how to test the connection.",
       },
     ],
     steps: [
@@ -639,7 +639,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "The problem developers hit",
         body:
-          "Modern AI coding tools use many setup files. A project may have AGENTS.md, CLAUDE.md, Cursor rules, MCP JSON files, skill folders, and tool-specific commands. Without a system, these files drift apart.",
+          "AI coding tools use many setup files. A project may use AGENTS.md, CLAUDE.md, Cursor rules, MCP files, skill folders, and special commands. Without one clear system, the files may stop matching each other.",
       },
       {
         title: "The files have different jobs",
@@ -714,12 +714,12 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         question: "Should I copy the same rules into every file?",
         answer:
-          "No. That creates drift. Keep one shared source and only duplicate short tool-specific notes when needed.",
+          "No. The copies may stop matching each other. Keep one main file and add short notes only when a specific AI tool needs them.",
       },
       {
         question: "Can AIPM install these files?",
         answer:
-          "Yes. AIPM packages can include target-specific files so a repo gets the right setup for each supported AI tool.",
+          "Yes. An AIPM package can include a different file for each AI tool. AIPM puts each file in the right project folder.",
       },
     ],
   },
@@ -730,7 +730,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     description:
       "A developer guide to writing Cursor rules that are clear, reviewable, and reusable across projects.",
     answer:
-      "Good Cursor rules are short, specific, stored in Git, reviewed by the team, and packaged when they are useful in more than one repo.",
+      "Good Cursor rules are short and clear. Keep them in Git so the team can review them. Package a rule when several projects need it.",
     keywords: ["Cursor rules best practices", "Cursor rules", ".cursor rules", "Cursor AI rules", "AIPM Cursor"],
     sections: [
       {
@@ -746,7 +746,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Package rules that repeat",
         body:
-          "If many repos need the same review rule, test rule, or docs rule, package it with AIPM instead of copying it by hand.",
+          "A rule may be useful in many projects. Package it with AIPM so people do not need to copy it by hand.",
       },
     ],
     steps: [
@@ -792,7 +792,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "AIPM helps distribute skills",
         body:
-          "AIPM gives a skill a package name and version, so teams can install the same Claude Code workflow across repos.",
+          "AIPM gives each skill a name and version number. This helps a team install the same skill in many projects.",
       },
     ],
     steps: [
@@ -838,7 +838,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Use packages for repeated setup",
         body:
-          "If several repos need the same MCP server setup, publish the safe config notes as an AIPM package and let each repo add its own local secrets.",
+          "Several projects may need the same MCP setup. Put the safe settings and notes in an AIPM package. Each project can add its own private values.",
       },
     ],
     steps: [
@@ -866,20 +866,20 @@ export const SEO_GUIDES: SeoGuide[] = [
     title: "Cursor Rules vs AGENTS.md: Which Should You Use?",
     h1: "Should you use Cursor rules or AGENTS.md?",
     description:
-      "Compare Cursor project rules and AGENTS.md, including scope, file format, team use, and when to use both.",
+      "Learn the simple difference between Cursor project rules and AGENTS.md. See when a team should use one or both.",
     answer:
-      "Use AGENTS.md for simple instructions that several coding agents can read. Use Cursor project rules when you need Cursor-only instructions, file-based scope, or separate rule files. A team can use both without copying every rule twice.",
+      "Use AGENTS.md for simple instructions that different AI coding tools can read. Use Cursor project rules for instructions meant only for Cursor or only for certain files. A team can use both without copying every rule twice.",
     keywords: ["Cursor rules vs AGENTS.md", "AGENTS.md Cursor", "Cursor project rules", ".cursor rules"],
     sections: [
       {
         title: "AGENTS.md is the simple shared option",
         body:
-          "AGENTS.md is a plain Markdown file. It works well for repo-wide facts such as build commands, coding style, and test expectations. It is easy for people to read and can be used by more than one agent tool.",
+          "AGENTS.md is a normal text file. It can list commands, writing rules, and test steps for the whole project. People and different AI coding tools can read it.",
       },
       {
         title: "Cursor rules give you more control",
         body:
-          "Cursor project rules live in .cursor/rules. You can split them by task and apply a rule only to matching files. This is useful when frontend, backend, and database work need different instructions.",
+          "Cursor project rules live in a folder named .cursor/rules. You can make a separate rule for each task or type of file. For example, website files and database files can follow different rules.",
       },
       {
         title: "Use both with one clear owner",
@@ -890,7 +890,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     steps: [
       "Write the instructions that every coding agent needs.",
       "Put those shared instructions in AGENTS.md.",
-      "Add Cursor project rules only for scoped or Cursor-specific behavior.",
+      "Add Cursor project rules only for Cursor or for certain types of files.",
       "Review both files in Git and remove repeated text.",
       "Package the reusable setup with AIPM for other repos.",
     ],
@@ -915,9 +915,9 @@ export const SEO_GUIDES: SeoGuide[] = [
     title: "Claude Code Skills vs Slash Commands",
     h1: "What is the difference between Claude Code skills and slash commands?",
     description:
-      "Learn how Claude Code skills and custom slash commands now fit together, and which format new workflows should use.",
+      "Learn how Claude Code skills and slash commands work together. See which one to use for a new task.",
     answer:
-      "Claude Code now treats custom slash commands as skills. Existing files in .claude/commands still work, but new reusable workflows should use a SKILL.md file in .claude/skills. A skill can run from a slash command and can also load automatically when relevant.",
+      "Claude Code now treats a custom slash command as a skill. Old command files still work. For a new reusable task, create a SKILL.md file in the .claude/skills folder. You can start a skill with a slash command, or Claude can choose it when it matches your task.",
     keywords: [
       "Claude Code skills vs slash commands",
       "Claude Code custom commands",
@@ -928,12 +928,12 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "The old formats now work together",
         body:
-          "A command file and a skill can both create a slash command. Existing command files do not need an urgent rewrite, but skills are the current format for new workflows.",
+          "A command file and a skill can both create a slash command. You do not need to change old command files now. Use the skill format for new tasks.",
       },
       {
         title: "Skills can hold more than one file",
         body:
-          "A skill can include a SKILL.md file plus examples, scripts, and reference files. Claude reads the full skill only when it is needed, which keeps normal sessions smaller.",
+          "A skill starts with a SKILL.md file. It can also include examples, small programs, and helpful documents. Claude reads these files only when it needs the skill.",
       },
       {
         title: "Package skills when teams reuse them",
@@ -972,9 +972,9 @@ export const SEO_GUIDES: SeoGuide[] = [
     title: "How to Share AI Coding Agent Instructions Across Repos",
     h1: "How do you share AI coding agent instructions across repos?",
     description:
-      "A practical way to share AGENTS.md, CLAUDE.md, Cursor rules, and skills across repositories without copy-paste drift.",
+      "Learn how to share AI instructions across projects without keeping many different copies.",
     answer:
-      "Keep shared instructions in one versioned package, install that package in each repo, and keep only repo-specific details local. This gives every repo the same base rules without manual copying.",
+      "Put shared instructions in one AIPM package. Install that package in each project. Keep details that belong to only one project in that project. This gives every project the same basic rules without manual copying.",
     keywords: [
       "share AI coding agent instructions",
       "share AGENTS.md across repos",
@@ -983,9 +983,9 @@ export const SEO_GUIDES: SeoGuide[] = [
     ],
     sections: [
       {
-        title: "Copy-paste creates different versions",
+        title: "Copied files soon become different",
         body:
-          "A copied instruction stops receiving updates. After a few months, each repo can have different rules even when the team expects them to match.",
+          "A copied instruction does not get later updates. After some time, each project may have different rules even when the team expects them to match.",
       },
       {
         title: "Split shared and local instructions",
@@ -1012,9 +1012,9 @@ export const SEO_GUIDES: SeoGuide[] = [
           "No. Share the common base and keep local commands, architecture, and product rules in each repo.",
       },
       {
-        question: "How do teams prevent instruction drift?",
+        question: "How do teams keep instructions the same?",
         answer:
-          "Use one versioned package as the shared source and update repos from that package instead of copying files by hand.",
+          "Keep the shared instructions in one package with a version number. Update each project from that package instead of copying files by hand.",
       },
     ],
     sources: [
@@ -1030,20 +1030,20 @@ export const SEO_GUIDES: SeoGuide[] = [
     title: "How to Manage AI Prompts in Git",
     h1: "What is the best way to manage AI prompts in Git?",
     description:
-      "Learn how developers store, review, test, version, and share important AI prompts in a Git repository.",
+      "Learn how to save, check, test, and share important AI prompts in a project folder.",
     answer:
       "Store important prompts as named files, explain their input and output, review changes in pull requests, and give shared prompts a version. Package prompts that are used in several repos instead of copying them.",
     keywords: ["manage AI prompts in Git", "prompt version control", "AI prompts GitHub", "version prompts"],
     sections: [
       {
-        title: "Treat important prompts like config",
+        title: "Treat important prompts like project settings",
         body:
           "A prompt can change generated code, tests, or documents. Put important prompts near the project, use clear file names, and let the team review changes.",
       },
       {
         title: "Record what good output means",
         body:
-          "A prompt file should explain when to use it, what input it needs, and what the result should contain. Add a small example or test case when possible.",
+          "A prompt file should say when to use it and what information it needs. It should also describe the result. Add a small example when possible.",
       },
       {
         title: "Use packages across repositories",
@@ -1076,9 +1076,9 @@ export const SEO_GUIDES: SeoGuide[] = [
     title: "MCP Server Configuration Best Practices",
     h1: "What are the best practices for MCP server configuration?",
     description:
-      "A developer checklist for safe MCP server config, secrets, scope, testing, Git review, and reuse across projects.",
+      "A simple checklist for setting up an MCP server safely and using the same setup in more than one project.",
     answer:
-      "Keep secrets out of MCP config files, give each server the smallest access it needs, document required environment variables, test the connection, and review shared config in Git. Package only safe setup files and instructions.",
+      "Do not put passwords or private tokens in MCP settings files. Give each server only the access it needs. Write down the private settings people must add, test the connection, and review shared files in Git. Package only files that are safe to share.",
     keywords: [
       "MCP server configuration best practices",
       "MCP config security",
@@ -1094,7 +1094,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "Limit access and explain the purpose",
         body:
-          "Add only the servers a project needs. Explain what each server can access, when the agent should use it, and which actions need a person to approve them.",
+          "Add only the servers a project needs. Explain what each server can see and when the AI should use it. Also explain which actions need approval from a person.",
       },
       {
         title: "Make setup repeatable",
