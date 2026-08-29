@@ -1,0 +1,179 @@
+.hero {
+  padding: 46px 0 36px;
+  border-bottom: 1px solid var(--line);
+}
+
+.heroManifestoRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.heroManifesto {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.heroManifesto li:last-child {
+  margin-top: 6px;
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.heroAuthor {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.heroAvatar {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  border: 2px solid var(--line);
+  object-fit: cover;
+  background: var(--panel-soft);
+}
+
+.heroAuthorMeta {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.heroAuthorName {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.heroAuthorBio {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.heroSocials {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.heroSocialLink {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.heroSocialLink:hover {
+  color: var(--accent-strong);
+}
+
+.heroTagRow {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-top: 20px;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.heroTagRow::-webkit-scrollbar {
+  height: 6px;
+}
+
+.heroTagRow::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.heroTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.heroTagIconDone {
+  color: var(--accent-strong);
+}
+
+.heroTagIconPending {
+  color: #d4a017;
+}
+
+.answerGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0 0;
+}
+
+.answerGrid div {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+}
+
+.answerGrid dt {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.answerGrid dd {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.answerGrid code {
+  color: var(--text);
+  font-size: 0.92em;
+}
+
+@media (max-width: 640px) {
+  .heroManifestoRow {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 20px;
+  }
+
+  .heroAuthor {
+    width: fit-content;
+  }
+
+  .answerGrid {
+    grid-template-columns: 1fr;
+  }
+}

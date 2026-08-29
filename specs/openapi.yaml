@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info:
+  title: AIPM Registry API
+  version: 0.1.0
+  description: MVP skill registry (no auth)
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /v1/packages/{name}/versions:
+    post:
+      summary: Publish package version
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "@team/react-reviewer"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                tarball:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Created
+        "409":
+          description: Version exists
+  /v1/packages/{name}/versions/{version}:
+    get:
+      summary: Package metadata
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Metadata
+        "404":
+          description: Not found
+  /v1/packages/{name}/versions/{version}/tarball:
+    get:
+      summary: Download tarball
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tarball bytes

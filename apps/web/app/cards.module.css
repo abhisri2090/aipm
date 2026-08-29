@@ -1,0 +1,611 @@
+.guideGrid,
+.steps,
+.exampleGrid,
+.practiceGrid,
+.templateGrid,
+.targetGrid,
+.popularGrid,
+.thanksList {
+  display: grid;
+  gap: 18px;
+  margin-top: 42px;
+}
+
+.guideGrid,
+.practiceGrid,
+.popularGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.popularGrid {
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+}
+
+.popularCatalog {
+  display: grid;
+  gap: 42px;
+  margin-top: 42px;
+  margin-bottom: 42px;
+}
+
+.popularCategoryBlock .popularGrid {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.popularCategoryTitle {
+  margin: 0 0 18px;
+  font-size: 24px;
+}
+
+.steps {
+  grid-template-columns: 1fr;
+}
+
+.exampleGrid {
+  grid-template-columns: 1fr;
+  margin: 4px 0 0;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.exampleGrid .exampleCard {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 20px;
+}
+
+.exampleGrid .exampleCard h2,
+.exampleGrid .exampleCard h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.exampleGrid .exampleCard > p {
+  margin: 0;
+}
+
+.guideCard,
+.stepCard,
+.practiceCard,
+.thanksCard,
+.templateCard,
+.targetCard,
+.popularCard,
+.resultCard,
+.faqList article,
+.statusCard,
+.roadmapCard,
+.changelogCard,
+.exampleCard,
+.glossaryCard,
+.sourceCard,
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.guideCard,
+.stepCard,
+.practiceCard,
+.thanksCard,
+.templateCard,
+.targetCard,
+.popularCard {
+  padding: 22px;
+}
+
+.guideCard {
+  text-decoration: none;
+}
+
+.guideCard p,
+.resultCard p,
+.faqList p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.templateGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 28px 0;
+}
+
+.templateCard {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.templateCard p,
+.templateCard h2,
+.templateCard h3 {
+  margin: 0;
+  text-decoration: none;
+}
+
+.templateCard > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.templateCard pre {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--code);
+  color: var(--code-text);
+  padding: 14px;
+}
+
+.targetGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 28px 0;
+}
+
+.targetCard {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+.targetCard p,
+.targetCard h2 {
+  margin: 0;
+}
+
+.targetCard > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.popularCard {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.popularCard h2,
+.popularCard h3,
+.popularCard p {
+  margin: 0;
+}
+
+.popularCard h3 {
+  font-size: 16px;
+}
+
+.popularCard > p:not(.eyebrow),
+.packageLine,
+.whyLine {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.popularPromptBlock {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.packageLine {
+  margin-top: 6px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.whyLine {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.targetCard dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.targetCard dl div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.targetCard dt {
+  color: var(--muted);
+}
+
+.targetCard dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.stepCard {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.stepHeading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepHeading h3 {
+  margin: 0;
+}
+
+.stepInstallMethods {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.stepNumber {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.stepCard pre {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.practiceCard p,
+.thanksCard p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.thanksList {
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.thanksCard {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  min-height: 0;
+}
+
+.thanksCardImage {
+  width: 100%;
+  height: 160px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  object-fit: contain;
+  padding: 14px;
+  image-rendering: auto;
+}
+
+.thanksCardBody {
+  display: flex;
+  min-height: 160px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.thanksCardLink {
+  margin-top: auto;
+}
+
+.sourceList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sourceCard {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  text-decoration: none;
+}
+
+.sourceCard:hover {
+  border-color: var(--accent);
+}
+
+.sourceCard span {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.sourceCard small {
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 28px 0;
+}
+
+.statusCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px;
+}
+
+.statusCard p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.statusCard strong {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.statusCard[data-status="ok"] strong {
+  color: var(--accent-strong);
+}
+
+.statusCard[data-status="error"] strong {
+  color: #b54708;
+}
+
+.roadmapList,
+.changelogList,
+.exampleList,
+.glossaryList {
+  display: grid;
+  gap: 14px;
+  margin: 28px 0;
+}
+
+.roadmapCard,
+.changelogCard,
+.exampleCard,
+.glossaryCard {
+  padding: 22px;
+}
+
+.roadmapCard h2,
+.changelogCard h2,
+.exampleCard h2,
+.exampleCard h3,
+.glossaryCard h2 {
+  margin: 0 0 14px;
+}
+
+.exampleStoryline {
+  margin: 0 0 22px;
+  line-height: 1.65;
+}
+
+.exampleCard .eyebrow {
+  margin-bottom: 10px;
+}
+
+.exampleSteps {
+  display: grid;
+  gap: 20px;
+  margin: 0 0 24px;
+}
+
+.exampleStep h4 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.exampleStep p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.glossaryCard p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.exampleCard pre {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--code);
+  color: var(--code-text);
+  padding: 14px;
+}
+
+.faqList {
+  display: grid;
+  gap: 12px;
+  margin-top: 42px;
+}
+
+.faqList article {
+  padding: 20px;
+}
+
+.resultCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: start;
+  padding: 22px;
+  cursor: pointer;
+}
+
+.resultCardOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 8px;
+}
+
+.resultCardBody {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.packageHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.packageHeaderContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.packageTitle {
+  margin: 0 0 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.packageTitleAvatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 22px;
+  font-weight: 800;
+  object-fit: cover;
+}
+
+img.packageTitleAvatar {
+  display: block;
+}
+
+.packageTitleOrg {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.resultDescription {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.claimLine {
+  margin: 12px 0 0;
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.claimLine a {
+  pointer-events: auto;
+}
+
+.cardActions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.packageIntegrity {
+  margin: 12px 0 0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.publisherLine {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.results {
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 760px) {
+  .guideGrid,
+  .steps,
+  .exampleGrid,
+  .practiceGrid,
+  .templateGrid,
+  .targetGrid,
+  .popularGrid,
+  .thanksList,
+  .statusGrid,
+  .sourceList {
+    grid-template-columns: 1fr;
+  }
+
+  .thanksCard {
+    grid-template-columns: 1fr;
+  }
+
+  .thanksCardBody {
+    min-height: 0;
+  }
+
+  .resultCard {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .cardActions {
+    justify-items: start;
+  }
+
+  .statusCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .targetCard dl div {
+    grid-template-columns: 1fr;
+  }
+}

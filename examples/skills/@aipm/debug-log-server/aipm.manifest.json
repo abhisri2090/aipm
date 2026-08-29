@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@aipm/debug-log-server",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Install and use a dev-only local debug log server with AI-assisted setup.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude"],
+  "license": "Apache-2.0",
+  "usage": "Run aipm add @aipm/debug-log-server, then run aipm show-prompt @aipm/debug-log-server and paste the saved setup prompt into your AI coding tool.",
+  "agentDescription": "Use this skill when a project needs a local debug log collector, browser/client logging helper, Node logging helper, and poll/analyze loop for AI-assisted debugging. The package installs helper templates and a manual setup prompt; it does not execute setup automatically.",
+  "tags": ["debugging", "logging", "observability", "devtools"],
+  "categories": ["Engineering"],
+  "examples": [
+    {
+      "title": "Set up debug logging for AI's self debugging",
+      "description": "Install the helper files and ask an AI coding tool to add the logger to the current repo.",
+      "prompt": "Use the @aipm/debug-log-server setup prompt to install a local debug log server in this project."
+    },
+    {
+      "title": "Trace a slow workflow",
+      "description": "Use debug logs to instrument a flow, reproduce it, and analyze the collected session.",
+      "prompt": "Use the debug log server workflow to instrument this slow startup path and identify the slowest step."
+    }
+  ],
+  "releaseNotes": "Initial hybrid skill package with manual setup prompt and helper templates.",
+  "install": {
+    "helperFiles": [
+      {
+        "from": "setup/DEBUGGER_LOG_SETUP.md",
+        "to": "DEBUGGER_LOG_SETUP.md"
+      },
+      {
+        "from": "setup/SETUP_PROMPT.md",
+        "to": "SETUP_PROMPT.md"
+      },
+      {
+        "from": "setup/reference.md",
+        "to": "reference.md"
+      },
+      {
+        "from": "setup/templates/debug-log-server/server.js",
+        "to": "templates/debug-log-server/server.js"
+      },
+      {
+        "from": "setup/templates/debug-log-server/analyze.js",
+        "to": "templates/debug-log-server/analyze.js"
+      },
+      {
+        "from": "setup/templates/debug-log-server/poll-logs.js",
+        "to": "templates/debug-log-server/poll-logs.js"
+      },
+      {
+        "from": "setup/templates/src/utils/debug-log/debug-log.const.ts",
+        "to": "templates/src/utils/debug-log/debug-log.const.ts"
+      },
+      {
+        "from": "setup/templates/src/utils/debug-log/debug-log-lan.ts",
+        "to": "templates/src/utils/debug-log/debug-log-lan.ts"
+      },
+      {
+        "from": "setup/templates/src/utils/debug-log/debug-log-client.ts",
+        "to": "templates/src/utils/debug-log/debug-log-client.ts"
+      },
+      {
+        "from": "setup/templates/src/utils/debug-log/debug-log-node.ts",
+        "to": "templates/src/utils/debug-log/debug-log-node.ts"
+      },
+      {
+        "from": "setup/templates/src/utils/debug-log/index.ts",
+        "to": "templates/src/utils/debug-log/index.ts"
+      }
+    ],
+    "postInstall": {
+      "mode": "manual_prompt",
+      "promptFile": "SETUP_PROMPT.md",
+      "cleanup": "after_user_confirmation"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Registry | AIPM</title>
+    <meta name="description" content="Search published AIPM skills." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/" aria-current="page">Registry</a>
+        <a href="/publish/">Publish</a>
+        <a href="/use/">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <p class="eyebrow">Registry</p>
+        <h1>Search published skills.</h1>
+        <p class="lede">
+          Find installable AI skills by package name, supported tool, or
+          description. Demo packages are hidden from the public listing so this
+          page stays focused on usable skills.
+        </p>
+      </section>
+
+      <section class="panel-section" aria-labelledby="registry-search-title">
+        <div class="section-heading">
+          <h2 id="registry-search-title">Skills</h2>
+          <p class="muted" id="registry-result-count">Loading registry entries</p>
+        </div>
+
+        <form class="search-form" id="registry-search-form" role="search">
+          <label for="registry-search-input">Package, target, or description</label>
+          <div class="search-row">
+            <input
+              id="registry-search-input"
+              name="q"
+              type="search"
+              autocomplete="off"
+              placeholder="@scope/name, cursor, claude..."
+            />
+            <button type="submit">Search</button>
+          </div>
+        </form>
+
+        <div class="filters" aria-label="Target filters">
+          <button class="chip active" type="button" data-target-filter="all">All</button>
+          <button class="chip" type="button" data-target-filter="cursor">Cursor</button>
+          <button class="chip" type="button" data-target-filter="claude">Claude</button>
+        </div>
+
+        <div class="results" id="registry-results" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

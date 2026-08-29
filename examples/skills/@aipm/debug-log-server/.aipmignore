@@ -1,0 +1,7 @@
+.aipm/
+node_modules/
+debug-log-server/logs/
+*.log
+.env
+.env.*
+.DS_Store

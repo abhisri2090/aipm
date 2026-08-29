@@ -1,0 +1,473 @@
+.notFoundPage {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 140px);
+  padding: 56px 24px 72px;
+  isolation: isolate;
+}
+
+.parallaxLayer {
+  position: absolute;
+  inset: -12%;
+  pointer-events: none;
+  transition: transform 0.35s ease-out;
+  will-change: transform;
+}
+
+.gridFloor {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--accent) 18%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 18%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 55%, #000 20%, transparent 75%);
+  animation: gridDrift 28s linear infinite;
+}
+
+.radar {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(90vw, 640px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  opacity: 0.55;
+}
+
+.radar::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--accent) 55%, transparent) 28deg,
+    transparent 56deg
+  );
+  animation: radarSpin 5s linear infinite;
+}
+
+.radarRing {
+  position: absolute;
+  inset: 18%;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--line) 80%, var(--accent));
+  opacity: 0.5;
+}
+
+.radarRing:nth-child(2) {
+  inset: 34%;
+}
+
+.radarRing:nth-child(3) {
+  inset: 50%;
+}
+
+.star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size, 3px);
+  height: var(--size, 3px);
+  border-radius: 50%;
+  background: var(--accent-strong);
+  opacity: 0.35;
+  animation: starPulse var(--duration, 3s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.orbit {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(72vw, 420px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  animation: orbitSpin 22s linear infinite;
+}
+
+.orbitNode {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 65%, transparent);
+  transform: rotate(var(--angle, 0deg)) translateX(min(36vw, 210px)) rotate(calc(-1 * var(--angle, 0deg)));
+  animation: nodePulse 2.4s ease-in-out infinite;
+  animation-delay: var(--node-delay, 0s);
+}
+
+.orbitNode::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  animation: nodeRipple 2.4s ease-out infinite;
+  animation-delay: var(--node-delay, 0s);
+}
+
+.scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 8%, transparent) 48%,
+    color-mix(in srgb, var(--accent) 14%, transparent) 50%,
+    color-mix(in srgb, var(--accent) 8%, transparent) 52%,
+    transparent 100%
+  );
+  background-size: 100% 220%;
+  animation: scanSweep 7s ease-in-out infinite;
+  opacity: 0.7;
+  mix-blend-mode: soft-light;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  text-align: center;
+}
+
+.codeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1.5vw, 16px);
+  margin: 0 0 8px;
+  line-height: 0.9;
+  font-size: clamp(5.5rem, 18vw, 11rem);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+}
+
+.digit {
+  position: relative;
+  display: inline-block;
+  color: transparent;
+  background: linear-gradient(
+    120deg,
+    var(--text) 0%,
+    var(--accent-strong) 42%,
+    var(--accent) 58%,
+    var(--text) 100%
+  );
+  background-size: 220% 220%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation:
+    digitEnter 0.9s cubic-bezier(0.22, 1, 0.36, 1) both,
+    shimmer 5s ease-in-out infinite;
+}
+
+.digit:nth-child(1) {
+  animation-delay: 0s, 0s;
+}
+
+.digit:nth-child(2) {
+  animation-delay: 0.12s, 0.4s;
+}
+
+.digit:nth-child(3) {
+  animation-delay: 0.24s, 0.8s;
+}
+
+.digitGlitch {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  background-clip: text;
+  -webkit-background-clip: text;
+  opacity: 0;
+  animation: digitGlitch 4.5s steps(1, end) infinite;
+}
+
+.digit:nth-child(2) .digitGlitch {
+  animation-delay: 1.2s;
+}
+
+.ghostPackage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto 20px;
+  padding: 8px 14px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  animation: ghostFloat 4s ease-in-out infinite;
+}
+
+.ghostPackage span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: ghostBlink 1.4s ease-in-out infinite;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  animation: fadeUp 0.7s ease both 0.35s;
+}
+
+.title {
+  margin: 0 0 14px;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.15;
+  animation: fadeUp 0.7s ease both 0.45s;
+}
+
+.lede {
+  max-width: 520px;
+  margin: 0 auto 28px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+  animation: fadeUp 0.7s ease both 0.55s;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  animation: fadeUp 0.7s ease both 0.65s;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.button:hover {
+  background: var(--accent-strong);
+  color: var(--on-accent);
+  transform: translateY(-2px);
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: var(--control);
+  color: var(--text);
+}
+
+.secondary:hover {
+  border-color: var(--accent);
+}
+
+@keyframes gridDrift {
+  from {
+    transform: perspective(600px) rotateX(58deg) translateY(0);
+  }
+  to {
+    transform: perspective(600px) rotateX(58deg) translateY(56px);
+  }
+}
+
+@keyframes radarSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbitSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes starPulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes nodePulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes nodeRipple {
+  0% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+@keyframes scanSweep {
+  0%,
+  100% {
+    background-position: 0 -120%;
+  }
+  50% {
+    background-position: 0 120%;
+  }
+}
+
+@keyframes digitEnter {
+  from {
+    opacity: 0;
+    transform: translateY(36px) scale(0.88);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes digitGlitch {
+  0%,
+  88%,
+  100% {
+    opacity: 0;
+    transform: translate(0);
+    clip-path: inset(0 0 0 0);
+  }
+  89% {
+    opacity: 0.85;
+    transform: translate(-3px, 1px);
+    clip-path: inset(12% 0 58% 0);
+  }
+  90% {
+    opacity: 0.7;
+    transform: translate(3px, -2px);
+    clip-path: inset(48% 0 18% 0);
+  }
+  91% {
+    opacity: 0.9;
+    transform: translate(-2px, 0);
+    clip-path: inset(8% 0 72% 0);
+  }
+}
+
+@keyframes ghostFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes ghostBlink {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .notFoundPage {
+    min-height: calc(100vh - 120px);
+    padding-top: 40px;
+  }
+
+  .orbit {
+    width: 88vw;
+  }
+
+  .orbitNode {
+    transform: rotate(var(--angle, 0deg)) translateX(42vw) rotate(calc(-1 * var(--angle, 0deg)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .parallaxLayer,
+  .gridFloor,
+  .radar::before,
+  .orbit,
+  .star,
+  .scanline,
+  .digit,
+  .digitGlitch,
+  .ghostPackage,
+  .ghostPackage span,
+  .eyebrow,
+  .title,
+  .lede,
+  .actions {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .digit {
+    color: var(--text);
+    background: none;
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@aipm-registry/adapter-sdk",
+  "version": "0.1.0",
+  "description": "Adapter interface shared by AIPM tool installers.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "homepage": "https://aipm-registry.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abhisri2090/aipm.git",
+    "directory": "packages/adapter-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/abhisri2090/aipm/issues"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@aipm-registry/schemas": "workspace:*"
+  }
+}

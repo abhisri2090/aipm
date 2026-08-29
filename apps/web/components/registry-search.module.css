@@ -1,0 +1,47 @@
+.searchForm {
+  margin-bottom: 16px;
+}
+
+.searchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 10px;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filterLabel {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chip {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  background: var(--control);
+  color: var(--muted);
+}
+
+.chipActive {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@media (max-width: 760px) {
+  .searchRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,246 @@
+.pageHeader {
+  padding: 0 0 36px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.pageHeaderNoBorder {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.compactPageHeader {
+  padding: 22px 0 20px;
+}
+
+.compactPageHeader .eyebrow {
+  margin-bottom: 8px;
+}
+
+.compactPageHeader h1 {
+  margin-bottom: 10px;
+  font-size: clamp(34px, 5vw, 54px);
+}
+
+.compactPageHeader .lede {
+  max-width: 820px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.compactPageHeader + .panelSection {
+  margin-top: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.lede {
+  max-width: 760px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 26px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button:hover {
+  background: var(--accent-strong);
+  color: var(--on-accent);
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: var(--control);
+  color: var(--text);
+}
+
+.secondary:hover {
+  border-color: var(--accent);
+}
+
+.textLink {
+  color: var(--muted);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.textLink:hover {
+  color: var(--text);
+}
+
+.panelSection {
+  margin-top: 42px;
+}
+
+.sectionHeading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 18px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.notice,
+.empty {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  color: var(--accent-strong);
+  padding: 16px;
+}
+
+.copy {
+  min-width: 104px;
+}
+
+.copyLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  margin-top: 42px;
+}
+
+.detailGridFlush {
+  margin-top: 0;
+}
+
+.panelSectionFlush {
+  margin-top: 24px;
+}
+
+.detailMain {
+  display: grid;
+  gap: 24px;
+  align-self: start;
+  min-width: 0;
+}
+
+.installPanel {
+  align-self: start;
+}
+
+.installPanel h2,
+.howToUsePanel h2 {
+  margin: 0;
+}
+
+.howToUsePanel {
+  align-self: start;
+}
+
+.usageText {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.packageDetailList {
+  display: grid;
+  gap: 16px;
+  margin: 16px 0 0;
+}
+
+.packageDetailItem {
+  position: relative;
+  display: grid;
+  padding: 18px 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.packageDetailItem dt {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  margin: 0;
+  padding: 0 6px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+}
+
+.packageDetailItem dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.panel pre {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.publisherPanel {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 22px;
+}
+
+@media (max-width: 760px) {
+  .sectionHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .publisherPanel {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+  }
+}

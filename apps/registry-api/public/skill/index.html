@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skill | AIPM</title>
+    <meta name="description" content="AIPM skill details and install command." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/">Registry</a>
+        <a href="/publish/">Publish</a>
+        <a href="/use/">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <p class="eyebrow">Skill detail</p>
+        <h1 id="skill-title">Loading skill</h1>
+        <p class="lede" id="skill-description">Fetching package metadata from the registry.</p>
+      </section>
+
+      <section class="two-column">
+        <article class="panel">
+          <h2>Install</h2>
+          <p class="muted">Install the CLI, initialize your project once, then add the package.</p>
+          <pre><code id="skill-init-command">npm install -g @aipm-registry/cli</code></pre>
+          <p class="muted">Create the AIPM config file in your project.</p>
+          <pre><code>aipm init</code></pre>
+          <p class="muted">Install this package into the selected target.</p>
+          <pre><code id="skill-install-command">aipm add @scope/name@version --target cursor --ci</code></pre>
+          <button class="copy inline" type="button" data-copy-source="skill-install-command">
+            Copy install command
+          </button>
+        </article>
+
+        <aside class="panel">
+          <h2>Metadata</h2>
+          <dl class="meta-list" id="skill-metadata"></dl>
+        </aside>
+      </section>
+
+      <div class="empty hidden" id="skill-error"></div>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

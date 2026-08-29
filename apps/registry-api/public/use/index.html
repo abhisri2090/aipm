@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Use AIPM | AIPM</title>
+    <meta name="description" content="How to install and use AIPM skills." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/">Registry</a>
+        <a href="/publish/">Publish</a>
+        <a href="/use/" aria-current="page">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <p class="eyebrow">Use AIPM</p>
+        <h1>Bind AI skills and tool files to your project.</h1>
+        <p class="lede">
+          AIPM installs the files a skill needs into your project, so your AI
+          setup travels with the code instead of living in scattered notes.
+        </p>
+      </section>
+
+      <article class="doc">
+        <h2>Install the CLI</h2>
+        <p>Install the bundled AIPM command once on your machine.</p>
+        <pre><code data-template="install-cli">npm install -g @aipm-registry/cli</code></pre>
+
+        <h2>Initialize a project</h2>
+        <p>This writes an <code>aipm.package.json</code> file with the public registry URL.</p>
+        <pre><code data-template="init">aipm init</code></pre>
+
+        <h2>Install a skill</h2>
+        <p>Choose a package from the registry and install it for the target tool.</p>
+        <pre><code data-template="add">aipm add @scope/name@1.0.0 --target cursor --ci</code></pre>
+
+        <h2>List installed skills</h2>
+        <p>Show packages currently recorded in this project.</p>
+        <pre><code data-template="list">aipm list</code></pre>
+
+        <h2>Where files go</h2>
+        <p>
+          AIPM writes tool-specific files into project locations that adapters
+          understand. For Cursor, installed skill files are placed under the
+          project Cursor skill area.
+        </p>
+
+        <h2>Updating a skill</h2>
+        <p>
+          Install the newer package version with the same <code>add</code>
+          command. Versions are explicit, so project changes stay reviewable.
+        </p>
+      </article>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

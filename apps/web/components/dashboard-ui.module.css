@@ -1,0 +1,888 @@
+.dashboardPage {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 0;
+  max-width: none;
+  min-height: calc(100vh - 80px);
+  padding: 0;
+  border-top: 1px solid var(--line);
+}
+
+.dashboardPage.dashboardPageFull {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.dashboardPage.dashboardPageFull .dashboardWorkspace {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.adminTopBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.dashboardSidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  min-height: calc(100vh - 80px);
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 80%, var(--bg));
+  padding: 24px;
+}
+
+.dashboardLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.dashboardLogo img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.accountCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.accountCardCompact {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
+.accountCard strong,
+.accountCard span:not(.avatar) {
+  display: block;
+}
+
+.accountCard span:not(.avatar),
+.sidebarNote span,
+.resourceRow small,
+.fieldHelp,
+.profileCardLarge p,
+.profileCardLarge span {
+  color: var(--muted);
+}
+
+.avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 800;
+  object-fit: cover;
+}
+
+img.avatar {
+  display: block;
+}
+
+.avatarLarge {
+  width: 88px;
+  height: 88px;
+  font-size: 34px;
+}
+
+.orgSwitcher {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.orgSwitcher label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.orgSwitcher select,
+.orgSwitcher a {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.dashboardNav {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+}
+
+.dashboardNav a {
+  border-radius: 8px;
+  color: var(--muted);
+  padding: 10px 12px;
+  text-decoration: none;
+}
+
+.dashboardNav a:hover,
+.dashboardNav a[aria-current="page"] {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.sidebarNote {
+  gap: 4px;
+  display: grid;
+  flex-direction: row;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.sidebarHelp {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+  font-size: 13px;
+}
+
+.sidebarHelp span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.sidebarSignOut {
+  margin-top: 12px;
+}
+
+.dashboardWorkspace {
+  min-width: 0;
+  padding: 34px;
+}
+
+.dashboardHero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.dashboardHero h1 {
+  max-width: 780px;
+  margin-bottom: 12px;
+  font-size: clamp(34px, 5vw, 56px);
+  line-height: 1;
+}
+
+.dashboardHeroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dashboardGrid,
+.metricGrid {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.dashboardGrid {
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+}
+
+.metricGrid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.dashboardPanel,
+.metricCard,
+.loginCard,
+.loginSidePanel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.dashboardPanel,
+.metricCard {
+  padding: 22px;
+  min-width: 0;
+}
+
+.dashboardPanelSpaced {
+  margin-top: 24px;
+}
+
+.metricCard span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.metricCard strong {
+  display: block;
+  margin: 12px 0 8px;
+  font-size: 28px;
+}
+
+.metricCard p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.nextActionPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 22px;
+}
+
+.nextActionPanel h2,
+.nextActionPanel p {
+  margin: 0;
+}
+
+.nextActionPanel h2 {
+  margin-bottom: 8px;
+}
+
+.nextActionPanel p {
+  max-width: 720px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.nextActionButton {
+  flex: 0 0 auto;
+  width: fit-content;
+  justify-content: center;
+  text-align: center;
+}
+
+.resourceList {
+  display: grid;
+  gap: 10px;
+}
+
+.compactForm + .resourceList,
+.tokenResult + .resourceList {
+  margin-top: 18px;
+}
+
+.resourceRow,
+.resourceButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  padding: 14px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.resourceButton {
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.resourceButtonActive,
+.resourceRowActive {
+  border-color: var(--accent);
+  background: var(--panel-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.resourceRow:hover,
+.resourceButton:hover {
+  border-color: var(--accent);
+}
+
+.resourceRow strong,
+.resourceRow small,
+.resourceButton strong,
+.resourceButton small {
+  display: block;
+}
+
+.resourceRow > span,
+.resourceButton > span {
+  min-width: 0;
+  flex: 1;
+}
+
+.resourceRow small,
+.resourceButton small {
+  overflow-wrap: anywhere;
+}
+
+.resourceRow > .textButton,
+.resourceRow > small {
+  flex-shrink: 0;
+}
+
+.formPanel {
+  display: grid;
+  max-width: 720px;
+  gap: 10px;
+}
+
+.formPanel select,
+.formPanel textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  font: inherit;
+}
+
+.formPanel select {
+  min-height: 46px;
+  padding: 0 36px 0 14px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.formPanel select:disabled,
+.formPanel textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.formPanel textarea {
+  min-height: 120px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+.fieldHelp {
+  margin: -2px 0 8px;
+  font-size: 13px;
+}
+
+.detailList {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.detailList div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.detailList dt {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.detailList dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  border-top: 1px solid var(--line);
+  padding: 12px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.table strong,
+.table small {
+  display: block;
+}
+
+.table small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.table select,
+.compactForm select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  padding: 0 36px 0 14px;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.rolePill {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  padding: 4px 9px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rowActions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.textButton,
+.secondaryButton {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+
+.textButton {
+  background: transparent;
+  padding: 6px 8px;
+}
+
+.textButton:hover,
+.secondaryButton:hover {
+  border-color: var(--accent);
+}
+
+.tabRow {
+  display: inline-flex;
+  gap: 4px;
+  margin: 4px 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-soft);
+  padding: 4px;
+}
+
+.tabButton {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 0;
+  padding: 7px 16px;
+}
+
+.tabButton:hover {
+  background: transparent;
+  color: var(--text);
+}
+
+.tabButtonActive,
+.tabButtonActive:hover {
+  background: var(--control);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.compactForm,
+.inlineForm {
+  display: grid;
+  gap: 10px;
+}
+
+.inlineForm {
+  margin-top: 16px;
+}
+
+.compactForm label,
+.inlineForm label {
+  font-weight: 700;
+}
+
+.compactForm input,
+.inlineForm input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  color: var(--text);
+  padding: 11px 12px;
+}
+
+.auditList {
+  display: grid;
+  gap: 10px;
+}
+
+.auditList div {
+  display: grid;
+  gap: 3px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.auditList span,
+.auditList small {
+  color: var(--muted);
+}
+
+.tokenPanel {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 100%;
+}
+
+.tokenPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.tokenPanelIntro {
+  display: grid;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tokenPanelIntro h2 {
+  margin: 0;
+}
+
+.tokenPanelIntro p {
+  margin: 0;
+}
+
+.tokenPanelAction {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.tokenResult {
+  margin-top: 8px;
+}
+
+.versionsPanel {
+  grid-column: 1 / -1;
+}
+
+.publishStepsPanel {
+  grid-column: 1 / -1;
+}
+
+.packageDetailSection {
+  margin-top: 24px;
+  min-width: 0;
+}
+
+.packageManagementGrid {
+  margin-top: 24px;
+}
+
+.dangerPanel {
+  grid-column: 1 / -1;
+}
+
+.commandSteps {
+  display: grid;
+  gap: 32px;
+}
+
+.commandStep h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.commandStepOptional h3 {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.commandStepOptional .commandStepDescription {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+.commandStepDescription {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.commandStepDescription code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+}
+
+.dangerActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.dangerAction + .dangerAction {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+}
+
+.dangerAction {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.dangerAction h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dangerAction .secondaryButton {
+  margin-top: 8px;
+}
+
+.tokenResult h3 {
+  margin-top: 18px;
+}
+
+.tokenActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.profileCardLarge {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 10px;
+}
+
+.profileCardLarge h2,
+.profileCardLarge p {
+  margin: 0;
+}
+
+.dashboardEmptyState {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 80px 24px;
+}
+
+.loginScreen {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.7fr);
+  gap: 24px;
+  align-items: stretch;
+  padding: 0 0 56px 0;
+}
+
+.loginCard,
+.loginSidePanel {
+  padding: 32px;
+}
+
+.loginLogo {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+}
+
+.loginOrDivider {
+  width: 100%;
+  margin: 4px 0;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.emailAuthBlock {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.emailAuthLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.linkButton {
+  border: 0;
+  background: transparent;
+  color: var(--accent, #1d7f5f);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.linkButton:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.otpInput {
+  font-size: 24px;
+  letter-spacing: 0.28em;
+  text-align: center;
+}
+
+.loginSidePanel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.loginBenefitList {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.loginBenefitList li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.loginBenefitIcon {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  line-height: 1.35;
+}
+
+.workflowList {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workflowList li {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr);
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.workflowList strong {
+  color: var(--text);
+}
+
+@media (max-width: 760px) {
+  .loginScreen,
+  .dashboardPage,
+  .dashboardGrid,
+  .metricGrid,
+  .workflowList {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboardSidebar {
+    position: static;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dashboardWorkspace {
+    padding: 24px;
+  }
+
+  .dashboardHero {
+    flex-direction: column;
+  }
+
+  .nextActionPanel {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboardHeroActions {
+    justify-content: flex-start;
+  }
+}

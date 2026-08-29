@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AIPM Registry</title>
+    <meta
+      name="description"
+      content="AIPM helps teams install and manage project-ready AI skills, prompts, and tool files."
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/">Registry</a>
+        <a href="/publish/">Publish</a>
+        <a href="/use/">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow">AIPM — AI Package Manager</p>
+        <h1 id="hero-title">npm-style packages for AI skills, tools, and MCP</h1>
+        <p class="lede">
+          AIPM aims to solve AI package distribution problems. Registry + CLI to Install, Update,
+          Deploy, Remove, and bind packages into your repo for Cursor, Claude, Codex, and more — no
+          copying files by hand.
+        </p>
+        <div class="actions">
+          <a class="button" href="#get-started">Get started</a>
+          <a class="button" href="/registry/">Browse registry</a>
+          <a class="button secondary" href="/publish/">Publishing plan</a>
+        </div>
+      </section>
+
+      <section class="panel-section" id="get-started" aria-labelledby="get-started-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Get started</p>
+            <h2 id="get-started-title">Install AIPM and bind skills to a project</h2>
+          </div>
+          <a class="text-link" href="/use/">Full guide</a>
+        </div>
+
+        <div class="steps">
+          <article class="step-card">
+            <span class="step-number">1</span>
+            <h3>Install the CLI</h3>
+            <p>Install the AIPM command on your machine.</p>
+            <pre><code data-template="install-cli">npm install -g @aipm-registry/cli</code></pre>
+          </article>
+          <article class="step-card">
+            <span class="step-number">2</span>
+            <h3>Initialize your project</h3>
+            <p>Create the AIPM project config file.</p>
+            <pre><code data-template="init">aipm init</code></pre>
+          </article>
+          <article class="step-card">
+            <span class="step-number">3</span>
+            <h3>Add a skill</h3>
+            <p>Install one package into the selected AI tool target.</p>
+            <pre><code>aipm add @scope/name@1.0.0 --target cursor --ci</code></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel-section" aria-labelledby="home-search-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Live registry</p>
+            <h2 id="home-search-title">Find a skill</h2>
+          </div>
+          <a class="text-link" href="/registry/">Open full registry</a>
+        </div>
+
+        <form class="search-form" id="home-search-form" role="search">
+          <label for="home-search-input">Package, target, or description</label>
+          <div class="search-row">
+            <input
+              id="home-search-input"
+              name="q"
+              type="search"
+              autocomplete="off"
+              placeholder="@scope/name, cursor, claude..."
+            />
+            <button type="submit">Search</button>
+          </div>
+        </form>
+
+        <p class="muted" id="home-result-count">Loading registry entries</p>
+        <div class="results compact" id="home-results" aria-live="polite"></div>
+      </section>
+
+      <section class="guide-grid" aria-label="AIPM basics">
+        <a class="guide-card" href="/use/">
+          <h2>Use skills</h2>
+          <p>Initialize a project, install a skill, and see what files AIPM writes.</p>
+        </a>
+        <a class="guide-card" href="/publish/">
+          <h2>Publish skills</h2>
+          <p>Create a manifest, target one or more AI tools, and version updates cleanly.</p>
+        </a>
+        <a class="guide-card" href="/faq/">
+          <h2>Troubleshoot</h2>
+          <p>Fix registry, package, target, version, and install problems quickly.</p>
+        </a>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

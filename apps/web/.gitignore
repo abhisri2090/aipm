@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Vercel local project metadata
+.vercel/
+
+# Local env files
+.env
+.env.*
+!.env.example
+!.env.local.example
+
+# Build/cache noise
+*.tsbuildinfo
+*.log

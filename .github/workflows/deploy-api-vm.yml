@@ -1,0 +1,76 @@
+name: Deploy API to Azure VM
+
+on:
+  push:
+    tags:
+      - "api-v*"
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: 20
+  PNPM_VERSION: 9.15.0
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment: production
+    env:
+      RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP || 'aipm-staging' }}
+      VM_NAME: ${{ vars.AZURE_VM_NAME || 'aipm-registry-vm' }}
+      STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
+      DEPLOY_CONTAINER: ${{ vars.AZURE_DEPLOY_CONTAINER || 'deploy' }}
+      PACKAGE_CONTAINER: ${{ vars.AZURE_PACKAGE_CONTAINER || 'packages' }}
+      CUSTOM_DOMAIN: ${{ vars.AIPM_API_DOMAIN || 'api.aipm-registry.com' }}
+      LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
+      KEY_VAULT_NAME: ${{ vars.AZURE_KEY_VAULT_NAME }}
+      EXPECTED_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AIPM_PUBLIC_SITE_URL: ${{ vars.AIPM_PUBLIC_SITE_URL || 'https://aipm-registry.com' }}
+      AIPM_API_URL: ${{ vars.AIPM_API_URL || 'https://api.aipm-registry.com' }}
+      AIPM_COOKIE_DOMAIN: ${{ vars.AIPM_COOKIE_DOMAIN || '.aipm-registry.com' }}
+      AIPM_EMAIL_SENDER_ADDRESS: ${{ vars.AIPM_EMAIL_SENDER_ADDRESS }}
+      AIPM_EMAIL_FROM_NAME: ${{ vars.AIPM_EMAIL_FROM_NAME || 'AIPM Registry' }}
+      AIPM_PUBLISH_TOKEN: ${{ secrets.AIPM_PUBLISH_TOKEN }}
+      AIPM_PUBLISH_TOKEN_SHA256: ${{ secrets.AIPM_PUBLISH_TOKEN_SHA256 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:check
+      - run: pnpm release:version-from-tag apps/registry-api/package.json api-v
+      - run: bash -n infra/azure/*.sh
+
+      - name: Check required VM deploy settings
+        shell: bash
+        run: |
+          missing=0
+          for name in STORAGE_ACCOUNT LETSENCRYPT_EMAIL; do
+            if [ -z "${!name}" ]; then
+              echo "Missing required deployment setting: ${name}" >&2
+              missing=1
+            fi
+          done
+          if [ "${missing}" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Deploy registry API to VM
+        run: ./infra/azure/deploy-registry-vm.sh
+
+      - name: Verify production API
+        run: ./infra/azure/verify-production.sh "${AIPM_API_URL}"

@@ -1,0 +1,206 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - "cli-v*"
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-binary:
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: node22-macos-arm64
+            asset: aipm-darwin-arm64
+          - os: macos-15-intel
+            target: node22-macos-x64
+            asset: aipm-darwin-x64
+          - os: ubuntu-24.04
+            target: node22-linux-x64
+            asset: aipm-linux-x64
+          - os: ubuntu-24.04-arm
+            target: node22-linux-arm64
+            asset: aipm-linux-arm64
+          - os: windows-2022
+            target: node22-win-x64
+            asset: aipm-windows-x64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:check
+      - run: pnpm release:version-from-tag apps/cli/package.json cli-v
+
+      - run: pnpm --filter '@aipm-registry/cli...' build
+      - run: pnpm --filter @aipm-registry/cli typecheck
+      - run: pnpm release:cli:binaries
+        env:
+          AIPM_CLI_BINARY_TARGET: ${{ matrix.target }}
+          AIPM_CLI_BINARY_NAME: ${{ matrix.asset }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            release/binaries/${{ matrix.asset }}
+            release/binaries/${{ matrix.asset }}.sha256
+
+  release:
+    needs: build-binary
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm release:check
+      - run: pnpm release:version-from-tag apps/cli/package.json cli-v
+
+      - run: pnpm --filter '@aipm-registry/cli...' build
+      - run: pnpm --filter @aipm-registry/cli lint
+      - run: pnpm --filter @aipm-registry/cli test
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: release/downloaded-cli-binaries
+
+      - name: Assemble binary directory
+        shell: bash
+        run: |
+          mkdir -p release/binaries
+          find release/downloaded-cli-binaries -maxdepth 2 -type f -print -exec cp {} release/binaries/ \;
+          cat release/binaries/*.sha256 > release/binaries/checksums.txt
+
+      - run: pnpm release:cli:templates
+
+      - name: Resolve release tag
+        id: release
+        shell: bash
+        run: |
+          echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish CLI to npm
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "Missing required secret: NPM_TOKEN" >&2
+            exit 1
+          fi
+          pnpm release:cli:publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          name: AIPM CLI ${{ steps.release.outputs.tag }}
+          files: |
+            release/binaries/aipm-darwin-arm64
+            release/binaries/aipm-darwin-arm64.sha256
+            release/binaries/aipm-darwin-x64
+            release/binaries/aipm-darwin-x64.sha256
+            release/binaries/aipm-linux-arm64
+            release/binaries/aipm-linux-arm64.sha256
+            release/binaries/aipm-linux-x64
+            release/binaries/aipm-linux-x64.sha256
+            release/binaries/aipm-windows-x64.exe
+            release/binaries/aipm-windows-x64.exe.sha256
+            release/binaries/checksums.txt
+            release/homebrew/Formula/aipm.rb
+            release/scoop/bucket/aipm.json
+            release/winget/aipm.yaml
+            release/installers/install.sh
+            release/installers/install.ps1
+
+      - name: Publish Homebrew tap
+        shell: bash
+        env:
+          PACKAGE_REPO_TOKEN: ${{ secrets.PACKAGE_REPO_TOKEN }}
+          HOMEBREW_TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO }}
+        run: |
+          if [ -z "${HOMEBREW_TAP_REPO}" ]; then
+            echo "HOMEBREW_TAP_REPO is not set; skipping Homebrew tap publish."
+            exit 0
+          fi
+          if [ -z "${PACKAGE_REPO_TOKEN}" ]; then
+            echo "PACKAGE_REPO_TOKEN is required to update ${HOMEBREW_TAP_REPO}." >&2
+            exit 1
+          fi
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          git clone "https://x-access-token:${PACKAGE_REPO_TOKEN}@github.com/${HOMEBREW_TAP_REPO}.git" "${tmp}/tap"
+          mkdir -p "${tmp}/tap/Formula"
+          cp release/homebrew/Formula/aipm.rb "${tmp}/tap/Formula/aipm.rb"
+          cd "${tmp}/tap"
+          git config user.name "aipm-release-bot"
+          git config user.email "actions@github.com"
+          git add Formula/aipm.rb
+          if git diff --cached --quiet; then
+            echo "Homebrew tap is already up to date."
+            exit 0
+          fi
+          git commit -m "Update AIPM CLI ${GITHUB_REF_NAME}"
+          git push
+
+      - name: Publish Scoop bucket
+        shell: bash
+        env:
+          PACKAGE_REPO_TOKEN: ${{ secrets.PACKAGE_REPO_TOKEN }}
+          SCOOP_BUCKET_REPO: ${{ vars.SCOOP_BUCKET_REPO }}
+        run: |
+          if [ -z "${SCOOP_BUCKET_REPO}" ]; then
+            echo "SCOOP_BUCKET_REPO is not set; skipping Scoop bucket publish."
+            exit 0
+          fi
+          if [ -z "${PACKAGE_REPO_TOKEN}" ]; then
+            echo "PACKAGE_REPO_TOKEN is required to update ${SCOOP_BUCKET_REPO}." >&2
+            exit 1
+          fi
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "${tmp}"' EXIT
+          git clone "https://x-access-token:${PACKAGE_REPO_TOKEN}@github.com/${SCOOP_BUCKET_REPO}.git" "${tmp}/bucket"
+          mkdir -p "${tmp}/bucket/bucket"
+          cp release/scoop/bucket/aipm.json "${tmp}/bucket/bucket/aipm.json"
+          cd "${tmp}/bucket"
+          git config user.name "aipm-release-bot"
+          git config user.email "actions@github.com"
+          git add bucket/aipm.json
+          if git diff --cached --quiet; then
+            echo "Scoop bucket is already up to date."
+            exit 0
+          fi
+          git commit -m "Update AIPM CLI ${GITHUB_REF_NAME}"
+          git push

@@ -1,0 +1,6 @@
+.aipm/
+node_modules/
+*.log
+.env
+.env.*
+.DS_Store

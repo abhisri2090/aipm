@@ -1,0 +1,28 @@
+{
+  "name": "@aipm-registry/web",
+  "version": "0.1.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint app components lib scripts next.config.ts",
+    "verify": "node scripts/verify-web.mjs",
+    "verify:local": "node scripts/verify-web.mjs http://127.0.0.1:3000 --allow-http",
+    "indexnow": "node scripts/submit-indexnow.mjs"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "next": "^15.5.21",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-markdown": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5"
+  }
+}

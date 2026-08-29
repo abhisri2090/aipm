@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@abhisri2090/aipm-package-prep",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Convert existing AI skills and helper files into upload-ready AIPM skill packages.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude"],
+  "license": "Apache-2.0",
+  "usage": "Use this skill when preparing a Cursor, Claude, Codex, or local skill folder for AIPM publishing.",
+  "agentDescription": "Use this skill to interview the user, inspect an existing skill folder or related files, classify permanent versus temporary setup assets, and produce an AIPM package with a valid manifest, optional helper files, optional main files, and optional manual setup prompt.",
+  "tags": ["aipm", "packaging", "publishing", "skills"],
+  "categories": ["Engineering"],
+  "examples": [
+    {
+      "title": "Package a local skill",
+      "description": "Turn an existing skill folder into an AIPM package.",
+      "prompt": "Package this Cursor skill folder for AIPM upload. Ask me the required questions first."
+    },
+    {
+      "title": "Package a setup-heavy skill",
+      "description": "Create a hybrid skill package with helper files and a manual setup prompt.",
+      "prompt": "Convert this debug helper skill into an AIPM package with helper setup files and a prompt users can run manually."
+    }
+  ],
+  "releaseNotes": "Initial self-contained packaging interview and AIPM package creation workflow."
+}

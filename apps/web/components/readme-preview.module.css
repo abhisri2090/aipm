@@ -1,0 +1,129 @@
+.preview {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--panel-soft) 0%, var(--panel) 48px);
+  padding: 28px 32px;
+  overflow: hidden;
+}
+
+.markdown {
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 1.6em 0 0.65em;
+  line-height: 1.25;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.markdown h1 {
+  font-size: 1.65rem;
+}
+
+.markdown h2 {
+  font-size: 1.25rem;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--line);
+}
+
+.markdown h3 {
+  font-size: 1.05rem;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin: 0 0 1em;
+  color: var(--muted);
+}
+
+.markdown li + li {
+  margin-top: 0.35em;
+}
+
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown a:hover {
+  color: var(--accent-strong);
+}
+
+.markdown blockquote {
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 1.5em 0;
+}
+
+.markdown code {
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  background: var(--panel-soft);
+  font-size: 0.9em;
+  color: var(--text);
+}
+
+.markdown pre {
+  overflow: auto;
+  margin: 0 0 1em;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--code);
+}
+
+.markdown pre code {
+  padding: 0;
+  background: transparent;
+  color: var(--code-text);
+}
+
+.markdown table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.markdown th,
+.markdown td {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.markdown th {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}

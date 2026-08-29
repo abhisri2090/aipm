@@ -1,0 +1,53 @@
+{
+  "name": "@aipm-registry/cli",
+  "version": "0.3.3",
+  "description": "Command line tool for installing AIPM AI skills into supported editors and assistants.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "homepage": "https://aipm-registry.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abhisri2090/aipm.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/abhisri2090/aipm/issues"
+  },
+  "main": "./dist/bin.cjs",
+  "bin": {
+    "aipm": "./dist/bin.cjs"
+  },
+  "exports": {
+    ".": "./dist/bin.cjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "pkg": {
+    "scripts": "dist/bin.cjs",
+    "assets": [
+      "package.json"
+    ]
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rm -rf dist && esbuild src/bin.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/bin.cjs --sourcemap",
+    "dev": "node dist/bin.cjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint src",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@aipm-registry/engine": "workspace:^",
+    "@aipm-registry/schemas": "workspace:^",
+    "commander": "^15.0.0"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "cd ../.. && pnpm --filter @aipm-registry/web build",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://avatars.githubusercontent.com; connect-src 'self' https://api.aipm-registry.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/v1/auth/github/start",
+      "destination": "https://api.aipm-registry.com/v1/auth/github/start",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/v1/:path*",
+      "destination": "https://api.aipm-registry.com/v1/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://api.aipm-registry.com/health"
+    },
+    {
+      "source": "/ready",
+      "destination": "https://api.aipm-registry.com/ready"
+    }
+  ]
+}

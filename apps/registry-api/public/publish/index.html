@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Publishing Guide | AIPM</title>
+    <meta name="description" content="How to publish AIPM skills." />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="AIPM home">
+        <span class="brand-mark">A</span>
+        <span>AIPM</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="/registry/">Registry</a>
+        <a href="/publish/" aria-current="page">Publish</a>
+        <a href="/use/">Use</a>
+        <a href="/about/">About</a>
+        <a href="/faq/">FAQ</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-header">
+        <p class="eyebrow">Publishing</p>
+        <h1>Package AI skills once, then install them anywhere.</h1>
+        <p class="lede">
+          A published AIPM skill is a versioned folder with a manifest and the
+          files your AI tool needs. Use the dashboard to reserve names and
+          generate short-lived tokens, then publish through the CLI.
+        </p>
+        <p class="notice">
+          Public publishing uses account-backed orgs, reserved package names,
+          and 5-minute publish tokens. Do not publish private prompts,
+          credentials, customer data, or internal-only files.
+        </p>
+      </section>
+
+      <article class="doc">
+        <h2>Install the CLI</h2>
+        <p>Install the AIPM command before creating or publishing skill packages.</p>
+        <pre><code data-template="install-cli">npm install -g @aipm-registry/cli</code></pre>
+
+        <h2>1. Create a skill folder</h2>
+        <p>Each skill needs an <code>aipm.manifest.json</code> file and an entry file.</p>
+        <pre><code>{
+  "schemaVersion": "0.1",
+  "name": "@team/review-helper",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Review checklist for project PRs",
+  "entry": "SKILL.md",
+  "targets": ["cursor"],
+  "license": "Apache-2.0"
+}</code></pre>
+
+        <h2>2. Create an account and reserve a name</h2>
+        <ol class="flow-list">
+          <li>Sign in with GitHub.</li>
+          <li>Create an organization namespace.</li>
+          <li>Reserve a package name such as <code>@team/review-helper</code>.</li>
+          <li>Generate a publish token that is valid for 5 minutes.</li>
+        </ol>
+
+        <h2>3. Stage and publish from the CLI</h2>
+        <p>Create the package folder, stage files, preview and validate them, then push with a 5-minute token.</p>
+        <pre><code>aipm publish init --name @team/review-helper --template code-review
+cd review-helper
+aipm publish add .
+aipm publish preview # optional
+aipm publish validate # optional
+AIPM_TOKEN=&lt;5-minute-token&gt; aipm publish push --yes</code></pre>
+
+        <h2>Starter templates</h2>
+        <p>
+          Templates only change the starter <code>SKILL.md</code>. Pick the closest
+          workflow, then edit the generated files before staging.
+        </p>
+        <div class="example-grid">
+          <section>
+            <h3>Code review</h3>
+            <p>Create a starter package for pull request review workflows.</p>
+            <pre><code>aipm publish init --name @team/review-helper --template code-review</code></pre>
+          </section>
+          <section>
+            <h3>Issue summary</h3>
+            <p>Create a starter package for bug, incident, and support triage.</p>
+            <pre><code>aipm publish init --name @team/issue-summary --template issue-summary</code></pre>
+          </section>
+          <section>
+            <h3>Release notes</h3>
+            <p>Create a starter package for release summary workflows.</p>
+            <pre><code>aipm publish init --name @team/release-notes --template release-notes</code></pre>
+          </section>
+        </div>
+
+        <h2>Target examples</h2>
+        <div class="example-grid">
+          <section>
+            <h3>Cursor-only</h3>
+            <pre><code>"targets": ["cursor"]</code></pre>
+            <p>Use this when the skill should write Cursor-compatible files only.</p>
+          </section>
+          <section>
+            <h3>Claude-only</h3>
+            <pre><code>"targets": ["claude"]</code></pre>
+            <p>Use this when the skill is built for Claude project instructions.</p>
+          </section>
+          <section>
+            <h3>Multi-tool</h3>
+            <pre><code>"targets": ["cursor", "claude"]</code></pre>
+            <p>Use this when the same skill should install into multiple AI tools.</p>
+          </section>
+        </div>
+
+        <h2>Common publish conditions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Condition</th>
+              <th>What to do</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Updating an existing skill</td>
+              <td>Change the manifest version, then publish again.</td>
+            </tr>
+            <tr>
+              <td>Duplicate version error</td>
+              <td>AIPM does not overwrite versions. Publish a new version.</td>
+            </tr>
+            <tr>
+              <td>Invalid package name</td>
+              <td>Use scoped names like <code>@team/review-helper</code>.</td>
+            </tr>
+            <tr>
+              <td>Registry unavailable</td>
+              <td>Check the registry URL and run <code>curl &lt;registry-url&gt;/health</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </article>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
