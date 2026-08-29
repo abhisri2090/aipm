@@ -155,7 +155,7 @@ export default async function HomePage() {
               alt="Author profile"
               className={home.heroAvatar}
               height={88}
-              src="/author.png"
+              src="/author.webp"
               width={88}
             />
             <div className={home.heroAuthorMeta}>
