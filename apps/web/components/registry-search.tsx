@@ -135,7 +135,7 @@ export function RegistrySearch({
       <div className={cards.results} aria-live="polite">
         {filtered.length > 0 ? (
           filtered.slice(0, compact ? 3 : filtered.length).map((pkg) => (
-            <PackageCard compact={compact} key={`${pkg.name}@${pkg.version}`} pkg={pkg} />
+            <PackageCard compact={compact} key={pkg.name} pkg={pkg} />
           ))
         ) : (
           <div className={shell.empty}>

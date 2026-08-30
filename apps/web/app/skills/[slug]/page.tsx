@@ -112,7 +112,7 @@ export default async function SkillDiscoveryPage({ params }: SkillDiscoveryRoute
         </div>
         <div className={cards.results}>
           {filteredPackages.length > 0 ? (
-            filteredPackages.map((pkg) => <PackageCard key={`${pkg.name}@${pkg.version}`} pkg={pkg} />)
+            filteredPackages.map((pkg) => <PackageCard key={pkg.name} pkg={pkg} />)
           ) : (
             <div className={shell.empty}>
               No matching public skills are listed yet. This page is ready for the first packages in this category.

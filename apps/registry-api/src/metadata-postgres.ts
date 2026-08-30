@@ -6,6 +6,7 @@ import {
   getPackageVersion,
   insertPackageVersion,
   listPackageVersions,
+  listPackageVersionsForName,
   deletePackageVersions,
 } from "./db.js";
 import {
@@ -48,6 +49,10 @@ export class PostgresMetadataStore implements MetadataStore {
     options: { limit?: number; cursor?: string } = {},
   ): Promise<PackageVersionRow[]> {
     return listPackageVersions(this.pool, query, options);
+  }
+
+  async listVersions(name: string): Promise<PackageVersionRow[]> {
+    return listPackageVersionsForName(this.pool, name);
   }
 
   async deletePackage(name: string): Promise<PackageVersionRow[]> {

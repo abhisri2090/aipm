@@ -2231,10 +2231,11 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   }, [versions]);
 
   useEffect(() => {
-    const params = new URLSearchParams({ q: packageName, limit: "20", includePrivate: "true" });
-    api<{ packages: PublishedPackageVersion[] }>(`/v1/packages?${params}`)
+    api<{ versions: PublishedPackageVersion[] }>(
+      `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+    )
       .then((data) => {
-        setVersions(data.packages.filter((pkg) => pkg.name === packageName));
+        setVersions(data.versions);
         setVersionsError("");
       })
       .catch((err: unknown) => setVersionsError(publicApiError(err)));

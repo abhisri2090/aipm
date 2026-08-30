@@ -2244,6 +2244,25 @@ export async function createApp(): Promise<FastifyInstance> {
     return reply.status(204).send();
   });
 
+  app.get<{ Params: { name: string } }>("/v1/packages/:name/versions", async (request, reply) => {
+    const name = decodePackageName(request.params.name);
+    const readAccess = await resolveReadAccess(accountAuth, request);
+    if (!(await canViewPackage(accountAuth, name, readAccess))) {
+      return reply.status(404).send({ error: "Not found" });
+    }
+    const rows = (await metadata.listVersions(name)).filter((row) => !row.yanked_at);
+    return {
+      versions: rows.map((row) => ({
+        name: row.name,
+        version: row.version,
+        description: row.manifest.description,
+        type: row.manifest.type,
+        targets: row.manifest.targets,
+        createdAt: row.created_at,
+      })),
+    };
+  });
+
   app.get<{ Params: { name: string; version: string } }>(
     "/v1/packages/:name/versions/:version",
     async (request, reply) => {

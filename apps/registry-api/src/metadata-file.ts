@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { PackageManifestSchema } from "@aipm-registry/schemas";
 import {
   DuplicateVersionError,
+  selectLatestPackageVersions,
   type MetadataStore,
   type PackageVersionInsert,
   type PackageVersionRow,
@@ -83,6 +84,7 @@ export class FileMetadataStore implements MetadataStore {
     const cursorTime = options.cursor ? new Date(options.cursor).getTime() : null;
     const index = await this.readIndex();
     const rows: PackageVersionRow[] = [];
+    const haystacks = new Map<string, string>();
 
     for (const [name, versions] of Object.entries(index.packages)) {
       for (const [version, entry] of Object.entries(versions)) {
@@ -109,10 +111,6 @@ export class FileMetadataStore implements MetadataStore {
           .join(" ")
           .toLowerCase();
 
-        const createdAt = new Date(entry.created_at);
-        if (normalizedQuery && !haystack.includes(normalizedQuery)) continue;
-        if (cursorTime && createdAt.getTime() >= cursorTime) continue;
-
         rows.push({
           id: randomUUID(),
           name,
@@ -121,14 +119,39 @@ export class FileMetadataStore implements MetadataStore {
           integrity: entry.integrity,
           blob_path: entry.blob_path,
           size_bytes: entry.size_bytes,
-          created_at: createdAt,
+          created_at: new Date(entry.created_at),
         });
+        haystacks.set(`${name}@${version}`, haystack);
       }
     }
 
-    return rows
+    return selectLatestPackageVersions(rows)
+      .filter((row) => {
+        if (normalizedQuery && !haystacks.get(`${row.name}@${row.version}`)?.includes(normalizedQuery)) {
+          return false;
+        }
+        return !cursorTime || row.created_at.getTime() < cursorTime;
+      })
       .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
       .slice(0, limit);
+  }
+
+  async listVersions(name: string): Promise<PackageVersionRow[]> {
+    const index = await this.readIndex();
+    const versions = index.packages[name];
+    if (!versions) return [];
+    return Object.entries(versions)
+      .map(([version, entry]) => ({
+        id: randomUUID(),
+        name,
+        version,
+        manifest: PackageManifestSchema.parse(entry.manifest),
+        integrity: entry.integrity,
+        blob_path: entry.blob_path,
+        size_bytes: entry.size_bytes,
+        created_at: new Date(entry.created_at),
+      }))
+      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
   }
 
   async deletePackage(name: string): Promise<PackageVersionRow[]> {

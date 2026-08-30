@@ -158,6 +158,42 @@ describe("registry API production behavior", () => {
     });
   });
 
+  it("lists one row per package using the latest version", async () => {
+    for (const version of ["1.0.0", "1.0.1"]) {
+      const tarball = await createTarball(version, "@team/listed-skill");
+      const payload = multipartPayload(tarball);
+      const publish = await app!.inject({
+        method: "POST",
+        url: `/v1/packages/${encodeURIComponent("@team/listed-skill")}/versions`,
+        headers: {
+          "content-type": payload.contentType,
+          authorization: `Bearer ${token}`,
+        },
+        payload: payload.body,
+      });
+      expect(publish.statusCode).toBe(201);
+    }
+
+    const list = await app!.inject({
+      method: "GET",
+      url: `/v1/packages?q=${encodeURIComponent("@team/listed-skill")}`,
+    });
+    expect(list.statusCode).toBe(200);
+    expect(list.json().packages).toEqual([
+      expect.objectContaining({ name: "@team/listed-skill", version: "1.0.1" }),
+    ]);
+
+    const versions = await app!.inject({
+      method: "GET",
+      url: `/v1/packages/${encodeURIComponent("@team/listed-skill")}/versions`,
+    });
+    expect(versions.statusCode).toBe(200);
+    expect(versions.json().versions).toEqual([
+      expect.objectContaining({ name: "@team/listed-skill", version: "1.0.1" }),
+      expect.objectContaining({ name: "@team/listed-skill", version: "1.0.0" }),
+    ]);
+  });
+
   it("lists and reads package files for public packages", async () => {
     const tarball = await createTarball("2.0.0", "@team/files-skill");
     const payload = multipartPayload(tarball);

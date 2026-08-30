@@ -658,12 +658,11 @@ export async function listPackageVersions(
   const normalizedQuery = query.trim();
   const limit = Math.min(Math.max(options.limit ?? 100, 1), 101);
   const values: Array<string | number> = [];
-  let where = "";
-
+  const filters: string[] = [];
   if (normalizedQuery) {
     values.push(`%${normalizedQuery}%`);
-    where = `
-      WHERE name ILIKE $1
+    filters.push(`
+      (name ILIKE $1
         OR version ILIKE $1
         OR manifest->>'description' ILIKE $1
         OR manifest->>'type' ILIKE $1
@@ -673,19 +672,25 @@ export async function listPackageVersions(
         OR (manifest->'targets')::text ILIKE $1
         OR (manifest->'tags')::text ILIKE $1
         OR (manifest->'categories')::text ILIKE $1
-        OR (manifest->'examples')::text ILIKE $1
-    `;
+        OR (manifest->'examples')::text ILIKE $1)
+    `);
   }
 
   if (options.cursor) {
     values.push(options.cursor);
-    where += where ? ` AND created_at < $${values.length}` : ` WHERE created_at < $${values.length}`;
+    filters.push(`created_at < $${values.length}`);
   }
 
   values.push(limit);
+  const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
   const result = await pool.query<PackageVersionRow>(
     `SELECT ${PACKAGE_VERSION_FIELDS}
-     FROM package_versions
+     FROM (
+       SELECT DISTINCT ON (name) ${PACKAGE_VERSION_FIELDS}
+       FROM package_versions
+       WHERE yanked_at IS NULL
+       ORDER BY name, created_at DESC
+     ) latest
      ${where}
      ORDER BY created_at DESC
      LIMIT $${values.length}`,
