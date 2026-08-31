@@ -200,6 +200,14 @@
   color: #68459a;
 }
 
+.sampleImage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  object-fit: cover;
+}
+
 :global(:root[data-theme="dark"]) .outputMark[data-output="image"] {
   background: #38291d;
   color: #efb77e;

@@ -56,6 +56,12 @@ function Publisher({ prompt }: { prompt: PromptSummary }) {
   );
 }
 
+function sampleImagePath(prompt: PromptSummary): string {
+  return `/v1/prompts/${encodeURIComponent(prompt.publisher.scope)}/${encodeURIComponent(
+    prompt.slug,
+  )}/sample-image`;
+}
+
 export function PromptDirectory({
   initialPrompts,
   initialQuery = "",
@@ -229,6 +235,15 @@ export function PromptDirectory({
                 <OutputMark output={prompt.outputTypes[0] ?? "text"} />
                 <span className={styles.categoryBadge}>{prompt.category}</span>
               </div>
+              {prompt.outputTypes.includes("image") && prompt.hasSampleImage ? (
+                <img
+                  alt=""
+                  className={styles.sampleImage}
+                  decoding="async"
+                  loading="lazy"
+                  src={sampleImagePath(prompt)}
+                />
+              ) : null}
               <div className={styles.cardContent}>
                 <h2>{prompt.title}</h2>
                 <p>{prompt.summary}</p>
