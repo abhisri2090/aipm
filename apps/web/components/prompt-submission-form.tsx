@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "../lib/api-client";
+import { compressImage } from "../lib/compress-image";
 import { PROMPT_LANGUAGES } from "../lib/languages";
 import {
   PROMPT_CATEGORIES,
@@ -259,7 +260,9 @@ export function PromptSubmissionForm() {
             return;
           }
           setSubmitting(true);
+          setStatus(sampleImage ? "Optimizing sample image…" : "");
           try {
+            const uploadImage = sampleImage ? await compressImage(sampleImage) : null;
             const data = {
               title,
               slug,
@@ -286,7 +289,7 @@ export function PromptSubmissionForm() {
             };
             const body = new FormData();
             body.append("data", JSON.stringify(data));
-            if (sampleImage) body.append("sampleImage", sampleImage);
+            if (uploadImage) body.append("sampleImage", uploadImage);
             const created = await api<PromptDetail>(
               "/v1/prompts",
               { method: "POST", body },
