@@ -1,0 +1,11 @@
+.copyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.copyButton svg {
+  width: 20px;
+  height: 20px;
+}

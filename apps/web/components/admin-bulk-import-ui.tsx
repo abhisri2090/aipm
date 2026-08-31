@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import { publicApiError } from "../lib/public-api-error";
+import { publicApiError, apiResponseError } from "../lib/public-api-error";
 import { packagePath } from "../lib/registry";
 import { dash, shell } from "../lib/page-styles";
 
@@ -37,11 +37,14 @@ async function bulkImportFromUrl(sourceUrl: string, orgName: string): Promise<Bu
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sourceUrl, orgName }),
     });
-    const body = (await response.json().catch(() => ({}))) as BulkImportResult & { error?: string };
+    const body = (await response.json().catch(() => ({}))) as BulkImportResult & {
+      error?: string;
+      message?: string;
+    };
 
     if (response.ok) return body;
     if (response.status === 400 && body.results) return body;
-    throw new Error(body.error ?? `Request failed: ${response.status}`);
+    throw new Error(apiResponseError(body, response.status));
   } finally {
     window.clearTimeout(timeout);
   }

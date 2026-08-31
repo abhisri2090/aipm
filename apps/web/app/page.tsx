@@ -5,10 +5,16 @@ import { RegistrySearch } from "../components/registry-search";
 import { CLI_INSTALL_OPTIONS } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
-const PACKAGE_TAGS = [
-  { label: "Skills", status: "done" },
+type PackageTag = {
+  href?: string;
+  label: string;
+  status: "done" | "pending";
+};
+
+const PACKAGE_TAGS: readonly PackageTag[] = [
+  { href: "/skills", label: "Skills", status: "done" },
   { label: "Rules", status: "pending" },
-  { label: "Prompts", status: "pending" },
+  { href: "/prompts", label: "Prompts", status: "done" },
   { label: "MCP servers", status: "pending" },
   { label: "Hooks", status: "pending" },
   { label: "Context packs", status: "pending" },
@@ -210,8 +216,8 @@ export default async function HomePage() {
           <div>
             <dt>Who is it for?</dt>
             <dd>
-              Developers and teams using Cursor, Claude, Codex, and other assistants who want
-              repeatable project-local AI setup instead of copied instructions.
+              Tech and non-tech people who use AI tools for day-to-day tasks and want to
+              organize and scale AI use across their teams.
             </dd>
           </div>
           <div>
@@ -223,12 +229,24 @@ export default async function HomePage() {
           </div>
         </dl>
         <div className={home.heroTagRow} aria-label="Package types AIPM manages">
-          {PACKAGE_TAGS.map((tag) => (
-            <span className={home.heroTag} key={tag.label}>
-              <TagStatusIcon status={tag.status} />
-              {tag.label}
-            </span>
-          ))}
+          {PACKAGE_TAGS.map((tag) => {
+            const content = (
+              <>
+                <TagStatusIcon status={tag.status} />
+                {tag.label}
+              </>
+            );
+
+            return tag.href ? (
+              <Link className={home.heroTag} href={tag.href} key={tag.label}>
+                {content}
+              </Link>
+            ) : (
+              <span className={home.heroTag} key={tag.label}>
+                {content}
+              </span>
+            );
+          })}
         </div>
         <div className={shell.actions}>
           <Link className={shell.button} href="#get-started">
@@ -236,6 +254,9 @@ export default async function HomePage() {
           </Link>
           <Link className={shell.button} href="/registry">
             Browse registry
+          </Link>
+          <Link className={shell.button} href="/prompts">
+            Browse prompts
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/publish">
             Publish a skill

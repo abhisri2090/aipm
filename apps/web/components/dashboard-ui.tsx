@@ -17,6 +17,7 @@ import {
 import { api } from "../lib/api-client";
 import { cn } from "../lib/class-names";
 import { publicApiError } from "../lib/public-api-error";
+import { formatCopyCount, formatPromptDate, type PromptSummary } from "../lib/prompts";
 import shell from "../app/page-shell.module.css";
 import dash from "./dashboard-ui.module.css";
 
@@ -264,7 +265,7 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "members" | "packages" | "tokens" | "activity" | "settings" | "profile";
+  active: "overview" | "orgs" | "members" | "packages" | "prompts" | "tokens" | "activity" | "settings" | "profile";
   children: (context: { me: Me; orgs: Org[]; activeOrg: Org | null; setActiveOrgSlug: (slug: string) => void }) => ReactNode;
   intro?: string;
   title: string;
@@ -309,6 +310,7 @@ function DashboardShell({
     { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
     { href: "/dashboard/members", id: "members", label: "Members" },
     { href: "/dashboard/packages", id: "packages", label: "Packages" },
+    { href: "/dashboard/prompts", id: "prompts", label: "Prompts" },
     { href: "/dashboard/tokens", id: "tokens", label: "Tokens" },
     { href: "/dashboard/activity", id: "activity", label: "Activity" },
     { href: "/dashboard/settings", id: "settings", label: "Settings" },
@@ -1128,6 +1130,69 @@ export function PackagesDashboard() {
       title="Packages"
     >
       {({ activeOrg }) => (activeOrg ? <PackagesContent org={activeOrg} /> : <NoActiveOrg />)}
+    </DashboardShell>
+  );
+}
+
+type OwnedPrompt = PromptSummary & { status: "draft" | "published" | "hidden" | "archived" };
+
+export function PromptsDashboard() {
+  const [prompts, setPrompts] = useState<OwnedPrompt[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api<{ prompts: OwnedPrompt[] }>("/v1/me/prompts")
+      .then((data) => setPrompts(data.prompts))
+      .catch((err: unknown) => setError(publicApiError(err)));
+  }, []);
+
+  return (
+    <DashboardShell
+      active="prompts"
+      intro="Publish and review the prompts connected to your publisher identity."
+      title="Prompts"
+    >
+      {() => (
+        <section className={dash.dashboardGrid}>
+          <article className={dash.dashboardPanel}>
+            <div className={shell.sectionHeading}>
+              <div>
+                <p className={shell.eyebrow}>Your publishing</p>
+                <h2>Listed prompts</h2>
+              </div>
+            </div>
+            {error ? <p className={shell.notice}>{error}</p> : null}
+            {prompts.length ? (
+              <div className={dash.resourceList}>
+                {prompts.map((prompt) => (
+                  <Link className={dash.resourceRow} href={prompt.path} key={prompt.id}>
+                    <span>
+                      <strong>{prompt.title}</strong>
+                      <small>
+                        {prompt.status} · {formatCopyCount(prompt.copyCount)} · Updated {formatPromptDate(prompt.updatedAt)}
+                      </small>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className={shell.empty}>You have not published a prompt yet.</div>
+            )}
+          </article>
+          <article className={dash.dashboardPanel}>
+            <p className={shell.eyebrow}>Create</p>
+            <h2>Share a prompt</h2>
+            <p className={shell.muted}>
+              Add the prompt, its inputs and outputs, the models you tested, and a sample image when it produces images.
+            </p>
+            <div className={shell.actions}>
+              <Link className={shell.button} href="/prompts/new">
+                List a prompt
+              </Link>
+            </div>
+          </article>
+        </section>
+      )}
     </DashboardShell>
   );
 }

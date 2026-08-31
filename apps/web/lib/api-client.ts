@@ -1,4 +1,4 @@
-import { publicApiError } from "./public-api-error";
+import { apiResponseError, publicApiError } from "./public-api-error";
 import { showErrorToast } from "./toast";
 
 export type ApiOptions = {
@@ -13,19 +13,20 @@ export async function api<T>(path: string, init?: RequestInit, options?: ApiOpti
 
   try {
     const hasBody = init?.body != null && init.body !== "";
+    const isFormData = typeof FormData !== "undefined" && init?.body instanceof FormData;
     const response = await fetch(path, {
       ...init,
       credentials: "include",
       signal: init?.signal ?? controller.signal,
       headers: {
-        ...(hasBody ? { "content-type": "application/json" } : {}),
+        ...(hasBody && !isFormData ? { "content-type": "application/json" } : {}),
         ...init?.headers,
       },
     });
 
     if (!response.ok) {
-      const error = (await response.json().catch(() => ({}))) as { error?: string };
-      apiMessage = response.status === 401 ? "Login required" : (error.error ?? `Request failed: ${response.status}`);
+      const error = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
+      apiMessage = response.status === 401 ? "Login required" : apiResponseError(error, response.status);
       throw new Error(apiMessage);
     }
 

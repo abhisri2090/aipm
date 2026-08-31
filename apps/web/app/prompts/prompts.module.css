@@ -1,0 +1,51 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr);
+  gap: 56px;
+  align-items: end;
+  padding: 40px 0 36px;
+}
+
+.hero h1 {
+  max-width: 780px;
+  font-size: clamp(42px, 6vw, 68px);
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.heroStats div {
+  padding: 18px 14px;
+  text-align: center;
+}
+
+.heroStats div + div {
+  border-left: 1px solid var(--line);
+}
+
+.heroStats dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.heroStats dd {
+  margin: 7px 0 0;
+  color: var(--accent-strong);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+}

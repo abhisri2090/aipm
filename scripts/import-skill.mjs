@@ -18,6 +18,7 @@ import {
   resolveDescription,
   resolveAgentDescription,
   resolveImportVersion,
+  assertSkillNotImported,
 } from "./import-skill-lib.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -100,6 +101,8 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
   const parsed = parseGitHubFolderUrl(sourceUrl);
   const folderName = parsed.path.split("/").pop() ?? "skill";
   const packageName = buildPackageName(parsed.owner, folderName);
+  const importMeta = await fetchImportMeta(registryUrl, packageName);
+  assertSkillNotImported(packageName, importMeta.latestVersion);
 
   const [{ files, commitSha }, user, repoMeta] = await Promise.all([
     fetchGitHubFolder({ ...parsed, token: githubToken }),
@@ -125,7 +128,6 @@ export async function importSkillFromUrl(sourceUrl, env = process.env) {
   const agentDescription = resolveAgentDescription(entryText);
   const license = detectLicense(files, repoMeta.license);
   const contentHash = computeContentHash(files);
-  const importMeta = await fetchImportMeta(registryUrl, packageName);
   const versionDecision = resolveImportVersion({
     latestVersion: importMeta.latestVersion,
     latestContentHash: importMeta.latestContentHash,

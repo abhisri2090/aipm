@@ -1,0 +1,117 @@
+.trigger {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  padding: 0 13px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  text-align: left;
+}
+
+.trigger:hover {
+  background: var(--control);
+}
+
+.trigger:focus-visible {
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.triggerIcon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.content {
+  z-index: 50;
+  width: var(--radix-popover-trigger-width);
+  min-width: 240px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px color-mix(in srgb, #000 18%, transparent);
+  color: var(--text);
+}
+
+.command {
+  overflow: hidden;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  padding: 0 13px;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--muted);
+}
+
+.list {
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 5px;
+}
+
+.empty {
+  padding: 18px 13px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.item {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 9px;
+  border-radius: 6px;
+  padding: 0 9px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.item[aria-selected="true"] {
+  background: var(--panel-soft);
+}
+
+.item:hover {
+  background: var(--panel-soft);
+}
+
+.item:focus-visible {
+  background: var(--panel-soft);
+  outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: -2px;
+}
+
+.check {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  color: var(--accent);
+  opacity: 0;
+}
+
+.check[data-selected="true"] {
+  opacity: 1;
+}

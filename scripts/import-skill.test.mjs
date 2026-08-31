@@ -9,6 +9,7 @@ import {
   parseGitHubFolderUrl,
   resolveDescription,
   resolveImportVersion,
+  assertSkillNotImported,
   truncateDescription,
 } from "./import-skill-lib.mjs";
 
@@ -81,6 +82,13 @@ describe("frontmatter + version logic", () => {
         contentHash: "def",
       }),
     ).toEqual({ action: "publish", version: "1.0.1" });
+  });
+
+  it("rejects import when the skill already exists", () => {
+    expect(() => assertSkillNotImported("@mattpocock/grill-me", "1.0.0")).toThrow(
+      "Skill already exists: @mattpocock/grill-me@1.0.0",
+    );
+    expect(() => assertSkillNotImported("@mattpocock/grill-me", null)).not.toThrow();
   });
 
   it("hashes folder contents deterministically", () => {

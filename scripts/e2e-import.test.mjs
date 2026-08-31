@@ -9,10 +9,17 @@ const hasE2eEnv =
 describe.skipIf(!hasE2eEnv)("import skill e2e", () => {
   it("imports grill-me from GitHub into the registry", async () => {
     const { importSkillFromUrl } = await import("./import-skill.mjs");
-    const result = await importSkillFromUrl(
-      "https://github.com/mattpocock/skills/tree/main/skills/productivity/grill-me",
-    );
-    expect(["published", "skipped"]).toContain(result.action);
-    expect(result.packageName).toBe("@mattpocock/grill-me");
+    try {
+      const result = await importSkillFromUrl(
+        "https://github.com/mattpocock/skills/tree/main/skills/productivity/grill-me",
+      );
+      expect(result.action).toBe("published");
+      expect(result.packageName).toBe("@mattpocock/grill-me");
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error instanceof Error ? error.message : String(error)).toMatch(
+        /Skill already exists: @mattpocock\/grill-me/,
+      );
+    }
   }, 120_000);
 });

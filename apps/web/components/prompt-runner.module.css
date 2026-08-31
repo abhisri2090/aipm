@@ -1,0 +1,136 @@
+.runner {
+  display: grid;
+  gap: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 22px;
+}
+
+.header {
+  display: grid;
+  gap: 8px;
+}
+
+.header h2,
+.header p {
+  margin: 0;
+}
+
+.header > p:last-child,
+.noVariables {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.fields {
+  display: grid;
+  gap: 14px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.field label span,
+.result pre {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.field label span {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.field label strong,
+.field label em {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.field textarea {
+  width: 100%;
+  min-height: 18px;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  padding: 10px 12px;
+  color: var(--text);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.field textarea:focus {
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.field small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.noVariables {
+  margin: 0;
+}
+
+.error {
+  margin: 0;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-soft);
+  padding: 10px 12px;
+  color: var(--accent-strong);
+  font-size: 13px;
+}
+
+.generateButton {
+  justify-self: start;
+}
+
+.result {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+
+.resultHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.resultHeader h3 {
+  margin: 0;
+}
+
+.result pre {
+  max-height: 420px;
+  margin: 0;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--code);
+  padding: 16px;
+  color: var(--code-text);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}

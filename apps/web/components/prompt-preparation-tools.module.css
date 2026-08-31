@@ -1,0 +1,284 @@
+.tools {
+  display: grid;
+  gap: 18px;
+}
+
+.tool {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.toolHeader {
+  display: grid;
+  gap: 7px;
+}
+
+.toolHeader h2,
+.toolHeader h3,
+.toolHeader p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.toolHeader > p:last-child {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.action {
+  width: 100%;
+}
+
+.alreadyGeneric {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.alreadyGeneric input {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.alreadyGeneric strong {
+  color: var(--accent-strong);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.error {
+  margin: 0;
+  border-left: 3px solid var(--accent);
+  background: var(--panel-soft);
+  padding: 9px 10px;
+  color: var(--accent-strong);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.result {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.resultHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.resultHeader h3,
+.resultHeader h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.result pre {
+  max-height: 300px;
+  margin: 0;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--code);
+  padding: 12px;
+  color: var(--code-text);
+  font:
+    11px/1.55 "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  white-space: pre-wrap;
+}
+
+.formDetailsImport,
+.genericPromptImport {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.formDetailsImport label,
+.genericPromptImport label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.formDetailsImport textarea,
+.genericPromptImport textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  padding: 11px 12px;
+  color: var(--text);
+  font: 13px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.formDetailsImport textarea:focus,
+.genericPromptImport textarea:focus {
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.genericPromptImport p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.success {
+  margin: 0;
+  color: var(--accent-strong);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.dialogOverlay {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  background: color-mix(in srgb, #000 55%, transparent);
+}
+
+.dialogContent {
+  position: fixed;
+  z-index: 101;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: min(620px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  gap: 18px;
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 22px;
+  color: var(--text);
+  box-shadow: 0 24px 70px color-mix(in srgb, #000 30%, transparent);
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.dialogTitle {
+  margin: 0 0 6px;
+  font-size: 24px;
+}
+
+.dialogDescription {
+  max-width: 500px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.close {
+  display: grid;
+  width: 34px;
+  min-height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  padding: 0;
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.close:hover,
+.close:focus-visible {
+  border-color: var(--accent);
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.promptInput {
+  display: grid;
+  gap: 7px;
+}
+
+.promptInput label {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.promptInput textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 130px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--control);
+  padding: 11px 12px;
+  color: var(--text);
+  font: 13px/1.55 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+.promptInput textarea:focus {
+  border-color: var(--accent);
+  outline: 3px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  outline-offset: 1px;
+}
+
+.promptInput p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.modalTools {
+  display: grid;
+  gap: 14px;
+}
+
+.modalTool {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 16px;
+}
+
+.modalToolCollapsed {
+  gap: 10px;
+}

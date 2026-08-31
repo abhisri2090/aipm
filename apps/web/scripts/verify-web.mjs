@@ -36,6 +36,13 @@ const requiredPages = [
   },
   { path: "/registry", title: "AI Skills Registry", h1: "Search public skills.", jsonLd: true },
   {
+    path: "/prompts",
+    title: "AI Prompt Directory",
+    h1: "Start with a prompt that already works.",
+    jsonLd: true,
+    includes: ["Browse all prompts", "Category", "Output"],
+  },
+  {
     path: "/publish",
     title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
     h1: "Publish AI skills so others can install them.",

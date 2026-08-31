@@ -49,6 +49,24 @@ export class GitHubSkillCollectionError extends Error {
   }
 }
 
+export class SkillAlreadyExistsError extends Error {
+  readonly packageName: string;
+  readonly version: string;
+
+  constructor(packageName: string, version: string) {
+    super(`Skill already exists: ${packageName}@${version}`);
+    this.name = "SkillAlreadyExistsError";
+    this.packageName = packageName;
+    this.version = version;
+  }
+}
+
+export function assertSkillNotImported(packageName: string, latestVersion: string | null): void {
+  if (latestVersion) {
+    throw new SkillAlreadyExistsError(packageName, latestVersion);
+  }
+}
+
 function normalizeGitHubFolderPath(path: string): string {
   const cleaned = path.replace(/\/$/, "");
   const segments = cleaned.split("/");
@@ -508,6 +526,8 @@ export async function importSkillFromGitHubUrl(options: {
   const parsed = resolved.ref;
   const folderName = parsed.path ? (parsed.path.split("/").pop() ?? parsed.repo) : parsed.repo;
   const packageName = buildPackageName(options.orgName?.trim() || parsed.owner, folderName);
+  const versions = await listPackageVersionsForName(options.pool, packageName);
+  assertSkillNotImported(packageName, versions[0]?.version ?? null);
 
   const [{ files, commitSha }, user, repoMeta] = await Promise.all([
     fetchGitHubFolder(parsed, token),
@@ -532,7 +552,6 @@ export async function importSkillFromGitHubUrl(options: {
   const contentHash = computeContentHash(files);
 
   const provenance = await getLatestProvenance(options.pool, packageName);
-  const versions = await listPackageVersionsForName(options.pool, packageName);
   const versionDecision = resolveImportVersion({
     latestVersion: versions[0]?.version ?? null,
     latestContentHash: provenance?.content_hash ?? null,

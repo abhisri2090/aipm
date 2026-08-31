@@ -21,16 +21,62 @@
 }
 
 .docNavGroup + .docNavGroup {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .docNavSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
   margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.docNavSection::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.12s ease;
+}
+
+.docNavSection[aria-expanded="true"]::after {
+  transform: rotate(45deg);
+}
+
+.docNavSection:hover,
+.docNavSection:focus-visible {
+  background: var(--panel-soft);
+  color: var(--accent);
+  outline: none;
+}
+
+:global(:root[data-theme="dark"]) .docNavSection:hover,
+:global(:root[data-theme="dark"]) .docNavSection:focus-visible {
+  color: var(--accent-strong);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .docNavSection:hover,
+  :global(:root:not([data-theme])) .docNavSection:focus-visible {
+    color: var(--accent-strong);
+  }
 }
 
 .docNavList {
@@ -74,7 +120,17 @@
 
 .docNavLink:hover {
   background: var(--panel-soft);
-  color: var(--text);
+  color: var(--accent);
+}
+
+:global(:root[data-theme="dark"]) .docNavLink:hover {
+  color: var(--accent-strong);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme])) .docNavLink:hover {
+    color: var(--accent-strong);
+  }
 }
 
 .docNavLinkActive {

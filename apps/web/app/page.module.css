@@ -121,6 +121,17 @@
   white-space: nowrap;
 }
 
+.heroTag[href] {
+  text-decoration: none;
+}
+
+.heroTag[href]:hover,
+.heroTag[href]:focus-visible {
+  border-color: var(--accent);
+  background: var(--control);
+  color: var(--text);
+}
+
 .heroTagIconDone {
   color: var(--accent-strong);
 }

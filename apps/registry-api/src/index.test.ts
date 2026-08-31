@@ -295,6 +295,19 @@ describe("registry API production behavior", () => {
     });
   });
 
+  it("returns unhandled backend error messages to the client", async () => {
+    const response = await app!.inject({
+      method: "POST",
+      url: "/v1/admin/import-from-url",
+      headers: { "content-type": "application/json" },
+      payload: "{not-json",
+    });
+    expect(response.statusCode).toBeGreaterThanOrEqual(400);
+    expect(response.json().error).toEqual(expect.any(String));
+    expect(response.json().error).not.toBe("Bad Request");
+    expect(response.json().error).not.toBe("Internal Server Error");
+  });
+
   it.skipIf(!savedDatabaseUrl)("requires reserved package names for admin-token publishing when accounts are enabled", async () => {
     await app?.close();
     app = null;

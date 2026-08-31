@@ -16,7 +16,8 @@ import {
   type ImportProvenancePayload,
 } from "./admin-import.js";
 import { bulkImportSkillsFromGitHubFolder } from "./bulk-import-from-github.js";
-import { GitHubSkillCollectionError, importSkillFromGitHubUrl } from "./import-from-github.js";
+import { httpStatusFromError, publicError } from "./api-error.js";
+import { GitHubSkillCollectionError, SkillAlreadyExistsError, importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
   addOrgMember,
   confirmEmailVerification,
@@ -151,6 +152,7 @@ import {
 } from "./publish.js";
 import { ensureSchema } from "./db.js";
 import { assertSafeLocalRuntime } from "./local-safety.js";
+import { registerPromptRoutes } from "./prompt-routes.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const APP_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -187,16 +189,6 @@ function parseListCursor(value: unknown): ParsedQueryValue<string | undefined> {
     return { ok: false, error: "Invalid cursor; use an ISO timestamp returned as nextCursor" };
   }
   return { ok: true, value: new Date(timestamp).toISOString() };
-}
-
-function publicError(error: unknown, fallback: string): string {
-  if (process.env.NODE_ENV === "production") return fallback;
-  return error instanceof Error ? error.message : fallback;
-}
-
-function importPublicError(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message.trim()) return error.message;
-  return fallback;
 }
 
 function isHiddenPublicPackage(name: string): boolean {
@@ -706,6 +698,11 @@ export async function createApp(): Promise<FastifyInstance> {
       randomUUID(),
   });
 
+  app.setErrorHandler((error, request, reply) => {
+    request.log.error(error);
+    return reply.status(httpStatusFromError(error)).send({ error: publicError(error, "Request failed") });
+  });
+
   await app.register(helmet, {
     contentSecurityPolicy: false,
   });
@@ -714,6 +711,7 @@ export async function createApp(): Promise<FastifyInstance> {
     timeWindow: "1 minute",
   });
   await app.register(multipart, { limits: { fileSize: MAX_PACKAGE_BYTES } });
+  await registerPromptRoutes(app, { accountAuth, storage });
 
   app.get("/health", async () => ({
     status: "ok",
@@ -1083,15 +1081,15 @@ export async function createApp(): Promise<FastifyInstance> {
           } catch (bulkError) {
             request.log.error(bulkError);
             return reply.status(400).send({
-              error: importPublicError(bulkError, "Failed to bulk import skills"),
+              error: publicError(bulkError, "Failed to bulk import skills"),
             });
           }
         }
-        if (error instanceof DuplicateVersionError) {
+        if (error instanceof DuplicateVersionError || error instanceof SkillAlreadyExistsError) {
           return reply.status(409).send({ error: error.message });
         }
         request.log.error(error);
-        return reply.status(400).send({ error: importPublicError(error, "Failed to import skill") });
+        return reply.status(400).send({ error: publicError(error, "Failed to import skill") });
       }
     },
   );
@@ -1143,7 +1141,7 @@ export async function createApp(): Promise<FastifyInstance> {
         return reply.status(200).send(result);
       } catch (error) {
         request.log.error(error);
-        return reply.status(400).send({ error: importPublicError(error, "Failed to bulk import skills") });
+        return reply.status(400).send({ error: publicError(error, "Failed to bulk import skills") });
       }
     },
   );

@@ -9,9 +9,9 @@ import { cn } from "../lib/class-names";
 import styles from "./header.module.css";
 
 const links = [
-  { href: "/registry", label: "Registry" },
+  { href: "/skills", label: "Skills" },
+  { href: "/prompts", label: "Prompts" },
   { href: "/publish", label: "Publish" },
-  { href: "/use", label: "Use" },
   { href: "/resources", label: "Docs" },
   { href: "/login", label: "Login", requiresGuest: true },
   { href: "/dashboard", label: "Dashboard", requiresAuth: true },
@@ -40,8 +40,18 @@ export function Header() {
       return DOC_PATHS.includes(pathname);
     }
 
-    if (href === "/registry") {
-      return pathname === href || pathname.startsWith("/packages/") || pathname === "/skill";
+    if (href === "/skills") {
+      return (
+        pathname === href ||
+        pathname === "/registry" ||
+        pathname.startsWith("/skills/") ||
+        pathname.startsWith("/packages/") ||
+        pathname === "/skill"
+      );
+    }
+
+    if (href === "/prompts") {
+      return pathname === href || pathname.startsWith("/prompts/");
     }
 
     if (href === "/publish") {

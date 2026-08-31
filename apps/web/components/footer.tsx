@@ -6,6 +6,7 @@ const groups = [
     title: "Product",
     links: [
       { href: "/registry", label: "Registry" },
+      { href: "/prompts", label: "Prompt directory" },
       { href: "/use", label: "Use AIPM" },
       { href: "/publish", label: "Publish" },
       { href: "/targets", label: "Targets" },

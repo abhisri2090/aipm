@@ -1,5 +1,6 @@
 import { shell, cn } from "../../lib/page-styles";
 import Link from "next/link";
+import { DirectoryListTile } from "../../components/directory-list-tile";
 import { RegistrySearch } from "../../components/registry-search";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
@@ -76,6 +77,7 @@ export default async function RegistryPage({
         <div className={shell.sectionHeading}>
           <h2 id="registry-search-title">Skills</h2>
         </div>
+        <DirectoryListTile kind="skill" />
         <RegistrySearch initialPackages={[]} initialQuery={query} />
       </section>
     </main>

@@ -113,19 +113,24 @@ export function RegistrySearch({
           <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Intent</span>
             <div className={styles.filters} aria-label="Skill intent filters">
-              {QUICK_FILTERS.map((filter) => (
-                <button
-                  className={cn(styles.chip, query === filter.query && styles.chipActive)}
-                  key={filter.query}
-                  type="button"
-                  onClick={() => {
-                    setQuery(filter.query);
-                    void search(filter.query);
-                  }}
-                >
-                  {filter.label}
-                </button>
-              ))}
+              {QUICK_FILTERS.map((filter) => {
+                const selected = query === filter.query;
+                return (
+                  <button
+                    className={cn(styles.chip, selected && styles.chipActive)}
+                    key={filter.query}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      const nextQuery = selected ? "" : filter.query;
+                      setQuery(nextQuery);
+                      void search(nextQuery);
+                    }}
+                  >
+                    {filter.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </>

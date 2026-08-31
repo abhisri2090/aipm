@@ -170,6 +170,12 @@ export function resolveImportVersion({ latestVersion, latestContentHash, content
   return { action: "publish", version: nextPatchVersion(latestVersion) };
 }
 
+export function assertSkillNotImported(packageName, latestVersion) {
+  if (latestVersion) {
+    throw new Error(`Skill already exists: ${packageName}@${latestVersion}`);
+  }
+}
+
 export async function githubRequest(path, token) {
   const response = await fetch(`https://api.github.com${path}`, {
     headers: {

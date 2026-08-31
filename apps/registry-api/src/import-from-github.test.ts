@@ -17,6 +17,8 @@ import {
   resolveAgentDescription,
   resolveGitHubSkillImport,
   resolveImportVersion,
+  assertSkillNotImported,
+  SkillAlreadyExistsError,
   toGitHubTreeUrl,
   truncateDescription,
   writeImportedFilesToDirectory,
@@ -158,6 +160,16 @@ describe("import-from-github helpers", () => {
         contentHash: "def",
       }),
     ).toMatchObject({ action: "publish", version: "1.0.1" });
+  });
+
+  it("rejects GitHub import when the skill already exists", () => {
+    expect(() => assertSkillNotImported("@mattpocock/grill-me", "1.0.0")).toThrow(
+      SkillAlreadyExistsError,
+    );
+    expect(() => assertSkillNotImported("@mattpocock/grill-me", "1.0.0")).toThrow(
+      "Skill already exists: @mattpocock/grill-me@1.0.0",
+    );
+    expect(() => assertSkillNotImported("@mattpocock/grill-me", null)).not.toThrow();
   });
 
   it("truncates descriptions to the manifest limit", () => {
