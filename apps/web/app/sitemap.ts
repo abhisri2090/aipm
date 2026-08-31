@@ -34,7 +34,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/templates",
     "/thanks",
     "/compatibility",
-    "/stats",
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
   ];

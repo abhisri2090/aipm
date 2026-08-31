@@ -90,17 +90,17 @@ const requiredPages = [
   { path: "/resources", title: "AI Skill Resources", h1: "Find the guide you need.", jsonLd: false },
   {
     path: "/compatibility",
-    title: "AI Agent Configuration Compatibility Matrix",
-    h1: "AI agent configuration compatibility matrix",
+    title: "AI Agent File Support for Cursor, Claude and Codex",
+    h1: "Which AI agent files work with Cursor, Claude Code, and Codex?",
     jsonLd: true,
-    includes: ["Which file works where?", "AGENTS.md", "CLAUDE.md", "Last checked"],
+    includes: ["Which file works where?", "AGENTS.md", "CLAUDE.md", "Last checked: 31 August 2026"],
   },
   {
-    path: "/stats",
-    title: "AIPM Registry Statistics",
-    h1: "AIPM Registry statistics",
+    path: "/guides/components-of-an-ai-agent",
+    title: "Components of an AI Agent",
+    h1: "What are the main components of an AI agent?",
     jsonLd: true,
-    includes: ["Public data", "Live numbers from the public registry"],
+    includes: ["Short answer", "Model", "Instructions and goals", "Safety and human control"],
   },
   {
     path: "/skills/cursor",
@@ -149,7 +149,7 @@ const requiredPages = [
     title: "AIPM Skill Examples",
     h1: "Skill publishing examples.",
     jsonLd: true,
-    includes: ["Code review helper for Cursor", "Sentry issue summariser for Claude", "Import an existing Codex skill folder"],
+    includes: ["Code review AI skill for Cursor", "Sentry issue summariser AI skill for Claude", "Import an existing Codex AI skill folder"],
   },
   {
     path: "/glossary",
@@ -467,6 +467,9 @@ assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/version-a
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/share-cursor-rules`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/reusable-claude-skills`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/ai-agent-instructions-git`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/components-of-an-ai-agent`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/compatibility`);
+assertIncludes("/llms.txt", llms.text, "What are the main components of an AI agent?");
 
 const securityPolicy = await readFile(resolve(repoRoot, "SECURITY.md"), "utf8");
 assertIncludes("SECURITY.md", securityPolicy, "aipm publish preview");

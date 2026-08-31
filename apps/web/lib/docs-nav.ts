@@ -184,14 +184,14 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
     title: "Guides",
     items: [
       {
-        href: "/compatibility",
-        label: "Compatibility matrix",
-        body: "Compare the files used by Cursor, Claude Code, Codex, Agent Skills, and MCP.",
+        href: "/guides/components-of-an-ai-agent",
+        label: "Components of an AI agent",
+        body: "Understand the model, instructions, memory, tools, actions, and safety controls inside an AI agent.",
       },
       {
-        href: "/stats",
-        label: "Registry statistics",
-        body: "See live public counts for packages, installs, AI tools, and categories.",
+        href: "/compatibility",
+        label: "AI agent file support",
+        body: "See which instruction, skill, and MCP files work with Cursor, Claude Code, Codex, and other AI tools.",
       },
       {
         href: "/targets",

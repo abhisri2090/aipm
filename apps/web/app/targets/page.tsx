@@ -76,6 +76,12 @@ export default function TargetsPage() {
         </div>
       </section>
 
+      <p className={shell.lede}>
+        AIPM automatically detects the AI tool in your project and installs the skill in the matching
+        location. To force a specific target, use <code>--target cursor</code> or{" "}
+        <code>--target claude</code> with <code>aipm add</code>.
+      </p>
+
       <section className={cards.targetGrid} aria-label="Supported AIPM targets">
         {targets.map((target) => (
           <article className={cards.targetCard} key={target.value}>
@@ -118,14 +124,6 @@ export default function TargetsPage() {
               <p>Installs the same package into multiple AI tools.</p>
             </article>
           </div>
-        </section>
-
-        <section>
-          <h2>When automatic detection is not enough</h2>
-          <p>
-            AIPM can detect `.cursor/` and `.claude/` folders in a project. In CI, or when a project
-            has more than one tool, pass `--target cursor` or `--target claude`.
-          </p>
         </section>
       </article>
     </DocLayout>

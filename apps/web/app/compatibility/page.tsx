@@ -6,9 +6,9 @@ import { pageMetadata } from "../../lib/seo";
 import styles from "./compatibility.module.css";
 
 export const metadata = pageMetadata({
-  title: "AI Agent Configuration Compatibility Matrix",
+  title: "AI Agent File Support for Cursor, Claude and Codex",
   description:
-    "Compare AGENTS.md, CLAUDE.md, Cursor rules, Agent Skills, and MCP setup across Cursor, Claude Code, and Codex.",
+    "See which AI agent files work with Cursor, Claude Code, and Codex. Compare AGENTS.md, CLAUDE.md, Cursor rules, Agent Skills, and MCP setup.",
   path: "/compatibility",
   keywords: [
     "AI agent configuration compatibility",
@@ -16,10 +16,11 @@ export const metadata = pageMetadata({
     "CLAUDE.md Cursor Codex",
     "Cursor rules vs Claude skills",
     "AI coding agent configuration matrix",
+    "AI agent file support",
   ],
 });
 
-const VERIFIED_ON = "2026-08-28";
+const VERIFIED_ON = "2026-08-31";
 
 const rows = [
   {
@@ -77,7 +78,7 @@ export default function CompatibilityPage() {
             "@graph": [
               {
                 "@type": "Article",
-                headline: "AI Agent Configuration Compatibility Matrix",
+                headline: "AI Agent File Support for Cursor, Claude Code, and Codex",
                 description:
                   "A plain-English comparison of instruction and skill files used by Cursor, Claude Code, and Codex.",
                 url: canonical,
@@ -92,7 +93,7 @@ export default function CompatibilityPage() {
                 "@type": "BreadcrumbList",
                 itemListElement: [
                   { "@type": "ListItem", position: 1, name: "AIPM", item: SITE_URL },
-                  { "@type": "ListItem", position: 2, name: "Compatibility", item: canonical },
+                  { "@type": "ListItem", position: 2, name: "AI agent file support", item: canonical },
                 ],
               },
             ],
@@ -102,12 +103,12 @@ export default function CompatibilityPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Verified reference</p>
-        <h1>AI agent configuration compatibility matrix</h1>
+        <h1>Which AI agent files work with Cursor, Claude Code, and Codex?</h1>
         <p className={shell.lede}>
-          AI coding tools use different files for instructions, reusable tasks, and tool connections.
-          This page shows the main difference in plain English.
+          Use AGENTS.md for shared project instructions, CLAUDE.md for Claude Code, Cursor project
+          rules for Cursor, Agent Skills for reusable tasks, and MCP setup for tool connections.
         </p>
-        <p className={styles.note}>Last checked: 28 August 2026.</p>
+        <p className={styles.note}>Last checked: 31 August 2026.</p>
       </section>
 
       <section aria-labelledby="matrix-title" className={shell.panelSection}>
@@ -183,6 +184,7 @@ export default function CompatibilityPage() {
       <section className={shell.panelSection} aria-labelledby="related-title">
         <div className={shell.sectionHeading}><h2 id="related-title">Related guides</h2></div>
         <div className={cards.guideGrid}>
+          <Link className={cards.guideCard} href="/guides/components-of-an-ai-agent"><h2>Components of an AI agent</h2><p>Understand how models, instructions, memory, tools, actions, and safety controls work together.</p></Link>
           <Link className={cards.guideCard} href="/guides/agents-md-vs-claude-md-vs-cursor-rules"><h2>Compare instruction files</h2><p>Learn what AGENTS.md, CLAUDE.md, and Cursor rules are for.</p></Link>
           <Link className={cards.guideCard} href="/guides/claude-code-skills-vs-slash-commands"><h2>Claude skills and commands</h2><p>See how Claude Code skills and slash commands work together.</p></Link>
           <Link className={cards.guideCard} href="/guides/mcp-server-config-best-practices"><h2>MCP safety checklist</h2><p>Set up MCP connections without sharing private values.</p></Link>

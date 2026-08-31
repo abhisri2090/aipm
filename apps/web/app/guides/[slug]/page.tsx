@@ -53,6 +53,8 @@ export default async function GuidePage({ params }: GuideRouteProps) {
   const relatedGuides = SEO_GUIDES.filter((item) => item.slug !== guide.slug).slice(0, 4);
   const guideText = JSON.stringify(guide);
   const terms = PLAIN_ENGLISH_TERMS.filter((item) => guideText.includes(item.match));
+  const publishedAt = guide.publishedAt ?? GUIDE_PUBLISHED_AT;
+  const updatedAt = guide.updatedAt ?? GUIDE_UPDATED_AT;
 
   return (
     <DocLayout wide>
@@ -68,8 +70,8 @@ export default async function GuidePage({ params }: GuideRouteProps) {
                 headline: guide.title,
                 description: guide.description,
                 url: `${SITE_URL}/guides/${guide.slug}`,
-                datePublished: GUIDE_PUBLISHED_AT,
-                dateModified: GUIDE_UPDATED_AT,
+                datePublished: publishedAt,
+                dateModified: updatedAt,
                 inLanguage: "en",
                 author: { "@type": "Person", name: "Abhishek Srivastava" },
                 publisher: { "@type": "Organization", name: "AIPM" },
@@ -111,7 +113,10 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         <p className={shell.eyebrow}>Plain-English guide</p>
         <h1>{guide.h1}</h1>
         <p className={shell.lede}>{guide.description}</p>
-        <p className={shell.muted}>Published 27 August 2026. Last reviewed 28 August 2026.</p>
+        <p className={shell.muted}>
+          Published {new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(publishedAt))}.
+          {" "}Last reviewed {new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(updatedAt))}.
+        </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/install">
             Install AIPM
@@ -152,7 +157,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         </section>
 
         <section>
-          <h2>Simple steps</h2>
+          <h2>Simple steps to create and AI agent</h2>
           <ol className={docs.flowList}>
             {guide.steps.map((step) => (
               <li key={step}>{step}</li>

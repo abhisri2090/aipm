@@ -5,6 +5,8 @@ export type SeoGuide = {
   description: string;
   answer: string;
   keywords: string[];
+  publishedAt?: string;
+  updatedAt?: string;
   sections: Array<{
     title: string;
     body: string;
@@ -21,6 +23,116 @@ export type SeoGuide = {
 };
 
 export const SEO_GUIDES: SeoGuide[] = [
+  {
+    slug: "components-of-an-ai-agent",
+    title: "Components of an AI Agent",
+    h1: "What are the main components of an AI agent?",
+    description:
+      "Learn the main components of an AI agent in plain English, including the model, instructions, context, memory, tools, actions, safety, and feedback.",
+    answer:
+      "An AI agent needs a model to think, instructions to guide it, context and memory to understand the task, tools to get information, actions to do work, and safety checks to keep its work under control.",
+    keywords: [
+      "components of an AI agent",
+      "AI agent components",
+      "parts of an AI agent",
+      "how AI agents work",
+      "AI agent architecture",
+    ],
+    publishedAt: "2026-08-31",
+    updatedAt: "2026-08-31",
+    sections: [
+      {
+        title: "1. Model",
+        body:
+          "The model is the part that understands words and decides what to do next. It can read a request, compare options, write an answer, or choose a tool. A stronger model can usually handle harder tasks, but it still needs clear instructions and good information.",
+      },
+      {
+        title: "2. Instructions and goals",
+        body:
+          "Instructions tell the agent what job it has, what result it should produce, and what rules it must follow. A clear goal helps the agent stay focused. Without clear instructions, even a capable model may solve the wrong problem.",
+      },
+      {
+        title: "3. Context",
+        body:
+          "Context is the information available for the current task. It may include the user's request, project files, documents, earlier messages, or search results. Useful context helps the agent give a relevant answer instead of guessing.",
+      },
+      {
+        title: "4. Memory",
+        body:
+          "Memory keeps useful information from earlier work. Short-term memory follows the current conversation. Longer-term memory may keep approved preferences or facts for future tasks. Memory should be limited, accurate, and easy to correct.",
+      },
+      {
+        title: "5. Tools",
+        body:
+          "Tools let the agent do more than write text. A tool may search the web, read a file, call an API, query a database, or use another application. Each tool needs a clear purpose and limited permission.",
+      },
+      {
+        title: "6. Planning and decisions",
+        body:
+          "For a larger task, the agent breaks the goal into smaller steps. It checks what it already knows, chooses a tool when needed, reviews the result, and decides what to do next. Simple tasks may not need a long plan.",
+      },
+      {
+        title: "7. Actions and results",
+        body:
+          "An action changes something outside the model. It may create a file, send a message, update a record, or run a command. The agent should check the result of each important action instead of assuming that it worked.",
+      },
+      {
+        title: "8. Safety and human control",
+        body:
+          "Safety controls limit what the agent can see and do. They can block unsafe input, protect private data, restrict tools, ask for approval before important actions, and record what happened. People should remain in control of costly, private, or difficult-to-reverse decisions.",
+      },
+      {
+        title: "9. Feedback and evaluation",
+        body:
+          "Feedback shows whether the agent completed the task correctly. Tests, user review, tool results, and quality checks help find mistakes. Teams can use this information to improve instructions, tools, and safety rules.",
+      },
+    ],
+    steps: [
+      "Give the agent one clear goal.",
+      "Add only the context needed for that goal.",
+      "Choose a model that can handle the task.",
+      "Give the agent a small set of useful tools.",
+      "Limit what each tool can read or change.",
+      "Ask for human approval before important actions.",
+      "Check the result and record useful feedback.",
+    ],
+    faqs: [
+      {
+        question: "Is a chatbot the same as an AI agent?",
+        answer:
+          "Not always. A chatbot mainly answers messages. An AI agent can also plan steps, use tools, take actions, and check whether the work was completed.",
+      },
+      {
+        question: "Does every AI agent need memory?",
+        answer:
+          "No. A small agent may only need the current request and a tool result. Add memory only when earlier information is genuinely useful.",
+      },
+      {
+        question: "What is the most important part of an AI agent?",
+        answer:
+          "There is no single most important part. A capable model still needs a clear goal, useful context, suitable tools, and safety controls to work reliably.",
+      },
+      {
+        question: "How are AI agent skills related to these components?",
+        answer:
+          "A skill packages instructions, examples, and sometimes tool guidance for one repeated job. It gives the agent a reusable way to complete that job.",
+      },
+    ],
+    sources: [
+      {
+        label: "OpenAI: A practical guide to building agents",
+        href: "https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf",
+      },
+      {
+        label: "Anthropic: Building effective agents",
+        href: "https://www.anthropic.com/engineering/building-effective-agents",
+      },
+      {
+        label: "Model Context Protocol: Introduction",
+        href: "https://modelcontextprotocol.io/docs/getting-started/intro",
+      },
+    ],
+  },
   {
     slug: "ai-package-manager",
     title: "What Is an AI Package Manager?",

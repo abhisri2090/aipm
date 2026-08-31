@@ -20,14 +20,14 @@ type Example = {
 
 const examples: Example[] = [
   {
-    title: "Code review helper for Cursor",
+    title: "Code review AI skill for Cursor",
     storyline:
       "Maya leads a small backend team. Every pull request gets different review comments because each developer prompts Cursor differently. She packages the team's PR checklist as a skill so every project installs the same review standards.",
     publishSteps: [
       {
         title: "1. Create the skill folder",
-        body: "Creates a new package folder with a manifest, starter SKILL.md, and .aipmignore. The --targets cursor flag means this skill is for Cursor only.",
-        code: "aipm publish init --name @team/review-helper --template code-review --targets cursor",
+        body: "Creates a new package folder with a manifest, starter SKILL.md, and .aipmignore. The --targets cursor flag means this skill is for Cursor only. --template code-review means the skill is a code review skill.",
+        code: "aipm publish init --name {{your-team-name/review-helper}} --template code-review --targets cursor",
       },
       {
         title: "2. Open the folder",
@@ -54,20 +54,20 @@ const examples: Example[] = [
       {
         title: "Install into a project",
         body: "Adds the published skill to your project and writes the Cursor skill file. --ci skips prompts in scripts or CI.",
-        code: "aipm add @team/review-helper@1.0.0 --target cursor --ci",
+        code: "aipm add {{your-team-name/review-helper}}@1.0.0 --target cursor --ci",
       },
     ],
-    notes: ["Good for pull request reviews", "Installs into .cursor/aipm/skills/<skill>.md"],
+    notes: ["This will get installed into .cursor/aipm/skills/<skill>.md"],
   },
   {
-    title: "Sentry issue summariser for Claude",
+    title: "Sentry issue summariser AI skill for Claude",
     storyline:
       "James gets paged when Sentry fires. He spends the first ten minutes rewriting the same triage prompt in Claude. He publishes one skill so incident summaries follow the same format every time.",
     publishSteps: [
       {
         title: "1. Create the skill folder",
         body: "Creates a package for Claude with starter content for issue summaries.",
-        code: "aipm publish init --name @team/sentry-issue-summary --template issue-summary --targets claude",
+        code: "aipm publish init --name {{your-team-name/sentry-issue-summary}} --template issue-summary --targets claude",
       },
       {
         title: "2. Open the folder",
@@ -94,10 +94,10 @@ const examples: Example[] = [
       {
         title: "Install into a project",
         body: "Installs the skill as a Claude project skill folder.",
-        code: "aipm add @team/sentry-issue-summary@1.0.0 --target claude --ci",
+        code: "aipm add {{your-team-name/sentry-issue-summary}}@1.0.0 --target claude --ci",
       },
     ],
-    notes: ["Good for incidents, support, and bug triage", "Installs into .claude/aipm/skills/<skill>/SKILL.md"],
+    notes: ["Good for incidents, support, and bug triage", "This will get installed into .claude/aipm/skills/<skill>/SKILL.md"],
   },
   {
     title: "Release notes skill for Cursor and Claude",
@@ -145,14 +145,14 @@ const examples: Example[] = [
     notes: ["Good for teams using more than one AI tool", "The manifest should include both cursor and claude targets"],
   },
   {
-    title: "Import an existing Codex skill folder",
+    title: "Import an existing Codex AI skill folder",
     storyline:
       "Alex already built a review skill in Codex. The team wants it on the registry so others can install it with aipm add. He imports the folder instead of starting from scratch.",
     publishSteps: [
       {
         title: "1. Import into an AIPM package",
         body: "Copies an existing skill folder into a new AIPM package layout with a manifest.",
-        code: "aipm publish import ~/.codex/skills/review-helper --name @team/review-helper",
+        code: "aipm publish import ~/.codex/skills/review-helper --name {{your-team-name/review-helper}}",
       },
       {
         title: "2. Open the folder",
@@ -179,10 +179,10 @@ const examples: Example[] = [
       {
         title: "Install into a project",
         body: "Installs the published skill for Cursor in this example.",
-        code: "aipm add @team/review-helper@1.0.0 --target cursor --ci",
+        code: "aipm add {{your-team-name/review-helper}}@1.0.0 --target cursor --ci",
       },
     ],
-    notes: ["Good when an AI tool created the first draft", "Review .aipmignore before staging imported files"],
+    notes: ["Good when an AI tool created the first draft", "Review .aipmignore before staging imported files", "This will get installed into .cursor/aipm/skills/<skill>.md"],
   },
 ];
 
@@ -234,9 +234,9 @@ export default function ExamplesPage() {
         <p className={shell.eyebrow}>Examples</p>
         <h1>Skill publishing examples.</h1>
         <p className={shell.lede}>
-          These examples show the whole path: create a skill, stage it, publish it, and install it
-          into an AI tool. Each step has its own command and a short explanation. Install the AIPM CLI
-          once before you start — see the <Link href="/install">install guide</Link>.
+          These examples show the whole path:
+          {`Create a skill -> stage it -> publish it -> let people install it`} <br />
+          Install the AIPM CLI once before you start — see the <Link href="/install">install guide</Link>.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/templates">
