@@ -201,11 +201,11 @@
 }
 
 .sampleImage {
+  display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
-  object-fit: cover;
 }
 
 :global(:root[data-theme="dark"]) .outputMark[data-output="image"] {
