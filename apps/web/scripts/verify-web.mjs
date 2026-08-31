@@ -407,7 +407,7 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
-for (const path of ["/registry", "/publish", "/publish/guide", "/install", "/use", "/commands", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/guides/ai-package-manager", "/guides/agent-package-manager", "/guides/prompt-package-manager", "/guides/mcp-package-manager", "/guides/version-ai-prompts", "/guides/share-cursor-rules", "/guides/reusable-claude-skills", "/guides/ai-agent-instructions-git", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
+for (const path of ["/registry", "/skills", "/prompts", "/publish", "/publish/guide", "/install", "/use", "/commands", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/guides/ai-package-manager", "/guides/agent-package-manager", "/guides/prompt-package-manager", "/guides/mcp-package-manager", "/guides/version-ai-prompts", "/guides/share-cursor-rules", "/guides/reusable-claude-skills", "/guides/ai-agent-instructions-git", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
 

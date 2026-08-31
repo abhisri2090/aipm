@@ -4,6 +4,7 @@ import type pg from "pg";
 import { getOrgBySlugForMember } from "./db.js";
 import type { BlobStorage } from "./storage.js";
 import { requireCurrentUser, type AccountAuth } from "./user-auth.js";
+import { promptPublicUrl, queueSearchNotification } from "./search-notification.js";
 
 const MAX_SAMPLE_IMAGE_BYTES = 5 * 1024 * 1024;
 const PROMPT_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?$/;
@@ -591,7 +592,12 @@ export async function registerPromptRoutes(
         created.slug,
       );
       if (!hydrated) throw new Error("Published prompt could not be loaded");
-      return reply.status(201).send(serializeDetail(hydrated));
+      const detail = serializeDetail(hydrated);
+      queueSearchNotification(
+        [promptPublicUrl(detail.publisher.scope, detail.slug)],
+        request.log,
+      );
+      return reply.status(201).send(detail);
     } catch (error) {
       if (blobPath) await options.storage.delete(blobPath).catch(() => undefined);
       const pgError = error as { code?: string };

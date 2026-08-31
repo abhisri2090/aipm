@@ -9,6 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths = [
     "/",
     "/registry",
+    "/skills",
     "/prompts",
     "/publish",
     "/publish/guide",
@@ -36,12 +37,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/stats",
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
-    ...prompts.map((prompt) => prompt.path),
   ];
-  const now = new Date();
 
-  return staticPaths.map((path) => ({
-    url: `${SITE_URL}${path}`,
-    lastModified: now,
-  }));
+  return [
+    ...staticPaths.map((path) => ({ url: `${SITE_URL}${path}` })),
+    ...prompts.map((prompt) => ({
+      url: `${SITE_URL}${prompt.path}`,
+      lastModified: new Date(prompt.updatedAt),
+    })),
+  ];
 }

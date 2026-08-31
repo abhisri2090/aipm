@@ -153,6 +153,7 @@ import {
 import { ensureSchema } from "./db.js";
 import { assertSafeLocalRuntime } from "./local-safety.js";
 import { registerPromptRoutes } from "./prompt-routes.js";
+import { packagePublicUrl, queueSearchNotification } from "./search-notification.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
 const APP_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -1965,6 +1966,15 @@ export async function createApp(): Promise<FastifyInstance> {
         eventType: "package.visibility_changed",
         metadata: { from: previous, to: visibility },
       });
+      if (previous === "private" && visibility === "public") {
+        const [latestVersion] = await metadata.listVersions(name);
+        if (latestVersion && !latestVersion.yanked_at) {
+          queueSearchNotification(
+            [packagePublicUrl(name, latestVersion.version)],
+            request.log,
+          );
+        }
+      }
       return {
         name: updated.name,
         visibility: updated.visibility,
@@ -2148,6 +2158,12 @@ export async function createApp(): Promise<FastifyInstance> {
         if (tempWritten) await storage.delete(tempBlobPath).catch(() => undefined);
       }
 
+      const publishedReservation = accountAuth
+        ? await getPackageReservationByName(accountAuth.pool, name)
+        : null;
+      if (publishedReservation?.visibility !== "private") {
+        queueSearchNotification([packagePublicUrl(name, manifest.version)], request.log);
+      }
       return reply.status(201).send({ name, version: manifest.version, integrity });
     },
   );

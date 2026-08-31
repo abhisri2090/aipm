@@ -17,6 +17,7 @@ import { extractManifestFromTarball } from "./publish.js";
 import type { MetadataStore } from "./metadata-store.js";
 import type { BlobStorage } from "./storage.js";
 import { blobKeyForPackage } from "./storage.js";
+import { packagePublicUrl, queueSearchNotification } from "./search-notification.js";
 
 export { DuplicateVersionError };
 export { getLatestContentHash, getOwnedPackageReservation } from "./db.js";
@@ -156,6 +157,7 @@ export async function importSkillPackage(options: {
     content_hash: options.provenance.contentHash,
   });
   await queueImportNotification(options.pool, { userId: user.id, packageName: manifest.name });
+  queueSearchNotification([packagePublicUrl(manifest.name, manifest.version)]);
 
   return { name: manifest.name, version: manifest.version, integrity, userId: user.id };
 }
