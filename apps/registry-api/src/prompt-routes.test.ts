@@ -35,10 +35,11 @@ describe("prompt validation", () => {
     expect(prompt.testedModels).toEqual(["GPT-5", "Claude Sonnet 4.5"]);
   });
 
-  it("requires at least one tested model", () => {
-    expect(() => validatePromptInput({ ...validPrompt, testedModels: [] })).toThrow(
-      "Choose at least one tested model",
-    );
+  it("allows tested models to be omitted", () => {
+    expect(validatePromptInput({ ...validPrompt, testedModels: [] }).testedModels).toEqual([]);
+    expect(
+      validatePromptInput({ ...validPrompt, testedModels: undefined }).testedModels,
+    ).toEqual([]);
   });
 
   it("rejects duplicate variables", () => {

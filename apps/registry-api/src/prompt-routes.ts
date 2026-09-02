@@ -215,10 +215,11 @@ export function validatePromptInput(raw: unknown): PromptInput {
     maxLength: 30,
     allowed: ALLOWED_OUTPUT_TYPES,
   });
-  const testedModels = cleanArray(input.testedModels, {
+  const testedModels = cleanArray(input.testedModels ?? [], {
     field: "Tested models",
     maxItems: 10,
     maxLength: 80,
+    required: false,
     preserveCase: true,
   });
   const effort = cleanString(input.effort, 20, "Effort").toLowerCase();

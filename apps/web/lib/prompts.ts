@@ -10,6 +10,7 @@ export const PROMPT_CATEGORIES = [
   "Learning",
   "Marketing",
   "Coding",
+  "Playground",
 ] as const;
 
 export const PROMPT_INPUT_TYPES = ["text", "image", "document", "code", "audio"] as const;

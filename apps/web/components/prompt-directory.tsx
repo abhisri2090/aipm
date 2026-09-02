@@ -265,7 +265,9 @@ export function PromptDirectory({
               </dl>
               <Publisher prompt={prompt} />
               <footer className={styles.cardFooter}>
-                <span>{formatCopyCount(prompt.copyCount)}</span>
+                {prompt.copyCount >= 2 ? (
+                  <span>{formatCopyCount(prompt.copyCount)}</span>
+                ) : null}
                 <span>Updated {formatPromptDate(prompt.updatedAt)}</span>
               </footer>
             </article>
