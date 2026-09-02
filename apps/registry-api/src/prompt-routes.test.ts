@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   slugifyPromptTitle,
+  userCanEditPrompt,
   validatePromptInput,
   validatePromptSampleImage,
 } from "./prompt-routes.js";
@@ -76,5 +77,29 @@ describe("prompt validation", () => {
         alt: "A vintage travel poster for Kyoto",
       }),
     ).not.toThrow();
+  });
+});
+
+describe("userCanEditPrompt", () => {
+  const prompt = { owner_user_id: "owner-1", org_id: null as string | null };
+
+  it("allows the original owner", () => {
+    expect(userCanEditPrompt("owner-1", prompt, new Set())).toBe(true);
+  });
+
+  it("rejects other users for personal prompts", () => {
+    expect(userCanEditPrompt("other", prompt, new Set(["org-1"]))).toBe(false);
+    expect(userCanEditPrompt(null, prompt, new Set())).toBe(false);
+  });
+
+  it("allows org owners and admins for org prompts", () => {
+    const orgPrompt = { owner_user_id: "owner-1", org_id: "org-1" };
+    expect(userCanEditPrompt("admin-user", orgPrompt, new Set(["org-1"]))).toBe(true);
+    expect(userCanEditPrompt("member-user", orgPrompt, new Set())).toBe(false);
+  });
+
+  it("still allows the original owner of an org prompt", () => {
+    const orgPrompt = { owner_user_id: "owner-1", org_id: "org-1" };
+    expect(userCanEditPrompt("owner-1", orgPrompt, new Set())).toBe(true);
   });
 });

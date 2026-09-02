@@ -20,6 +20,13 @@
   padding: 30px 0 34px;
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 .detailHeader h1 {
   max-width: 820px;
   margin: 14px 0;

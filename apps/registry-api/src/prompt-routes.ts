@@ -1,9 +1,13 @@
 import { randomUUID } from "node:crypto";
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import type pg from "pg";
 import { getOrgBySlugForMember } from "./db.js";
 import type { BlobStorage } from "./storage.js";
-import { requireCurrentUser, type AccountAuth } from "./user-auth.js";
+import {
+  getCurrentUser,
+  requireCurrentUser,
+  type AccountAuth,
+} from "./user-auth.js";
 import { promptPublicUrl, queueSearchNotification } from "./search-notification.js";
 
 const MAX_SAMPLE_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -300,6 +304,26 @@ export function validatePromptSampleImage(
   }
 }
 
+export function userCanEditPrompt(
+  userId: string | null | undefined,
+  prompt: { owner_user_id: string; org_id: string | null },
+  editableOrgIds: ReadonlySet<string>,
+): boolean {
+  if (!userId) return false;
+  if (prompt.owner_user_id === userId) return true;
+  return Boolean(prompt.org_id && editableOrgIds.has(prompt.org_id));
+}
+
+async function listEditableOrgIds(pool: pg.Pool, userId: string): Promise<Set<string>> {
+  const result = await pool.query<{ org_id: string }>(
+    `SELECT org_id
+     FROM org_memberships
+     WHERE user_id = $1 AND role IN ('owner', 'admin')`,
+    [userId],
+  );
+  return new Set(result.rows.map((row) => row.org_id));
+}
+
 function publisherScope(row: PromptRow): string {
   return row.org_slug ?? row.username;
 }
@@ -319,7 +343,10 @@ function serializePublisher(row: PromptRow) {
   };
 }
 
-function serializeSummary(row: PromptRow) {
+function serializeSummary(
+  row: PromptRow,
+  options?: { canEdit?: boolean },
+) {
   const scope = publisherScope(row);
   return {
     id: row.id,
@@ -339,13 +366,17 @@ function serializeSummary(row: PromptRow) {
     publisher: serializePublisher(row),
     path: `/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(row.slug)}`,
     hasSampleImage: Boolean(row.sample_image_blob_path),
+    canEdit: Boolean(options?.canEdit),
   };
 }
 
-function serializeDetail(row: PromptRow) {
+function serializeDetail(
+  row: PromptRow,
+  options?: { canEdit?: boolean },
+) {
   const scope = publisherScope(row);
   return {
-    ...serializeSummary(row),
+    ...serializeSummary(row, options),
     promptText: row.prompt_text,
     testedModels: row.tested_models,
     variables: row.variables,
@@ -359,6 +390,50 @@ function serializeDetail(row: PromptRow) {
       ? `/v1/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(row.slug)}/sample-image`
       : null,
   };
+}
+
+type ParsedPromptMultipart = {
+  rawData: string;
+  sampleImage: { data: Buffer; contentType: string; extension: string } | null;
+  error?: { status: number; error: string };
+};
+
+async function parsePromptMultipart(
+  request: FastifyRequest,
+): Promise<ParsedPromptMultipart> {
+  let rawData = "";
+  let sampleImage: ParsedPromptMultipart["sampleImage"] = null;
+  for await (const part of request.parts({
+    limits: { fileSize: MAX_SAMPLE_IMAGE_BYTES, files: 1, fields: 10 },
+  })) {
+    if (part.type === "file") {
+      if (part.fieldname !== "sampleImage" || !part.filename) {
+        await part.toBuffer();
+        continue;
+      }
+      const extension = ALLOWED_IMAGE_TYPES.get(part.mimetype);
+      if (!extension) {
+        await part.toBuffer();
+        return {
+          rawData,
+          sampleImage: null,
+          error: { status: 400, error: "Sample image must be a JPEG, PNG, or WebP file" },
+        };
+      }
+      const data = await part.toBuffer();
+      if (part.file.truncated || data.length > MAX_SAMPLE_IMAGE_BYTES) {
+        return {
+          rawData,
+          sampleImage: null,
+          error: { status: 413, error: "Sample image must be 5 MB or smaller" },
+        };
+      }
+      sampleImage = { data, contentType: part.mimetype, extension };
+    } else if (part.fieldname === "data") {
+      rawData = String(part.value ?? "");
+    }
+  }
+  return { rawData, sampleImage };
 }
 
 async function ensurePromptSchema(pool: pg.Pool): Promise<void> {
@@ -452,7 +527,17 @@ export async function registerPromptRoutes(
        LIMIT $${values.length}`,
         values,
       );
-      return { prompts: result.rows.map(serializeSummary) };
+      const user = await getCurrentUser(options.accountAuth, request);
+      const editableOrgIds = user
+        ? await listEditableOrgIds(options.accountAuth.pool, user.id)
+        : new Set<string>();
+      return {
+        prompts: result.rows.map((row) =>
+          serializeSummary(row, {
+            canEdit: userCanEditPrompt(user?.id, row, editableOrgIds),
+          }),
+        ),
+      };
     },
   );
 
@@ -468,9 +553,12 @@ export async function registerPromptRoutes(
        ORDER BY prompts.updated_at DESC`,
       [user.id],
     );
+    const editableOrgIds = await listEditableOrgIds(options.accountAuth.pool, user.id);
     return {
       prompts: result.rows.map((row) => ({
-        ...serializeSummary(row),
+        ...serializeSummary(row, {
+          canEdit: userCanEditPrompt(user.id, row, editableOrgIds),
+        }),
         status: row.status,
       })),
     };
@@ -479,35 +567,9 @@ export async function registerPromptRoutes(
   app.post("/v1/prompts", async (request, reply) => {
     const user = await requireCurrentUser(options.accountAuth, request, reply);
     if (!user || !options.accountAuth) return;
-    let rawData = "";
-    let sampleImage: { data: Buffer; contentType: string; extension: string } | null =
-      null;
-    for await (const part of request.parts({
-      limits: { fileSize: MAX_SAMPLE_IMAGE_BYTES, files: 1, fields: 10 },
-    })) {
-      if (part.type === "file") {
-        if (part.fieldname !== "sampleImage" || !part.filename) {
-          await part.toBuffer();
-          continue;
-        }
-        const extension = ALLOWED_IMAGE_TYPES.get(part.mimetype);
-        if (!extension) {
-          await part.toBuffer();
-          return reply
-            .status(400)
-            .send({ error: "Sample image must be a JPEG, PNG, or WebP file" });
-        }
-        const data = await part.toBuffer();
-        if (part.file.truncated || data.length > MAX_SAMPLE_IMAGE_BYTES) {
-          return reply
-            .status(413)
-            .send({ error: "Sample image must be 5 MB or smaller" });
-        }
-        sampleImage = { data, contentType: part.mimetype, extension };
-      } else if (part.fieldname === "data") {
-        rawData = String(part.value ?? "");
-      }
-    }
+    const parsed = await parsePromptMultipart(request);
+    if (parsed.error) return reply.status(parsed.error.status).send({ error: parsed.error.error });
+    const { rawData, sampleImage } = parsed;
 
     let input: PromptInput;
     try {
@@ -593,7 +655,7 @@ export async function registerPromptRoutes(
         created.slug,
       );
       if (!hydrated) throw new Error("Published prompt could not be loaded");
-      const detail = serializeDetail(hydrated);
+      const detail = serializeDetail(hydrated, { canEdit: true });
       queueSearchNotification(
         [promptPublicUrl(detail.publisher.scope, detail.slug)],
         request.log,
@@ -611,6 +673,157 @@ export async function registerPromptRoutes(
     }
   });
 
+  app.patch<{ Params: { publisher: string; slug: string } }>(
+    "/v1/prompts/:publisher/:slug",
+    async (request, reply) => {
+      const user = await requireCurrentUser(options.accountAuth, request, reply);
+      if (!user || !options.accountAuth) return;
+
+      const existing = await findPublicPrompt(
+        options.accountAuth.pool,
+        request.params.publisher.toLowerCase(),
+        request.params.slug.toLowerCase(),
+      );
+      if (!existing) return reply.status(404).send({ error: "Prompt not found" });
+
+      const editableOrgIds = await listEditableOrgIds(options.accountAuth.pool, user.id);
+      if (!userCanEditPrompt(user.id, existing, editableOrgIds)) {
+        return reply.status(403).send({ error: "You cannot edit this prompt" });
+      }
+
+      const parsed = await parsePromptMultipart(request);
+      if (parsed.error) return reply.status(parsed.error.status).send({ error: parsed.error.error });
+      const { rawData, sampleImage } = parsed;
+
+      let input: PromptInput;
+      try {
+        input = validatePromptInput(JSON.parse(rawData || "{}"));
+      } catch (error) {
+        return reply
+          .status(400)
+          .send({ error: error instanceof Error ? error.message : "Invalid prompt" });
+      }
+
+      const keepsImage = Boolean(existing.sample_image_blob_path) && !sampleImage;
+      const imageOutput = input.outputTypes.includes("image");
+      try {
+        if (imageOutput) {
+          validatePromptSampleImage(input.outputTypes, {
+            present: Boolean(sampleImage) || keepsImage,
+            alt: input.sampleImageAlt || (keepsImage ? existing.sample_image_alt ?? "" : ""),
+          });
+        }
+      } catch (error) {
+        return reply.status(400).send({
+          error: error instanceof Error ? error.message : "Invalid sample image",
+        });
+      }
+
+      const previousBlobPath = existing.sample_image_blob_path;
+      let nextBlobPath = previousBlobPath;
+      let nextContentType = existing.sample_image_content_type;
+      let nextAlt = input.sampleImageAlt || null;
+      let uploadedBlobPath: string | null = null;
+
+      if (!imageOutput) {
+        nextBlobPath = null;
+        nextContentType = null;
+        nextAlt = null;
+      } else if (sampleImage) {
+        uploadedBlobPath = `prompts/${existing.id}/sample.${sampleImage.extension}`;
+        nextBlobPath = uploadedBlobPath;
+        nextContentType = sampleImage.contentType;
+        await options.storage.put(uploadedBlobPath, sampleImage.data);
+      } else {
+        nextAlt = input.sampleImageAlt || existing.sample_image_alt;
+      }
+
+      try {
+        await options.accountAuth.pool.query(
+          `UPDATE prompts SET
+             slug = $2,
+             title = $3,
+             summary = $4,
+             prompt_text = $5,
+             category = $6,
+             tags = $7::jsonb,
+             input_types = $8::jsonb,
+             output_types = $9::jsonb,
+             tested_models = $10::jsonb,
+             effort = $11,
+             variables = $12::jsonb,
+             example_input = $13,
+             example_output = $14,
+             usage_notes = $15,
+             language = $16,
+             source_url = $17,
+             license = $18,
+             sample_image_blob_path = $19,
+             sample_image_content_type = $20,
+             sample_image_alt = $21,
+             updated_at = NOW()
+           WHERE id = $1`,
+          [
+            existing.id,
+            input.slug,
+            input.title,
+            input.summary,
+            input.promptText,
+            input.category,
+            JSON.stringify(input.tags),
+            JSON.stringify(input.inputTypes),
+            JSON.stringify(input.outputTypes),
+            JSON.stringify(input.testedModels),
+            input.effort,
+            JSON.stringify(input.variables ?? []),
+            input.exampleInput || null,
+            input.exampleOutput || null,
+            input.usageNotes || null,
+            input.language,
+            input.sourceUrl || null,
+            input.license,
+            nextBlobPath,
+            nextContentType,
+            nextAlt,
+          ],
+        );
+      } catch (error) {
+        if (uploadedBlobPath) {
+          await options.storage.delete(uploadedBlobPath).catch(() => undefined);
+        }
+        const pgError = error as { code?: string };
+        if (pgError.code === "23505") {
+          return reply
+            .status(409)
+            .send({ error: "That prompt slug is already in use for this publisher" });
+        }
+        throw error;
+      }
+
+      if (
+        previousBlobPath &&
+        previousBlobPath !== nextBlobPath
+      ) {
+        await options.storage.delete(previousBlobPath).catch(() => undefined);
+      }
+
+      const publisherScopeValue = publisherScope(existing);
+      const hydrated = await findPublicPrompt(
+        options.accountAuth.pool,
+        publisherScopeValue,
+        input.slug!,
+      );
+      if (!hydrated) throw new Error("Updated prompt could not be loaded");
+      const detail = serializeDetail(hydrated, { canEdit: true });
+      const urls = [promptPublicUrl(detail.publisher.scope, detail.slug)];
+      if (existing.slug !== detail.slug) {
+        urls.push(promptPublicUrl(publisherScopeValue, existing.slug));
+      }
+      queueSearchNotification(urls, request.log);
+      return detail;
+    },
+  );
+
   app.get<{ Params: { publisher: string; slug: string } }>(
     "/v1/prompts/:publisher/:slug",
     async (request, reply) => {
@@ -622,7 +835,13 @@ export async function registerPromptRoutes(
         request.params.slug.toLowerCase(),
       );
       if (!row) return reply.status(404).send({ error: "Prompt not found" });
-      return serializeDetail(row);
+      const user = await getCurrentUser(options.accountAuth, request);
+      const editableOrgIds = user
+        ? await listEditableOrgIds(options.accountAuth.pool, user.id)
+        : new Set<string>();
+      return serializeDetail(row, {
+        canEdit: userCanEditPrompt(user?.id, row, editableOrgIds),
+      });
     },
   );
 

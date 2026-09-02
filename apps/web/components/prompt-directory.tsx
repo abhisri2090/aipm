@@ -269,6 +269,15 @@ export function PromptDirectory({
                   <span>{formatCopyCount(prompt.copyCount)}</span>
                 ) : null}
                 <span>Updated {formatPromptDate(prompt.updatedAt)}</span>
+                {prompt.canEdit ? (
+                  <Link
+                    className={styles.editLink}
+                    href={`${promptPath(prompt)}/edit`}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    Edit
+                  </Link>
+                ) : null}
               </footer>
             </article>
           ))}

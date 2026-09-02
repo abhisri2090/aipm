@@ -62,6 +62,7 @@ export type PromptSummary = {
   publisher: PromptPublisher;
   path: string;
   hasSampleImage: boolean;
+  canEdit?: boolean;
 };
 
 export type PromptDetail = PromptSummary & {

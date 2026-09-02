@@ -89,35 +89,59 @@ function ChoiceGroup({
   );
 }
 
-export function PromptSubmissionForm() {
+export function PromptSubmissionForm({
+  mode = "create",
+  initialPrompt = null,
+}: {
+  mode?: "create" | "edit";
+  initialPrompt?: PromptDetail | null;
+}) {
   const router = useRouter();
+  const isEdit = mode === "edit";
   const [me, setMe] = useState<Me | null>(null);
   const [orgs, setOrgs] = useState<Org[]>([]);
   const [accountState, setAccountState] = useState<"loading" | "ready" | "login">(
     "loading",
   );
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [slugEdited, setSlugEdited] = useState(false);
-  const [summary, setSummary] = useState("");
-  const [promptText, setPromptText] = useState("");
-  const [category, setCategory] = useState("Productivity");
-  const [tags, setTags] = useState<string[]>([]);
+  const [title, setTitle] = useState(initialPrompt?.title ?? "");
+  const [slug, setSlug] = useState(initialPrompt?.slug ?? "");
+  const [slugEdited, setSlugEdited] = useState(isEdit);
+  const [summary, setSummary] = useState(initialPrompt?.summary ?? "");
+  const [promptText, setPromptText] = useState(initialPrompt?.promptText ?? "");
+  const [category, setCategory] = useState(initialPrompt?.category ?? "Productivity");
+  const [tags, setTags] = useState<string[]>(initialPrompt?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
-  const [inputTypes, setInputTypes] = useState<string[]>(["text"]);
-  const [outputTypes, setOutputTypes] = useState<string[]>(["text"]);
-  const [testedModels, setTestedModels] = useState("");
-  const [effort, setEffort] = useState("quick");
-  const [publisher, setPublisher] = useState("personal");
-  const [variables, setVariables] = useState<PromptVariable[]>([]);
-  const [exampleInput, setExampleInput] = useState("");
-  const [exampleOutput, setExampleOutput] = useState("");
-  const [usageNotes, setUsageNotes] = useState("");
-  const [language, setLanguage] = useState("English");
-  const [license, setLicense] = useState("CC BY 4.0");
-  const [sourceUrl, setSourceUrl] = useState("");
+  const [inputTypes, setInputTypes] = useState<string[]>(
+    initialPrompt?.inputTypes ?? ["text"],
+  );
+  const [outputTypes, setOutputTypes] = useState<string[]>(
+    initialPrompt?.outputTypes ?? ["text"],
+  );
+  const [testedModels, setTestedModels] = useState(
+    initialPrompt?.testedModels.join(", ") ?? "",
+  );
+  const [effort, setEffort] = useState<"quick" | "guided" | "advanced">(
+    initialPrompt?.effort ?? "quick",
+  );
+  const [publisher, setPublisher] = useState(
+    initialPrompt?.publisher.kind === "organization" && initialPrompt.publisher.org?.slug
+      ? initialPrompt.publisher.org.slug
+      : "personal",
+  );
+  const [variables, setVariables] = useState<PromptVariable[]>(
+    initialPrompt?.variables ?? [],
+  );
+  const [exampleInput, setExampleInput] = useState(initialPrompt?.exampleInput ?? "");
+  const [exampleOutput, setExampleOutput] = useState(initialPrompt?.exampleOutput ?? "");
+  const [usageNotes, setUsageNotes] = useState(initialPrompt?.usageNotes ?? "");
+  const [language, setLanguage] = useState(initialPrompt?.language ?? "English");
+  const [license, setLicense] = useState(initialPrompt?.license ?? "CC BY 4.0");
+  const [sourceUrl, setSourceUrl] = useState(initialPrompt?.sourceUrl ?? "");
   const [sampleImage, setSampleImage] = useState<File | null>(null);
-  const [sampleImageAlt, setSampleImageAlt] = useState("");
+  const [sampleImageAlt, setSampleImageAlt] = useState(
+    initialPrompt?.sampleImageAlt ?? "",
+  );
+  const [existingSampleImageUrl] = useState(initialPrompt?.sampleImageUrl ?? null);
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -179,7 +203,9 @@ export function PromptSubmissionForm() {
     if (details.inputTypes !== undefined) setInputTypes(details.inputTypes);
     if (details.outputTypes !== undefined) setOutputTypes(details.outputTypes);
     if (details.testedModels !== undefined) setTestedModels(details.testedModels.join(", "));
-    if (details.effort !== undefined) setEffort(details.effort);
+    if (details.effort !== undefined) {
+      setEffort(details.effort as "quick" | "guided" | "advanced");
+    }
     if (details.variables !== undefined) setVariables(details.variables);
     if (details.exampleInput !== undefined) setExampleInput(details.exampleInput);
     if (details.exampleOutput !== undefined) setExampleOutput(details.exampleOutput);
@@ -202,7 +228,7 @@ export function PromptSubmissionForm() {
       <main>
         <section className={shell.pageHeader}>
           <p className={shell.eyebrow}>Prompt publishing</p>
-          <h1>Sign in to list a prompt.</h1>
+          <h1>{isEdit ? "Sign in to edit this prompt." : "Sign in to list a prompt."}</h1>
           <p className={shell.lede}>
             Every prompt is connected to a publisher profile so readers know who created
             it.
@@ -225,16 +251,21 @@ export function PromptSubmissionForm() {
       <section className={styles.header}>
         <div>
           <p className={shell.eyebrow}>Prompt publishing</p>
-          <h1>List a prompt.</h1>
+          <h1>{isEdit ? "Edit prompt." : "List a prompt."}</h1>
           <p className={shell.lede}>
-            Share the exact prompt, document what it needs, and show people what a good
-            result looks like.
+            {isEdit
+              ? "Update the prompt text, metadata, or sample image. The publisher stays the same."
+              : "Share the exact prompt, document what it needs, and show people what a good result looks like."}
           </p>
         </div>
         <div className={styles.publisherSummary}>
-          <span>Publishing as</span>
+          <span>{isEdit ? "Published as" : "Publishing as"}</span>
           <strong>{publisherLabel}</strong>
-          <small>Publisher details will appear on the prompt page.</small>
+          <small>
+            {isEdit
+              ? "Publisher cannot be changed after publish."
+              : "Publisher details will appear on the prompt page."}
+          </small>
         </div>
       </section>
 
@@ -243,7 +274,7 @@ export function PromptSubmissionForm() {
         onSubmit={async (event) => {
           event.preventDefault();
           setStatus("");
-          if (imageOutput && !sampleImage) {
+          if (imageOutput && !sampleImage && !(isEdit && existingSampleImageUrl)) {
             setStatus("Add a sample image before publishing an image-output prompt.");
             return;
           }
@@ -290,15 +321,25 @@ export function PromptSubmissionForm() {
             const body = new FormData();
             body.append("data", JSON.stringify(data));
             if (uploadImage) body.append("sampleImage", uploadImage);
-            const created = await api<PromptDetail>(
-              "/v1/prompts",
-              { method: "POST", body },
-              { timeoutMs: 20_000 },
-            );
-            router.push(created.path);
+            const saved = isEdit
+              ? await api<PromptDetail>(
+                  `/v1/prompts/${encodeURIComponent(initialPrompt!.publisher.scope)}/${encodeURIComponent(initialPrompt!.slug)}`,
+                  { method: "PATCH", body },
+                  { timeoutMs: 20_000 },
+                )
+              : await api<PromptDetail>(
+                  "/v1/prompts",
+                  { method: "POST", body },
+                  { timeoutMs: 20_000 },
+                );
+            router.push(saved.path);
           } catch (error) {
             setStatus(
-              error instanceof Error ? error.message : "Could not publish the prompt",
+              error instanceof Error
+                ? error.message
+                : isEdit
+                  ? "Could not save the prompt"
+                  : "Could not publish the prompt",
             );
           } finally {
             setSubmitting(false);
@@ -338,6 +379,12 @@ export function PromptSubmissionForm() {
                   }}
                   placeholder="weekly-priority-plan"
                 />
+                {isEdit ? (
+                  <p className={styles.help}>
+                    Public URL: /prompts/{publisher === "personal" ? me?.username ?? "you" : publisher}/
+                    {slug || "…"}
+                  </p>
+                ) : null}
               </div>
             </div>
             <label htmlFor="prompt-summary">Short description</label>
@@ -368,7 +415,9 @@ export function PromptSubmissionForm() {
                 <select
                   id="prompt-effort"
                   value={effort}
-                  onChange={(event) => setEffort(event.target.value)}
+                  onChange={(event) =>
+                    setEffort(event.target.value as "quick" | "guided" | "advanced")
+                  }
                 >
                   <option value="quick">Quick</option>
                   <option value="guided">Guided</option>
@@ -540,14 +589,24 @@ export function PromptSubmissionForm() {
               <div className={styles.imageRequirement}>
                 <strong>Image output requires a sample</strong>
                 <p>
-                  Upload a real result created with this prompt. JPEG, PNG, or WebP;
-                  maximum 5 MB.
+                  {isEdit && existingSampleImageUrl
+                    ? "Keep the current sample, or upload a new JPEG, PNG, or WebP (maximum 5 MB)."
+                    : "Upload a real result created with this prompt. JPEG, PNG, or WebP; maximum 5 MB."}
                 </p>
-                <label htmlFor="sample-image">Sample image</label>
+                {isEdit && existingSampleImageUrl && !sampleImage ? (
+                  <img
+                    alt={sampleImageAlt || "Current sample image"}
+                    className={styles.existingSample}
+                    src={existingSampleImageUrl}
+                  />
+                ) : null}
+                <label htmlFor="sample-image">
+                  {isEdit && existingSampleImageUrl ? "Replace sample image" : "Sample image"}
+                </label>
                 <input
                   accept="image/jpeg,image/png,image/webp"
                   id="sample-image"
-                  required
+                  required={!(isEdit && Boolean(existingSampleImageUrl))}
                   type="file"
                   onChange={(event) => setSampleImage(event.target.files?.[0] ?? null)}
                 />
@@ -588,6 +647,7 @@ export function PromptSubmissionForm() {
             <select
               id="prompt-publisher"
               value={publisher}
+              disabled={isEdit}
               onChange={(event) => setPublisher(event.target.value)}
             >
               <option value="personal">Personal · @{me?.username}</option>
@@ -597,6 +657,9 @@ export function PromptSubmissionForm() {
                 </option>
               ))}
             </select>
+            {isEdit ? (
+              <p className={styles.help}>Publisher is locked for edited prompts.</p>
+            ) : null}
             <div className={styles.twoColumns}>
               <div>
                 <label htmlFor="prompt-license">Reuse terms</label>
@@ -647,9 +710,17 @@ export function PromptSubmissionForm() {
           {status ? <p className={shell.notice}>{status}</p> : null}
           <div className={styles.submitRow}>
             <button disabled={submitting} type="submit">
-              {submitting ? "Publishing…" : "Publish prompt"}
+              {submitting
+                ? isEdit
+                  ? "Saving…"
+                  : "Publishing…"
+                : isEdit
+                  ? "Save changes"
+                  : "Publish prompt"}
             </button>
-            <Link href="/prompts">Cancel</Link>
+            <Link href={isEdit && initialPrompt ? initialPrompt.path : "/prompts"}>
+              Cancel
+            </Link>
           </div>
         </div>
 

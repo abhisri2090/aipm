@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PromptCopyButton } from "../../../../components/prompt-copy-button";
+import { PromptEditLink } from "../../../../components/prompt-edit-link";
 import { PromptRunner } from "../../../../components/prompt-runner";
 import {
   displayPromptType,
@@ -132,6 +133,14 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
             Published by {publisherName} · Updated {formatPromptDate(prompt.updatedAt)} ·{" "}
             {formatCopyCount(prompt.copyCount)}
           </p>
+          <div className={styles.headerActions}>
+            <PromptEditLink
+              className={shell.button}
+              publisher={prompt.publisher.scope}
+              slug={prompt.slug}
+              label="Edit prompt"
+            />
+          </div>
         </div>
       </section>
 

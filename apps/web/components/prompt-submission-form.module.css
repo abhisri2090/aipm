@@ -305,6 +305,15 @@
   line-height: 1.5;
 }
 
+.existingSample {
+  display: block;
+  width: min(100%, 320px);
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
 .defaultsButton {
   justify-self: start;
   min-height: 38px;

@@ -172,6 +172,20 @@
   gap: 12px;
 }
 
+.editLink {
+  position: relative;
+  z-index: 2;
+  margin-left: auto;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.editLink:hover {
+  text-decoration: underline;
+}
+
 .outputMark {
   display: grid;
   width: 40px;
