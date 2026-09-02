@@ -1,0 +1,150 @@
+.section {
+  display: grid;
+  gap: 18px;
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+}
+
+.heading h2 {
+  margin: 0;
+}
+
+.composer,
+.replyComposer {
+  display: grid;
+  gap: 10px;
+}
+
+.composer textarea,
+.replyComposer textarea {
+  width: 100%;
+  min-height: 96px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 12px 14px;
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.composer button,
+.replyComposer button,
+.actions button {
+  justify-self: start;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 0 12px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.composer > button[type="submit"],
+.replyComposer > .actions > button:first-child,
+.actions > button:first-child {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.list {
+  display: grid;
+  gap: 16px;
+}
+
+.comment,
+.reply {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  padding: 16px;
+}
+
+.reply {
+  background: var(--panel-soft);
+}
+
+.replies {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+  padding-left: 18px;
+  border-left: 2px solid var(--line);
+}
+
+.author {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.author img,
+.author span {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.author span {
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 800;
+}
+
+.author strong {
+  display: block;
+  font-size: 14px;
+}
+
+.author small,
+.comment > time,
+.reply > time {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.body {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.body a {
+  color: var(--accent-strong);
+}
+
+.removed {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.signIn,
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.signIn a {
+  color: var(--accent-strong);
+  font-weight: 700;
+}

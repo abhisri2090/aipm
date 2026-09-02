@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PromptCopyButton } from "../../../../components/prompt-copy-button";
+import { CommentsSection } from "../../../../components/comments-section";
 import { PromptEditLink } from "../../../../components/prompt-edit-link";
 import { PromptRunner } from "../../../../components/prompt-runner";
 import {
@@ -322,6 +323,8 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
           </section>
         </aside>
       </div>
+
+      <CommentsSection targetType="prompt" targetKey={prompt.id} />
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { shell, cards, dash, cn } from "../lib/page-styles";
 import { CodeBlock } from "./code-block";
+import { CommentsSection } from "./comments-section";
 import { PackageReadmePreview } from "./package-readme-preview";
 import { PackageShareButtons } from "./package-share-buttons";
 import {
@@ -336,6 +337,8 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           ))}
         </div>
       </section>
+
+      <CommentsSection targetType="package" targetKey={summary.name} />
     </>
   );
 }

@@ -153,6 +153,7 @@ import {
 import { ensureSchema } from "./db.js";
 import { assertSafeLocalRuntime } from "./local-safety.js";
 import { registerPromptRoutes } from "./prompt-routes.js";
+import { registerCommentRoutes } from "./comment-routes.js";
 import { packagePublicUrl, queueSearchNotification } from "./search-notification.js";
 
 const PORT = Number(process.env.PORT ?? 8080);
@@ -713,6 +714,7 @@ export async function createApp(): Promise<FastifyInstance> {
   });
   await app.register(multipart, { limits: { fileSize: MAX_PACKAGE_BYTES } });
   await registerPromptRoutes(app, { accountAuth, storage });
+  await registerCommentRoutes(app, { accountAuth, adminAuthConfig });
 
   app.get("/health", async () => ({
     status: "ok",
