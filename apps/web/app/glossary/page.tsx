@@ -115,8 +115,9 @@ export default function GlossaryPage() {
       <section className={cards.glossaryList} aria-label="AIPM glossary terms">
         {terms.map((item) => (
           <article className={cards.glossaryCard} key={item.term}>
-            <h2>{item.term}</h2>
-            <p>{item.definition}</p>
+            <p>
+              <h2>• {item.term}</h2>{item.definition}
+            </p>
           </article>
         ))}
       </section>

@@ -128,6 +128,36 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         label: "MCP config best practices",
         body: "Configure MCP servers safely and reuse setup across projects.",
       },
+      {
+        href: "/guides/aipm-vs-skills-sh",
+        label: "AIPM vs Skills.sh",
+        body: "Compare two ways to discover and install reusable Agent Skills.",
+      },
+      {
+        href: "/guides/claude-code-skills-vs-codex-skills",
+        label: "Claude skills vs Codex skills",
+        body: "Compare SKILL.md workflows, tool-specific locations, and team sharing.",
+      },
+      {
+        href: "/guides/agent-skills-vs-mcp",
+        label: "Agent Skills vs MCP",
+        body: "Choose between reusable instructions and connections to tools or information.",
+      },
+      {
+        href: "/guides/how-to-install-claude-code-skills",
+        label: "Install Claude Code skills",
+        body: "Install and review a Claude Code skill in one project.",
+      },
+      {
+        href: "/guides/how-to-install-cursor-skills",
+        label: "Install Cursor skills",
+        body: "Install and test a reusable AI skill for Cursor.",
+      },
+      {
+        href: "/guides/how-to-create-agent-skill",
+        label: "Create an Agent Skill",
+        body: "Write, test, package, and publish one reusable AI workflow.",
+      },
     ],
   },
   {

@@ -46,6 +46,12 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Share Cursor rules](${site}/guides/share-cursor-rules)
 - [Publish reusable Claude skills](${site}/guides/reusable-claude-skills)
 - [Manage AI agent instructions in Git](${site}/guides/ai-agent-instructions-git)
+- [AIPM vs Skills.sh](${site}/guides/aipm-vs-skills-sh)
+- [Claude Code skills vs Codex skills](${site}/guides/claude-code-skills-vs-codex-skills)
+- [Agent Skills vs MCP](${site}/guides/agent-skills-vs-mcp)
+- [Install Claude Code skills](${site}/guides/how-to-install-claude-code-skills)
+- [Install Cursor skills](${site}/guides/how-to-install-cursor-skills)
+- [Create an Agent Skill](${site}/guides/how-to-create-agent-skill)
 
 ## Plain-English Answers
 
@@ -56,6 +62,14 @@ An AI agent needs a model to think, instructions to guide it, context and memory
 ### Which AI agent instruction file should a project use?
 
 Use AGENTS.md for shared project instructions, CLAUDE.md for Claude Code, Cursor project rules for Cursor, Agent Skills for reusable tasks, and MCP setup for tool connections. See [AI agent file support](${site}/compatibility).
+
+### What is the difference between Agent Skills and MCP?
+
+An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI application to tools and information. A skill explains the workflow; MCP provides capabilities the workflow may use. See [Agent Skills vs MCP](${site}/guides/agent-skills-vs-mcp).
+
+### How do you install a Claude Code or Cursor skill?
+
+Install the AIPM CLI, initialize the project for the target, and run aipm add with the package name and target. Review the installed files before use. See [Install Claude Code skills](${site}/guides/how-to-install-claude-code-skills) and [Install Cursor skills](${site}/guides/how-to-install-cursor-skills).
 
 ## Install
 
@@ -110,6 +124,7 @@ ${input.cliScoopCommand}
 - AIPM currently focuses on Cursor, Claude, Codex-oriented workflows, and project-local AI files.
 - Plain English technical guides explain AI package managers, agent package managers, prompt packages, MCP setup, Cursor rules, Claude skills, and Git-based AI instructions for beginner/technical/non-technical readers.
 - The components guide explains models, goals, context, memory, tools, planning, actions, safety controls, and evaluation in plain English.
+- Comparison guides explain AIPM and Skills.sh, Claude Code and Codex skills, and the different roles of Agent Skills and MCP.
 
 ## Suggested Citations
 

@@ -103,6 +103,48 @@ const requiredPages = [
     includes: ["Short answer", "Model", "Instructions and goals", "Safety and human control"],
   },
   {
+    path: "/guides/aipm-vs-skills-sh",
+    title: "AIPM vs Skills.sh",
+    h1: "What is the difference between AIPM and Skills.sh?",
+    jsonLd: true,
+    includes: ["Short answer", "Where they overlap", "How AIPM is different"],
+  },
+  {
+    path: "/guides/claude-code-skills-vs-codex-skills",
+    title: "Claude Code Skills vs Codex Skills",
+    h1: "What is the difference between Claude Code skills and Codex skills?",
+    jsonLd: true,
+    includes: ["Short answer", "The shared idea", "Sharing across a team"],
+  },
+  {
+    path: "/guides/agent-skills-vs-mcp",
+    title: "Agent Skills vs MCP",
+    h1: "What is the difference between Agent Skills and MCP?",
+    jsonLd: true,
+    includes: ["Short answer", "Use a skill for repeatable instructions", "Use MCP for a connection"],
+  },
+  {
+    path: "/guides/how-to-install-claude-code-skills",
+    title: "How to Install Claude Code Skills",
+    h1: "How do you install a Claude Code skill?",
+    jsonLd: true,
+    includes: ["Short answer", "aipm init --target claude", "Review the installed .claude skill files"],
+  },
+  {
+    path: "/guides/how-to-install-cursor-skills",
+    title: "How to Install Cursor AI Skills",
+    h1: "How do you install an AI skill for Cursor?",
+    jsonLd: true,
+    includes: ["Short answer", "aipm init --target cursor", "Review the installed .cursor/aipm skill file"],
+  },
+  {
+    path: "/guides/how-to-create-agent-skill",
+    title: "How to Create an Agent Skill",
+    h1: "How do you create a reusable Agent Skill?",
+    jsonLd: true,
+    includes: ["Short answer", "Give the skill one job", "aipm publish validate"],
+  },
+  {
     path: "/skills/cursor",
     title: "Cursor Skills",
     h1: "Find Cursor skills for project-ready AI workflows.",
@@ -428,6 +470,9 @@ if (packageList.response.ok) {
     assertIncludes(path, page.text, `aipm add ${pkg.name}@${pkg.version}`);
     assertIncludes(path, page.text, "AI assistant context");
     assertIncludes(path, page.text, "Package FAQ");
+    assertIncludes(path, page.text, "Share this skill");
+    assertIncludes(path, page.text, "Copy link");
+    assertIncludes(path, page.text, "LinkedIn");
     assertIncludes(path, page.text, 'id="aipm-package-context"');
     const jsonLd = extractJsonLd(page.text).join("\n");
     assertIncludes(path, jsonLd, '"@type":"WebPage"');

@@ -1241,6 +1241,320 @@ export const SEO_GUIDES: SeoGuide[] = [
       { label: "Cursor documentation: Model Context Protocol", href: "https://docs.cursor.com/context/model-context-protocol" },
     ],
   },
+  {
+    slug: "aipm-vs-skills-sh",
+    title: "AIPM vs Skills.sh",
+    h1: "What is the difference between AIPM and Skills.sh?",
+    description:
+      "Compare AIPM and Skills.sh in plain English. Understand discovery, installation, versions, publishing, and project use before choosing a skill workflow.",
+    answer:
+      "Both help people find and install Agent Skills. Skills.sh is an Agent Skills directory with its own install command. AIPM is a registry and package-manager workflow for publishing named, versioned skill packages and installing target-specific files into projects.",
+    keywords: ["AIPM vs Skills.sh", "Skills.sh alternative", "Agent Skills directory", "AI skill package manager"],
+    publishedAt: "2026-09-01",
+    updatedAt: "2026-09-01",
+    sections: [
+      {
+        title: "Where they overlap",
+        body:
+          "Both products help developers discover reusable Agent Skills instead of rebuilding the same instructions for every project. Both lead users from a public skill page to an installation workflow.",
+      },
+      {
+        title: "How AIPM is different",
+        body:
+          "AIPM treats a skill as a named package with a publisher, version, manifest, install command, integrity value, source details, and target list. It can install files for supported tools and keep the selected package version clear.",
+      },
+      {
+        title: "How to choose",
+        body:
+          "Use the directory that contains the skill you trust. AIPM is useful when your team wants package names, explicit versions, publisher ownership, project-local installation, and a workflow for publishing updates. Check the source and license in either directory before installing.",
+      },
+    ],
+    steps: [
+      "Search both directories for the job you need.",
+      "Read the skill source and license.",
+      "Check which AI tools the skill supports.",
+      "Compare the install command and version information.",
+      "Test the skill in a non-critical project before team-wide use.",
+    ],
+    faqs: [
+      {
+        question: "Is AIPM connected to Skills.sh?",
+        answer: "No. They are separate products and directories with separate publishing and installation workflows.",
+      },
+      {
+        question: "Can the same public skill appear in both directories?",
+        answer:
+          "Yes, when its license and publisher allow it. Always follow the original source and avoid publishing someone else's work without clear attribution and permission.",
+      },
+    ],
+    sources: [
+      { label: "Skills.sh: The Agent Skills Directory", href: "https://skills.sh/" },
+      { label: "AIPM publishing guide", href: "https://www.aipm-registry.com/publish/guide" },
+    ],
+  },
+  {
+    slug: "claude-code-skills-vs-codex-skills",
+    title: "Claude Code Skills vs Codex Skills",
+    h1: "What is the difference between Claude Code skills and Codex skills?",
+    description:
+      "Compare Claude Code skills and Codex skills, including SKILL.md, storage locations, automatic selection, commands, and team sharing.",
+    answer:
+      "Claude Code and Codex can both use reusable skills built around a SKILL.md file. The main differences are where each tool stores and discovers skills, how users start them, and which product-specific features surround the shared instructions.",
+    keywords: ["Claude Code skills vs Codex skills", "Codex SKILL.md", "Claude SKILL.md", "Agent Skills comparison"],
+    publishedAt: "2026-09-01",
+    updatedAt: "2026-09-01",
+    sections: [
+      {
+        title: "The shared idea",
+        body:
+          "A skill gives an AI tool a reusable job description, steps, examples, and optional resources. Keeping one job per skill makes it easier for both people and agents to choose the right workflow.",
+      },
+      {
+        title: "The important differences",
+        body:
+          "Claude Code and Codex read skills from their own supported locations and apply their own discovery rules. A skill should avoid product-specific assumptions unless it is intentionally made for one tool. Check each product's current documentation before choosing folders or optional fields.",
+      },
+      {
+        title: "Sharing across a team",
+        body:
+          "Keep shared skill source in Git, review changes, and state which tools were tested. A package can hold common instructions plus target-specific files when the tools need different layouts.",
+      },
+    ],
+    steps: [
+      "Write one clear task in SKILL.md.",
+      "Keep common instructions free of tool-specific wording.",
+      "Add separate target files only when behavior differs.",
+      "Test the skill in Claude Code and Codex.",
+      "Record the tested tools and publish a new version when behavior changes.",
+    ],
+    faqs: [
+      {
+        question: "Can one SKILL.md work in both Claude Code and Codex?",
+        answer:
+          "Often yes, when it contains plain task instructions and uses files both tools can read. Product-specific tools, paths, or commands may need separate guidance.",
+      },
+      {
+        question: "Does AIPM currently install directly into Codex?",
+        answer:
+          "AIPM currently lists Cursor and Claude as supported install targets. Codex-oriented skills can be packaged and documented, but direct Codex installation should not be claimed until that target is supported and tested.",
+      },
+    ],
+    sources: [
+      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+      { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
+    ],
+  },
+  {
+    slug: "agent-skills-vs-mcp",
+    title: "Agent Skills vs MCP",
+    h1: "What is the difference between Agent Skills and MCP?",
+    description:
+      "Learn when to use an Agent Skill and when to use MCP. Compare reusable instructions with connections to external tools and information.",
+    answer:
+      "An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI application to tools and information. A skill explains the workflow; MCP provides capabilities the workflow may use.",
+    keywords: ["Agent Skills vs MCP", "MCP vs skills", "AI agent skills", "Model Context Protocol tools"],
+    publishedAt: "2026-09-01",
+    updatedAt: "2026-09-01",
+    sections: [
+      {
+        title: "Use a skill for repeatable instructions",
+        body:
+          "A skill is a good fit for code review steps, release notes, testing checks, research methods, or documentation rules. It can include examples and reference files that explain what good work looks like.",
+      },
+      {
+        title: "Use MCP for a connection",
+        body:
+          "MCP is useful when the AI needs to search a service, read a database, call an API, or use another application. The MCP server exposes approved tools or information to the AI application.",
+      },
+      {
+        title: "Use both for a complete workflow",
+        body:
+          "A support-triage skill can explain how to investigate an issue, while an MCP connection can provide the ticket and monitoring data. Keep instructions in the skill and private credentials outside shared files.",
+      },
+    ],
+    steps: [
+      "Write down the job the AI must complete.",
+      "Create a skill when the missing part is instructions or examples.",
+      "Add MCP when the missing part is access to a tool or information source.",
+      "Give the MCP server only the access it needs.",
+      "Test the full workflow and require approval for important write actions.",
+    ],
+    faqs: [
+      {
+        question: "Does an Agent Skill replace MCP?",
+        answer: "No. A skill provides instructions. MCP provides a standard connection to tools and information.",
+      },
+      {
+        question: "Can a skill explain how to use an MCP tool?",
+        answer:
+          "Yes. A skill can explain when to use a tool, what input to provide, how to check its result, and when a person must approve an action.",
+      },
+    ],
+    sources: [
+      { label: "Model Context Protocol: Introduction", href: "https://modelcontextprotocol.io/docs/getting-started/intro" },
+      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+    ],
+  },
+  {
+    slug: "how-to-install-claude-code-skills",
+    title: "How to Install Claude Code Skills",
+    h1: "How do you install a Claude Code skill?",
+    description:
+      "Install a reusable Claude Code skill with AIPM, check the created files, and test the skill in a project.",
+    answer:
+      "Install the AIPM CLI, run aipm init --target claude in your project, then run aipm add with the skill package name and --target claude. Review the installed SKILL.md before using it.",
+    keywords: ["install Claude Code skills", "Claude Code skill install", "add Claude skill", ".claude skills"],
+    publishedAt: "2026-09-01",
+    updatedAt: "2026-09-01",
+    sections: [
+      {
+        title: "Choose a skill you can trust",
+        body:
+          "Read the package description, source, publisher, license, target list, and bundled files. Do not install a public skill only because its name looks familiar.",
+      },
+      {
+        title: "Install it into one project",
+        body:
+          "Run the commands from the project root. AIPM writes the Claude-ready skill files into the project so the files can be reviewed with the rest of the code.",
+      },
+      {
+        title: "Test the installed skill",
+        body:
+          "Open Claude Code in the project and ask for the task described by the skill. Check the result on a small example before relying on it for important work.",
+      },
+    ],
+    steps: [
+      "Run npm install -g @aipm-registry/cli.",
+      "Open the project folder in a terminal.",
+      "Run aipm init --target claude.",
+      "Run aipm add @scope/name@version --target claude --ci.",
+      "Review the installed .claude skill files.",
+      "Open Claude Code and test the skill on a small task.",
+    ],
+    faqs: [
+      {
+        question: "Where does AIPM put a Claude skill?",
+        answer:
+          "AIPM's Claude adapter installs the skill under .claude/aipm/skills in the project. Check the package page and installed files for the exact skill folder.",
+      },
+      {
+        question: "Should installed skill files be committed to Git?",
+        answer:
+          "Commit them when the team should use and review the same project skill. Keep credentials and private values out of the skill files.",
+      },
+    ],
+    sources: [
+      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+      { label: "AIPM install guide", href: "https://www.aipm-registry.com/install" },
+    ],
+  },
+  {
+    slug: "how-to-install-cursor-skills",
+    title: "How to Install Cursor AI Skills",
+    h1: "How do you install an AI skill for Cursor?",
+    description:
+      "Install a reusable AI skill for Cursor with AIPM, review the project files, and test the workflow safely.",
+    answer:
+      "Install the AIPM CLI, run aipm init --target cursor in your project, then run aipm add with the package name and --target cursor. Review the installed instructions before using them.",
+    keywords: ["install Cursor skills", "Cursor AI skills", "add Cursor skill", "Cursor project skill"],
+    publishedAt: "2026-09-01",
+    updatedAt: "2026-09-01",
+    sections: [
+      {
+        title: "Start from the public package page",
+        body:
+          "Check the description, source, license, publisher, files, examples, and supported targets. A package should say what job it performs and what behavior it changes.",
+      },
+      {
+        title: "Install into the project",
+        body:
+          "Run the target-specific command from the project root. AIPM places the Cursor-ready file under the project instead of hiding the shared instructions in one person's chat history.",
+      },
+      {
+        title: "Review before team use",
+        body:
+          "Read the installed file and test it on a small task. Commit it only when the team agrees that the instructions are safe and useful for the project.",
+      },
+    ],
+    steps: [
+      "Run npm install -g @aipm-registry/cli.",
+      "Open the project folder in a terminal.",
+      "Run aipm init --target cursor.",
+      "Run aipm add @scope/name@version --target cursor --ci.",
+      "Review the installed .cursor/aipm skill file.",
+      "Open Cursor and test the skill on a small task.",
+    ],
+    faqs: [
+      {
+        question: "Where does AIPM put a Cursor skill?",
+        answer:
+          "AIPM installs a Cursor skill under .cursor/aipm/skills in the project. The package name determines the installed file name.",
+      },
+      {
+        question: "Is a Cursor skill the same as a Cursor project rule?",
+        answer:
+          "Not exactly. Both provide reusable instructions, but project rules can be scoped to files or conditions while a skill usually describes a task or workflow.",
+      },
+    ],
+    sources: [
+      { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
+      { label: "AIPM install guide", href: "https://www.aipm-registry.com/install" },
+    ],
+  },
+  {
+    slug: "how-to-create-agent-skill",
+    title: "How to Create an Agent Skill",
+    h1: "How do you create a reusable Agent Skill?",
+    description:
+      "Create a focused Agent Skill with SKILL.md, clear instructions, examples, safety limits, and package metadata that a team can review and share.",
+    answer:
+      "Choose one repeated job, create a SKILL.md file that explains when and how to do it, add a small example, test it on real tasks, and publish it with a clear name, version, source, and license.",
+    keywords: ["how to create Agent Skill", "create AI agent skill", "write SKILL.md", "build Claude skill"],
+    publishedAt: "2026-09-01",
+    updatedAt: "2026-09-01",
+    sections: [
+      {
+        title: "Give the skill one job",
+        body:
+          "A focused skill is easier to discover, test, and trust. Use a clear job such as reviewing a pull request, writing release notes, or preparing a support handoff.",
+      },
+      {
+        title: "Write instructions that can be checked",
+        body:
+          "Explain when to use the skill, the information it needs, the steps it follows, the output it should create, and the actions it must not take. Add one short example of useful input and output.",
+      },
+      {
+        title: "Package and improve it",
+        body:
+          "Put the skill in Git, review changes, test it on several real tasks, and give shared releases version numbers. AIPM can create the package folder, validate public files, and publish the package page.",
+      },
+    ],
+    steps: [
+      "Choose one repeated task with a clear result.",
+      "Run aipm publish init --name @your-org/skill-name.",
+      "Edit SKILL.md with purpose, steps, limits, and examples.",
+      "Add description, targets, license, source URL, and tags to the manifest.",
+      "Run aipm publish add . and aipm publish validate.",
+      "Test the skill before publishing version 1.0.0.",
+    ],
+    faqs: [
+      {
+        question: "How long should SKILL.md be?",
+        answer:
+          "Use the shortest file that explains the job clearly. Move long reference material into separate files and include it only when the task needs it.",
+      },
+      {
+        question: "What should never be included in a public skill?",
+        answer:
+          "Do not include passwords, API keys, customer data, private prompts, confidential documents, or instructions that hide risky behavior.",
+      },
+    ],
+    sources: [
+      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+      { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
+      { label: "AIPM publishing guide", href: "https://www.aipm-registry.com/publish/guide" },
+    ],
+  },
 ] as const;
 
 export function getSeoGuide(slug: string): SeoGuide | null {

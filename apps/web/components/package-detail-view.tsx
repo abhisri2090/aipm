@@ -2,6 +2,7 @@ import Link from "next/link";
 import { shell, cards, dash, cn } from "../lib/page-styles";
 import { CodeBlock } from "./code-block";
 import { PackageReadmePreview } from "./package-readme-preview";
+import { PackageShareButtons } from "./package-share-buttons";
 import {
   commandTargets,
   displayTargets,
@@ -71,6 +72,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           <p className={shell.eyebrow}>AIPM package</p>
           <h1>{packageShortName(summary.name)}</h1>
           <p className={shell.lede}>{summary.description}</p>
+          <PackageShareButtons title={`${summary.name}@${summary.version}`} url={canonicalUrl} />
           {isUnverifiedImportedPackage(summary) ? (
             <div className={shell.actions}>
               {summary.import?.sourceUrl ? (

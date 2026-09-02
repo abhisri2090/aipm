@@ -26,5 +26,6 @@ coverage/
 .tmp/
 docs/*
 !docs/LOCAL_DEV.md
+!docs/GROWTH_PLAN.md
 !docs/superpowers/
 !docs/superpowers/**

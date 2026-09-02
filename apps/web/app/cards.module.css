@@ -82,7 +82,6 @@
 .roadmapCard,
 .changelogCard,
 .exampleCard,
-.glossaryCard,
 .sourceCard,
 .panel {
   border: 1px solid var(--line);
@@ -388,9 +387,12 @@
 .roadmapCard h2,
 .changelogCard h2,
 .exampleCard h2,
-.exampleCard h3,
-.glossaryCard h2 {
+.exampleCard h3 {
   margin: 0 0 14px;
+}
+
+.glossaryCard {
+  padding: 0;
 }
 
 .exampleStoryline {
@@ -422,6 +424,7 @@
 .glossaryCard p {
   margin: 0;
   color: var(--muted);
+  font-size: 14px;
   line-height: 1.6;
 }
 
