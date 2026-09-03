@@ -8,7 +8,8 @@ const DEFAULT_URL = "https://www.aipm-registry.com";
 const positionalUrl = process.argv.find((arg, index) => index > 1 && !arg.startsWith("--"));
 const baseUrl = new URL(positionalUrl ?? process.env.WEB_URL ?? DEFAULT_URL);
 const expectedCanonicalUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? DEFAULT_URL).replace(/\/$/, "");
-const allowHttp = process.argv.includes("--allow-http") || baseUrl.hostname === "127.0.0.1" || baseUrl.hostname === "localhost";
+const allowHttp =
+  process.argv.includes("--allow-http") || baseUrl.hostname === "127.0.0.1" || baseUrl.hostname === "localhost";
 const timeoutMs = Number(process.env.VERIFY_TIMEOUT_MS ?? 8000);
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -27,14 +28,14 @@ const requiredPages = [
     renderedTitle: "AIPM - AI Package Manager for Skills and Tool Files",
     h1: "Install AI skills like packages.",
     jsonLd: true,
-    includes: [
-      "What is AIPM?",
-      "AIPM is an AI package manager",
-      "Abhishek Srivastava",
-      "aipm add @scope/name@version",
-    ],
+    includes: ["What is AIPM?", "AIPM is an AI package manager", "Abhishek Srivastava", "aipm add @scope/name@version"],
   },
-  { path: "/registry", title: "AI Skills Registry", h1: "Search public skills.", jsonLd: true },
+  {
+    path: "/registry",
+    title: "AI Skills Registry",
+    h1: "Search public skills.",
+    jsonLd: true,
+  },
   {
     path: "/prompts",
     title: "AI Prompt Directory",
@@ -47,25 +48,21 @@ const requiredPages = [
     title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
     h1: "Publish AI skills so others can install them.",
     jsonLd: false,
-    includes: [
-      "AI package distribution",
-      "MCP setup",
-      "What teams can share",
-      "/publish/guide",
-    ],
+    includes: ["AI package distribution", "MCP setup", "What teams can share", "/publish/guide"],
   },
   {
     path: "/publish/guide",
     title: "Publishing Guide",
     h1: "Create a skill package and publish it.",
     jsonLd: false,
-    includes: [
-      "install guide",
-      "skill templates guide",
-      "aipm publish init",
-    ],
+    includes: ["install guide", "skill templates guide", "aipm publish init"],
   },
-  { path: "/use", title: "Use AIPM", h1: "Install AI skills into your project.", jsonLd: false },
+  {
+    path: "/use",
+    title: "Use AIPM",
+    h1: "Install AI skills into your project.",
+    jsonLd: false,
+  },
   {
     path: "/install",
     title: "Install the AIPM CLI",
@@ -87,7 +84,12 @@ const requiredPages = [
     jsonLd: true,
     includes: [".cursor/aipm/skills/&lt;skill&gt;.md", ".claude/aipm/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
   },
-  { path: "/resources", title: "AI Skill Resources", h1: "Find the guide you need.", jsonLd: false },
+  {
+    path: "/resources",
+    title: "AI Skill Resources",
+    h1: "Find the guide you need.",
+    jsonLd: false,
+  },
   {
     path: "/compatibility",
     title: "AI Agent File Support for Cursor, Claude and Codex",
@@ -145,6 +147,13 @@ const requiredPages = [
     includes: ["Short answer", "Give the skill one job", "aipm publish validate"],
   },
   {
+    path: "/publishers/anthropics",
+    title: "Anthropic AI Skills",
+    h1: "Anthropic",
+    jsonLd: true,
+    includes: ["Skills from Anthropic", "has not claimed the AIPM account yet"],
+  },
+  {
     path: "/skills/cursor",
     title: "Cursor Skills",
     h1: "Find Cursor skills for project-ready AI workflows.",
@@ -191,7 +200,11 @@ const requiredPages = [
     title: "AIPM Skill Examples",
     h1: "Skill publishing examples.",
     jsonLd: true,
-    includes: ["Code review AI skill for Cursor", "Sentry issue summariser AI skill for Claude", "Import an existing Codex AI skill folder"],
+    includes: [
+      "Code review AI skill for Cursor",
+      "Sentry issue summariser AI skill for Claude",
+      "Import an existing Codex AI skill folder",
+    ],
   },
   {
     path: "/glossary",
@@ -200,8 +213,18 @@ const requiredPages = [
     jsonLd: true,
     includes: ["Publish token", "Org namespace", ".aipmignore"],
   },
-  { path: "/ai-practices", title: "AI Skill Best Practices for Reusable Assistant Workflows", h1: "Build AI skills that are clear, safe, and reusable.", jsonLd: true },
-  { path: "/discoverability", title: "AI Skill SEO and Discoverability Guide", h1: "Help users find and understand your skill.", jsonLd: true },
+  {
+    path: "/ai-practices",
+    title: "AI Skill Best Practices for Reusable Assistant Workflows",
+    h1: "Build AI skills that are clear, safe, and reusable.",
+    jsonLd: true,
+  },
+  {
+    path: "/discoverability",
+    title: "AI Skill SEO and Discoverability Guide",
+    h1: "Help users find and understand your skill.",
+    jsonLd: true,
+  },
   {
     path: "/security",
     title: "AIPM Security Guide for Publishing AI Skills Safely",
@@ -449,13 +472,53 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
-for (const path of ["/registry", "/skills", "/prompts", "/publish", "/publish/guide", "/install", "/use", "/commands", "/targets", "/resources", "/skills/cursor", "/skills/claude", "/skills/code-review", "/skills/issue-summarizer", "/skills/testing", "/skills/documentation", "/guides/ai-package-manager", "/guides/agent-package-manager", "/guides/prompt-package-manager", "/guides/mcp-package-manager", "/guides/version-ai-prompts", "/guides/share-cursor-rules", "/guides/reusable-claude-skills", "/guides/ai-agent-instructions-git", "/examples", "/glossary", "/discoverability", "/security", "/privacy", "/terms", "/status", "/roadmap", "/changelog", "/templates", "/thanks"]) {
+for (const path of [
+  "/registry",
+  "/skills",
+  "/prompts",
+  "/publish",
+  "/publish/guide",
+  "/install",
+  "/use",
+  "/commands",
+  "/targets",
+  "/resources",
+  "/skills/cursor",
+  "/skills/claude",
+  "/skills/code-review",
+  "/skills/issue-summarizer",
+  "/skills/testing",
+  "/skills/documentation",
+  "/guides/ai-package-manager",
+  "/guides/agent-package-manager",
+  "/guides/prompt-package-manager",
+  "/guides/mcp-package-manager",
+  "/guides/version-ai-prompts",
+  "/guides/share-cursor-rules",
+  "/guides/reusable-claude-skills",
+  "/guides/ai-agent-instructions-git",
+  "/examples",
+  "/glossary",
+  "/discoverability",
+  "/security",
+  "/privacy",
+  "/terms",
+  "/status",
+  "/roadmap",
+  "/changelog",
+  "/templates",
+  "/thanks",
+]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
 
 const packageSitemap = await fetchText("/package-sitemap.xml");
 assertStatus("/package-sitemap.xml", packageSitemap.response);
-assertIncludes("/package-sitemap.xml", packageSitemap.text, '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+assertIncludes(
+  "/package-sitemap.xml",
+  packageSitemap.text,
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+);
 
 const packageList = await fetchText("/v1/packages?limit=1");
 if (packageList.response.ok) {
@@ -485,7 +548,7 @@ if (packageList.response.ok) {
 const llms = await fetchText("/llms.txt");
 assertStatus("/llms.txt", llms.response);
 if (!/^\s*#\s+.+/m.test(llms.text)) {
-  fail("/llms.txt is missing a Markdown H1 header (e.g., \"# Title\").");
+  fail('/llms.txt is missing a Markdown H1 header (e.g., "# Title").');
 }
 if (!/\[.+\]\(.+\)/.test(llms.text)) {
   fail("/llms.txt does not appear to contain Markdown links ([text](url)).");
@@ -522,7 +585,15 @@ assertIncludes("SECURITY.md", securityPolicy, "https://aipm-registry.com/securit
 
 const readme = await readFile(resolve(repoRoot, "README.md"), "utf8");
 assertIncludes("README.md", readme, "web/              → Next.js website, registry UI, docs, and publisher dashboard");
-assertIncludes("README.md", readme, "GitHub sign-in, profile, org namespaces, package reservations, and 5-minute publish tokens");
-assertIncludes("README.md", readme, "Public website: search, package pages, dashboard, docs, SEO pages, security/privacy/terms/status, and roadmap");
+assertIncludes(
+  "README.md",
+  readme,
+  "GitHub sign-in, profile, org namespaces, package reservations, and 5-minute publish tokens",
+);
+assertIncludes(
+  "README.md",
+  readme,
+  "Public website: search, package pages, dashboard, docs, SEO pages, security/privacy/terms/status, and roadmap",
+);
 
 console.log("Web verification passed.");

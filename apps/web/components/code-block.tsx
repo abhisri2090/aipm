@@ -1,26 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { track } from "@vercel/analytics";
 import { cn } from "../lib/class-names";
+import { copyToClipboard } from "../lib/copy-to-clipboard";
 import styles from "./code-block.module.css";
 
 type CodeBlockProps = {
   code: string;
   className?: string;
   muted?: boolean;
+  trackingEvent?: string;
+  trackingProperties?: Record<string, string>;
 };
 
 function CopyIcon({ copied }: { copied: boolean }) {
   if (copied) {
     return (
       <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M20 6 9 17l-5-5"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
   }
@@ -38,7 +36,7 @@ function CopyIcon({ copied }: { copied: boolean }) {
   );
 }
 
-export function CodeBlock({ code, className, muted = false }: CodeBlockProps) {
+export function CodeBlock({ code, className, muted = false, trackingEvent, trackingProperties }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   return (
@@ -51,7 +49,9 @@ export function CodeBlock({ code, className, muted = false }: CodeBlockProps) {
           aria-label={copied ? "Copied" : "Copy code"}
           title={copied ? "Copied" : "Copy to clipboard"}
           onClick={async () => {
-            await navigator.clipboard.writeText(code);
+            const didCopy = await copyToClipboard(code);
+            if (!didCopy) return;
+            if (trackingEvent) track(trackingEvent, trackingProperties);
             setCopied(true);
             window.setTimeout(() => setCopied(false), 1400);
           }}

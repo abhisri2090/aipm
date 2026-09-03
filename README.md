@@ -1,6 +1,25 @@
+<p align="center">
+  <a href="https://www.aipm-registry.com">
+    <img src="apps/web/public/aipm-logo.svg" alt="AIPM" width="112" />
+  </a>
+</p>
+
 # AIPM
 
+[![CI](https://github.com/abhisri2090/aipm/actions/workflows/ci.yml/badge.svg)](https://github.com/abhisri2090/aipm/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@aipm-registry/cli)](https://www.npmjs.com/package/@aipm-registry/cli)
+[![license](https://img.shields.io/github/license/abhisri2090/aipm)](LICENSE)
+[![website](https://img.shields.io/badge/registry-aipm--registry.com-0969da)](https://www.aipm-registry.com)
+
 Open-source **AI package manager** — publish and install AI skills into Cursor and Claude project folders.
+
+```bash
+npm install -g @aipm-registry/cli
+aipm init --target claude
+aipm add @anthropics/frontend-design@1.0.0
+```
+
+[Browse AI skills](https://www.aipm-registry.com/skills) · [Read the install guide](https://www.aipm-registry.com/install) · [Publish a skill](https://www.aipm-registry.com/publish)
 
 Repository: [https://github.com/abhisri2090/aipm](https://github.com/abhisri2090/aipm)
 
@@ -133,19 +152,18 @@ npm install -g @aipm-registry/cli
 
 ## Scripts
 
-
-| Command      | Description               |
-| ------------ | ------------------------- |
-| `pnpm build` | Build all packages        |
-| `pnpm test`  | Run tests                 |
-| `pnpm lint`  | ESLint                    |
-| `pnpm typecheck` | TypeScript checks     |
+| Command             | Description                                                          |
+| ------------------- | -------------------------------------------------------------------- |
+| `pnpm build`        | Build all packages                                                   |
+| `pnpm test`         | Run tests                                                            |
+| `pnpm lint`         | ESLint                                                               |
+| `pnpm typecheck`    | TypeScript checks                                                    |
 | `pnpm scan:secrets` | Scan tracked and untracked non-ignored files for common secret leaks |
-| `pnpm local:setup` | Docker Postgres + local env files |
-| `pnpm local:api` | Registry API with local `.env` |
-| `pnpm local:web` | Next.js dev server |
-| `pnpm local:seed` | Seed local registry from public API |
-| `pnpm local:check` | Verify contributor docs stay production-free |
+| `pnpm local:setup`  | Docker Postgres + local env files                                    |
+| `pnpm local:api`    | Registry API with local `.env`                                       |
+| `pnpm local:web`    | Next.js dev server                                                   |
+| `pnpm local:seed`   | Seed local registry from public API                                  |
+| `pnpm local:check`  | Verify contributor docs stay production-free                         |
 
 ## Before making a branch public
 
@@ -163,7 +181,6 @@ pnpm scan:secrets
 Also check `git status --short` and review every untracked file. If you deploy
 from this repo, keep cloud credentials in GitHub/Vercel/Azure secret stores, not
 in the repository.
-
 
 ## Current scope (shipped in repo)
 

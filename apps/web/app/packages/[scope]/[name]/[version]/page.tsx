@@ -2,6 +2,7 @@ import { shell, cards, cn } from "../../../../../lib/page-styles";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PackageDetailView } from "../../../../../components/package-detail-view";
+import { PackageCard } from "../../../../../components/package-card";
 import {
   CLI_INSTALL_COMMAND,
   commandTargets,
@@ -9,6 +10,7 @@ import {
   getPackage,
   installCommand,
   installCommandForTarget,
+  listPackages,
   packagePath,
   resolveSkillInvokeCommand,
   SITE_URL,
@@ -135,7 +137,10 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
 export default async function PackagePage({ params }: PackagePageProps) {
   const { scope, name, version } = await params;
   const packageName = `@${decodeURIComponent(scope)}/${decodeURIComponent(name)}`;
-  const pkg = await getPackage(packageName, decodeURIComponent(version));
+  const [pkg, allPackages] = await Promise.all([
+    getPackage(packageName, decodeURIComponent(version)),
+    listPackages("", 100),
+  ]);
   if (!pkg) notFound();
 
   const summary = toSummary(pkg);
@@ -174,6 +179,23 @@ export default async function PackagePage({ params }: PackagePageProps) {
   const publisherName = summary.publisher
     ? `${summary.publisher.org.name} (${summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`})`
     : "AIPM";
+  const packageTerms = new Set(
+    [...(summary.categories ?? []), ...(summary.tags ?? [])].map((value) => value.toLowerCase()),
+  );
+  const relatedPackages = allPackages
+    .filter((candidate) => candidate.name !== summary.name)
+    .map((candidate) => ({
+      candidate,
+      score:
+        (candidate.publisher?.org.slug === summary.publisher?.org.slug ? 3 : 0) +
+        [...(candidate.categories ?? []), ...(candidate.tags ?? [])].filter((value) =>
+          packageTerms.has(value.toLowerCase()),
+        ).length,
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || (b.candidate.installCount ?? 0) - (a.candidate.installCount ?? 0))
+    .slice(0, 3)
+    .map(({ candidate }) => candidate);
 
   return (
     <main>
@@ -304,6 +326,22 @@ export default async function PackagePage({ params }: PackagePageProps) {
       />
       <PackageDetailView canonicalUrl={canonicalUrl} pkg={pkg} />
 
+      {relatedPackages.length > 0 ? (
+        <section className={shell.panelSection} aria-labelledby="related-skills-title">
+          <div className={shell.sectionHeading}>
+            <div>
+              <p className={shell.eyebrow}>Keep exploring</p>
+              <h2 id="related-skills-title">Related AI skills</h2>
+            </div>
+          </div>
+          <div className={cards.results}>
+            {relatedPackages.map((related) => (
+              <PackageCard compact key={`${related.name}@${related.version}`} pkg={related} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className={shell.panelSection} aria-labelledby="package-faq-title">
         <article className={cn(shell.panel, cards.stepCard)}>
           <p className={shell.eyebrow}>Package FAQ</p>
@@ -327,8 +365,8 @@ export default async function PackagePage({ params }: PackagePageProps) {
         <article className={shell.notice}>
           <h2 id="install-safety-title">Before installing</h2>
           <p>
-            AIPM skills can add files to your project. Review the package name, target, description,
-            license, and publisher before installing. Use a clean branch when trying a new skill.
+            AIPM skills can add files to your project. Review the package name, target, description, license, and
+            publisher before installing. Use a clean branch when trying a new skill.
           </p>
         </article>
       </section>

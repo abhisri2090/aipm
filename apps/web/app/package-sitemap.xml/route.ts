@@ -1,4 +1,4 @@
-import { packagePath, REGISTRY_API_BASE_URL, SITE_URL, type PackageSummary } from "../../lib/registry";
+import { packagePath, publisherPath, REGISTRY_API_BASE_URL, SITE_URL, type PackageSummary } from "../../lib/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +47,7 @@ export async function GET(): Promise<Response> {
     packages = [];
   }
 
-  const urls = packages
+  const packageUrls = packages
     .map((pkg) => {
       const loc = `${SITE_URL}${packagePath(pkg.name, pkg.version)}`;
       const lastmod = new Date(pkg.createdAt).toISOString();
@@ -55,9 +55,27 @@ export async function GET(): Promise<Response> {
     })
     .join("");
 
-  return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`, {
-    headers: {
-      "content-type": "application/xml; charset=utf-8",
+  const publisherDates = new Map<string, string>();
+  for (const pkg of packages) {
+    const slug = pkg.publisher?.org.slug;
+    if (!slug) continue;
+    const current = publisherDates.get(slug);
+    if (!current || new Date(pkg.createdAt) > new Date(current)) publisherDates.set(slug, pkg.createdAt);
+  }
+
+  const publisherUrls = [...publisherDates]
+    .map(([slug, createdAt]) => {
+      const loc = `${SITE_URL}${publisherPath(slug)}`;
+      return `<url><loc>${escapeXml(loc)}</loc><lastmod>${new Date(createdAt).toISOString()}</lastmod></url>`;
+    })
+    .join("");
+
+  return new Response(
+    `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${packageUrls}${publisherUrls}</urlset>`,
+    {
+      headers: {
+        "content-type": "application/xml; charset=utf-8",
+      },
     },
-  });
+  );
 }

@@ -83,14 +83,10 @@ export const GITHUB_LOGIN_URL = `${PUBLIC_REGISTRY_API_BASE_URL}/v1/auth/github/
 
 export const DEV_LOGIN_URL = "/v1/auth/dev/login";
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.aipm-registry.com").replace(
-  /\/$/,
-  "",
-);
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.aipm-registry.com").replace(/\/$/, "");
 
 export function isLocalDevSite(siteUrl: string = SITE_URL): boolean {
-  const normalized =
-    typeof window === "undefined" ? siteUrl.toLowerCase() : window.location.origin.toLowerCase();
+  const normalized = typeof window === "undefined" ? siteUrl.toLowerCase() : window.location.origin.toLowerCase();
   return normalized.includes("localhost") || normalized.includes("127.0.0.1");
 }
 
@@ -136,6 +132,10 @@ export function packageFilesPath(packageName: string, version: string): string {
   return `${packagePath(packageName, version)}/files`;
 }
 
+export function publisherPath(slug: string): string {
+  return `/publishers/${encodeURIComponent(slug)}`;
+}
+
 export function packageShortName(name: string): string {
   const parts = name.replace(/^@/, "").split("/");
   return parts[parts.length - 1] ?? name;
@@ -149,14 +149,16 @@ export function parsePackageName(name: string): { scope: string; skillName: stri
 function firstMarkdownParagraph(content: string): string | null {
   let body = content.replace(/^---[\s\S]*?---\r?\n?/, "").trim();
   body = body.replace(/^#\s+[^\n]+\n+/, "").trim();
-  return body.split(/\n\s*\n/).find((block) => block.trim())?.trim() ?? null;
+  return (
+    body
+      .split(/\n\s*\n/)
+      .find((block) => block.trim())
+      ?.trim() ?? null
+  );
 }
 
 /** Longer skill overview copied from import (legacy usage field or SKILL.md body). */
-export function resolveSkillAbout(options: {
-  usage?: string | null;
-  agentDescription?: string | null;
-}): string | null {
+export function resolveSkillAbout(options: { usage?: string | null; agentDescription?: string | null }): string | null {
   if (options.usage?.trim()) return options.usage.trim();
   if (options.agentDescription?.trim()) return firstMarkdownParagraph(options.agentDescription);
   return null;
@@ -178,7 +180,9 @@ export function resolveSkillUsage(options: {
   return resolveSkillInvokeCommand(options.name);
 }
 
-export function packageKeywords(pkg: Pick<PackageSummary, "name" | "description" | "targets" | "tags" | "categories">): string[] {
+export function packageKeywords(
+  pkg: Pick<PackageSummary, "name" | "description" | "targets" | "tags" | "categories">,
+): string[] {
   return [
     pkg.name,
     pkg.description,
@@ -208,10 +212,7 @@ export function isUnverifiedImportedPackage(pkg: Pick<PackageSummary, "import" |
   return isImportedPackage(pkg) && pkg.publisher?.user.verified === false;
 }
 
-export function installCommandForTarget(
-  pkg: Pick<PackageSummary, "name" | "version">,
-  target: string,
-): string {
+export function installCommandForTarget(pkg: Pick<PackageSummary, "name" | "version">, target: string): string {
   return `aipm add ${pkg.name}@${pkg.version} --target ${target} --ci`;
 }
 

@@ -2,6 +2,7 @@
 
 import { Check, Copy, Share2 } from "lucide-react";
 import { useState } from "react";
+import { copyToClipboard } from "../lib/copy-to-clipboard";
 import styles from "./package-share-buttons.module.css";
 
 export function PackageShareButtons({ title, url }: { title: string; url: string }) {
@@ -11,7 +12,8 @@ export function PackageShareButtons({ title, url }: { title: string; url: string
   const xUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 
   async function copyLink() {
-    await navigator.clipboard.writeText(url);
+    const didCopy = await copyToClipboard(url);
+    if (!didCopy) return;
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
   }
@@ -39,14 +41,20 @@ export function PackageShareButtons({ title, url }: { title: string; url: string
         {copied ? "Copied" : "Copy link"}
       </button>
       <a className={styles.button} href={linkedInUrl} rel="noreferrer" target="_blank">
-        <span aria-hidden="true" className={styles.linkedInIcon}>in</span>
+        <span aria-hidden="true" className={styles.linkedInIcon}>
+          in
+        </span>
         LinkedIn
       </a>
       <a className={styles.button} href={xUrl} rel="noreferrer" target="_blank">
-        <span aria-hidden="true" className={styles.xIcon}>X</span>
+        <span aria-hidden="true" className={styles.xIcon}>
+          X
+        </span>
         Post
       </a>
-      <span className={styles.status} aria-live="polite">{copied ? "Skill link copied." : ""}</span>
+      <span className={styles.status} aria-live="polite">
+        {copied ? "Skill link copied." : ""}
+      </span>
     </div>
   );
 }

@@ -27,5 +27,7 @@ coverage/
 docs/*
 !docs/LOCAL_DEV.md
 !docs/GROWTH_PLAN.md
+!docs/LAUNCH_ASSETS.md
+!docs/BACKLINK_TRACKER.md
 !docs/superpowers/
 !docs/superpowers/**

@@ -16,6 +16,7 @@ import {
   packagePath,
   packageFilesPath,
   packageShortName,
+  publisherPath,
   resolveSkillAbout,
   resolveSkillInvokeCommand,
   shortIntegrity,
@@ -118,9 +119,22 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             <div className={shell.packageDetailItem}>
               <dt>Publisher</dt>
               <dd>
-                {summary.publisher
-                  ? `${summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`} in @${summary.publisher.org.slug}`
-                  : "Unavailable"}
+                {summary.publisher ? (
+                  <Link href={publisherPath(summary.publisher.org.slug)}>
+                    {summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`} in @
+                    {summary.publisher.org.slug}
+                  </Link>
+                ) : (
+                  "Unavailable"
+                )}
+              </dd>
+            </div>
+            <div className={shell.packageDetailItem}>
+              <dt>Publisher status</dt>
+              <dd>
+                {summary.publisher?.user.verified === true
+                  ? "GitHub account connected"
+                  : "Publisher account not verified"}
               </dd>
             </div>
             <div className={shell.packageDetailItem}>
@@ -182,7 +196,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <dd title={summary.integrity}>{shortIntegrity(summary.integrity)}</dd>
             </div>
             <div className={shell.packageDetailItem}>
-              <dt>Published</dt>
+              <dt>Version published</dt>
               <dd>{new Date(summary.createdAt).toLocaleString()}</dd>
             </div>
             <div className={shell.packageDetailItem}>
@@ -193,7 +207,10 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         </aside>
       </section>
 
-      <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="package-content-title">
+      <section
+        className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+        aria-labelledby="package-content-title"
+      >
         <article className={cn(shell.panel, cards.stepCard)}>
           <p className={shell.eyebrow}>Source</p>
           <h2 id="package-content-title">Package content</h2>
@@ -217,12 +234,19 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             <a href={canonicalUrl} aria-label={`Open ${summary.name}@${summary.version} on AIPM`}>
               <img alt="Install with AIPM" height="28" src="/install-with-aipm.svg" width="154" />
             </a>
-            <CodeBlock code={badgeMarkdown} />
+            <CodeBlock
+              code={badgeMarkdown}
+              trackingEvent="README Badge Copied"
+              trackingProperties={{ package: summary.name, version: summary.version }}
+            />
           </article>
         </section>
       ) : null}
 
-      <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="publisher-title">
+      <section
+        className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+        aria-labelledby="publisher-title"
+      >
         <article className={cn(shell.panel, shell.publisherPanel)}>
           {summary.publisher?.user.avatarUrl ? (
             <img alt="" className={cn(dash.avatar, dash.avatarLarge)} src={summary.publisher.user.avatarUrl} />
@@ -234,13 +258,18 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           <div>
             <p className={shell.eyebrow}>Publisher</p>
             <h2 id="publisher-title">
-              {summary.publisher ? summary.publisher.org.name : "Publisher identity unavailable"}
+              {summary.publisher ? (
+                <Link href={publisherPath(summary.publisher.org.slug)}>{summary.publisher.org.name}</Link>
+              ) : (
+                "Publisher identity unavailable"
+              )}
             </h2>
             {summary.publisher ? (
               <p className={shell.muted}>
-                Reserved under @{summary.publisher.org.slug} by{" "}
-                {summary.publisher.user.name ?? `@${summary.publisher.user.githubLogin}`}. This package name belongs
-                to an AIPM publisher account.
+                {summary.publisher.user.verified === true
+                  ? "This publisher signed in with the linked GitHub account. "
+                  : "This imported publisher has not claimed its AIPM account. "}
+                A connected account confirms account control, but it does not guarantee that a package is safe.
               </p>
             ) : (
               <p className={shell.muted}>
@@ -252,7 +281,10 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
       </section>
 
       {pkg.manifest.examples && pkg.manifest.examples.length > 0 ? (
-        <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="examples-title">
+        <section
+          className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+          aria-labelledby="examples-title"
+        >
           <div className={shell.sectionHeading}>
             <div>
               <p className={shell.eyebrow}>Prompts</p>
@@ -272,7 +304,10 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
       ) : null}
 
       {pkg.manifest.releaseNotes ? (
-        <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="release-notes-title">
+        <section
+          className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+          aria-labelledby="release-notes-title"
+        >
           <article className={cn(shell.panel, cards.stepCard)}>
             <p className={shell.eyebrow}>Version notes</p>
             <h2 id="release-notes-title">What changed in {summary.version}</h2>
@@ -281,13 +316,16 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         </section>
       ) : null}
 
-      <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="ai-context-title">
+      <section
+        className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+        aria-labelledby="ai-context-title"
+      >
         <article className={cn(shell.panel, cards.stepCard)}>
           <p className={shell.eyebrow}>AI assistant context</p>
           <h2 id="ai-context-title">What this skill is for</h2>
           <p className={shell.usageText}>
-            {summary.name}@{summary.version} is an AIPM {summary.type} package for {targetLabel}. Use it when a
-            project needs the reusable AI behavior described as: {summary.description}
+            {summary.name}@{summary.version} is an AIPM {summary.type} package for {targetLabel}. Use it when a project
+            needs the reusable AI behavior described as: {summary.description}
           </p>
           <dl className={shell.packageDetailList}>
             <div className={shell.packageDetailItem}>
@@ -320,7 +358,10 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         </article>
       </section>
 
-      <section className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)} aria-labelledby="target-install-title">
+      <section
+        className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+        aria-labelledby="target-install-title"
+      >
         <div className={shell.sectionHeading}>
           <div>
             <p className={shell.eyebrow}>Tool targets</p>
