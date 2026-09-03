@@ -7,8 +7,9 @@ Search Console currently reports 10 external links from one domain, Libraries.io
 | Placement                       | Status                             | Link or submission                                                         | Next action                                                 |
 | ------------------------------- | ---------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Libraries.io                    | Live and visible in Search Console | https://libraries.io/npm/@aipm-registry%2Fcli                              | Keep package metadata current                               |
-| AlternativeTo                   | Live, but has no alternatives      | https://alternativeto.net/software/aipm/                                   | Add SkillsCat and Skill Shield as relevant alternatives     |
-| Product Hunt                    | Draft                              | Product Hunt maker dashboard                                               | Add demo video, then schedule launch                        |
+| AlternativeTo                   | Alternative submitted for review   | https://alternativeto.net/software/aipm/                                   | Wait for SkillsCat moderation; do not submit it again       |
+| Product Hunt                    | Complete draft, not scheduled      | https://www.producthunt.com/products/aipm-2?launch=aipm-2                  | Add demo video, then choose and schedule the launch date    |
+| Hacker News                     | Show HN live                       | https://news.ycombinator.com/item?id=49548473                              | Reply to useful feedback and avoid promotional follow-ups   |
 | DeepYard                        | Submitted                          | Directory submission                                                       | Check review status after two weeks                         |
 | Awesome AI Coding Tools         | Open pull request                  | https://github.com/ai-for-developers/awesome-ai-coding-tools/pull/662      | Wait for review; follow up once after 14 days               |
 | Awesome Open AI Developer Tools | Open pull request                  | https://github.com/Sami-Uysal/awesome-open-ai-developer-tools/pull/28      | Wait for review; follow up once after 14 days               |
@@ -20,7 +21,7 @@ Search Console currently reports 10 external links from one domain, Libraries.io
 
 1. Ask claimed publishers to add the version-specific AIPM badge to their source README.
 2. Publish the practical installation article and link to the exact guides and package used.
-3. Launch on Product Hunt and Show HN on different days.
+3. Add the demo video and schedule the completed Product Hunt draft on a different day from Show HN.
 4. Share one useful guide in each relevant community after reading its rules.
 5. Contact the first three publishers with a personal message and a direct package URL.
 
