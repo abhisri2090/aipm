@@ -2,6 +2,7 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const sources = [
   {
@@ -109,7 +110,7 @@ export default function AiPracticesPage() {
               "Write safe, testable, reusable AI skills for Cursor, Claude, Codex, and other assistants with AIPM.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
-            mainEntityOfPage: "https://aipm-registry.com/ai-practices",
+            mainEntityOfPage: `${SITE_URL}/ai-practices`,
           }),
         }}
       />

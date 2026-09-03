@@ -86,23 +86,6 @@ const faqs: { question: string; answer: ReactNode }[] = [
 export default function FaqPage() {
   return (
     <DocLayout>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqs.map(({ question, answer }) => ({
-              "@type": "Question",
-              name: question,
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: typeof answer === "string" ? answer : question,
-              },
-            })),
-          }),
-        }}
-      />
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>FAQ</p>
         <h1>Common questions and fixes.</h1>

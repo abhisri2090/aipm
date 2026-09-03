@@ -32,9 +32,17 @@ const requiredPages = [
   },
   {
     path: "/registry",
-    title: "AI Skills Registry",
-    h1: "Search public skills.",
+    canonicalPath: "/skills",
+    title: "Search the AIPM Skills Registry",
+    h1: "Find AI agent skills you can inspect and install.",
     jsonLd: true,
+  },
+  {
+    path: "/skills",
+    title: "AI Agent Skills Registry and Marketplace",
+    h1: "Find AI agent skills you can inspect and install.",
+    jsonLd: true,
+    includes: ["What is an AI agent skills registry?", "Claude Code", "Cursor"],
   },
   {
     path: "/prompts",
@@ -45,7 +53,7 @@ const requiredPages = [
   },
   {
     path: "/publish",
-    title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
+    title: "Publish an AI Agent Skill to the AIPM Registry",
     h1: "Publish AI skills so others can install them.",
     jsonLd: false,
     includes: ["AI package distribution", "MCP setup", "What teams can share", "/publish/guide"],
@@ -65,7 +73,7 @@ const requiredPages = [
   },
   {
     path: "/install",
-    title: "Install the AIPM CLI",
+    title: "Install AIPM CLI on macOS, Linux, or Windows",
     h1: "Install the AIPM CLI.",
     jsonLd: false,
     includes: ["via Homebrew", "via Scoop", "aipm --version", "aipm doctor"],
@@ -155,15 +163,15 @@ const requiredPages = [
   },
   {
     path: "/skills/cursor",
-    title: "Cursor Skills",
-    h1: "Find Cursor skills for project-ready AI workflows.",
+    title: "Cursor Skills for Reusable AI Workflows",
+    h1: "Find Cursor skills you can review and install.",
     jsonLd: true,
     includes: ["Search registry", "Browse more skill categories"],
   },
   {
     path: "/skills/claude",
-    title: "Claude Skills",
-    h1: "Find Claude skills for repeatable assistant workflows.",
+    title: "Claude Code Skills Marketplace and Library",
+    h1: "Find Claude Code skills you can review and install.",
     jsonLd: true,
     includes: ["Search registry", "Browse more skill categories"],
   },
@@ -269,8 +277,8 @@ const requiredPages = [
   },
   {
     path: "/templates",
-    title: "AIPM Skill Templates for Code Review, Issues, and Releases",
-    h1: "Start with a template, then edit it.",
+    title: "SKILL.md Template and Examples for AI Agent Skills",
+    h1: "SKILL.md template and examples",
     jsonLd: true,
     includes: ["--template code-review", "--template issue-summary", "--template release-notes"],
   },
@@ -281,7 +289,7 @@ const requiredPages = [
     jsonLd: true,
     includes: ["Global conferences &amp; communities", "NeurIPS", "ICLR", "CVPR", "AI Engineer"],
   },
-  { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: true },
+  { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: false },
   {
     path: "/guides/ai-package-manager",
     title: "What Is an AI Package Manager?",
@@ -421,7 +429,8 @@ for (const page of requiredPages) {
   assertIncludes(page.path, text, `<title>${renderedTitle}</title>`);
   assertIncludes(page.path, text, page.h1);
 
-  const canonical = `${expectedCanonicalUrl}${page.path === "/" ? "" : page.path}`;
+  const canonicalPath = page.canonicalPath ?? page.path;
+  const canonical = `${expectedCanonicalUrl}${canonicalPath === "/" ? "" : canonicalPath}`;
   assertIncludes(page.path, text, `rel="canonical" href="${canonical}"`);
 
   if (page.jsonLd && extractJsonLd(text).length === 0) {
@@ -456,6 +465,9 @@ assertIncludes("/", homePage.text, 'href="/glossary"');
 assertIncludes("/", homePage.text, 'href="/guides/ai-package-manager"');
 assertIncludes("/", homePage.text, 'href="/guides/agent-package-manager"');
 assertIncludes("/", homePage.text, 'href="/guides/version-ai-prompts"');
+assertIncludes("/", homePage.text, 'href="/guides/cursor-rules-vs-agent-skills"');
+assertIncludes("/", homePage.text, 'href="/guides/agents-md-vs-skill-md"');
+assertIncludes("/", homePage.text, 'href="/research/state-of-agent-skills-2026"');
 
 for (const path of privatePages) {
   const { response, text } = await fetchText(path);
@@ -473,7 +485,6 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
 for (const path of [
-  "/registry",
   "/skills",
   "/prompts",
   "/publish",
@@ -497,6 +508,9 @@ for (const path of [
   "/guides/share-cursor-rules",
   "/guides/reusable-claude-skills",
   "/guides/ai-agent-instructions-git",
+  "/guides/cursor-rules-vs-agent-skills",
+  "/guides/agents-md-vs-skill-md",
+  "/research/state-of-agent-skills-2026",
   "/examples",
   "/glossary",
   "/discoverability",
@@ -510,6 +524,23 @@ for (const path of [
   "/thanks",
 ]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
+}
+assertIncludes("/sitemap.xml", sitemap.text, "<lastmod>");
+if (sitemap.text.includes(`<loc>${expectedCanonicalUrl}/registry</loc>`)) {
+  fail("/sitemap.xml contains the duplicate /registry landing page.");
+}
+
+const research = await fetchText("/research/state-of-agent-skills-2026");
+assertStatus("/research/state-of-agent-skills-2026", research.response);
+assertIncludes("/research/state-of-agent-skills-2026", research.text, "State of AI Agent Skills 2026");
+assertIncludes("/research/state-of-agent-skills-2026", research.text, "Trust signals in the registry");
+assertIncludes("/research/state-of-agent-skills-2026", research.text, '"@type":"Dataset"');
+
+const researchDataset = await fetchText("/research/agent-skills-2026.json");
+assertStatus("/research/agent-skills-2026.json", researchDataset.response);
+const researchData = JSON.parse(researchDataset.text);
+if (!Array.isArray(researchData.packages) || typeof researchData.totals?.packages !== "number") {
+  fail("/research/agent-skills-2026.json does not contain the expected reproducible dataset.");
 }
 
 const packageSitemap = await fetchText("/package-sitemap.xml");
@@ -541,7 +572,9 @@ if (packageList.response.ok) {
     assertIncludes(path, jsonLd, '"@type":"WebPage"');
     assertIncludes(path, jsonLd, '"@type":"SoftwareSourceCode"');
     assertIncludes(path, jsonLd, '"@type":"HowTo"');
-    assertIncludes(path, jsonLd, '"@type":"FAQPage"');
+    if (jsonLd.includes('"@type":"FAQPage"')) {
+      fail(`${path} contains deprecated FAQPage structured data.`);
+    }
   }
 }
 
@@ -581,7 +614,7 @@ assertIncludes("/llms.txt", llms.text, "What are the main components of an AI ag
 
 const securityPolicy = await readFile(resolve(repoRoot, "SECURITY.md"), "utf8");
 assertIncludes("SECURITY.md", securityPolicy, "aipm publish preview");
-assertIncludes("SECURITY.md", securityPolicy, "https://aipm-registry.com/security");
+assertIncludes("SECURITY.md", securityPolicy, "https://www.aipm-registry.com/security");
 
 const readme = await readFile(resolve(repoRoot, "README.md"), "utf8");
 assertIncludes("README.md", readme, "web/              → Next.js website, registry UI, docs, and publisher dashboard");

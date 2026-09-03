@@ -10,6 +10,7 @@ import {
   getPackage,
   installCommand,
   installCommandForTarget,
+  isIndexablePackage,
   listPackages,
   packagePath,
   resolveSkillInvokeCommand,
@@ -72,6 +73,7 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
   const description = `${pkg.manifest.description} Install ${pkg.name}@${pkg.version} for ${targetLabel} with AIPM.`;
   const path = packagePath(pkg.name, pkg.version);
   const publisher = pkg.publisher?.org.name ?? "AIPM";
+  const indexable = isIndexablePackage(summary);
   return {
     title,
     description,
@@ -82,10 +84,10 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
     publisher,
     alternates: { canonical: `${SITE_URL}${path}` },
     robots: {
-      index: true,
+      index: indexable,
       follow: true,
       googleBot: {
-        index: true,
+        index: indexable,
         follow: true,
         "max-snippet": -1,
         "max-image-preview": "large",
@@ -272,28 +274,6 @@ export default async function PackagePage({ params }: PackagePageProps) {
                     name: "Install the skill",
                     text: command,
                     url: `${canonicalUrl}#install-command`,
-                  },
-                ],
-              },
-              {
-                "@type": "FAQPage",
-                "@id": `${canonicalUrl}#faq`,
-                mainEntity: [
-                  {
-                    "@type": "Question",
-                    name: `How do I install ${summary.name}@${summary.version}?`,
-                    acceptedAnswer: {
-                      "@type": "Answer",
-                      text: `Run ${command} in a project that has AIPM initialized.`,
-                    },
-                  },
-                  {
-                    "@type": "Question",
-                    name: `Which AI tools does ${summary.name}@${summary.version} support?`,
-                    acceptedAnswer: {
-                      "@type": "Answer",
-                      text: `${summary.name}@${summary.version} supports ${targetLabel}.`,
-                    },
                   },
                 ],
               },

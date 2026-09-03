@@ -80,6 +80,16 @@ export default async function SkillDiscoveryPage({ params }: SkillDiscoveryRoute
         </div>
       </section>
 
+      <section className={shell.panelSection} aria-labelledby="skill-collection-answer-title">
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>Short answer</p>
+            <h2 id="skill-collection-answer-title">What you will find here</h2>
+          </div>
+        </div>
+        <p>{page.answer}</p>
+      </section>
+
       <section className={shell.panelSection} aria-labelledby="use-cases-title">
         <div className={shell.sectionHeading}>
           <div>
@@ -137,6 +147,21 @@ export default async function SkillDiscoveryPage({ params }: SkillDiscoveryRoute
           ))}
         </div>
       </section>
+
+      {page.sources?.length ? (
+        <section className={shell.panelSection} aria-labelledby="skill-sources-title">
+          <div className={shell.sectionHeading}>
+            <h2 id="skill-sources-title">Primary sources</h2>
+          </div>
+          <ul>
+            {page.sources.map((source) => (
+              <li key={source.href}>
+                <a href={source.href} rel="noreferrer" target="_blank">{source.label}</a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </main>
   );
 }

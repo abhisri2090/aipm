@@ -114,6 +114,16 @@ Website: https://www.aipm-registry.com
 
 Source: https://github.com/abhisri2090/aipm
 
+## Research Announcement
+
+I published a reproducible snapshot of the public AIPM Agent Skills registry.
+
+It currently covers 33 public package versions and reports source-link, license, integrity, publisher, install, and declared tool-target metadata. The page explains what each signal means and what it does not prove. The normalized JSON dataset refreshes every hour.
+
+Report: https://www.aipm-registry.com/research/state-of-agent-skills-2026
+
+This is a snapshot of AIPM, not a count of every Agent Skill online. Corrections and ideas for the next useful measurement are welcome.
+
 ## Publisher Outreach
 
 ### Orchestra Research

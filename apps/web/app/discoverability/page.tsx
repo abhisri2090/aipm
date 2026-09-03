@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const principles = [
   {
@@ -69,7 +70,7 @@ export default function DiscoverabilityPage() {
               "Learn how to name and describe AIPM packages so users can find and trust them.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
-            mainEntityOfPage: "https://aipm-registry.com/discoverability",
+            mainEntityOfPage: `${SITE_URL}/discoverability`,
           }),
         }}
       />

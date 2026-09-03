@@ -2,6 +2,7 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const sections = [
   {
@@ -71,7 +72,7 @@ export default function RoadmapPage() {
             name: "AIPM Product Roadmap",
             description:
               "See planned AIPM features for AI skill installs, publishing, package trust, MCP bundles, and assistant targets.",
-            url: "https://aipm-registry.com/roadmap",
+            url: `${SITE_URL}/roadmap`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
         }}

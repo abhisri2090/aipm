@@ -11,8 +11,8 @@ import {
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Install the AIPM CLI",
-  description: "Install the AIPM CLI with npm, Homebrew, standalone scripts, Windows PowerShell, or Scoop.",
+  title: "Install AIPM CLI on macOS, Linux, or Windows",
+  description: "Install the AIPM CLI with npm, Homebrew, macOS or Linux scripts, Windows PowerShell, or Scoop. Then check the installation in two commands.",
   path: "/install",
   keywords: [
     "install AIPM CLI",
@@ -32,6 +32,10 @@ export default function InstallPage() {
         <p className={shell.lede}>
           Install the CLI once on your machine before you use, publish, or manage skills. The current
           verified release is <a href={CLI_RELEASE_URL}>AIPM CLI {CLI_VERSION}</a>.
+        </p>
+        <p>
+          <strong>Short answer:</strong> use npm on any supported system, or choose the native
+          installer for your operating system. Run <code>aipm --version</code> when it finishes.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/use">

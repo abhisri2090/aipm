@@ -102,7 +102,7 @@ export default async function HomePage() {
                 },
                 potentialAction: {
                   "@type": "SearchAction",
-                  target: "https://www.aipm-registry.com/registry?q={search_term_string}",
+                target: "https://www.aipm-registry.com/skills?q={search_term_string}",
                   "query-input": "required name=search_term_string",
                 },
               },
@@ -252,8 +252,8 @@ export default async function HomePage() {
           <Link className={shell.button} href="#get-started">
             Get started
           </Link>
-          <Link className={shell.button} href="/registry">
-            Browse registry
+          <Link className={shell.button} href="/skills">
+            Browse skills
           </Link>
           <Link className={shell.button} href="/prompts">
             Browse prompts
@@ -314,8 +314,8 @@ export default async function HomePage() {
             <p className={shell.eyebrow}>Live registry</p>
             <h2 id="home-search-title">Find a skill</h2>
           </div>
-          <Link className={shell.textLink} href="/registry">
-            Open full registry
+          <Link className={shell.textLink} href="/skills">
+            Open skills registry
           </Link>
         </div>
         <RegistrySearch compact initialPackages={[]} />
@@ -370,6 +370,14 @@ export default async function HomePage() {
           <h2>Cursor rules vs AGENTS.md</h2>
           <p>Choose the right shared or scoped instruction format for your coding agents.</p>
         </Link>
+        <Link className={cards.guideCard} href="/guides/cursor-rules-vs-agent-skills">
+          <h2>Cursor rules vs Agent Skills</h2>
+          <p>Choose between instructions that always apply and a reusable task workflow.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/agents-md-vs-skill-md">
+          <h2>AGENTS.md vs SKILL.md</h2>
+          <p>Compare shared project instructions with a reusable Agent Skill.</p>
+        </Link>
         <Link className={cards.guideCard} href="/guides/claude-code-skills-vs-slash-commands">
           <h2>Claude skills vs commands</h2>
           <p>See how Claude Code skills and custom slash commands now work together.</p>
@@ -401,6 +409,10 @@ export default async function HomePage() {
         <Link className={cards.guideCard} href="/templates">
           <h2>Start from templates</h2>
           <p>Create package folders for review, issue summary, release notes, or blank skills.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/research/state-of-agent-skills-2026">
+          <h2>State of AI Agent Skills 2026</h2>
+          <p>Explore current registry data, tool support, trust signals, and the open dataset.</p>
         </Link>
         <Link className={cards.guideCard} href="/faq">
           <h2>Troubleshoot</h2>

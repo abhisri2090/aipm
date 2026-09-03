@@ -109,6 +109,16 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Choose between shared AGENTS.md instructions and scoped Cursor project rules.",
       },
       {
+        href: "/guides/cursor-rules-vs-agent-skills",
+        label: "Cursor rules vs Agent Skills",
+        body: "Choose between ongoing Cursor project instructions and a reusable task workflow.",
+      },
+      {
+        href: "/guides/agents-md-vs-skill-md",
+        label: "AGENTS.md vs SKILL.md",
+        body: "Compare shared project instructions with a reusable Agent Skill file.",
+      },
+      {
         href: "/guides/claude-code-skills-vs-slash-commands",
         label: "Claude skills vs commands",
         body: "Understand how Claude Code skills and custom slash commands now fit together.",
@@ -232,6 +242,16 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         href: "/glossary",
         label: "Glossary",
         body: "Learn simple meanings for skills, manifests, targets, orgs, and tokens.",
+      },
+    ],
+  },
+  {
+    title: "Research",
+    items: [
+      {
+        href: "/research/state-of-agent-skills-2026",
+        label: "State of AI Agent Skills 2026",
+        body: "See current registry data, target support, trust signals, methods, and a downloadable dataset.",
       },
     ],
   },

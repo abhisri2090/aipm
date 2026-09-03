@@ -25,4 +25,12 @@
   .docShell {
     grid-template-columns: 1fr;
   }
+
+  .docMain {
+    order: 1;
+  }
+
+  .docShell > aside {
+    order: 2;
+  }
 }

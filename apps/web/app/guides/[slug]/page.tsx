@@ -29,6 +29,32 @@ const PLAIN_ENGLISH_TERMS = [
   },
 ] as const;
 
+const RELATED_STOP_WORDS = new Set([
+  "aipm", "and", "best", "code", "for", "guide", "how", "install", "manage", "share", "the", "to", "vs", "what",
+]);
+
+function guideTerms(guide: (typeof SEO_GUIDES)[number]): Set<string> {
+  return new Set(
+    [guide.slug, guide.title, guide.h1, ...guide.keywords]
+      .join(" ")
+      .toLowerCase()
+      .split(/[^a-z0-9.]+/)
+      .filter((term) => term.length > 2 && !RELATED_STOP_WORDS.has(term)),
+  );
+}
+
+function findRelatedGuides(guide: (typeof SEO_GUIDES)[number]) {
+  const terms = guideTerms(guide);
+  return SEO_GUIDES.filter((item) => item.slug !== guide.slug)
+    .map((item) => ({
+      item,
+      score: [...guideTerms(item)].filter((term) => terms.has(term)).length,
+    }))
+    .sort((a, b) => b.score - a.score || a.item.title.localeCompare(b.item.title))
+    .slice(0, 4)
+    .map(({ item }) => item);
+}
+
 export function generateStaticParams() {
   return SEO_GUIDES.map((guide) => ({ slug: guide.slug }));
 }
@@ -50,7 +76,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
   const guide = getSeoGuide(slug);
   if (!guide) notFound();
 
-  const relatedGuides = SEO_GUIDES.filter((item) => item.slug !== guide.slug).slice(0, 4);
+  const relatedGuides = findRelatedGuides(guide);
   const guideText = JSON.stringify(guide);
   const terms = PLAIN_ENGLISH_TERMS.filter((item) => guideText.includes(item.match));
   const publishedAt = guide.publishedAt ?? GUIDE_PUBLISHED_AT;
@@ -78,17 +104,6 @@ export default async function GuidePage({ params }: GuideRouteProps) {
                 mainEntityOfPage: `${SITE_URL}/guides/${guide.slug}`,
                 isPartOf: { "@type": "WebSite", name: "AIPM Registry", url: SITE_URL },
                 breadcrumb: { "@id": `${SITE_URL}/guides/${guide.slug}#breadcrumbs` },
-              },
-              {
-                "@type": "FAQPage",
-                mainEntity: guide.faqs.map((faq) => ({
-                  "@type": "Question",
-                  name: faq.question,
-                  acceptedAnswer: {
-                    "@type": "Answer",
-                    text: faq.answer,
-                  },
-                })),
               },
               {
                 "@type": "BreadcrumbList",
@@ -121,7 +136,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           <Link className={shell.button} href="/install">
             Install AIPM
           </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/registry">
+          <Link className={cn(shell.button, shell.secondary)} href="/skills">
             Browse skills
           </Link>
         </div>
@@ -157,7 +172,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         </section>
 
         <section>
-          <h2>Simple steps to create and AI agent</h2>
+          <h2>Simple steps</h2>
           <ol className={docs.flowList}>
             {guide.steps.map((step) => (
               <li key={step}>{step}</li>
@@ -199,6 +214,15 @@ export default async function GuidePage({ params }: GuideRouteProps) {
             </ul>
           </section>
         ) : null}
+
+        <section>
+          <h2>How this guide was checked</h2>
+          <p>
+            Abhishek Srivastava reviewed this guide for plain English and current product behavior.
+            Official references are linked above when the guide depends on outside product details.
+            Product details can change, so the review date is shown at the top of the page.
+          </p>
+        </section>
       </article>
 
       <section className={shell.panelSection} aria-labelledby="related-guides-title">

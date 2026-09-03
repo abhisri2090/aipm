@@ -2,6 +2,7 @@ import { shell, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const publisherRules = [
   "Only publish packages you are allowed to share.",
@@ -54,7 +55,7 @@ export default function TermsPage() {
             name: "AIPM Terms and Acceptable Use",
             description:
               "Read AIPM rules for publishing public AI skill packages, avoiding unsafe content, and using package names honestly.",
-            url: "https://aipm-registry.com/terms",
+            url: `${SITE_URL}/terms`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
         }}

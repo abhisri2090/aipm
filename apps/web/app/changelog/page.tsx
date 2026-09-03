@@ -2,6 +2,7 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const entries = [
   {
@@ -71,7 +72,7 @@ export default function ChangelogPage() {
             name: "AIPM Changelog",
             description:
               "Track AIPM CLI, registry, dashboard, SEO, publishing, and AI skill package updates.",
-            url: "https://aipm-registry.com/changelog",
+            url: `${SITE_URL}/changelog`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
         }}

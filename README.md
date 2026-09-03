@@ -51,7 +51,7 @@ packages/
 
 Design docs: `InitialDesignPlan/`.
 
-Security policy and public package safety guidance: [`SECURITY.md`](SECURITY.md) and [aipm-registry.com/security](https://aipm-registry.com/security). Privacy notice: [aipm-registry.com/privacy](https://aipm-registry.com/privacy). Terms and acceptable use: [aipm-registry.com/terms](https://aipm-registry.com/terms). Product roadmap: [aipm-registry.com/roadmap](https://aipm-registry.com/roadmap). Changelog: [aipm-registry.com/changelog](https://aipm-registry.com/changelog). Skill templates: [aipm-registry.com/templates](https://aipm-registry.com/templates). Supported targets: [aipm-registry.com/targets](https://aipm-registry.com/targets). Examples: [aipm-registry.com/examples](https://aipm-registry.com/examples). Glossary: [aipm-registry.com/glossary](https://aipm-registry.com/glossary).
+Security policy and public package safety guidance: [`SECURITY.md`](SECURITY.md) and [aipm-registry.com/security](https://www.aipm-registry.com/security). Privacy notice: [aipm-registry.com/privacy](https://www.aipm-registry.com/privacy). Terms and acceptable use: [aipm-registry.com/terms](https://www.aipm-registry.com/terms). Product roadmap: [aipm-registry.com/roadmap](https://www.aipm-registry.com/roadmap). Changelog: [aipm-registry.com/changelog](https://www.aipm-registry.com/changelog). Skill templates: [aipm-registry.com/templates](https://www.aipm-registry.com/templates). Supported targets: [aipm-registry.com/targets](https://www.aipm-registry.com/targets). Examples: [aipm-registry.com/examples](https://www.aipm-registry.com/examples). Glossary: [aipm-registry.com/glossary](https://www.aipm-registry.com/glossary).
 
 ## Prerequisites
 
@@ -99,7 +99,7 @@ aipm init
 aipm add @team/sample-skill@0.0.1780307807
 ```
 
-The installed CLI uses `https://aipm-registry.com` by default. For local
+The installed CLI uses `https://api.aipm-registry.com` by default. For local
 development, pass `--registry http://127.0.0.1:8080` or set `AIPM_REGISTRY`.
 
 ### Install the `aipm` command (no full path)
@@ -117,7 +117,7 @@ After you change CLI code, run `pnpm build` again (link stays valid).
 Then from any folder:
 
 ```bash
-aipm init --registry https://aipm-registry.com
+aipm init --registry https://api.aipm-registry.com
 aipm publish init --name @team/review-helper --template code-review
 aipm publish add .
 AIPM_TOKEN=<5-minute-token> aipm publish push --yes
@@ -132,7 +132,7 @@ To remove: `pnpm cli:unlink`
 
 ```bash
 pnpm build
-pnpm aipm init --registry https://aipm-registry.com
+pnpm aipm init --registry https://api.aipm-registry.com
 ```
 
 Public registry reads and installs do not need a token. For private org

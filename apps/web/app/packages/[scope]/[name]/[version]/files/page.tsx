@@ -5,7 +5,6 @@ import { PackageFilesExplorer } from "../../../../../../components/package-files
 import { shell, cn } from "../../../../../../lib/page-styles";
 import {
   getPackage,
-  packageFilesPath,
   packagePath,
   packageShortName,
   SITE_URL,
@@ -22,12 +21,12 @@ export async function generateMetadata({ params }: PackageFilesPageProps): Promi
   if (!pkg) return { title: "Package not found | AIPM" };
 
   const title = `${pkg.name}@${pkg.version} files`;
-  const path = packageFilesPath(pkg.name, pkg.version);
+  const path = packagePath(pkg.name, pkg.version);
   return {
     title,
     description: `Browse files bundled in ${pkg.name}@${pkg.version}.`,
     alternates: { canonical: `${SITE_URL}${path}` },
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: true },
   };
 }
 

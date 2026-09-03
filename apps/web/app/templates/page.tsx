@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const templates = [
   {
@@ -36,12 +37,14 @@ const templates = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Skill Templates for Code Review, Issues, and Releases",
+  title: "SKILL.md Template and Examples for AI Agent Skills",
   description:
-    "Create reusable AI skills faster with AIPM templates for code review, issue summaries, release notes, and blank packages.",
+    "Start with a plain SKILL.md template, then see AIPM examples for code review, issue summaries, and release notes.",
   path: "/templates",
   keywords: [
-    "AIPM templates",
+    "SKILL.md template",
+    "SKILL.md example",
+    "Agent Skills format",
     "AI skill templates",
     "code review skill",
     "issue summary skill",
@@ -62,7 +65,7 @@ export default function TemplatesPage() {
             name: "AIPM Skill Templates",
             description:
               "Create reusable AI skills faster with AIPM templates for code review, issue summaries, release notes, and blank packages.",
-            url: "https://aipm-registry.com/templates",
+            url: `${SITE_URL}/templates`,
             hasPart: templates.map((template) => ({
               "@type": "HowTo",
               name: `${template.name} AIPM template`,
@@ -74,11 +77,16 @@ export default function TemplatesPage() {
 
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>Templates</p>
-        <h1>Start with a template, then edit it.</h1>
+        <h1>SKILL.md template and examples</h1>
         <p className={shell.lede}>
           Templates create starter files for common AI tasks. They are only a starting point. Edit
           the SKILL.md, manifest, and .aipmignore file before you publish. Install the AIPM CLI once
           before running template commands — see the <Link href="/install">install guide</Link>.
+        </p>
+        <p>
+          <strong>Short answer:</strong> a SKILL.md file gives an AI agent a name, a clear purpose,
+          and step-by-step instructions for one reusable task. Start small, test the steps, and add
+          only the files the task needs.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish/guide">
@@ -108,6 +116,17 @@ export default function TemplatesPage() {
       </section>
 
       <article className={cn(docs.doc, docs.wideDoc)}>
+        <section>
+          <h2>Basic SKILL.md example</h2>
+          <p>This small example reviews a change and reports the most important problems first.</p>
+          <CodeBlock
+            code={`---\nname: code-review\ndescription: Review code changes for bugs, security risks, and missing tests.\n---\n\n# Code review\n\n1. Read the changed files and nearby tests.\n2. Find problems that can change real behavior.\n3. Explain each problem with a file and line number.\n4. Put serious problems first.\n5. Say clearly when no problem is found.`}
+          />
+          <p>
+            The exact supported fields can differ by AI tool. Check the{" "}
+            <Link href="/compatibility">AI agent file support table</Link> before sharing the skill.
+          </p>
+        </section>
         <section>
           <h2>After you choose a template</h2>
           <p>

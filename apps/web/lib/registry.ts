@@ -141,6 +141,12 @@ export function packageShortName(name: string): string {
   return parts[parts.length - 1] ?? name;
 }
 
+export function isIndexablePackage(pkg: Pick<PackageSummary, "description" | "sourceUrl" | "import">): boolean {
+  const description = pkg.description.trim();
+  const sourceUrl = pkg.sourceUrl ?? pkg.import?.sourceUrl ?? null;
+  return description.length >= 40 && (Boolean(sourceUrl) || description.length >= 80);
+}
+
 export function parsePackageName(name: string): { scope: string; skillName: string } {
   const [scope, skillName] = name.replace(/^@/, "").split("/");
   return { scope: scope ?? "", skillName: skillName ?? name };

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Publish and Distribute AI Skills, MCP, and Tool Packages",
+  title: "Publish an AI Agent Skill to the AIPM Registry",
   description:
-    "Use AIPM to publish AI skills, MCP setup, prompts, and tool files.",
+    "Publish a reusable AI agent skill with a clear name, version, source, install command, and supported tools. Follow the complete AIPM publishing steps.",
   path: "/publish",
   keywords: [
     "publish AI skills",
@@ -61,6 +61,11 @@ export default function PublishPage() {
           AIPM helps you package prompts, rules, MCP setup, and tool files once. Then other projects
           can install the same setup from the registry. Publishing uses account ownership,
           reserved package names, and short-lived CLI tokens.
+        </p>
+        <p>
+          <strong>Short answer:</strong> create a skill folder, reserve its package name, check the
+          public files, and publish a version with the AIPM CLI. Other people can then install that
+          exact version from the registry.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/login">

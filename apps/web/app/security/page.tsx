@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const checklist = [
   "Run aipm publish preview before publishing and check every included file.",
@@ -69,7 +70,7 @@ export default function SecurityPage() {
               "Learn how to publish AI skill packages with AIPM without leaking secrets, private prompts, tokens, or customer data.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
-            mainEntityOfPage: "https://aipm-registry.com/security",
+            mainEntityOfPage: `${SITE_URL}/security`,
           }),
         }}
       />

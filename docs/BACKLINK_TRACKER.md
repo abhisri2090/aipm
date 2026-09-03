@@ -1,6 +1,6 @@
 # AIPM Backlink Tracker
 
-Updated: 3 September 2026
+Updated: 4 September 2026
 
 Search Console currently reports 10 external links from one domain, Libraries.io. Search Console can take several weeks to show a new link.
 
@@ -16,13 +16,16 @@ Search Console currently reports 10 external links from one domain, Libraries.io
 | AI Coding Assistants Playbook   | Open pull request                  | https://github.com/CodandoTV/awesome-ai-coding-assistants-playbook/pull/14 | Wait for review; follow up once after 14 days               |
 | Awesome Agent Skills            | Open pull request                  | https://github.com/philipbankier/awesome-agent-skills/pull/68              | Wait for review; note the current one-star requirement risk |
 | QAInsights Awesome AI Tools     | Closed                             | https://github.com/QAInsights/awesome-ai-tools/issues/236                  | Do not resubmit without new evidence or maintainer guidance |
+| DevPages                        | Ready to submit                     | https://devpages.io/submit-a-tool                                           | Submit AIPM as a developer tool after approval              |
+| The Rundown Supertools          | Ready to submit                     | https://www.therundown.ai/submit                                            | Send the one-line tool submission after approval            |
+| Awesome Skills Directory        | Candidate for AIPM-owned skills     | https://www.awesomeskills.dev/en/submit                                     | Submit only a public repo path that contains a real SKILL.md |
 
 ## Next High-value Links
 
-1. Ask claimed publishers to add the version-specific AIPM badge to their source README.
-2. Publish the practical installation article and link to the exact guides and package used.
-3. Add the demo video and schedule the completed Product Hunt draft on a different day from Show HN.
-4. Share one useful guide in each relevant community after reading its rules.
+1. Share the original State of AI Agent Skills 2026 report with researchers and maintainers who can use the dataset.
+2. Ask claimed publishers to add the version-specific AIPM badge to their source README.
+3. Submit to DevPages and The Rundown after founder approval.
+4. Add the demo video and schedule the completed Product Hunt draft.
 5. Contact the first three publishers with a personal message and a direct package URL.
 
 Avoid paid links, bulk directory submissions, and repeated comments. They add risk without building trust or useful traffic.

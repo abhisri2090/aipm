@@ -92,4 +92,4 @@ examples, but treat any finding as a blocker until it is removed or rotated.
 - Publish tokens are short-lived and should not be stored by the CLI or committed to projects.
 - Private package support, package takedown workflow, stronger package scanning, verified publishers, and a formal disclosure channel are planned product hardening items.
 
-See the public guide at https://aipm-registry.com/security.
+See the public guide at https://www.aipm-registry.com/security.

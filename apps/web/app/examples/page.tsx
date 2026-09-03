@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 type ExampleStep = {
   title: string;
@@ -225,7 +226,7 @@ export default function ExamplesPage() {
             "@type": "CollectionPage",
             name: "AIPM Skill Examples",
             description: "Copy simple AIPM examples for publishing and installing skills.",
-            url: "https://aipm-registry.com/examples",
+            url: `${SITE_URL}/examples`,
           }),
         }}
       />

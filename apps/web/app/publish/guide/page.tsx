@@ -135,6 +135,18 @@ AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
           replace publish tokens.
         </p>
 
+        <h2>Share the published skill from GitHub</h2>
+        <p>
+          After a successful publish, the CLI prints the package page, install command, and a
+          ready-to-paste README badge. Add the badge to the source README so people can inspect the
+          exact version before installing it. Use GitHub topics such as <code>agent-skills</code>,{" "}
+          <code>ai-skills</code>, and <code>aipm</code> only when they accurately describe the repository.
+        </p>
+        <p>
+          A badge is a navigation link, not a safety approval. Keep the source URL, license,
+          description, examples, and release notes current on every version.
+        </p>
+
         <h2>Starter templates</h2>
         <p>
           Templates only create starter SKILL.md content. Pick the closest one, then edit the

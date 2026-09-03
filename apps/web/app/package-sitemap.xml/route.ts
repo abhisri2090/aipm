@@ -1,4 +1,11 @@
-import { packagePath, publisherPath, REGISTRY_API_BASE_URL, SITE_URL, type PackageSummary } from "../../lib/registry";
+import {
+  isIndexablePackage,
+  packagePath,
+  publisherPath,
+  REGISTRY_API_BASE_URL,
+  SITE_URL,
+  type PackageSummary,
+} from "../../lib/registry";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +54,8 @@ export async function GET(): Promise<Response> {
     packages = [];
   }
 
-  const packageUrls = packages
+  const indexablePackages = packages.filter(isIndexablePackage);
+  const packageUrls = indexablePackages
     .map((pkg) => {
       const loc = `${SITE_URL}${packagePath(pkg.name, pkg.version)}`;
       const lastmod = new Date(pkg.createdAt).toISOString();
@@ -56,7 +64,7 @@ export async function GET(): Promise<Response> {
     .join("");
 
   const publisherDates = new Map<string, string>();
-  for (const pkg of packages) {
+  for (const pkg of indexablePackages) {
     const slug = pkg.publisher?.org.slug;
     if (!slug) continue;
     const current = publisherDates.get(slug);

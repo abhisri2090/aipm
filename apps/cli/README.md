@@ -1,9 +1,9 @@
-# Search the registry at [aipm-registry.com](https://aipm-registry.com) for a skill
+# Search the registry at [aipm-registry.com](https://www.aipm-registry.com) for a skill
 
 
 # AIPM CLI
 
-**An Open source command-line tool for AI skills management and discovery [AIPM](https://aipm-registry.com)**
+**An Open source command-line tool for AI skills management and discovery [AIPM](https://www.aipm-registry.com)**
 
 ## What is this?
 
@@ -13,13 +13,13 @@ AIPM makes skills easy to **find, install, and share** — like npm, but for AI 
 
 This package gives you the `aipm` command. With it you can:
 
-- **Browse and install** skills from the public registry at **[aipm-registry.com](https://aipm-registry.com)**
+- **Browse and install** skills from the public registry at **[aipm-registry.com](https://www.aipm-registry.com)**
 - **Add skills to your project** so your whole team uses the same instructions
 - **Publish your own skills** so others can install them
 
 No other AIPM packages are required — everything is bundled in one install.
 
-**Supported tools today:** Cursor and Claude (more targets at [aipm-registry.com/targets](https://aipm-registry.com/targets)).
+**Supported tools today:** Cursor and Claude (more targets at [aipm-registry.com/targets](https://www.aipm-registry.com/targets)).
 
 ## Install
 
@@ -39,7 +39,7 @@ Start in any project folder:
 aipm init --target cursor
 ```
 
-*Search the registry at [aipm-registry.com](https://aipm-registry.com) for a skill:*
+*Search the registry at [aipm-registry.com](https://www.aipm-registry.com) for a skill:*
 
 ```bash
 aipm search sentry
@@ -82,13 +82,13 @@ Update installed skills:
 aipm update
 ```
 
-Browse more packages on the website: **[aipm-registry.com](https://aipm-registry.com)**
+Browse more packages on the website: **[aipm-registry.com](https://www.aipm-registry.com)**
 
 ## Publish your skill (public / private / organization-only)
 
 Share a skill with your team or the public registry.
 
-1. Create a free account at **[aipm-registry.com](https://aipm-registry.com)**
+1. Create a free account at **[aipm-registry.com](https://www.aipm-registry.com)**
 2. Create an org and reserve your package name (for example `@team/review-helper`)
 3. Scaffold a new skill package:
 
@@ -106,7 +106,7 @@ aipm publish validate   # optional — check for problems
 AIPM_TOKEN=<5-minute-token> aipm publish push --yes
 ```
 
-Get the short-lived publish token from your package page on **[aipm-registry.com/dashboard](https://aipm-registry.com/dashboard)**.
+Get the short-lived publish token from your package page on **[aipm-registry.com/dashboard](https://www.aipm-registry.com/dashboard)**.
 
 **Starter templates:** `blank`, `code-review`, `issue-summary`, `release-notes`. They only set the initial `SKILL.md` — edit any file before publishing.
 
@@ -131,7 +131,7 @@ aipm doctor --publish             # check publish setup
 
 Use `.aipmignore` to skip local-only files. Before upload, AIPM blocks common mistakes such as private keys, `.env` files, and oversized packages.
 
-Full publishing guide: **[aipm-registry.com/publish](https://aipm-registry.com/publish)**
+Full publishing guide: **[aipm-registry.com/publish](https://www.aipm-registry.com/publish)**
 
 ## Configuration
 
@@ -146,7 +146,7 @@ For a local or private registry, use `--registry <url>`, or set `AIPM_REGISTRY_U
 
 ## Links
 
-- **Registry & browse skills:** [aipm-registry.com](https://aipm-registry.com)
-- **Publishing guide:** [aipm-registry.com/publish](https://aipm-registry.com/publish)
-- **Docs & examples:** [aipm-registry.com/examples](https://aipm-registry.com/examples)
+- **Registry & browse skills:** [aipm-registry.com](https://www.aipm-registry.com)
+- **Publishing guide:** [aipm-registry.com/publish](https://www.aipm-registry.com/publish)
+- **Docs & examples:** [aipm-registry.com/examples](https://www.aipm-registry.com/examples)
 - **Source code:** [github.com/abhisri2090/aipm](https://github.com/abhisri2090/aipm)

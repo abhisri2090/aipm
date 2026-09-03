@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const targets = [
   {
@@ -49,7 +50,7 @@ export default function TargetsPage() {
             name: "AIPM Supported Targets",
             description:
               "Learn where AIPM installs skills for Cursor and Claude.",
-            url: "https://aipm-registry.com/targets",
+            url: `${SITE_URL}/targets`,
             hasPart: targets.map((target) => ({
               "@type": "SoftwareApplication",
               name: `${target.name} AIPM target`,

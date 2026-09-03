@@ -1,6 +1,6 @@
 # AIPM Growth Plan
 
-Updated: 1 September 2026
+Updated: 4 September 2026
 
 This plan focuses on useful adoption, not empty traffic. A good result is a person who finds a trusted skill, installs it, and returns or publishes one of their own.
 
@@ -38,12 +38,12 @@ The product already creates a version-specific "Install with AIPM" badge on ever
 
 ### Next implementation steps
 
-- Add a "Copy README badge" event to analytics.
-- Show the badge immediately after a successful publish.
-- Add a publisher profile page with all claimed packages.
-- Add related skills and "More from this publisher" links.
-- Offer a small pull-request template that adds the badge to a publisher's README. Never open a PR without the publisher's permission.
-- Add a GitHub topic recommendation to publishing docs: `agent-skills`, `ai-skills`, and `aipm` when relevant.
+- [x] Add a "Copy README badge" event to analytics.
+- [x] Show the badge immediately after a successful CLI publish.
+- [x] Add a publisher profile page with all claimed packages.
+- [x] Add related skills using publisher and category signals.
+- [x] Prepare a small README badge pull-request template. Never open a PR without the publisher's permission.
+- [x] Add GitHub topic recommendations to the publishing guide.
 
 ### Measures
 
@@ -158,6 +158,8 @@ Send a personal message for each person. Mention one real skill and one reason i
 - Cursor Forum and developer community resource threads
 - GitHub repository topics and Discussions posts where self-promotion is allowed
 - Maintainer READMEs after the maintainer has reviewed and approved the AIPM listing
+- Researchers studying Agent Skills who may use the open registry dataset
+- DevPages and The Rundown Supertools, which currently accept tool submissions
 
 ### Rules
 

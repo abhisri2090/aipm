@@ -1555,6 +1555,123 @@ export const SEO_GUIDES: SeoGuide[] = [
       { label: "AIPM publishing guide", href: "https://www.aipm-registry.com/publish/guide" },
     ],
   },
+  {
+    slug: "cursor-rules-vs-agent-skills",
+    title: "Cursor Rules vs Agent Skills",
+    h1: "What is the difference between Cursor rules and Agent Skills?",
+    description:
+      "Compare Cursor project rules and Agent Skills in plain English. Learn where each file belongs and when a team should use both.",
+    answer:
+      "Cursor rules control how Cursor should behave in a project or for certain files. Agent Skills describe how an AI agent should complete a reusable task. Use rules for ongoing project instructions and skills for focused workflows that may be shared across tools.",
+    keywords: [
+      "Cursor rules vs skills",
+      "Cursor rules and skills",
+      "Cursor Agent Skills",
+      "Cursor SKILL.md",
+    ],
+    publishedAt: "2026-09-04",
+    updatedAt: "2026-09-04",
+    sections: [
+      {
+        title: "Rules guide normal project behavior",
+        body:
+          "A Cursor project rule can apply all the time, only to matching files, or when Cursor decides it is relevant. Rules are useful for coding style, project structure, required checks, and limits that should stay active while work is being done.",
+      },
+      {
+        title: "Skills explain one repeatable job",
+        body:
+          "An Agent Skill is a small package of instructions for a task such as reviewing a pull request, preparing release notes, or checking accessibility. A skill can include a SKILL.md file, examples, references, and small helper programs.",
+      },
+      {
+        title: "Use one source for each instruction",
+        body:
+          "Do not copy the same instruction into both places. Keep project-wide behavior in Cursor rules. Keep longer, task-focused steps in a skill. Put shared files in Git and review changes before using them across a team.",
+      },
+    ],
+    steps: [
+      "List the instructions that should apply during normal Cursor work.",
+      "Keep those instructions in project rules.",
+      "List the longer tasks that happen only when needed.",
+      "Create one focused Agent Skill for each repeated task.",
+      "Test the rule and skill together and remove repeated or conflicting text.",
+      "Use AIPM when another project needs the same reviewed skill version.",
+    ],
+    faqs: [
+      {
+        question: "Are Agent Skills replacing Cursor rules?",
+        answer:
+          "No. Rules and skills solve different problems. Rules control project behavior, while skills provide reusable steps for a task.",
+      },
+      {
+        question: "Can a Cursor project use both?",
+        answer:
+          "Yes. Keep the rule short and use the skill for detailed task steps. Make sure the two files do not give conflicting instructions.",
+      },
+    ],
+    sources: [
+      { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
+      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+    ],
+  },
+  {
+    slug: "agents-md-vs-skill-md",
+    title: "AGENTS.md vs SKILL.md",
+    h1: "What is the difference between AGENTS.md and SKILL.md?",
+    description:
+      "Compare AGENTS.md and SKILL.md in plain English. Choose between shared project instructions and a reusable Agent Skill workflow.",
+    answer:
+      "AGENTS.md gives an AI coding agent instructions about a project, such as commands, code style, and test rules. SKILL.md explains how to complete one reusable task. Use AGENTS.md for project context and SKILL.md for a focused workflow.",
+    keywords: [
+      "AGENTS.md vs SKILL.md",
+      "agents.md vs skills.md",
+      "AGENTS.md file",
+      "SKILL.md format",
+    ],
+    publishedAt: "2026-09-04",
+    updatedAt: "2026-09-04",
+    sections: [
+      {
+        title: "AGENTS.md describes the project",
+        body:
+          "Use AGENTS.md for information an AI coding agent needs while working in a repository. It can list build commands, test steps, folder rules, code style, and important limits. Keep it short enough to review when the project changes.",
+      },
+      {
+        title: "SKILL.md describes a task",
+        body:
+          "A SKILL.md file is the main instruction file inside an Agent Skill. It should say when the skill is useful, what information it needs, which steps to follow, what result to produce, and which actions to avoid.",
+      },
+      {
+        title: "A project can use both",
+        body:
+          "AGENTS.md can tell the agent how the repository works. A skill can then provide detailed steps for a task such as code review or release preparation. Do not repeat the same project facts in every skill.",
+      },
+    ],
+    steps: [
+      "Put shared repository facts and commands in AGENTS.md.",
+      "Choose one repeated task that needs more detailed instructions.",
+      "Create a folder for the skill and add SKILL.md.",
+      "Write the task purpose, inputs, steps, output, and safety limits.",
+      "Test the skill while the project instructions are active.",
+      "Package the skill when several projects need the same version.",
+    ],
+    faqs: [
+      {
+        question: "Should SKILL.md contain all project instructions?",
+        answer:
+          "No. Keep general repository instructions in AGENTS.md. Put only the information needed for the skill's task in SKILL.md.",
+      },
+      {
+        question: "Can one skill work in several repositories?",
+        answer:
+          "Yes, when the skill avoids project-specific assumptions or clearly explains the information each project must provide.",
+      },
+    ],
+    sources: [
+      { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
+      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+      { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
+    ],
+  },
 ] as const;
 
 export function getSeoGuide(slug: string): SeoGuide | null {

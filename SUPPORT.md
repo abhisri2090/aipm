@@ -2,10 +2,10 @@
 
 Use the public website and docs first:
 
-- Website: https://aipm-registry.com
-- Registry status: https://aipm-registry.com/status
-- FAQ: https://aipm-registry.com/faq
-- Publishing guide: https://aipm-registry.com/publish/guide
+- Website: https://www.aipm-registry.com
+- Registry status: https://www.aipm-registry.com/status
+- FAQ: https://www.aipm-registry.com/faq
+- Publishing guide: https://www.aipm-registry.com/publish/guide
 
 ## Public Questions And Bugs
 

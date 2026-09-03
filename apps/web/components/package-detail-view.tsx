@@ -134,7 +134,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <dd>
                 {summary.publisher?.user.verified === true
                   ? "GitHub account connected"
-                  : "Publisher account not verified"}
+                  : "Publisher account not claimed"}
               </dd>
             </div>
             <div className={shell.packageDetailItem}>
@@ -152,7 +152,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             {summary.import?.imported ? (
               <div className={shell.packageDetailItem}>
                 <dt>Import status</dt>
-                <dd>{summary.publisher?.user.verified === false ? "Imported · Unverified" : "Imported"}</dd>
+                <dd>{summary.publisher?.user.verified === false ? "Imported from source · account not claimed" : "Imported from source"}</dd>
               </div>
             ) : null}
             <div className={shell.packageDetailItem}>
@@ -177,23 +177,31 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
                 <dd>{summary.tags.join(", ")}</dd>
               </div>
             ) : null}
-            {sourceUrl ? (
-              <div className={shell.packageDetailItem}>
-                <dt>Source</dt>
-                <dd>
+            <div className={shell.packageDetailItem}>
+              <dt>Source status</dt>
+              <dd>
+                {sourceUrl ? (
                   <a href={sourceUrl} rel="noreferrer" target="_blank">
-                    {sourceUrl}
+                    Public source linked
                   </a>
-                </dd>
-              </div>
-            ) : null}
+                ) : (
+                  "No public source provided"
+                )}
+              </dd>
+            </div>
             <div className={shell.packageDetailItem}>
               <dt>Size</dt>
               <dd>{formatBytes(summary.sizeBytes)}</dd>
             </div>
             <div className={shell.packageDetailItem}>
-              <dt>Integrity</dt>
-              <dd title={summary.integrity}>{shortIntegrity(summary.integrity)}</dd>
+              <dt>Integrity check</dt>
+              <dd title={summary.integrity}>SHA-256 recorded: {shortIntegrity(summary.integrity)}</dd>
+            </div>
+            <div className={shell.packageDetailItem}>
+              <dt>Safety status</dt>
+              <dd>
+                <Link href="/security">Review required before install</Link>
+              </dd>
             </div>
             <div className={shell.packageDetailItem}>
               <dt>Version published</dt>

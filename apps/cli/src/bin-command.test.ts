@@ -98,7 +98,8 @@ describe("CLI publish commands", () => {
         "test-token",
       ]);
 
-      expect(result.stdout).toContain("View: https://aipm-registry.com/packages/team/url-check/2.0.0");
+      expect(result.stdout).toContain("View: https://www.aipm-registry.com/packages/team/url-check/2.0.0");
+      expect(result.stdout).toContain("README badge: [![Install with AIPM]");
       expect(result.stdout).toContain("Install: aipm add @team/url-check@2.0.0 --target cursor --ci");
     } finally {
       await new Promise<void>((resolveClose, rejectClose) =>

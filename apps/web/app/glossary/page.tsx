@@ -1,6 +1,7 @@
 import { shell, cards } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
+import { SITE_URL } from "../../lib/registry";
 
 const terms = [
   {
@@ -93,7 +94,7 @@ export default function GlossaryPage() {
             "@context": "https://schema.org",
             "@type": "DefinedTermSet",
             name: "AIPM Glossary",
-            url: "https://aipm-registry.com/glossary",
+            url: `${SITE_URL}/glossary`,
             hasDefinedTerm: terms.map((item) => ({
               "@type": "DefinedTerm",
               name: item.term,

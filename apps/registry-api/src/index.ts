@@ -437,7 +437,7 @@ function requestIp(request: FastifyRequest): string {
 }
 
 function inviteUrl(token: string): string {
-  const siteUrl = (process.env.AIPM_PUBLIC_SITE_URL ?? "https://aipm-registry.com").replace(/\/$/, "");
+  const siteUrl = (process.env.AIPM_PUBLIC_SITE_URL ?? "https://www.aipm-registry.com").replace(/\/$/, "");
   return `${siteUrl}/dashboard?invite=${encodeURIComponent(token)}`;
 }
 

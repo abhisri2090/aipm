@@ -4,6 +4,7 @@ import { DocLayout } from "../../components/doc-layout";
 import { CodeBlock } from "../../components/code-block";
 import { StatusChecks } from "../../components/status-checks";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 export const metadata = pageMetadata({
   title: "AIPM Registry Status",
@@ -24,7 +25,7 @@ export default function StatusPage() {
             name: "AIPM Registry Status",
             description:
               "Check whether the AIPM registry and its dependencies are working.",
-            url: "https://aipm-registry.com/status",
+            url: `${SITE_URL}/status`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
         }}
@@ -54,8 +55,8 @@ export default function StatusPage() {
           <h2>Check from the command line</h2>
           <p>Use these curl checks when you want to confirm the API process and its dependencies from a terminal.</p>
           <CodeBlock
-            code={`curl https://aipm-registry.com/health
-curl https://aipm-registry.com/ready`}
+            code={`curl https://api.aipm-registry.com/health
+curl https://api.aipm-registry.com/ready`}
           />
         </section>
 

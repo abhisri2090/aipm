@@ -1,6 +1,7 @@
 import { shell, cards, docs, cn } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
+import { SITE_URL } from "../../lib/registry";
 
 const people = [
   {
@@ -160,7 +161,7 @@ export default function ThanksPage() {
             name: "Special Thanks to the AI Community",
             description:
               "Acknowledgements for the people, papers, companies, and public work that shaped modern AI tools.",
-            url: "https://aipm-registry.com/thanks",
+            url: `${SITE_URL}/thanks`,
             about: [...people.map((person) => person.work), ...conferenceSignals.map((signal) => signal.work)],
           }),
         }}

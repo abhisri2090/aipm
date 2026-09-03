@@ -46,7 +46,7 @@ type GithubUser = {
 };
 
 export function resolveUserAuthConfig(env: NodeJS.ProcessEnv = process.env): UserAuthConfig {
-  const publicSiteUrl = env.AIPM_PUBLIC_SITE_URL ?? "https://aipm-registry.com";
+  const publicSiteUrl = env.AIPM_PUBLIC_SITE_URL ?? "https://www.aipm-registry.com";
   const apiUrl = env.AIPM_API_URL ?? "https://api.aipm-registry.com";
   const isProduction = env.NODE_ENV === "production";
   const cookieDomain = env.AIPM_COOKIE_DOMAIN?.trim();

@@ -64,9 +64,9 @@ import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
 const CLI_VERSION = getCliVersion();
 const program = new Command();
 const DEFAULT_REGISTRY = "https://api.aipm-registry.com";
-const SITE_URL = "https://aipm-registry.com";
-const PUBLISH_DOC_URL = "https://aipm-registry.com/publish";
-const DASHBOARD_URL = "https://aipm-registry.com/dashboard";
+const SITE_URL = "https://www.aipm-registry.com";
+const PUBLISH_DOC_URL = `${SITE_URL}/publish`;
+const DASHBOARD_URL = `${SITE_URL}/dashboard`;
 const GLOBAL_OPTION = "-g, --global";
 const GLOBAL_OPTION_DESC =
   "Use global config (~/.aipm) and install skills under your home directory";
@@ -108,6 +108,11 @@ function registryFromEnvOrDefault(flag?: string): string {
 function packagePageUrl(packageName: string, version: string): string {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
   return `${SITE_URL}/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+}
+
+function packageBadgeMarkdown(packageName: string, version: string): string {
+  const pageUrl = packagePageUrl(packageName, version);
+  return `[![Install with AIPM](${SITE_URL}/install-with-aipm.svg)](${pageUrl})`;
 }
 
 function parsePackageArg(value: string): { name: string; version?: string } {
@@ -994,6 +999,7 @@ const publish = program
     console.log(`Published ${manifest.name}@${result.version}`);
     console.log(`View: ${packagePageUrl(manifest.name, result.version)}`);
     console.log(`Install: aipm add ${manifest.name}@${result.version} --target ${manifest.targets[0]} --ci`);
+    console.log(`README badge: ${packageBadgeMarkdown(manifest.name, result.version)}`);
     printPublishGuide(
       `Published ${manifest.name}@${result.version} from ${abs}.`,
       "Share the install command or open the package page to confirm the listing.",
@@ -1212,6 +1218,7 @@ publish
     console.log(`Published ${manifest.name}@${result.version}`);
     console.log(`View: ${packagePageUrl(manifest.name, result.version)}`);
     console.log(`Install: aipm add ${manifest.name}@${result.version} --target ${manifest.targets[0]} --ci`);
+    console.log(`README badge: ${packageBadgeMarkdown(manifest.name, result.version)}`);
     printPublishGuide(
       `Published ${manifest.name}@${result.version} to ${registry}.`,
       "Open the registry page, test the install command in a clean project, and share the package link.",

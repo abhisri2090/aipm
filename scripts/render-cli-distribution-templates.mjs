@@ -63,7 +63,7 @@ async function main() {
 function homebrewFormula(shas) {
   return `class Aipm < Formula
   desc "AI package manager for installing project-ready AI skills"
-  homepage "https://aipm-registry.com"
+  homepage "https://www.aipm-registry.com"
   version "${version}"
   license "Apache-2.0"
 
@@ -103,7 +103,7 @@ function scoopManifest(shas) {
     {
       version,
       description: "AI package manager for installing project-ready AI skills.",
-      homepage: "https://aipm-registry.com",
+      homepage: "https://www.aipm-registry.com",
       license: "Apache-2.0",
       architecture: {
         "64bit": {
@@ -135,7 +135,7 @@ PackageIdentifier: aipm-registry.aipm
 PackageVersion: ${version}
 PackageLocale: en-US
 Publisher: AIPM Registry
-PublisherUrl: https://aipm-registry.com
+PublisherUrl: https://www.aipm-registry.com
 PackageName: AIPM
 License: Apache-2.0
 LicenseUrl: ${repositoryUrl}/blob/main/LICENSE

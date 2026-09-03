@@ -2,6 +2,7 @@ import { shell, cards, docs, cn } from "../../lib/page-styles";
 import Link from "next/link";
 import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
+import { SITE_URL } from "../../lib/registry";
 
 const dataItems = [
   {
@@ -67,7 +68,7 @@ export default function PrivacyPage() {
             name: "AIPM Privacy Notice",
             description:
               "What AIPM stores for accounts, packages, tokens, and local website preferences.",
-            url: "https://aipm-registry.com/privacy",
+            url: `${SITE_URL}/privacy`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),
         }}
