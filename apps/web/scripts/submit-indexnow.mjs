@@ -15,11 +15,17 @@ function sitemapUrls(xml) {
 async function main() {
   const site = siteUrl();
   const host = new URL(site).hostname;
-  const sitemapResponse = await fetch(`${site}/sitemap.xml`, { signal: AbortSignal.timeout(15000) });
-  if (!sitemapResponse.ok) throw new Error(`Could not read sitemap: ${sitemapResponse.status}`);
+  const sitemapPaths = ["/sitemap.xml", "/package-sitemap.xml"];
+  const sitemapResponses = await Promise.all(
+    sitemapPaths.map(async (path) => {
+      const response = await fetch(`${site}${path}`, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error(`Could not read ${path}: ${response.status}`);
+      return response.text();
+    }),
+  );
 
-  const urls = sitemapUrls(await sitemapResponse.text());
-  if (!urls.length) throw new Error("The sitemap did not contain any URLs.");
+  const urls = [...new Set(sitemapResponses.flatMap(sitemapUrls))];
+  if (!urls.length) throw new Error("The sitemaps did not contain any URLs.");
 
   const response = await fetch(INDEXNOW_ENDPOINT, {
     method: "POST",
