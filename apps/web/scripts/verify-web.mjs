@@ -151,7 +151,7 @@ const requiredPages = [
     title: "Anthropic AI Skills",
     h1: "Anthropic",
     jsonLd: true,
-    includes: ["Skills from Anthropic", "has not claimed the AIPM account yet"],
+    includes: ["/packages/anthropics/", "has not claimed the AIPM account yet"],
   },
   {
     path: "/skills/cursor",
