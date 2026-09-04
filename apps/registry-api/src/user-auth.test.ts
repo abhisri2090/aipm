@@ -56,3 +56,13 @@ describe("dev auth helpers", () => {
     expect(isGithubAuthConfigured(resolveUserAuthConfig())).toBe(true);
   });
 });
+
+describe("oauth state helpers", () => {
+  it("encodes and parses intent", async () => {
+    const { encodeOauthState, parseOauthState } = await import("./user-auth.js");
+    expect(parseOauthState(encodeOauthState("connect", "nonce1"))).toEqual({
+      intent: "connect",
+      nonce: "nonce1",
+    });
+  });
+});

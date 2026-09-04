@@ -5,23 +5,31 @@ import {
   createPublishToken,
   createSession,
   deleteSession,
+  getUserByPrimaryEmail,
   getUserBySession,
   getValidPublishToken,
   ensureUserUsername,
+  linkGithubToUser,
   upsertGithubUser,
+  GithubAlreadyLinkedError,
+  GithubEmailConflictError,
+  UserAlreadyHasGithubError,
   type UserRow,
 } from "./db.js";
 
 const SESSION_COOKIE = "aipm_session";
 const OAUTH_STATE_COOKIE = "aipm_oauth_state";
+const GITHUB_TOKEN_COOKIE = "aipm_github_token";
 const SESSION_DAYS = 30;
 const TOKEN_TTL_MS = 5 * 60 * 1000;
+const GITHUB_TOKEN_TTL_SECONDS = 600;
 const DEV_AUTH_ENV = "AIPM_DEV_AUTH";
 const DEV_GITHUB_ID = "dev-local";
 const DEV_GITHUB_LOGIN = "dev-local";
 const DEV_DISPLAY_NAME = "Local Contributor";
+const GITHUB_OAUTH_SCOPES = "read:user user:email public_repo";
 
-export { SESSION_COOKIE };
+export { SESSION_COOKIE, GITHUB_TOKEN_COOKIE };
 
 export interface UserAuthConfig {
   githubClientId?: string;
@@ -43,7 +51,16 @@ type GithubUser = {
   login: string;
   name?: string | null;
   avatar_url?: string | null;
+  email?: string | null;
 };
+
+type GithubEmail = {
+  email: string;
+  primary?: boolean;
+  verified?: boolean;
+};
+
+type OauthIntent = "login" | "connect";
 
 export function resolveUserAuthConfig(env: NodeJS.ProcessEnv = process.env): UserAuthConfig {
   const publicSiteUrl = env.AIPM_PUBLIC_SITE_URL ?? "https://www.aipm-registry.com";
@@ -127,6 +144,19 @@ function readBearerToken(request: FastifyRequest): string | null {
   return match?.[1]?.trim() || null;
 }
 
+export function encodeOauthState(intent: OauthIntent, nonce: string): string {
+  return `${intent}.${nonce}`;
+}
+
+export function parseOauthState(state: string): { intent: OauthIntent; nonce: string } | null {
+  const separator = state.indexOf(".");
+  if (separator === -1) return null;
+  const intent = state.slice(0, separator);
+  const nonce = state.slice(separator + 1);
+  if ((intent !== "login" && intent !== "connect") || !nonce) return null;
+  return { intent, nonce };
+}
+
 export async function getCurrentUser(auth: AccountAuth, request: FastifyRequest): Promise<UserRow | null> {
   const sessionId = parseRequestCookies(request)[SESSION_COOKIE];
   if (!sessionId) return null;
@@ -160,6 +190,11 @@ export function isGithubAuthConfigured(config: UserAuthConfig): boolean {
   return Boolean(config.githubClientId && config.githubClientSecret && config.sessionSecret);
 }
 
+export function readGithubAccessToken(request: FastifyRequest): string | undefined {
+  const value = parseRequestCookies(request)[GITHUB_TOKEN_COOKIE]?.trim();
+  return value || undefined;
+}
+
 export async function startDevLogin(auth: AccountAuth, reply: FastifyReply): Promise<void> {
   if (!isDevAuthEnabled()) {
     throw new Error("Dev auth is not enabled");
@@ -187,16 +222,97 @@ export function githubStartUrl(config: UserAuthConfig, state: string): string {
   const params = new URLSearchParams({
     client_id: config.githubClientId,
     redirect_uri: `${config.apiUrl}/v1/auth/github/callback`,
-    scope: "read:user",
+    scope: GITHUB_OAUTH_SCOPES,
     state,
   });
   return `https://github.com/login/oauth/authorize?${params}`;
 }
 
 export function startGithubLogin(auth: AccountAuth, reply: FastifyReply): void {
-  const state = randomToken(24);
+  const state = encodeOauthState("login", randomToken(24));
   setAuthCookie(reply, auth.config, OAUTH_STATE_COOKIE, state, 600);
   reply.redirect(githubStartUrl(auth.config, state));
+}
+
+export async function startGithubConnect(
+  auth: AccountAuth,
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const user = await getCurrentUser(auth, request);
+  if (!user) {
+    reply.redirect(`${auth.config.publicSiteUrl}/login`);
+    return;
+  }
+  if (user.github_id) {
+    reply.redirect(`${auth.config.publicSiteUrl}/dashboard/packages?github=already_linked`);
+    return;
+  }
+  const state = encodeOauthState("connect", randomToken(24));
+  setAuthCookie(reply, auth.config, OAUTH_STATE_COOKIE, state, 600);
+  reply.redirect(githubStartUrl(auth.config, state));
+}
+
+async function exchangeGithubCode(
+  auth: AccountAuth,
+  code: string,
+): Promise<{ accessToken: string } | { error: string }> {
+  const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify({
+      client_id: auth.config.githubClientId,
+      client_secret: auth.config.githubClientSecret,
+      code,
+      redirect_uri: `${auth.config.apiUrl}/v1/auth/github/callback`,
+    }),
+  });
+  const tokenData = (await tokenResponse.json()) as { access_token?: string; error?: string };
+  if (!tokenResponse.ok || !tokenData.access_token) {
+    return { error: tokenData.error ?? "GitHub token exchange failed" };
+  }
+  return { accessToken: tokenData.access_token };
+}
+
+async function fetchGithubProfile(accessToken: string): Promise<{
+  githubUser: GithubUser;
+  contactEmail: string | null;
+}> {
+  const userResponse = await fetch("https://api.github.com/user", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "user-agent": "aipm-registry",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!userResponse.ok) throw new Error("GitHub user lookup failed");
+  const githubUser = (await userResponse.json()) as GithubUser;
+
+  let contactEmail: string | null = githubUser.email?.trim() || null;
+  const emailsResponse = await fetch("https://api.github.com/user/emails", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "user-agent": "aipm-registry",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (emailsResponse.ok) {
+    const emails = (await emailsResponse.json()) as GithubEmail[];
+    const primary = emails.find((row) => row.primary && row.email)?.email?.trim();
+    const any = emails.find((row) => row.email)?.email?.trim();
+    contactEmail = primary || any || contactEmail;
+  }
+
+  return { githubUser, contactEmail };
+}
+
+function redirectAuthError(auth: AccountAuth, reply: FastifyReply, path: string, message: string): void {
+  const url = new URL(path, auth.config.publicSiteUrl);
+  url.searchParams.set("error", message);
+  reply.redirect(url.toString());
 }
 
 export async function finishGithubLogin(
@@ -209,44 +325,97 @@ export async function finishGithubLogin(
     return reply.status(400).send({ error: "Invalid GitHub login state" });
   }
 
-  const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      accept: "application/json",
-    },
-    body: JSON.stringify({
-      client_id: auth.config.githubClientId,
-      client_secret: auth.config.githubClientSecret,
-      code: request.query.code,
-      redirect_uri: `${auth.config.apiUrl}/v1/auth/github/callback`,
-    }),
-  });
-  const tokenData = (await tokenResponse.json()) as { access_token?: string; error?: string };
-  if (!tokenResponse.ok || !tokenData.access_token) {
-    return reply.status(400).send({ error: tokenData.error ?? "GitHub token exchange failed" });
+  const parsedState = parseOauthState(request.query.state);
+  if (!parsedState) {
+    return reply.status(400).send({ error: "Invalid GitHub login state" });
   }
 
-  const userResponse = await fetch("https://api.github.com/user", {
-    headers: {
-      Authorization: `Bearer ${tokenData.access_token}`,
-      "user-agent": "aipm-registry",
-    },
-  });
-  if (!userResponse.ok) return reply.status(400).send({ error: "GitHub user lookup failed" });
-  const githubUser = (await userResponse.json()) as GithubUser;
+  const exchanged = await exchangeGithubCode(auth, request.query.code);
+  if ("error" in exchanged) {
+    return reply.status(400).send({ error: exchanged.error });
+  }
+
+  let githubUser: GithubUser;
+  let contactEmail: string | null;
+  try {
+    ({ githubUser, contactEmail } = await fetchGithubProfile(exchanged.accessToken));
+  } catch {
+    return reply.status(400).send({ error: "GitHub user lookup failed" });
+  }
+
+  clearAuthCookie(reply, auth.config, OAUTH_STATE_COOKIE);
+  setAuthCookie(reply, auth.config, GITHUB_TOKEN_COOKIE, exchanged.accessToken, GITHUB_TOKEN_TTL_SECONDS);
+
+  if (parsedState.intent === "connect") {
+    const sessionUser = await getCurrentUser(auth, request);
+    if (!sessionUser) {
+      redirectAuthError(auth, reply, "/login", "Sign in before connecting GitHub.");
+      return;
+    }
+    try {
+      await linkGithubToUser(auth.pool, {
+        userId: sessionUser.id,
+        githubId: String(githubUser.id),
+        githubLogin: githubUser.login,
+        name: githubUser.name ?? null,
+        avatarUrl: githubUser.avatar_url ?? null,
+        contactEmail,
+      });
+      reply.redirect(`${auth.config.publicSiteUrl}/dashboard/packages?github=connected`);
+      return;
+    } catch (error) {
+      if (error instanceof GithubAlreadyLinkedError) {
+        redirectAuthError(
+          auth,
+          reply,
+          "/dashboard/packages",
+          "This GitHub account is already used on AIPM. Sign in with GitHub to import.",
+        );
+        return;
+      }
+      if (error instanceof UserAlreadyHasGithubError) {
+        redirectAuthError(auth, reply, "/dashboard/packages", error.message);
+        return;
+      }
+      if (error instanceof GithubEmailConflictError) {
+        redirectAuthError(auth, reply, "/dashboard/packages", error.message);
+        return;
+      }
+      throw error;
+    }
+  }
+
+  if (contactEmail) {
+    const emailUser = await getUserByPrimaryEmail(auth.pool, contactEmail);
+    if (emailUser && emailUser.auth_provider === "email") {
+      clearAuthCookie(reply, auth.config, GITHUB_TOKEN_COOKIE);
+      redirectAuthError(
+        auth,
+        reply,
+        "/login",
+        "You already have an AIPM account with this email. Sign in with email.",
+      );
+      return;
+    }
+  }
+
   const user = await upsertGithubUser(auth.pool, {
     githubId: String(githubUser.id),
     githubLogin: githubUser.login,
     name: githubUser.name ?? null,
     avatarUrl: githubUser.avatar_url ?? null,
     verified: true,
+    contact: contactEmail
+      ? {
+          email: contactEmail,
+          githubUrl: `https://github.com/${githubUser.login}`,
+        }
+      : { githubUrl: `https://github.com/${githubUser.login}` },
   });
 
   const sessionId = randomToken(32);
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await createSession(auth.pool, { id: sessionId, userId: user.id, expiresAt });
-  clearAuthCookie(reply, auth.config, OAUTH_STATE_COOKIE);
   setAuthCookie(reply, auth.config, SESSION_COOKIE, sessionId, SESSION_DAYS * 24 * 60 * 60);
   reply.redirect(`${auth.config.publicSiteUrl}/dashboard`);
 }
@@ -256,6 +425,7 @@ export async function logout(auth: AccountAuth | null, request: FastifyRequest, 
     const sessionId = parseRequestCookies(request)[SESSION_COOKIE];
     if (sessionId) await deleteSession(auth.pool, sessionId);
     clearAuthCookie(reply, auth.config, SESSION_COOKIE);
+    clearAuthCookie(reply, auth.config, GITHUB_TOKEN_COOKIE);
   }
   reply.send({ ok: true });
 }

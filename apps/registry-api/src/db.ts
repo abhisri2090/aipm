@@ -819,6 +819,86 @@ export async function getUserById(pool: pg.Pool, userId: string): Promise<UserRo
   return user ? ensureUserUsername(pool, user) : null;
 }
 
+export async function getUserByGithubId(pool: pg.Pool, githubId: string): Promise<UserRow | null> {
+  const result = await pool.query<UserRow>(
+    `SELECT ${USER_ROW_FIELDS} FROM users WHERE github_id = $1`,
+    [githubId],
+  );
+  const user = result.rows[0] ?? null;
+  return user ? ensureUserUsername(pool, user) : null;
+}
+
+export class GithubAlreadyLinkedError extends Error {
+  constructor(message = "This GitHub account is already used on AIPM. Sign in with GitHub to import.") {
+    super(message);
+    this.name = "GithubAlreadyLinkedError";
+  }
+}
+
+export class UserAlreadyHasGithubError extends Error {
+  constructor(message = "This account is already linked to GitHub.") {
+    super(message);
+    this.name = "UserAlreadyHasGithubError";
+  }
+}
+
+export class GithubEmailConflictError extends Error {
+  constructor(message = "That GitHub email belongs to a different AIPM account. Use a different GitHub account.") {
+    super(message);
+    this.name = "GithubEmailConflictError";
+  }
+}
+
+/** Attach GitHub identity to an existing (usually email-auth) user. Does not change auth_provider. */
+export async function linkGithubToUser(
+  pool: pg.Pool,
+  input: {
+    userId: string;
+    githubId: string;
+    githubLogin: string;
+    name?: string | null;
+    avatarUrl?: string | null;
+    contactEmail?: string | null;
+  },
+): Promise<UserRow> {
+  const current = await getUserById(pool, input.userId);
+  if (!current) throw new Error("User not found");
+  if (current.github_id) throw new UserAlreadyHasGithubError();
+
+  const existingGithub = await getUserByGithubId(pool, input.githubId);
+  if (existingGithub) throw new GithubAlreadyLinkedError();
+
+  if (input.contactEmail) {
+    const emailOwner = await getUserByPrimaryEmail(pool, input.contactEmail);
+    if (emailOwner && emailOwner.id !== input.userId) {
+      throw new GithubEmailConflictError();
+    }
+  }
+
+  const result = await pool.query<UserRow>(
+    `UPDATE users
+     SET github_id = $2,
+         github_login = $3,
+         name = COALESCE(users.name, $4),
+         avatar_url = COALESCE(users.avatar_url, $5),
+         contact_email = COALESCE(users.contact_email, $6),
+         contact_github_url = COALESCE(users.contact_github_url, $7),
+         updated_at = NOW()
+     WHERE id = $1
+     RETURNING ${USER_ROW_FIELDS}`,
+    [
+      input.userId,
+      input.githubId,
+      input.githubLogin,
+      input.name ?? null,
+      input.avatarUrl ?? null,
+      input.contactEmail ?? null,
+      `https://github.com/${input.githubLogin}`,
+    ],
+  );
+  return ensureUserUsername(pool, result.rows[0]!);
+}
+
 export async function createCliAuthorizationCode(
   pool: pg.Pool,
   input: {

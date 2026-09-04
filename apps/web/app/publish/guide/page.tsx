@@ -34,6 +34,11 @@ export default function PublishPage() {
           Install the AIPM CLI once before running these commands. See the{" "}
           <a href="/install">install guide</a>.
         </p>
+        <p>
+          Already have a public skill on GitHub? You can{" "}
+          <a href="/publish/github">import it from the packages dashboard</a> instead of using the
+          CLI for the first publish.
+        </p>
 
         <h2>1. Create an account and reserve a package name</h2>
         <ol className={docs.flowList}>

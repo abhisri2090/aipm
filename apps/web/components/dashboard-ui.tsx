@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { GithubImportPanel } from "./github-import-panel";
 import { CodeBlock } from "./code-block";
 import { PackageDetailView } from "./package-detail-view";
 import {
@@ -438,9 +439,18 @@ export function LoginPanel() {
   const [devCode, setDevCode] = useState<string | null>(null);
   const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   useEffect(() => {
     storeAuthReturnPath();
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get("error")?.trim();
+    if (authError) {
+      setOauthError(authError);
+      const next = new URL(window.location.href);
+      next.searchParams.delete("error");
+      window.history.replaceState({}, "", `${next.pathname}${next.search}`);
+    }
   }, []);
 
   useEffect(() => {
@@ -549,6 +559,7 @@ export function LoginPanel() {
             Sign in to reserve namespaces, manage packages, generate short-lived publish tokens,
             and keep your AI tooling ready for real projects.
           </p>
+          {oauthError ? <p className={shell.notice}>{oauthError}</p> : null}
           <div className={shell.actions}>
             {authConfig === null && !localDev ? (
               <span className={shell.muted}>Checking sign-in options…</span>
@@ -1018,20 +1029,22 @@ function JoinableOrgsPanel() {
   );
 }
 
-function PackagesContent({ org }: { org: Org }) {
+function PackagesContent({ org, me }: { org: Org; me: Me }) {
   const [packages, setPackages] = useState<ReservedPackage[]>([]);
   const [packageName, setPackageName] = useState("");
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)
-      .then((data) => {
-        setPackages(data.packages);
-        setError("");
-      })
-      .catch((err: unknown) => setError(publicApiError(err)));
+  const reloadPackages = useCallback(async () => {
+    const data = await api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`);
+    setPackages(data.packages);
   }, [org.slug]);
+
+  useEffect(() => {
+    reloadPackages()
+      .then(() => setError(""))
+      .catch((err: unknown) => setError(publicApiError(err)));
+  }, [reloadPackages]);
 
   const canReserve = canManageOrg(org.role);
 
@@ -1118,6 +1131,17 @@ function PackagesContent({ org }: { org: Org }) {
         <button disabled={!canReserve} type="submit">Reserve package</button>
         {!canReserve ? <p className={dash.fieldHelp}>Only owners and admins can reserve package names.</p> : null}
       </form>
+      <GithubImportPanel
+        org={org}
+        githubLogin={me.githubLogin}
+        onImported={async () => {
+          try {
+            await reloadPackages();
+          } catch (err) {
+            setError(publicApiError(err));
+          }
+        }}
+      />
     </section>
   );
 }
@@ -1129,7 +1153,9 @@ export function PackagesDashboard() {
       intro="Reserve and manage skill package names for the selected workspace."
       title="Packages"
     >
-      {({ activeOrg }) => (activeOrg ? <PackagesContent org={activeOrg} /> : <NoActiveOrg />)}
+      {({ activeOrg, me }) =>
+        activeOrg ? <PackagesContent org={activeOrg} me={me} /> : <NoActiveOrg />
+      }
     </DashboardShell>
   );
 }

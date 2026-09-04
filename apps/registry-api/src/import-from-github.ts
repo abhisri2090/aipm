@@ -261,7 +261,7 @@ export function resolveImportVersion(options: {
   return { action: "publish", version: nextPatchVersion(options.latestVersion) };
 }
 
-async function githubRequest<T>(path: string, token?: string): Promise<T> {
+export async function githubRequest<T>(path: string, token?: string): Promise<T> {
   const response = await fetch(`https://api.github.com${path}`, {
     headers: {
       Accept: "application/vnd.github+json",

@@ -104,16 +104,23 @@ import {
   isDevAuthEnabled,
   isGithubAuthConfigured,
   logout,
+  readGithubAccessToken,
   requireCurrentUser,
   resolveUserAuthConfig,
   SESSION_COOKIE,
   setAuthCookie,
   startDevLogin,
+  startGithubConnect,
   startGithubLogin,
   verifyScopedPublishToken,
   sha256Hex,
   type AccountAuth,
 } from "./user-auth.js";
+import {
+  confirmUserGithubImport,
+  previewUserGithubImport,
+  UserGithubImportError,
+} from "./user-github-import.js";
 import {
   createDbEmailAuthStore,
   emailDomain,
@@ -743,6 +750,15 @@ export async function createApp(): Promise<FastifyInstance> {
       startGithubLogin(accountAuth, reply);
     } catch (error) {
       return reply.status(500).send({ error: publicError(error, "GitHub login is not configured") });
+    }
+  });
+
+  app.get("/v1/auth/github/connect", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    try {
+      await startGithubConnect(accountAuth, request, reply);
+    } catch (error) {
+      return reply.status(500).send({ error: publicError(error, "GitHub connect is not configured") });
     }
   });
 
@@ -1541,6 +1557,129 @@ export async function createApp(): Promise<FastifyInstance> {
         const pgErr = error as { code?: string };
         if (pgErr.code === "23505") return reply.status(409).send({ error: "Package name is already reserved" });
         throw error;
+      }
+    },
+  );
+
+  app.post<{ Params: { org: string }; Body: { sourceUrl?: string; entry?: string } }>(
+    "/v1/orgs/:org/imports/github/preview",
+    {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      if (!user.github_login) {
+        return reply.status(403).send({ error: "Connect GitHub before importing.", code: "github_required" });
+      }
+      const orgSlug = normalizeOrgSlug(request.params.org);
+      const org = await getOrgBySlugForMember(accountAuth.pool, orgSlug, user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      if (!canManagePackages(org.role)) {
+        return reply.status(403).send({ error: "Only org owners and admins can import from GitHub" });
+      }
+      const sourceUrl = request.body?.sourceUrl?.trim();
+      if (!sourceUrl) return reply.status(400).send({ error: "Missing sourceUrl" });
+      try {
+        const preview = await previewUserGithubImport({
+          pool: accountAuth.pool,
+          orgSlug,
+          sourceUrl,
+          entry: request.body?.entry?.trim(),
+          githubLogin: user.github_login,
+          githubToken: readGithubAccessToken(request),
+        });
+        return preview;
+      } catch (error) {
+        if (error instanceof UserGithubImportError) {
+          return reply.status(error.status).send({
+            error: error.message,
+            code: error.code,
+            ...(error.files ? { files: error.files } : {}),
+          });
+        }
+        request.log.error(error);
+        return reply.status(400).send({ error: publicError(error, "Failed to preview GitHub import") });
+      }
+    },
+  );
+
+  app.post<{
+    Params: { org: string };
+    Body: {
+      sourceUrl?: string;
+      entry?: string;
+      commitSha?: string;
+      manifest?: unknown;
+      visibility?: string;
+    };
+  }>(
+    "/v1/orgs/:org/imports/github",
+    {
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = await requireCurrentUser(accountAuth, request, reply);
+      if (!user || !accountAuth) return;
+      if (!user.github_login) {
+        return reply.status(403).send({ error: "Connect GitHub before importing.", code: "github_required" });
+      }
+      const orgSlug = normalizeOrgSlug(request.params.org);
+      const org = await getOrgBySlugForMember(accountAuth.pool, orgSlug, user.id);
+      if (!org) return reply.status(404).send({ error: "Org not found" });
+      if (!canManagePackages(org.role)) {
+        return reply.status(403).send({ error: "Only org owners and admins can import from GitHub" });
+      }
+      const sourceUrl = request.body?.sourceUrl?.trim();
+      const commitSha = request.body?.commitSha?.trim();
+      if (!sourceUrl) return reply.status(400).send({ error: "Missing sourceUrl" });
+      if (!commitSha) return reply.status(400).send({ error: "Missing commitSha" });
+      if (request.body?.manifest == null) return reply.status(400).send({ error: "Missing manifest" });
+
+      let visibility: PackageVisibility | undefined;
+      if (request.body.visibility !== undefined) {
+        try {
+          visibility = parsePackageVisibility(request.body.visibility);
+        } catch {
+          return reply.status(400).send({ error: "Invalid package visibility" });
+        }
+      }
+
+      try {
+        const result = await confirmUserGithubImport({
+          pool: accountAuth.pool,
+          metadata,
+          storage,
+          user,
+          orgSlug,
+          sourceUrl,
+          entry: request.body.entry?.trim(),
+          commitSha,
+          manifest: request.body.manifest,
+          visibility,
+          githubToken: readGithubAccessToken(request),
+        });
+        return reply.status(201).send(result);
+      } catch (error) {
+        if (error instanceof UserGithubImportError) {
+          return reply.status(error.status).send({
+            error: error.message,
+            code: error.code,
+            ...(error.files ? { files: error.files } : {}),
+          });
+        }
+        request.log.error(error);
+        return reply.status(400).send({ error: publicError(error, "Failed to import from GitHub") });
       }
     },
   );

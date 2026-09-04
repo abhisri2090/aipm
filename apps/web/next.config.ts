@@ -61,6 +61,11 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/v1/auth/github/connect",
+        destination: `${apiProxyOrigin}/v1/auth/github/connect`,
+        permanent: false,
+      },
+      {
         source: "/internal",
         destination: "/admin",
         permanent: true,

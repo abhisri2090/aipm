@@ -67,12 +67,20 @@ export default function PublishPage() {
           public files, and publish a version with the AIPM CLI. Other people can then install that
           exact version from the registry.
         </p>
+        <p>
+          Skill already on GitHub?{" "}
+          <Link href="/publish/github">Import a public skill you own</Link> from the packages
+          dashboard.
+        </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/login">
             Sign in to publish
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/publish/guide">
             Read publishing guide
+          </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/publish/github">
+            Import from GitHub
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/dashboard">
             Publisher dashboard

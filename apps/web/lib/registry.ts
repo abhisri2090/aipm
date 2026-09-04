@@ -80,6 +80,7 @@ export const PUBLIC_REGISTRY_API_BASE_URL = (
 ).replace(/\/$/, "");
 
 export const GITHUB_LOGIN_URL = `${PUBLIC_REGISTRY_API_BASE_URL}/v1/auth/github/start`;
+export const GITHUB_CONNECT_URL = `${PUBLIC_REGISTRY_API_BASE_URL}/v1/auth/github/connect`;
 
 export const DEV_LOGIN_URL = "/v1/auth/dev/login";
 

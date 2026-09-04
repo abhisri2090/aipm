@@ -1,9 +1,13 @@
+.tileGroup {
+  margin-bottom: 22px;
+}
+
 .tile {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
-  margin-bottom: 22px;
+  margin-bottom: 0;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--panel-soft);
@@ -14,6 +18,16 @@
     border-color 0.16s ease,
     background 0.16s ease,
     transform 0.16s ease;
+}
+
+.githubHint {
+  margin: 8px 4px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.githubHint a {
+  color: var(--accent-strong);
 }
 
 .tile:hover,

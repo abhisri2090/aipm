@@ -204,6 +204,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Create a package, reserve a name, get a token, and publish with the CLI.",
       },
       {
+        href: "/publish/github",
+        label: "Import from GitHub",
+        body: "Publish a public GitHub skill you own into your AIPM org from the dashboard.",
+      },
+      {
         href: "/examples",
         label: "Skill publishing examples",
         body: "Copy full scenario walkthroughs for publishing and installing common skills.",

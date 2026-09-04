@@ -8,8 +8,10 @@ import {
   getPackageReservationByName,
   queueImportNotification,
   reservePackageName,
+  updatePackageVisibility,
   upsertGithubUser,
   upsertProvenance,
+  type PackageVisibility,
   type UserRow,
 } from "./db.js";
 import { DuplicateVersionError } from "./metadata-store.js";
@@ -117,18 +119,15 @@ export async function ensureImportReservation(
   });
 }
 
-export async function importSkillPackage(options: {
+async function writeImportedPackageVersion(options: {
   pool: pg.Pool;
   metadata: MetadataStore;
   storage: BlobStorage;
   tarball: Buffer;
-  author: ImportAuthorPayload;
+  userId: string;
   provenance: ImportProvenancePayload;
 }): Promise<{ name: string; version: string; integrity: string; userId: string }> {
   const { manifest, integrity } = await extractManifestFromTarball(options.tarball);
-  const { user, orgSlug } = await ensureImportAccount(options.pool, options.author);
-  await ensureImportReservation(options.pool, user, manifest.name, orgSlug);
-
   const blobPath = blobKeyForPackage(manifest.name, manifest.version);
   const tempBlobPath = `${blobPath}.tmp-${randomUUID()}`;
   let tempWritten = false;
@@ -156,8 +155,82 @@ export async function importSkillPackage(options: {
     source_license: options.provenance.license ?? null,
     content_hash: options.provenance.contentHash,
   });
-  await queueImportNotification(options.pool, { userId: user.id, packageName: manifest.name });
+  await queueImportNotification(options.pool, { userId: options.userId, packageName: manifest.name });
   queueSearchNotification([packagePublicUrl(manifest.name, manifest.version)]);
 
-  return { name: manifest.name, version: manifest.version, integrity, userId: user.id };
+  return { name: manifest.name, version: manifest.version, integrity, userId: options.userId };
+}
+
+export async function importSkillPackage(options: {
+  pool: pg.Pool;
+  metadata: MetadataStore;
+  storage: BlobStorage;
+  tarball: Buffer;
+  author: ImportAuthorPayload;
+  provenance: ImportProvenancePayload;
+}): Promise<{ name: string; version: string; integrity: string; userId: string }> {
+  const { manifest } = await extractManifestFromTarball(options.tarball);
+  const { user, orgSlug } = await ensureImportAccount(options.pool, options.author);
+  await ensureImportReservation(options.pool, user, manifest.name, orgSlug);
+  return writeImportedPackageVersion({
+    pool: options.pool,
+    metadata: options.metadata,
+    storage: options.storage,
+    tarball: options.tarball,
+    userId: user.id,
+    provenance: options.provenance,
+  });
+}
+
+/** Publish an imported tarball as an existing session user into a reserved org package name. */
+export async function publishImportedSkillForOrg(options: {
+  pool: pg.Pool;
+  metadata: MetadataStore;
+  storage: BlobStorage;
+  tarball: Buffer;
+  user: UserRow;
+  orgSlug: string;
+  visibility?: PackageVisibility;
+  provenance: ImportProvenancePayload;
+}): Promise<{ name: string; version: string; integrity: string; userId: string; isUpdate: boolean }> {
+  const { manifest } = await extractManifestFromTarball(options.tarball);
+  if (!isValidScopeName(manifest.name)) {
+    throw new Error("Invalid package name; use @org/name");
+  }
+  const parsed = parseScopeName(manifest.name);
+  if (parsed.scope !== options.orgSlug) {
+    throw new Error(`Package name must use @${options.orgSlug}/...`);
+  }
+
+  const org = await getOrgBySlug(options.pool, options.orgSlug);
+  if (!org) throw new Error("Org not found");
+
+  const existing = await getPackageReservationByName(options.pool, manifest.name);
+  let isUpdate = false;
+  if (existing) {
+    if (existing.org_id !== org.id) {
+      throw new Error("Package name is reserved by another organization");
+    }
+    isUpdate = true;
+    if (options.visibility && existing.visibility !== options.visibility) {
+      await updatePackageVisibility(options.pool, manifest.name, options.visibility);
+    }
+  } else {
+    await reservePackageName(options.pool, {
+      name: manifest.name,
+      orgId: org.id,
+      ownerUserId: options.user.id,
+      visibility: options.visibility,
+    });
+  }
+
+  const published = await writeImportedPackageVersion({
+    pool: options.pool,
+    metadata: options.metadata,
+    storage: options.storage,
+    tarball: options.tarball,
+    userId: options.user.id,
+    provenance: options.provenance,
+  });
+  return { ...published, isUpdate };
 }
