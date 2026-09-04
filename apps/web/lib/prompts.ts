@@ -102,18 +102,53 @@ export function formatCopyCount(count: number): string {
 }
 
 export async function listPrompts(query = ""): Promise<PromptSummary[]> {
-  const params = new URLSearchParams({ limit: "100" });
-  if (query) params.set("q", query);
+  const page = await listPromptsPage({ query, limit: 100 });
+  return page.prompts;
+}
+
+export async function listPromptsPage(options: {
+  query?: string;
+  limit?: number;
+  cursor?: string | null;
+  offset?: number | null;
+  category?: string;
+  output?: string;
+  sort?: string;
+}): Promise<{
+  prompts: PromptSummary[];
+  nextCursor: string | null;
+  nextOffset: number | null;
+  total: number;
+}> {
+  const params = new URLSearchParams({ limit: String(options.limit ?? 40) });
+  if (options.query) params.set("q", options.query);
+  if (options.cursor) params.set("cursor", options.cursor);
+  if (options.offset != null && options.offset > 0) params.set("offset", String(options.offset));
+  if (options.category && options.category !== "All") params.set("category", options.category);
+  if (options.output && options.output !== "all") params.set("output", options.output);
+  if (options.sort) params.set("sort", options.sort);
   try {
     const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/prompts?${params}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(3000),
     });
-    if (!response.ok) return [];
-    const data = (await response.json()) as { prompts?: PromptSummary[] };
-    return data.prompts ?? [];
+    if (!response.ok) {
+      return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
+    }
+    const data = (await response.json()) as {
+      prompts?: PromptSummary[];
+      nextCursor?: string | null;
+      nextOffset?: number | null;
+      total?: number;
+    };
+    return {
+      prompts: data.prompts ?? [],
+      nextCursor: data.nextCursor ?? null,
+      nextOffset: data.nextOffset ?? null,
+      total: data.total ?? data.prompts?.length ?? 0,
+    };
   } catch {
-    return [];
+    return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
   }
 }
 

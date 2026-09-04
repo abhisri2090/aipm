@@ -1867,6 +1867,64 @@ export async function listPublicPackagePublishers(
   return result.rows;
 }
 
+export interface PublicPublisherListRow {
+  slug: string;
+  name: string;
+  description: string | null;
+  website_url: string | null;
+  avatar_url: string | null;
+  created_at: Date;
+  package_count: number;
+  publisher_login: string | null;
+  publisher_name: string | null;
+  publisher_avatar_url: string | null;
+  publisher_verified: boolean;
+}
+
+export async function listPublicPublishers(
+  pool: pg.Pool,
+  options: { query?: string; limit: number; cursor?: string },
+): Promise<PublicPublisherListRow[]> {
+  const values: unknown[] = [];
+  const conditions = ["orgs.deleted_at IS NULL", "package_reservations.visibility = 'public'"];
+
+  if (options.query?.trim()) {
+    values.push(`%${options.query.trim()}%`);
+    conditions.push(
+      `(orgs.name ILIKE $${values.length} OR orgs.slug ILIKE $${values.length} OR COALESCE(owners.github_login, '') ILIKE $${values.length} OR COALESCE(owners.name, '') ILIKE $${values.length})`,
+    );
+  }
+  if (options.cursor) {
+    values.push(new Date(options.cursor));
+    conditions.push(`orgs.created_at < $${values.length}`);
+  }
+
+  values.push(options.limit);
+  const result = await pool.query<PublicPublisherListRow>(
+    `SELECT orgs.slug,
+            orgs.name,
+            orgs.description,
+            orgs.website_url,
+            COALESCE(orgs.avatar_url, owners.avatar_url) AS avatar_url,
+            orgs.created_at,
+            COUNT(DISTINCT package_reservations.name)::int AS package_count,
+            owners.github_login AS publisher_login,
+            owners.name AS publisher_name,
+            owners.avatar_url AS publisher_avatar_url,
+            COALESCE(owners.verified, false) AS publisher_verified
+     FROM orgs
+     JOIN users owners ON owners.id = orgs.owner_user_id
+     JOIN package_reservations ON package_reservations.org_id = orgs.id
+     WHERE ${conditions.join(" AND ")}
+     GROUP BY orgs.id, owners.id
+     HAVING COUNT(DISTINCT package_reservations.name) > 0
+     ORDER BY orgs.created_at DESC, orgs.slug ASC
+     LIMIT $${values.length}`,
+    values,
+  );
+  return result.rows;
+}
+
 export async function upsertProvenance(
   pool: pg.Pool,
   row: Omit<PackageProvenanceRow, "imported_at">,

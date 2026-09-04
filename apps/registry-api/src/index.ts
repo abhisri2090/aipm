@@ -72,6 +72,7 @@ import {
   listOrgPackageReservations,
   listPackageMembers,
   listPublicPackagePublishers,
+  listPublicPublishers,
   listUserImportedPackages,
   listUserOrgs,
   listPackageVersionsForName,
@@ -2495,6 +2496,56 @@ export async function createApp(): Promise<FastifyInstance> {
         return reply.status(404).send({ error: "Not found" });
       }
       return { installCount };
+    },
+  );
+
+  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string } }>(
+    "/v1/publishers",
+    {
+      config: {
+        rateLimit: {
+          max: 240,
+          timeWindow: "1 minute",
+        },
+      },
+    },
+    async (request, reply) => {
+      if (!accountAuth) {
+        return reply.status(503).send({ error: "Account services are not configured" });
+      }
+      const parsedLimit = parseListLimit(request.query.limit);
+      if (!parsedLimit.ok) return reply.status(400).send({ error: parsedLimit.error });
+      const parsedCursor = parseListCursor(request.query.cursor);
+      if (!parsedCursor.ok) return reply.status(400).send({ error: parsedCursor.error });
+
+      const limit = parsedLimit.value;
+      const rows = await listPublicPublishers(accountAuth.pool, {
+        query: request.query.q?.trim() ?? "",
+        limit: limit + 1,
+        cursor: parsedCursor.value,
+      });
+      const page = rows.slice(0, limit);
+      const nextCursor =
+        rows.length > limit ? page[page.length - 1]?.created_at.toISOString() ?? null : null;
+
+      return {
+        publishers: page.map((row) => ({
+          slug: row.slug,
+          name: row.name,
+          description: row.description,
+          websiteUrl: row.website_url,
+          avatarUrl: row.avatar_url,
+          createdAt: row.created_at.toISOString(),
+          packageCount: row.package_count,
+          user: {
+            githubLogin: row.publisher_login,
+            name: row.publisher_name,
+            avatarUrl: row.publisher_avatar_url,
+            verified: row.publisher_verified,
+          },
+        })),
+        nextCursor,
+      };
     },
   );
 

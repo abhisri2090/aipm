@@ -1,7 +1,7 @@
 import { PromptDirectory } from "../../components/prompt-directory";
 import { DirectoryListTile } from "../../components/directory-list-tile";
 import Link from "next/link";
-import { listPrompts } from "../../lib/prompts";
+import { listPromptsPage } from "../../lib/prompts";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
@@ -28,9 +28,15 @@ export default async function PromptsPage({
 }) {
   const params = await searchParams;
   const initialQuery = params.tag ?? params.q ?? "";
-  const prompts = await listPrompts(initialQuery);
-  const outputCount = new Set(prompts.flatMap((prompt) => prompt.outputTypes)).size;
-  const categoryCount = new Set(prompts.map((prompt) => prompt.category)).size;
+  const page = await listPromptsPage({
+    query: initialQuery,
+    limit: 40,
+    category: params.category,
+    output: params.output,
+    sort: "newest",
+  });
+  const outputCount = new Set(page.prompts.flatMap((prompt) => prompt.outputTypes)).size;
+  const categoryCount = new Set(page.prompts.map((prompt) => prompt.category)).size;
 
   return (
     <main>
@@ -46,7 +52,7 @@ export default async function PromptsPage({
             url: `${SITE_URL}/prompts`,
             mainEntity: {
               "@type": "ItemList",
-              itemListElement: prompts.map((prompt, index) => ({
+              itemListElement: page.prompts.map((prompt, index) => ({
                 "@type": "ListItem",
                 position: index + 1,
                 name: prompt.title,
@@ -74,7 +80,7 @@ export default async function PromptsPage({
         <dl className={styles.heroStats} aria-label="Prompt directory overview">
           <div>
             <dt>Prompts</dt>
-            <dd>{prompts.length}</dd>
+            <dd>{page.total}</dd>
           </div>
           <div>
             <dt>Categories</dt>
@@ -96,7 +102,10 @@ export default async function PromptsPage({
         </div>
         <DirectoryListTile kind="prompt" />
         <PromptDirectory
-          initialPrompts={prompts}
+          initialPrompts={page.prompts}
+          initialNextCursor={page.nextCursor}
+          initialNextOffset={page.nextOffset}
+          initialTotal={page.total}
           initialQuery={initialQuery}
           initialCategory={params.category}
           initialOutput={params.output}

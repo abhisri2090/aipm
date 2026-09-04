@@ -504,39 +504,119 @@ export async function registerPromptRoutes(
 ): Promise<void> {
   if (options.accountAuth) await ensurePromptSchema(options.accountAuth.pool);
 
-  app.get<{ Querystring: { q?: string; limit?: string } }>(
-    "/v1/prompts",
-    async (request) => {
-      if (!options.accountAuth) return { prompts: [] };
+  app.get<{
+    Querystring: {
+      q?: string;
+      limit?: string;
+      cursor?: string;
+      offset?: string;
+      category?: string;
+      output?: string;
+      sort?: string;
+    };
+  }>("/v1/prompts", async (request, reply) => {
+      if (!options.accountAuth) return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
       const limit = Math.min(100, Math.max(1, Number(request.query.limit ?? 50) || 50));
       const query = request.query.q?.trim() ?? "";
+      const category = request.query.category?.trim() ?? "";
+      const output = request.query.output?.trim() ?? "";
+      const sort = request.query.sort?.trim() || "newest";
+      const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
+      const cursorRaw = request.query.cursor?.trim();
+      let cursor: Date | undefined;
+      if (cursorRaw) {
+        const timestamp = Date.parse(cursorRaw);
+        if (!Number.isFinite(timestamp)) {
+          return reply
+            .status(400)
+            .send({ error: "Invalid cursor; use an ISO timestamp returned as nextCursor" });
+        }
+        cursor = new Date(timestamp);
+      }
+
       const values: unknown[] = [];
-      let search = "";
+      const conditions = ["prompts.status = 'published'"];
       if (query) {
         values.push(`%${query}%`);
-        search = `AND (prompts.title ILIKE $1 OR prompts.summary ILIKE $1 OR prompts.category ILIKE $1 OR prompts.tags::text ILIKE $1)`;
+        conditions.push(
+          `(prompts.title ILIKE $${values.length} OR prompts.summary ILIKE $${values.length} OR prompts.category ILIKE $${values.length} OR prompts.tags::text ILIKE $${values.length} OR COALESCE(users.username, '') ILIKE $${values.length} OR COALESCE(orgs.slug, '') ILIKE $${values.length})`,
+        );
       }
-      values.push(limit);
-      const result = await options.accountAuth.pool.query<PromptRow>(
-        `SELECT ${PROMPT_SELECT}
-       FROM prompts
-       JOIN users ON users.id = prompts.owner_user_id
-       LEFT JOIN orgs ON orgs.id = prompts.org_id
-       WHERE prompts.status = 'published' ${search}
-       ORDER BY prompts.published_at DESC, prompts.created_at DESC
-       LIMIT $${values.length}`,
+      if (category && category.toLowerCase() !== "all") {
+        values.push(category);
+        conditions.push(`prompts.category ILIKE $${values.length}`);
+      }
+      if (output && output.toLowerCase() !== "all") {
+        values.push(output);
+        conditions.push(`$${values.length} = ANY(prompts.output_types)`);
+      }
+
+      const whereSql = conditions.join(" AND ");
+      const countResult = await options.accountAuth.pool.query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count
+         FROM prompts
+         JOIN users ON users.id = prompts.owner_user_id
+         LEFT JOIN orgs ON orgs.id = prompts.org_id
+         WHERE ${whereSql}`,
         values,
       );
+      const total = Number(countResult.rows[0]?.count ?? 0);
+
+      let orderSql = "COALESCE(prompts.published_at, prompts.created_at) DESC, prompts.id DESC";
+      if (sort === "popular") {
+        orderSql = "prompts.copy_count DESC, COALESCE(prompts.published_at, prompts.created_at) DESC, prompts.id DESC";
+      } else if (sort === "title") {
+        orderSql = "prompts.title ASC, prompts.id ASC";
+      }
+
+      const useCursor = sort === "newest";
+      const pageValues = [...values];
+      let pageWhereSql = whereSql;
+      if (useCursor && cursor) {
+        pageValues.push(cursor);
+        pageWhereSql = `${whereSql} AND COALESCE(prompts.published_at, prompts.created_at) < $${pageValues.length}`;
+      }
+      pageValues.push(limit + 1);
+      const limitParam = pageValues.length;
+      let offsetSql = "";
+      if (!useCursor) {
+        pageValues.push(offset);
+        offsetSql = ` OFFSET $${pageValues.length}`;
+      }
+
+      const result = await options.accountAuth.pool.query<PromptRow>(
+        `SELECT ${PROMPT_SELECT}
+         FROM prompts
+         JOIN users ON users.id = prompts.owner_user_id
+         LEFT JOIN orgs ON orgs.id = prompts.org_id
+         WHERE ${pageWhereSql}
+         ORDER BY ${orderSql}
+         LIMIT $${limitParam}${offsetSql}`,
+        pageValues,
+      );
+
+      const pageRows = result.rows.slice(0, limit);
+      const hasMore = result.rows.length > limit;
+      const nextCursor =
+        useCursor && hasMore
+          ? (pageRows[pageRows.length - 1]?.published_at ??
+              pageRows[pageRows.length - 1]?.created_at)?.toISOString() ?? null
+          : null;
+      const nextOffset = !useCursor && hasMore ? offset + pageRows.length : null;
+
       const user = await getCurrentUser(options.accountAuth, request);
       const editableOrgIds = user
         ? await listEditableOrgIds(options.accountAuth.pool, user.id)
         : new Set<string>();
       return {
-        prompts: result.rows.map((row) =>
+        prompts: pageRows.map((row) =>
           serializeSummary(row, {
             canEdit: userCanEditPrompt(user?.id, row, editableOrgIds),
           }),
         ),
+        nextCursor,
+        nextOffset,
+        total,
       };
     },
   );

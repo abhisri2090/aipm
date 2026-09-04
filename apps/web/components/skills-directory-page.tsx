@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listPackages, packagePath, SITE_URL } from "../lib/registry";
+import { listPackagesPage, packagePath, SITE_URL } from "../lib/registry";
 import { cn, shell } from "../lib/page-styles";
 import { DirectoryListTile } from "./directory-list-tile";
 import { RegistrySearch } from "./registry-search";
@@ -13,7 +13,10 @@ export async function SkillsDirectoryPage({
 }) {
   const params = await searchParams;
   const query = params.q ?? "";
-  const initialPackages = await listPackages(query, 50);
+  const { packages: initialPackages, nextCursor: initialNextCursor } = await listPackagesPage(
+    query,
+    20,
+  );
 
   return (
     <main>
@@ -55,6 +58,9 @@ export async function SkillsDirectoryPage({
           <Link className={shell.button} href="/popular-skills">
             See popular skill ideas
           </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/publishers">
+            Browse publishers
+          </Link>
         </div>
       </section>
 
@@ -77,7 +83,11 @@ export async function SkillsDirectoryPage({
           <h2 id="registry-search-title">Skills</h2>
         </div>
         <DirectoryListTile kind="skill" />
-        <RegistrySearch initialPackages={initialPackages} initialQuery={query} />
+        <RegistrySearch
+          initialPackages={initialPackages}
+          initialNextCursor={initialNextCursor}
+          initialQuery={query}
+        />
       </section>
     </main>
   );

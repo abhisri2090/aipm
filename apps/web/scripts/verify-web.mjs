@@ -155,6 +155,13 @@ const requiredPages = [
     includes: ["Short answer", "Give the skill one job", "aipm publish validate"],
   },
   {
+    path: "/publishers",
+    title: "AI Skill Publishers",
+    h1: "Meet the people and orgs behind public skills.",
+    jsonLd: true,
+    includes: ["All publishers", "Publisher name or handle"],
+  },
+  {
     path: "/publishers/anthropics",
     title: "Anthropic AI Skills",
     h1: "Anthropic",
@@ -487,6 +494,7 @@ assertStatus("/sitemap.xml", sitemap.response);
 for (const path of [
   "/skills",
   "/prompts",
+  "/publishers",
   "/publish",
   "/publish/guide",
   "/install",

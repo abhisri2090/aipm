@@ -252,19 +252,81 @@ export function shortIntegrity(value: string): string {
   return `${algorithm}-${hash.slice(0, 14)}...`;
 }
 
-export async function listPackages(query = "", limit = 50): Promise<PackageSummary[]> {
+export async function listPackages(
+  query = "",
+  limit = 50,
+): Promise<PackageSummary[]> {
+  const page = await listPackagesPage(query, limit);
+  return page.packages;
+}
+
+export async function listPackagesPage(
+  query = "",
+  limit = 50,
+  cursor?: string | null,
+): Promise<{ packages: PackageSummary[]; nextCursor: string | null }> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (query) params.set("q", query);
+  if (cursor) params.set("cursor", cursor);
   try {
     const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(3000),
     });
-    if (!response.ok) return [];
-    const data = (await response.json()) as { packages?: PackageSummary[] };
-    return data.packages ?? [];
+    if (!response.ok) return { packages: [], nextCursor: null };
+    const data = (await response.json()) as {
+      packages?: PackageSummary[];
+      nextCursor?: string | null;
+    };
+    return {
+      packages: data.packages ?? [],
+      nextCursor: data.nextCursor ?? null,
+    };
   } catch {
-    return [];
+    return { packages: [], nextCursor: null };
+  }
+}
+
+export type PublisherSummary = {
+  slug: string;
+  name: string;
+  description: string | null;
+  websiteUrl: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  packageCount: number;
+  user: {
+    githubLogin: string | null;
+    name: string | null;
+    avatarUrl: string | null;
+    verified: boolean;
+  };
+};
+
+export async function listPublishersPage(
+  query = "",
+  limit = 24,
+  cursor?: string | null,
+): Promise<{ publishers: PublisherSummary[]; nextCursor: string | null }> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (query) params.set("q", query);
+  if (cursor) params.set("cursor", cursor);
+  try {
+    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/publishers?${params}`, {
+      next: { revalidate: 120 },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!response.ok) return { publishers: [], nextCursor: null };
+    const data = (await response.json()) as {
+      publishers?: PublisherSummary[];
+      nextCursor?: string | null;
+    };
+    return {
+      publishers: data.publishers ?? [],
+      nextCursor: data.nextCursor ?? null,
+    };
+  } catch {
+    return { publishers: [], nextCursor: null };
   }
 }
 

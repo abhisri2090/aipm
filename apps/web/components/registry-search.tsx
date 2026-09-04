@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PackageCard } from "./package-card";
+import { LoadMoreSentinel } from "./load-more-sentinel";
 import { api } from "../lib/api-client";
 import type { PackageSummary } from "../lib/registry";
 import { publicApiError } from "../lib/public-api-error";
@@ -17,25 +18,39 @@ const QUICK_FILTERS = [
   { label: "Documentation", query: "documentation" },
 ] as const;
 
+const PAGE_SIZE = 20;
+
+type PackagesPage = {
+  packages?: PackageSummary[];
+  nextCursor?: string | null;
+};
+
 export function RegistrySearch({
   initialPackages,
+  initialNextCursor = null,
   initialQuery = "",
   compact = false,
 }: {
   initialPackages: PackageSummary[];
+  initialNextCursor?: string | null;
   initialQuery?: string;
   compact?: boolean;
 }) {
   const [packages, setPackages] = useState(initialPackages);
   const [query, setQuery] = useState(initialQuery);
   const [target, setTarget] = useState("all");
+  const [nextCursor, setNextCursor] = useState<string | null>(
+    compact ? null : initialNextCursor,
+  );
+  const [loadingMore, setLoadingMore] = useState(false);
   const [status, setStatus] = useState(
     initialPackages.length === 0
       ? "Loading skills"
       : initialPackages.length === 1
-        ? "1 package found"
-        : `${initialPackages.length} packages found`,
+        ? "1 skill loaded"
+        : `${initialPackages.length} skills loaded`,
   );
+  const loadingMoreRef = useRef(false);
 
   const filtered = useMemo(
     () =>
@@ -47,20 +62,64 @@ export function RegistrySearch({
     [packages, target],
   );
 
-  const search = useCallback(async (nextQuery: string) => {
-    setStatus("Searching");
-    const params = new URLSearchParams({ limit: compact ? "3" : "50" });
-    if (nextQuery) params.set("q", nextQuery);
-    try {
-      const data = await api<{ packages?: PackageSummary[] }>(`/v1/packages?${params}`);
-      const nextPackages = data.packages ?? [];
-      setPackages(nextPackages);
-      setStatus(nextPackages.length === 1 ? "1 package found" : `${nextPackages.length} packages found`);
-    } catch (error) {
-      setPackages([]);
-      setStatus(publicApiError(error));
+  const updateStatus = useCallback((count: number, hasMore: boolean) => {
+    if (count === 0) {
+      setStatus("No skills found");
+      return;
     }
-  }, [compact]);
+    const label = count === 1 ? "1 skill loaded" : `${count} skills loaded`;
+    setStatus(hasMore ? `${label} · scroll for more` : label);
+  }, []);
+
+  const search = useCallback(
+    async (nextQuery: string) => {
+      setStatus("Searching");
+      const params = new URLSearchParams({ limit: compact ? "3" : String(PAGE_SIZE) });
+      if (nextQuery) params.set("q", nextQuery);
+      try {
+        const data = await api<PackagesPage>(`/v1/packages?${params}`);
+        const nextPackages = data.packages ?? [];
+        const cursor = compact ? null : (data.nextCursor ?? null);
+        setPackages(nextPackages);
+        setNextCursor(cursor);
+        updateStatus(nextPackages.length, Boolean(cursor));
+      } catch (error) {
+        setPackages([]);
+        setNextCursor(null);
+        setStatus(publicApiError(error));
+      }
+    },
+    [compact, updateStatus],
+  );
+
+  const loadMore = useCallback(async () => {
+    if (compact || !nextCursor || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    const params = new URLSearchParams({
+      limit: String(PAGE_SIZE),
+      cursor: nextCursor,
+    });
+    if (query.trim()) params.set("q", query.trim());
+    try {
+      const data = await api<PackagesPage>(`/v1/packages?${params}`);
+      const nextPackages = data.packages ?? [];
+      const cursor = data.nextCursor ?? null;
+      setPackages((current) => {
+        const seen = new Set(current.map((pkg) => pkg.name));
+        const merged = [...current, ...nextPackages.filter((pkg) => !seen.has(pkg.name))];
+        updateStatus(merged.length, Boolean(cursor));
+        return merged;
+      });
+      setNextCursor(cursor);
+    } catch (error) {
+      setStatus(publicApiError(error));
+      setNextCursor(null);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [compact, nextCursor, query, updateStatus]);
 
   useEffect(() => {
     if (initialPackages.length === 0) void search(initialQuery.trim());
@@ -150,6 +209,14 @@ export function RegistrySearch({
           </div>
         )}
       </div>
+      {!compact ? (
+        <LoadMoreSentinel
+          enabled={Boolean(nextCursor)}
+          loading={loadingMore}
+          onLoadMore={() => void loadMore()}
+          label="Loading more skills…"
+        />
+      ) : null}
     </>
   );
 }

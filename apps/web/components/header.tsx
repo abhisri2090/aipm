@@ -11,6 +11,7 @@ import styles from "./header.module.css";
 const links = [
   { href: "/skills", label: "Skills" },
   { href: "/prompts", label: "Prompts" },
+  { href: "/publishers", label: "Publishers" },
   { href: "/publish", label: "Publish" },
   { href: "/resources", label: "Docs" },
   { href: "/login", label: "Login", requiresGuest: true },
@@ -52,6 +53,10 @@ export function Header() {
 
     if (href === "/prompts") {
       return pathname === href || pathname.startsWith("/prompts/");
+    }
+
+    if (href === "/publishers") {
+      return pathname === href || pathname.startsWith("/publishers/");
     }
 
     if (href === "/publish") {
