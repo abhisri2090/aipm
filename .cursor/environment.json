@@ -1,0 +1,20 @@
+{
+  "name": "AIPM",
+  "install": "pnpm install --frozen-lockfile && ([ -f .env ] || cp .env.example .env) && ([ -f apps/web/.env.local ] || cp apps/web/.env.local.example apps/web/.env.local) && pnpm build",
+  "terminals": [
+    {
+      "name": "registry-api",
+      "command": "node --env-file=.env apps/registry-api/dist/index.js",
+      "description": "AIPM registry API (Fastify) on http://127.0.0.1:8080. Falls back to a file metadata store when Postgres is unavailable."
+    },
+    {
+      "name": "web",
+      "command": "pnpm --filter @aipm-registry/web dev",
+      "description": "AIPM Next.js website/dashboard on http://localhost:3000, proxying /v1/* to the registry API."
+    }
+  ],
+  "ports": [
+    { "name": "web", "port": 3000 },
+    { "name": "registry-api", "port": 8080 }
+  ]
+}
