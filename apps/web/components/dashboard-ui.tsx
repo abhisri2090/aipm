@@ -231,7 +231,7 @@ function LoadingShell() {
       <section className={dash.dashboardEmptyState}>
         <p className={shell.eyebrow}>Dashboard</p>
         <h1>Loading your workspace.</h1>
-        <p className={shell.lede}>Fetching account, organization, and package details.</p>
+        <p className={shell.lede}>Fetching account, organization, and skill details.</p>
       </section>
     </main>
   );
@@ -310,7 +310,7 @@ function DashboardShell({
     { href: "/dashboard", id: "overview", label: "Overview" },
     { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
     { href: "/dashboard/members", id: "members", label: "Members" },
-    { href: "/dashboard/packages", id: "packages", label: "Packages" },
+    { href: "/dashboard/packages", id: "packages", label: "Skills" },
     { href: "/dashboard/prompts", id: "prompts", label: "Prompts" },
     { href: "/dashboard/tokens", id: "tokens", label: "Tokens" },
     { href: "/dashboard/activity", id: "activity", label: "Activity" },
@@ -556,7 +556,7 @@ export function LoginPanel() {
           <p className={shell.eyebrow}>Publisher access</p>
           <h1>Build and ship reusable AI skills.</h1>
           <p className={shell.lede}>
-            Sign in to reserve namespaces, manage packages, generate short-lived publish tokens,
+            Sign in to reserve namespaces, manage skills, generate short-lived publish tokens,
             and keep your AI tooling ready for real projects.
           </p>
           {oauthError ? <p className={shell.notice}>{oauthError}</p> : null}
@@ -664,7 +664,7 @@ export function LoginPanel() {
               <span aria-hidden="true" className={dash.loginBenefitIcon}>
                 🏢
               </span>
-              <span>Organization namespaces for package ownership.</span>
+              <span>Organization namespaces for skill ownership.</span>
             </li>
             <li>
               <span aria-hidden="true" className={dash.loginBenefitIcon}>
@@ -682,7 +682,7 @@ export function LoginPanel() {
               <span aria-hidden="true" className={dash.loginBenefitIcon}>
                 👤
               </span>
-              <span>A profile that makes packages feel accountable.</span>
+              <span>A profile that makes skills feel accountable.</span>
             </li>
           </ul>
         </aside>
@@ -760,7 +760,7 @@ export function DashboardHome() {
   return (
     <DashboardShell
       active="overview"
-      intro="Manage publisher profile, organization namespaces, package reservations, and token-based releases."
+      intro="Manage publisher profile, organization namespaces, skill reservations, and token-based releases."
       title="Your publishing workspace"
     >
       {({ me, orgs }) => {
@@ -769,7 +769,7 @@ export function DashboardHome() {
           ? { href: "/dashboard/profile", label: "Complete profile" }
           : orgs.length === 0
             ? { href: "/dashboard/orgs", label: "Create org" }
-            : { href: "/dashboard/packages", label: "Manage packages" };
+            : { href: "/dashboard/packages", label: "Manage skills" };
         return (
           <>
             <InviteAcceptBanner />
@@ -777,7 +777,7 @@ export function DashboardHome() {
               <article className={dash.metricCard}>
                 <span>Profile</span>
                 <strong>{me.name ? "Complete" : "Needs name"}</strong>
-                <p>{me.name ?? "Add a display name so published packages feel trustworthy."}</p>
+                <p>{me.name ?? "Add a display name so published skills feel trustworthy."}</p>
               </article>
               <article className={dash.metricCard}>
                 <span>Organizations</span>
@@ -787,7 +787,7 @@ export function DashboardHome() {
               <article className={dash.metricCard}>
                 <span>Next release</span>
                 <strong>{packageCount > 0 ? "Ready" : "Setup"}</strong>
-                <p>{packageCount > 0 ? "Open a package to generate a publish token." : "Create an org first."}</p>
+                <p>{packageCount > 0 ? "Open a skill to generate a publish token." : "Create an org first."}</p>
               </article>
             </section>
 
@@ -796,7 +796,7 @@ export function DashboardHome() {
                 <p className={shell.eyebrow}>Next best action</p>
                 <h2>Move one step closer to publishing.</h2>
                 <p>
-                  AIPM keeps publishing gated by identity, namespace ownership, package reservation,
+                  AIPM keeps publishing gated by identity, namespace ownership, skill reservation,
                   and short-lived CLI tokens.
                 </p>
               </div>
@@ -820,11 +820,11 @@ export function DashboardHome() {
                   </li>
                   <li>
                     <strong>2. Create org</strong>
-                    <span>Reserve your npm-style package scope.</span>
+                    <span>Reserve your npm-style skill scope.</span>
                   </li>
                   <li>
                     <strong>3. Reserve skill</strong>
-                    <span>Lock a package name before publishing.</span>
+                    <span>Lock a skill name before publishing.</span>
                   </li>
                   <li>
                     <strong>4. Push from CLI</strong>
@@ -868,7 +868,7 @@ export function DashboardHome() {
                   </div>
                 ) : (
                   <div className={shell.empty}>
-                    No orgs yet. Create one to reserve your first skill name and unlock package tokens.
+                    No orgs yet. Create one to reserve your first skill name and unlock publish tokens.
                   </div>
                 )}
               </article>
@@ -886,7 +886,7 @@ function NoActiveOrg({ action = "Create organization" }: { action?: string }) {
       <p className={shell.eyebrow}>Workspace required</p>
       <h2>Create an organization first.</h2>
       <p className={shell.muted}>
-        Organizations own package scopes, members, invites, publishing tokens, and activity.
+        Organizations own skill scopes, members, invites, publishing tokens, and activity.
       </p>
       <Link className={shell.button} href="/dashboard/orgs">
         {action}
@@ -934,7 +934,7 @@ export function OrgsDashboard() {
                 ))}
               </div>
             ) : (
-              <div className={shell.empty}>No organizations yet. Create one to reserve your first package scope.</div>
+              <div className={shell.empty}>No organizations yet. Create one to reserve your first skill scope.</div>
             )}
           </article>
 
@@ -964,7 +964,7 @@ export function OrgsDashboard() {
               placeholder="acme-corp"
               value={slug}
             />
-            <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
+            <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your skill scope.</p>
             <label htmlFor="org-name">Display name</label>
             <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Acme Corp" value={name} />
             {error ? <p className={shell.notice}>{error}</p> : null}
@@ -1054,7 +1054,7 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
         <div className={shell.sectionHeading}>
           <div>
             <p className={shell.eyebrow}>@{org.slug}</p>
-            <h2>Reserved packages</h2>
+            <h2>Reserved skills</h2>
           </div>
         </div>
         {error ? <p className={shell.notice}>{error}</p> : null}
@@ -1095,7 +1095,7 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
             ))}
           </div>
         ) : (
-          <div className={shell.empty}>No packages reserved in @{org.slug} yet.</div>
+          <div className={shell.empty}>No skills reserved in @{org.slug} yet.</div>
         )}
       </article>
       <form
@@ -1116,9 +1116,9 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
           }
         }}
       >
-        <p className={shell.eyebrow}>Reserve package</p>
+        <p className={shell.eyebrow}>Reserve skill</p>
         <h2>Claim a skill name</h2>
-        <label htmlFor="package-name">Package name</label>
+        <label htmlFor="package-name">Skill name</label>
         <input
           disabled={!canReserve}
           id="package-name"
@@ -1128,8 +1128,8 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
         />
         <p className={dash.fieldHelp}>Use a short name, or paste @{org.slug}/review-helper.</p>
         {status ? <p className={shell.notice}>{status}</p> : null}
-        <button disabled={!canReserve} type="submit">Reserve package</button>
-        {!canReserve ? <p className={dash.fieldHelp}>Only owners and admins can reserve package names.</p> : null}
+        <button disabled={!canReserve} type="submit">Reserve skill</button>
+        {!canReserve ? <p className={dash.fieldHelp}>Only owners and admins can reserve skill names.</p> : null}
       </form>
       <GithubImportPanel
         org={org}
@@ -1150,8 +1150,8 @@ export function PackagesDashboard() {
   return (
     <DashboardShell
       active="packages"
-      intro="Reserve and manage skill package names for the selected workspace."
-      title="Packages"
+      intro="Reserve and manage skill names for the selected workspace."
+      title="Skills"
     >
       {({ activeOrg, me }) =>
         activeOrg ? <PackagesContent org={activeOrg} me={me} /> : <NoActiveOrg />
@@ -1231,7 +1231,7 @@ export function NewOrgForm() {
   return (
     <DashboardShell
       active="orgs"
-      intro="Create a namespace that will own package names such as @acme/review-helper."
+      intro="Create a namespace that will own skill names such as @acme/review-helper."
       title="Create organization"
     >
       {() => (
@@ -1258,13 +1258,13 @@ export function NewOrgForm() {
             placeholder="acme-corp"
             value={slug}
           />
-          <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your package scope.</p>
+          <p className={dash.fieldHelp}>Use lowercase letters, numbers, and hyphens. This becomes your skill scope.</p>
           <label htmlFor="org-name">Display name</label>
           <input id="org-name" onChange={(event) => setName(event.target.value)} placeholder="Acme Corp" value={name} />
           {error ? <p className={shell.notice}>{error}</p> : null}
           <button type="submit">Create organization</button>
           <p className={dash.fieldHelp}>
-            After this, reserve your first package name inside the org namespace.
+            After this, reserve your first skill name inside the org namespace.
           </p>
         </form>
       )}
@@ -1588,7 +1588,7 @@ export function MembersDashboard() {
   return (
     <DashboardShell
       active="members"
-      intro="Invite teammates, change roles, and keep membership separate from package work."
+      intro="Invite teammates, change roles, and keep membership separate from skill work."
       title="Members"
     >
       {({ activeOrg }) => (activeOrg ? <MembersContent org={activeOrg} /> : <NoActiveOrg />)}
@@ -1631,7 +1631,7 @@ function TokensContent({ org }: { org: Org }) {
       <article className={dash.dashboardPanel}>
         <p className={shell.eyebrow}>Token</p>
         <h2>Generate a publish token</h2>
-        <p className={shell.muted}>Choose a package in @{org.slug}. Tokens expire after 5 minutes and are shown once.</p>
+        <p className={shell.muted}>Choose a skill in @{org.slug}. Tokens expire after 5 minutes and are shown once.</p>
         <form
           className={dash.compactForm}
           onSubmit={async (event) => {
@@ -1650,7 +1650,7 @@ function TokensContent({ org }: { org: Org }) {
             }
           }}
         >
-          <label htmlFor="token-package">Package</label>
+          <label htmlFor="token-package">Skill</label>
           <select id="token-package" value={selectedPackage} onChange={(event) => setSelectedPackage(event.target.value)}>
             {packages.map((pkg) => (
               <option key={pkg.name} value={pkg.name}>
@@ -1666,7 +1666,7 @@ function TokensContent({ org }: { org: Org }) {
             <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
             <CodeBlock code={token.token} />
             <h3>Push command</h3>
-            <p>Run this inside the staged package folder to publish the current version.</p>
+            <p>Run this inside the staged skill folder to publish the current version.</p>
             <CodeBlock code={pushCommand} />
           </section>
         ) : null}
@@ -1675,7 +1675,7 @@ function TokensContent({ org }: { org: Org }) {
       <article className={dash.dashboardPanel}>
         <p className={shell.eyebrow}>CLI flow</p>
         <h2>Publish from terminal</h2>
-        <p className={shell.muted}>Use this sequence after your package folder exists and your files are ready.</p>
+        <p className={shell.muted}>Use this sequence after your skill folder exists and your files are ready.</p>
         <DashboardCommandSteps
           steps={[
             { title: "Stage files for publish", code: "aipm publish add ." },
@@ -1788,7 +1788,7 @@ export function TokensDashboard() {
   return (
     <DashboardShell
       active="tokens"
-      intro="Generate short-lived publish tokens without opening a package detail page."
+      intro="Generate short-lived publish tokens without opening a skill detail page."
       title="Publish tokens"
     >
       {({ activeOrg }) => (activeOrg ? <TokensContent org={activeOrg} /> : <NoActiveOrg />)}
@@ -1851,7 +1851,7 @@ export function ActivityDashboard() {
   return (
     <DashboardShell
       active="activity"
-      intro="See invites, member changes, package reservations, and access changes in one place."
+      intro="See invites, member changes, skill reservations, and access changes in one place."
       title="Activity"
     >
       {({ activeOrg }) => (activeOrg ? <ActivityContent org={activeOrg} /> : <NoActiveOrg />)}
@@ -1909,7 +1909,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
   return (
     <DashboardShell
       active="packages"
-      intro="Control packages, teammates, invites, and access for this publisher namespace."
+      intro="Control skills, teammates, invites, and access for this publisher namespace."
       title={`@${orgSlug}`}
     >
       {() => (
@@ -1919,7 +1919,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
             <article className={dash.metricCard}>
               <span>Your role</span>
               <strong>{roleLabel(org?.role)}</strong>
-              <p>{manageOrg ? "You can manage invites, members, and package access." : "Your access is limited by org role."}</p>
+              <p>{manageOrg ? "You can manage invites, members, and skill access." : "Your access is limited by org role."}</p>
             </article>
             <article className={dash.metricCard}>
               <span>Members</span>
@@ -1927,9 +1927,9 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
               <p>Owner, admins, members, and viewers in this namespace.</p>
             </article>
             <article className={dash.metricCard}>
-              <span>Packages</span>
+              <span>Skills</span>
               <strong>{packages.length}</strong>
-              <p>Reserved package names under @{orgSlug}.</p>
+              <p>Reserved skill names under @{orgSlug}.</p>
             </article>
           </section>
 
@@ -1937,12 +1937,12 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
             <article className={dash.dashboardPanel}>
               <div className={shell.sectionHeading}>
                 <div>
-                  <p className={shell.eyebrow}>Packages</p>
+                  <p className={shell.eyebrow}>Skills</p>
                   <h2>Reserved skill names</h2>
                 </div>
                 {manageOrg ? (
                   <Link className={shell.button} href={`/dashboard/orgs/${orgSlug}/packages/new`}>
-                    Reserve package
+                    Reserve skill
                   </Link>
                 ) : null}
               </div>
@@ -1960,7 +1960,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
                 </div>
               ) : (
                 <div className={shell.empty}>
-                  No packages reserved yet. Reserve a skill name before generating a token or publishing from the CLI.
+                  No skills reserved yet. Reserve a skill name before generating a token or publishing from the CLI.
                 </div>
               )}
             </article>
@@ -2259,8 +2259,8 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
   return (
     <DashboardShell
       active="packages"
-      intro="Reserve a stable package name before generating publish tokens."
-      title={`Reserve package in @${orgSlug}`}
+      intro="Reserve a stable skill name before generating publish tokens."
+      title={`Reserve skill in @${orgSlug}`}
     >
       {() => (
         <form
@@ -2279,17 +2279,17 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
             }
           }}
         >
-          <label htmlFor="package-name">Package name</label>
+          <label htmlFor="package-name">Skill name</label>
           <input
             id="package-name"
             onChange={(event) => setName(event.target.value)}
             placeholder="sentry-desktop-issue-summariser"
             value={name}
           />
-          <p className={dash.fieldHelp}>Use a short name, or paste the full package name such as @{orgSlug}/review-helper.</p>
+          <p className={dash.fieldHelp}>Use a short name, or paste the full skill name such as @{orgSlug}/review-helper.</p>
           {error ? <p className={shell.notice}>{error}</p> : null}
-          <button type="submit">Reserve package</button>
-          <p className={dash.fieldHelp}>After reserving, the package page will show CLI commands and token generation.</p>
+          <button type="submit">Reserve skill</button>
+          <p className={dash.fieldHelp}>After reserving, the skill page will show CLI commands and token generation.</p>
         </form>
       )}
     </DashboardShell>
@@ -2385,7 +2385,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   const publishCommandSteps = useMemo(
     () => [
       {
-        title: "Initialize this package",
+        title: "Initialize this skill",
         description: (
           <>
             <code>--template</code> chooses the starter SKILL.md layout.{" "}
@@ -2397,7 +2397,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
         code: `aipm publish init --name ${packageName} --template code-review`,
       },
       {
-        title: "Enter the package folder",
+        title: "Enter the skill folder",
         code: `cd ${packageFolderName(packageName)}`,
       },
       {
@@ -2461,7 +2461,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
               ) : packageDetailError ? (
                 <p className={shell.notice}>{packageDetailError}</p>
               ) : (
-                <p className={shell.muted}>Loading package details...</p>
+                <p className={shell.muted}>Loading skill details...</p>
               )}
             </section>
           ) : null}
@@ -2474,7 +2474,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                   <h2>Publish Skill in 3 Steps</h2>
                 </div>
               </div>
-              <p className={shell.muted}>Copy this flow when preparing and publishing this package from your terminal.</p>
+              <p className={shell.muted}>Copy this flow when preparing and publishing this skill from your terminal.</p>
               <DashboardCommandSteps steps={publishCommandSteps} />
             </article>
           ) : null}
@@ -2484,7 +2484,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                 <p className={shell.eyebrow}>Token</p>
                 <h2>Generate publish token</h2>
                 <p className={shell.muted}>
-                  Tokens are shown once, scoped to this package, and expire after 5 minutes. Members need package maintainer access.
+                  Tokens are shown once, scoped to this skill, and expire after 5 minutes. Members need skill maintainer access.
                 </p>
               </div>
               {error ? <p className={shell.notice}>{error}</p> : null}
@@ -2493,7 +2493,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                   <p>This token expires at {new Date(token.expiresAt).toLocaleString()}.</p>
                   <CodeBlock code={token.token} />
                   <h3>Ready-to-run push command</h3>
-                  <p>Run this inside the package folder after staging and validating files.</p>
+                  <p>Run this inside the skill folder after staging and validating files.</p>
                   <CodeBlock code={tokenPushCommand} />
                 </section>
               ) : null}
@@ -2522,7 +2522,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
             <div className={shell.sectionHeading}>
               <div>
                 <p className={shell.eyebrow}>Access</p>
-                <h2>Package maintainers</h2>
+                <h2>Skill maintainers</h2>
               </div>
             </div>
             {memberStatus ? <p className={shell.notice}>{memberStatus}</p> : null}
@@ -2559,7 +2559,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                 ))}
               </div>
             ) : (
-              <div className={shell.empty}>No package maintainers yet.</div>
+              <div className={shell.empty}>No skill maintainers yet.</div>
             )}
             {canManageMembers ? (
               <form
@@ -2593,7 +2593,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
           <article className={cn(dash.dashboardPanel, dash.versionsPanel)}>
             <div className={shell.sectionHeading}>
               <div>
-                <p className={shell.eyebrow}>{visibility === "private" ? "Private package" : "Public registry"}</p>
+                <p className={shell.eyebrow}>{visibility === "private" ? "Private skill" : "Public registry"}</p>
                 <h2>Published versions</h2>
                 <p className={shell.muted}>
                   {visibility === "private"
@@ -2655,7 +2655,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
           {visibility === "private" ? (
             <article className={dash.dashboardPanel}>
               <p className={shell.eyebrow}>Private install</p>
-              <h2>Install this package</h2>
+              <h2>Install this skill</h2>
               <p className={shell.muted}>
                 Org members should sign in once from the CLI. AIPM stores a local session, so they
                 do not need to paste a token for every private install.
@@ -2670,7 +2670,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
             </article>
           ) : null}
           <article className={cn(dash.dashboardPanel, dash.dangerPanel)}>
-            <p className={shell.eyebrow}>{canManageMembers ? "Package lifecycle" : "Package settings"}</p>
+            <p className={shell.eyebrow}>{canManageMembers ? "Skill lifecycle" : "Skill settings"}</p>
             <div className={dash.dangerActions}>
               <section className={dash.dangerAction}>
                 <h2>Visibility and lifecycle</h2>
@@ -2682,7 +2682,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                       value={visibility}
                       onChange={async (event) => {
                         const next = event.target.value as "public" | "private";
-                        if (next === "public" && visibility === "private" && !window.confirm("Make this package public?")) return;
+                        if (next === "public" && visibility === "private" && !window.confirm("Make this skill public?")) return;
                         setPackageStatus("");
                         try {
                           await api<{ visibility: "public" | "private" }>(`/v1/packages/${encodeURIComponent(packageName)}`, {
@@ -2705,7 +2705,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                     </p>
                   </div>
                 ) : (
-                  <p className={shell.muted}>{visibility === "private" ? "Private package" : "Public package"}</p>
+                  <p className={shell.muted}>{visibility === "private" ? "Private skill" : "Public skill"}</p>
                 )}
               </section>
               {canManageMembers ? (
@@ -2714,7 +2714,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                     <h2>Deprecate skill</h2>
                     <p className={shell.muted}>
                       Over time, AI may handle the workflows this skill encodes on its own. Deprecate
-                      when the package is no longer needed, and leave a note for teams still using it.
+                      when the skill is no longer needed, and leave a note for teams still using it.
                     </p>
                   {deprecatedAt ? (
                     <>
@@ -2761,7 +2761,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                         value={deprecationMessage}
                         onChange={(e) => setDeprecationMessage(e.target.value)}
                       />
-                      <button type="submit">Deprecate package</button>
+                      <button type="submit">Deprecate skill</button>
                     </form>
                   )}
                 </section>
@@ -2873,7 +2873,7 @@ function SettingsContent({ org }: { org: Org }) {
         <label htmlFor="settings-avatar">Avatar URL</label>
         <input id="settings-avatar" value={avatarUrl} disabled={!manageOrg} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://..." />
         <p className={shell.eyebrow}>Defaults</p>
-        <label htmlFor="settings-default-visibility">Default package visibility</label>
+        <label htmlFor="settings-default-visibility">Default skill visibility</label>
         <select id="settings-default-visibility" value={defaultPackageVisibility} disabled={!manageOrg} onChange={(e) => setDefaultPackageVisibility(e.target.value as "public" | "private")}>
           <option value="public">Public</option>
           <option value="private">Private</option>
@@ -2895,7 +2895,7 @@ function SettingsContent({ org }: { org: Org }) {
           <p className={shell.eyebrow}>Danger zone</p>
           <section className={dash.dangerAction}>
             <h2>Delete organization</h2>
-            <p className={shell.muted}>Soft-deletes @{org.slug}. Slug stays reserved for 30 days. Blocked if any package has published versions.</p>
+            <p className={shell.muted}>Soft-deletes @{org.slug}. Slug stays reserved for 30 days. Blocked if any skill has published versions.</p>
             <label htmlFor="delete-org-slug">Type @{org.slug} to confirm</label>
             <input id="delete-org-slug" value={deleteSlug} onChange={(e) => setDeleteSlug(e.target.value)} placeholder={`@${org.slug}`} />
             <button
@@ -2937,7 +2937,7 @@ export function ProfileSettings() {
   return (
     <DashboardShell
       active="profile"
-      intro="Control how your publisher identity appears across the dashboard and future package pages."
+      intro="Control how your publisher identity appears across the dashboard and future skill pages."
       title="Profile settings"
     >
       {({ me }) => (
@@ -2951,7 +2951,7 @@ export function ProfileSettings() {
             ) : me.githubLogin ? (
               <span>GitHub @{me.githubLogin}</span>
             ) : null}
-            <p>Public packages should feel accountable. Use a recognizable name and image for your publisher profile.</p>
+            <p>Public skills should feel accountable. Use a recognizable name and image for your publisher profile.</p>
           </article>
           <form
             className={cn(dash.dashboardPanel, dash.formPanel)}

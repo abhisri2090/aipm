@@ -247,7 +247,7 @@ export function GithubImportPanel({
       <h2>Import skill from GitHub</h2>
       <p className={shell.muted}>
         Paste a public GitHub repo or folder you own (or admin). One skill per URL. Skill files stay as-is; you review
-        the package details before publishing under @{org.slug}.
+        the skill details before publishing under @{org.slug}.
       </p>
 
       {!githubLogin ? (
@@ -310,7 +310,7 @@ export function GithubImportPanel({
                 Entry file: <code>{preview.entry}</code> (from GitHub; not editable). Commit{" "}
                 <code>{preview.commitSha.slice(0, 7)}</code>.
               </p>
-              <label htmlFor="github-import-name">Package name</label>
+              <label htmlFor="github-import-name">Skill name</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span>@{org.slug}/</span>
                 <input

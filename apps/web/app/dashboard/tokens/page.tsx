@@ -3,7 +3,7 @@ import { noIndexPageMetadata } from "../../../lib/seo";
 
 export const metadata = noIndexPageMetadata({
   title: "Publish Tokens",
-  description: "Generate short-lived AIPM package publish tokens.",
+  description: "Generate short-lived AIPM skill publish tokens.",
   path: "/dashboard/tokens",
 });
 
