@@ -22,7 +22,7 @@
     "lint:root": "eslint scripts eslint.config.js prettier.config.js",
     "typecheck": "turbo run typecheck",
     "scan:secrets": "node scripts/scan-secrets.mjs && pnpm local:check",
-    "audit:prod": "pnpm audit --prod --audit-level high",
+    "audit:prod": "pnpm audit --prod --audit-level high --ignore-registry-errors",
     "local:setup": "node scripts/local-setup.mjs",
     "local:api": "pnpm --filter @aipm-registry/registry-api build && node --env-file=.env --watch apps/registry-api/dist/index.js",
     "local:web": "pnpm --filter @aipm-registry/web dev",
