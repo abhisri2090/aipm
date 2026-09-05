@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../lib/api-client";
 import { publicApiError } from "../lib/public-api-error";
 import { shell, cards, cn } from "../lib/page-styles";
@@ -22,10 +22,7 @@ function loginPath(): string {
 }
 
 export function CliLoginPanel() {
-  const params = useMemo(() => {
-    if (typeof window === "undefined") return new URLSearchParams();
-    return new URLSearchParams(window.location.search);
-  }, []);
+  const [params, setParams] = useState(() => new URLSearchParams());
   const redirectUri = params.get("redirect_uri") ?? "";
   const state = params.get("state") ?? "";
   const codeChallenge = params.get("code_challenge") ?? "";
@@ -34,6 +31,10 @@ export function CliLoginPanel() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setParams(new URLSearchParams(window.location.search));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
