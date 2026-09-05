@@ -43,6 +43,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: repoRoot,
+  transpilePackages: ["@aipm-registry/schemas"],
   poweredByHeader: false,
   trailingSlash: false,
   async headers() {

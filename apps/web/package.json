@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
+    "prebuild": "pnpm --filter @aipm-registry/schemas build",
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
