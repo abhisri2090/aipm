@@ -237,6 +237,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
     const lock: Lockfile = (await readLockfile(configRoot)) ?? {
       schemaVersion: "0.1",
       packages: {},
+      prompts: {},
     };
 
     const installed: LockfilePackageEntry["installed"] = {};

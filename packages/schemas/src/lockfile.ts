@@ -6,6 +6,17 @@ const scopedPackageKey = z.string().regex(SCOPE_NAME_REGEX);
 
 const InstalledPathsSchema = z.record(AiToolSchema, z.array(z.string()));
 
+export const LockfilePromptEntrySchema = z.object({
+  id: z.string().min(1),
+  url: z.string().url(),
+  publisher: z.string().min(1),
+  slug: z.string().min(1),
+  contentHash: z.string().min(1),
+  updatedAt: z.string().min(1),
+  installedPath: z.string().min(1),
+});
+export type LockfilePromptEntry = z.infer<typeof LockfilePromptEntrySchema>;
+
 export const LockfilePackageEntrySchema = z.object({
   version: z.string(),
   integrity: z.string(),
@@ -31,6 +42,7 @@ export const LockfilePackageEntrySchema = z.object({
 export const LockfileSchema = z.object({
   schemaVersion: z.literal("0.1"),
   packages: z.record(scopedPackageKey, LockfilePackageEntrySchema),
+  prompts: z.record(z.string().min(1), LockfilePromptEntrySchema).default({}),
 });
 
 export type Lockfile = z.infer<typeof LockfileSchema>;

@@ -267,3 +267,111 @@ export async function recordPackageInstall(
   }
   return res.json() as Promise<{ installCount: number }>;
 }
+
+export type RegistryPromptVariable = {
+  name: string;
+  description: string;
+  example: string;
+  required: boolean;
+};
+
+export type RegistryPromptDetail = {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  category: string;
+  tags: string[];
+  inputTypes: string[];
+  outputTypes: string[];
+  effort: string;
+  language: string;
+  promptText: string;
+  variables: RegistryPromptVariable[];
+  exampleInput: string | null;
+  exampleOutput: string | null;
+  usageNotes: string | null;
+  license: string;
+  sourceUrl: string | null;
+  updatedAt: string;
+  path: string;
+  publisher: {
+    scope: string;
+    kind: "individual" | "organization";
+    org: { slug: string; name: string } | null;
+    user: { username: string; name: string | null };
+  };
+};
+
+export async function fetchPromptDetail(
+  registry: string,
+  publisher: string,
+  slug: string,
+): Promise<RegistryPromptDetail> {
+  const base = registry.replace(/\/$/, "");
+  const url = `${base}/v1/prompts/${encodeURIComponent(publisher)}/${encodeURIComponent(slug)}`;
+  const res = await registryFetch(url, base);
+  if (!res.ok) throw new Error(`Prompt not found: @${publisher}/${slug} (${res.status})`);
+  return res.json() as Promise<RegistryPromptDetail>;
+}
+
+export async function recordPromptCopy(
+  registry: string,
+  publisher: string,
+  slug: string,
+): Promise<void> {
+  const base = registry.replace(/\/$/, "");
+  const url = `${base}/v1/prompts/${encodeURIComponent(publisher)}/${encodeURIComponent(slug)}/copy`;
+  const res = await registryFetch(url, base, { method: "POST" });
+  if (!res.ok) throw new Error(`Prompt copy recording failed: ${res.status}`);
+}
+
+export type PromptPublishInput = {
+  slug: string;
+  title: string;
+  summary: string;
+  promptText: string;
+  category: string;
+  tags: string[];
+  inputTypes: string[];
+  outputTypes: string[];
+  testedModels?: string[];
+  effort: "quick" | "guided" | "advanced";
+  variables?: RegistryPromptVariable[];
+  exampleInput?: string;
+  exampleOutput?: string;
+  usageNotes?: string;
+  language: string;
+  license: string;
+  sourceUrl?: string;
+  sampleImageAlt?: string;
+  orgSlug?: string;
+};
+
+export async function publishPrompt(
+  registry: string,
+  input: PromptPublishInput,
+  accessToken: string,
+  sampleImage?: { data: Buffer; filename: string; contentType: string },
+): Promise<RegistryPromptDetail> {
+  const base = registry.replace(/\/$/, "");
+  const form = new FormData();
+  form.append("data", JSON.stringify(input));
+  if (sampleImage) {
+    form.append(
+      "sampleImage",
+      new Blob([sampleImage.data], { type: sampleImage.contentType }),
+      sampleImage.filename,
+    );
+  }
+  const res = await registryFetch(`${base}/v1/prompts`, base, {
+    method: "POST",
+    headers: registryAuthHeaders(accessToken),
+    body: form,
+  });
+  if (!res.ok) {
+    const error = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(error.error ?? `Prompt publish failed: ${res.status}`);
+  }
+  return res.json() as Promise<RegistryPromptDetail>;
+}

@@ -9,12 +9,13 @@
 
 AI coding tools like Cursor and Claude can follow **skills**: small instruction files that teach the assistant how to do a job (code review, release notes, issue summaries, and more).
 
-AIPM makes skills easy to **find, install, and share** — like npm, but for AI skills.
+AIPM makes skills and reusable prompts easy to **find, install, track, and share**.
 
 This package gives you the `aipm` command. With it you can:
 
 - **Browse and install** skills from the public registry at **[aipm-registry.com](https://www.aipm-registry.com)**
 - **Add skills to your project** so your whole team uses the same instructions
+- **Track prompts** as readable Markdown snapshots alongside your project
 - **Publish your own skills** so others can install them
 
 No other AIPM packages are required — everything is bundled in one install.
@@ -80,6 +81,44 @@ Update installed skills:
 
 ```bash
 aipm update
+```
+
+## Track prompts in your project
+
+Add a prompt directly from its AIPM page:
+
+```bash
+aipm add https://www.aipm-registry.com/prompts/aipm/brain-dump-to-action-plan
+```
+
+AIPM stores the snapshot at `.aipm/prompts/aipm--brain-dump-to-action-plan.md`
+and tracks its canonical page URL in `aipm.package.json`:
+
+```json
+{
+  "prompts": {
+    "brain-dump-to-action-plan": "https://www.aipm-registry.com/prompts/aipm/brain-dump-to-action-plan"
+  }
+}
+```
+
+The same lifecycle commands work for prompts:
+
+```bash
+aipm show https://www.aipm-registry.com/prompts/aipm/brain-dump-to-action-plan
+aipm update https://www.aipm-registry.com/prompts/aipm/brain-dump-to-action-plan
+aipm remove https://www.aipm-registry.com/prompts/aipm/brain-dump-to-action-plan
+aipm install # restore all tracked skill and prompt files
+```
+
+`aipm update` only rewrites a prompt snapshot when its published content changed. List
+prompts with `aipm list -p` or `aipm list -prompt`; list skills with `aipm list -s` or
+`aipm list -skill`.
+
+Signed-in publishers can publish one prompt or a JSON batch through the API-backed CLI:
+
+```bash
+aipm prompt publish prompts.json --yes
 ```
 
 Browse more packages on the website: **[aipm-registry.com](https://www.aipm-registry.com)**

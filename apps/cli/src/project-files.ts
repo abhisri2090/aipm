@@ -6,6 +6,7 @@ import {
   type AiTool,
   type Lockfile,
   type LockfilePackageEntry,
+  type LockfilePromptEntry,
   type ProjectPackageJson,
 } from "@aipm-registry/schemas";
 
@@ -57,6 +58,17 @@ export function upsertLockEntry(
   return {
     ...lock,
     packages: { ...lock.packages, [name]: entry },
+  };
+}
+
+export function upsertPromptLockEntry(
+  lock: Lockfile,
+  name: string,
+  entry: LockfilePromptEntry,
+): Lockfile {
+  return {
+    ...lock,
+    prompts: { ...lock.prompts, [name]: entry },
   };
 }
 

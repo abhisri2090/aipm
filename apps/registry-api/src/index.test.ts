@@ -610,6 +610,14 @@ describe("CLI auth flow", () => {
     expect(me.statusCode).toBe(200);
     expect(me.json().user).toMatchObject({ githubLogin: "dev-local" });
 
+    const accountMe = await app.inject({
+      method: "GET",
+      url: "/v1/me",
+      headers: { authorization: `Bearer ${token.json().accessToken}` },
+    });
+    expect(accountMe.statusCode).toBe(200);
+    expect(accountMe.json()).toMatchObject({ githubLogin: "dev-local" });
+
     const refresh = await app.inject({
       method: "POST",
       url: "/v1/cli-auth/refresh",

@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { execFile } from "node:child_process";
 import { createServer } from "node:http";
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { basename, join, resolve, sep } from "node:path";
+import { basename, dirname, extname, join, resolve, sep } from "node:path";
 import { cwd, env } from "node:process";
 import type { AddressInfo } from "node:net";
 import {
@@ -20,9 +20,11 @@ import {
   fetchCliAuthMe,
   logoutCliAuth,
   publishPackage,
+  publishPrompt,
   recordPackageInstall,
   refreshCliAuth,
   searchPackages,
+  type PromptPublishInput,
 } from "./registry-client.js";
 import {
   authFilePath,
@@ -58,6 +60,13 @@ import {
   writeProjectPackageJson,
 } from "./project-files.js";
 import { promptForConfirmation, promptForTool } from "./prompt.js";
+import {
+  installTrackedPrompt,
+  parsePromptUrl,
+  readInstalledPrompt,
+  removeTrackedPrompt,
+  resolveTrackedPrompt,
+} from "./prompt-install.js";
 import { getCliVersion } from "./version.js";
 import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
 
@@ -70,6 +79,10 @@ const DASHBOARD_URL = `${SITE_URL}/dashboard`;
 const GLOBAL_OPTION = "-g, --global";
 const GLOBAL_OPTION_DESC =
   "Use global config (~/.aipm) and install skills under your home directory";
+
+const normalizedArgv = process.argv.map((arg) =>
+  arg === "-prompt" ? "--prompt" : arg === "-skill" ? "--skill" : arg,
+);
 
 type ScopedCommandOptions = ProjectScopeOptions;
 
@@ -700,6 +713,7 @@ program
       registry,
       preferredTools: preferredTools.length ? preferredTools : undefined,
       packages: {},
+      prompts: {},
     });
     console.log(`Created aipm.package.json (${scopeLabel(scope)}, registry: ${registry})`);
   });
@@ -814,22 +828,36 @@ program
   });
 
 program
-  .command("add <package>")
-  .description("Add and install a package @scope/name[@version]")
+  .command("add <package-or-prompt>")
+  .description("Add a skill package or an AIPM prompt URL")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, or *")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive; fail if prompt needed")
   .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
-    const { name, version: requestedVersion } = parsePackageArg(pkgArg);
-
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     let project = await readProjectPackageJson(configRoot);
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
+
+    const promptReference = parsePromptUrl(pkgArg);
+    if (promptReference) {
+      const result = await installTrackedPrompt({
+        configRoot,
+        registry,
+        project,
+        reference: promptReference,
+        track: true,
+        recordCopy: true,
+      });
+      console.log(`Installed prompt ${result.prompt.title} → ${result.path}`);
+      return;
+    }
+
+    const { name, version: requestedVersion } = parsePackageArg(pkgArg);
     const token = await tokenForRead(registry, opts.token);
     const version = requestedVersion ?? project.packages[name] ?? (await latestVersionForPackage(registry, name, token));
     if (!version) throw new Error("Specify version: aipm add @scope/pkg@1.0.0");
@@ -929,6 +957,42 @@ program
         token,
       });
     }
+
+    for (const [alias, url] of Object.entries(project.prompts)) {
+      const reference = parsePromptUrl(url);
+      if (!reference) throw new Error(`Invalid tracked prompt URL for ${alias}: ${url}`);
+      const result = await installTrackedPrompt({
+        configRoot,
+        registry,
+        project,
+        reference: { ...reference, alias },
+        track: false,
+      });
+      console.log(`Restored prompt ${result.prompt.title} → ${result.path}`);
+    }
+  });
+
+program
+  .command("show <package-or-prompt>")
+  .description("Show an installed prompt snapshot or tracked skill details")
+  .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
+  .action(async (value: string, opts: { global?: boolean }) => {
+    const configRoot = resolveConfigRoot({ global: opts.global });
+    const project = await readProjectPackageJson(configRoot);
+    if (!project) throw new Error(initRequiredMessage({ global: opts.global }));
+    const reference = resolveTrackedPrompt(project, value);
+    if (reference && project.prompts[reference.alias] === reference.url) {
+      const lock = await readLockfile(configRoot);
+      const entry = lock?.prompts[reference.alias];
+      if (!entry) throw new Error(`Prompt is not installed: ${reference.url}. Run aipm install.`);
+      console.log(await readInstalledPrompt(configRoot, entry));
+      return;
+    }
+    const { name } = parsePackageArg(value);
+    const lock = await readLockfile(configRoot);
+    const entry = lock?.packages[name];
+    if (!entry) throw new Error(`Package is not installed: ${name}`);
+    console.log(`${name}@${entry.version} [${entry.resolvedTools.join(", ")}]`);
   });
 
 program
@@ -937,6 +1001,60 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .action(async (pkgArg: string, opts: { global?: boolean }) => {
     await showInstalledPrompt(resolveConfigRoot({ global: opts.global }), pkgArg);
+  });
+
+type PromptPublishFileItem = PromptPublishInput & { sampleImagePath?: string };
+
+function promptImageContentType(path: string): string {
+  const extension = extname(path).toLowerCase();
+  if (extension === ".png") return "image/png";
+  if (extension === ".jpg" || extension === ".jpeg") return "image/jpeg";
+  if (extension === ".webp") return "image/webp";
+  throw new Error(`Unsupported prompt sample image: ${path}`);
+}
+
+const promptCommand = program
+  .command("prompt")
+  .description("Publish prompt listings from structured JSON");
+
+promptCommand
+  .command("publish <file>")
+  .description("Publish one prompt or a batch of prompts from JSON")
+  .option("--registry <url>", "Registry API base URL")
+  .option("--yes", "Confirm public publishing without an extra reminder")
+  .action(async (file: string, opts: { registry?: string; yes?: boolean }) => {
+    const registry = registryFromEnvOrDefault(opts.registry);
+    const accessToken = await authTokenForRegistry(registry, { throwOnFailure: true });
+    if (!accessToken) throw new Error("Run aipm login before publishing prompts.");
+    const absoluteFile = resolve(file);
+    const parsed = JSON.parse(await readFile(absoluteFile, "utf8")) as
+      | PromptPublishFileItem
+      | PromptPublishFileItem[]
+      | { prompts: PromptPublishFileItem[] };
+    const rows = Array.isArray(parsed)
+      ? parsed
+      : "prompts" in parsed
+        ? parsed.prompts
+        : [parsed];
+    if (rows.length === 0) throw new Error("Prompt publish file contains no prompts.");
+    if (!opts.yes) {
+      console.log(`Reminder: this will publish ${rows.length} public prompt${rows.length === 1 ? "" : "s"}.`);
+      console.log("Use --yes to skip this reminder in automation.");
+    }
+    for (const row of rows) {
+      const { sampleImagePath, ...input } = row;
+      let sampleImage: { data: Buffer; filename: string; contentType: string } | undefined;
+      if (sampleImagePath) {
+        const imagePath = resolve(dirname(absoluteFile), sampleImagePath);
+        sampleImage = {
+          data: await readFile(imagePath),
+          filename: basename(imagePath),
+          contentType: promptImageContentType(imagePath),
+        };
+      }
+      const saved = await publishPrompt(registry, input, accessToken, sampleImage);
+      console.log(`Published ${saved.title} → ${SITE_URL}${saved.path}`);
+    }
   });
 
 program
@@ -1227,31 +1345,50 @@ publish
 
 program
   .command("list")
-  .description("List packages from aipm-lock.json")
+  .description("List installed skills and prompts from aipm-lock.json")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
-  .action(async (opts: { global?: boolean }) => {
+  .option("-p, --prompt", "List prompts only")
+  .option("-s, --skill", "List skills only")
+  .action(async (opts: { global?: boolean; prompt?: boolean; skill?: boolean }) => {
     const configRoot = resolveConfigRoot({ global: opts.global });
     const lock = await readLockfile(configRoot);
-    if (!lock || Object.keys(lock.packages).length === 0) {
-      console.log("No packages installed.");
+    const showSkills = !opts.prompt || Boolean(opts.skill);
+    const showPrompts = !opts.skill || Boolean(opts.prompt);
+    const skillRows = lock ? Object.entries(lock.packages) : [];
+    const promptRows = lock ? Object.entries(lock.prompts) : [];
+    if ((!showSkills || skillRows.length === 0) && (!showPrompts || promptRows.length === 0)) {
+      console.log(opts.prompt && !opts.skill ? "No prompts installed." : opts.skill && !opts.prompt ? "No skills installed." : "No skills or prompts installed.");
       return;
     }
-    for (const [name, entry] of Object.entries(lock.packages)) {
-      console.log(`${name}@${entry.version} [${entry.resolvedTools.join(", ")}]`);
+    if (showSkills) {
+      for (const [name, entry] of skillRows) {
+        console.log(`skill  ${name}@${entry.version} [${entry.resolvedTools.join(", ")}]`);
+      }
+    }
+    if (showPrompts) {
+      for (const [name, entry] of promptRows) {
+        console.log(`prompt  ${name}  ${entry.url}  ${entry.installedPath}`);
+      }
     }
   });
 
 program
-  .command("remove <package>")
+  .command("remove <package-or-prompt>")
   .alias("rm")
-  .description("Remove a package from aipm.package.json and aipm-lock.json")
+  .description("Remove a tracked skill or prompt and its installed files")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .action(async (pkgArg: string, opts: { global?: boolean }) => {
-    const { name } = parsePackageArg(pkgArg);
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const project = await readProjectPackageJson(configRoot);
     if (!project) throw new Error(initRequiredMessage(scope));
+    const promptReference = resolveTrackedPrompt(project, pkgArg);
+    if (promptReference && project.prompts[promptReference.alias] === promptReference.url) {
+      await removeTrackedPrompt({ configRoot, project, reference: promptReference });
+      console.log(`Removed prompt ${promptReference.url} and its local snapshot.`);
+      return;
+    }
+    const { name } = parsePackageArg(pkgArg);
     const packages = { ...project.packages };
     delete packages[name];
     await writeProjectPackageJson(configRoot, { ...project, packages });
@@ -1281,12 +1418,25 @@ program
     let project = await readProjectPackageJson(configRoot);
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
-    const token = await tokenForRead(registry, opts.token);
-    const names = pkgArg ? [parsePackageArg(pkgArg).name] : Object.keys(project.packages);
-    if (names.length === 0) {
-      console.log("No packages configured.");
+    const requestedPrompt = pkgArg ? resolveTrackedPrompt(project, pkgArg) : null;
+    if (requestedPrompt) {
+      if (project.prompts[requestedPrompt.alias] !== requestedPrompt.url) {
+        throw new Error(`Prompt is not tracked: ${requestedPrompt.url}`);
+      }
+      const result = await installTrackedPrompt({
+        configRoot,
+        registry,
+        project,
+        reference: requestedPrompt,
+        track: false,
+        updateOnly: true,
+      });
+      console.log(result.changed ? `Updated prompt ${result.prompt.title} → ${result.path}` : `Prompt unchanged: ${result.prompt.title}`);
       return;
     }
+
+    const token = await tokenForRead(registry, opts.token);
+    const names = pkgArg ? [parsePackageArg(pkgArg).name] : Object.keys(project.packages);
 
     for (const name of names) {
       const version = await latestVersionForPackage(registry, name, token);
@@ -1307,6 +1457,25 @@ program
         token,
       });
     }
+
+    if (!pkgArg) {
+      for (const [alias, url] of Object.entries(project.prompts)) {
+        const reference = parsePromptUrl(url);
+        if (!reference) throw new Error(`Invalid tracked prompt URL for ${alias}: ${url}`);
+        const result = await installTrackedPrompt({
+          configRoot,
+          registry,
+          project,
+          reference: { ...reference, alias },
+          track: false,
+          updateOnly: true,
+        });
+        console.log(result.changed ? `Updated prompt ${result.prompt.title} → ${result.path}` : `Prompt unchanged: ${result.prompt.title}`);
+      }
+    }
+    if (names.length === 0 && Object.keys(project.prompts).length === 0) {
+      console.log("No skills or prompts configured.");
+    }
   });
 
 program
@@ -1318,7 +1487,7 @@ program
   .option("--publish", "Only show publish-readiness checks")
   .action((opts: { global?: boolean; registry?: string; json?: boolean; publish?: boolean }) => runDoctor(opts));
 
-program.parseAsync(process.argv).catch((err: Error) => {
+program.parseAsync(normalizedArgv).catch((err: Error) => {
   console.error(err.message);
   const message = err.message.toLowerCase();
   if (message.includes("token") || message.includes("unauthorized") || message.includes("forbidden")) {

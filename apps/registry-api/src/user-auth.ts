@@ -5,6 +5,8 @@ import {
   createPublishToken,
   createSession,
   deleteSession,
+  getActiveCliAccessTokenByHash,
+  getUserById,
   getUserByPrimaryEmail,
   getUserBySession,
   getValidPublishToken,
@@ -159,10 +161,17 @@ export function parseOauthState(state: string): { intent: OauthIntent; nonce: st
 
 export async function getCurrentUser(auth: AccountAuth, request: FastifyRequest): Promise<UserRow | null> {
   const sessionId = parseRequestCookies(request)[SESSION_COOKIE];
-  if (!sessionId) return null;
-  const user = await getUserBySession(auth.pool, sessionId);
-  if (!user) return null;
-  return ensureUserUsername(auth.pool, user);
+  if (sessionId) {
+    const user = await getUserBySession(auth.pool, sessionId);
+    if (user) return ensureUserUsername(auth.pool, user);
+  }
+
+  const token = readBearerToken(request);
+  if (!token?.startsWith("aipm_cli_access_")) return null;
+  const access = await getActiveCliAccessTokenByHash(auth.pool, sha256Hex(token));
+  if (!access) return null;
+  const user = await getUserById(auth.pool, access.user_id);
+  return user ? ensureUserUsername(auth.pool, user) : null;
 }
 
 export async function requireCurrentUser(
