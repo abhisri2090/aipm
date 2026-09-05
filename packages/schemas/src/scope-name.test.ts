@@ -27,6 +27,7 @@ describe("scope name", () => {
     );
     expect(normalizePackageSearchQuery("  @acme/skill@2.1.0-beta  ")).toBe("@acme/skill");
     expect(normalizePackageSearchQuery("@team/react-reviewer")).toBe("@team/react-reviewer");
+    expect(normalizePackageSearchQuery("@Team/React-Reviewer")).toBe("@team/react-reviewer");
     expect(normalizePackageSearchQuery("prod-flow")).toBe("prod-flow");
   });
 });

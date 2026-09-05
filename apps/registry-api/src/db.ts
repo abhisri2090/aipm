@@ -1,5 +1,5 @@
 import pg from "pg";
-import { normalizePackageSearchQuery, type PackageManifest } from "@aipm-registry/schemas";
+import { isValidScopeName, normalizePackageSearchQuery, type PackageManifest } from "@aipm-registry/schemas";
 import { nextUsernameCandidate, normalizeUsernameCandidate } from "./aipm-username.js";
 
 const { Pool } = pg;
@@ -1696,24 +1696,12 @@ export async function listAdminPackages(
   limit = 50,
 ): Promise<AdminPackageSummary[]> {
   const normalizedQuery = normalizePackageSearchQuery(query);
-  const boundedLimit = Math.min(Math.max(limit, 1), 100);
-  const values: Array<string | number> = [];
-  let filter = "";
-
-  if (normalizedQuery) {
-    values.push(`%${normalizedQuery}%`);
-    filter = `
-      AND (
-        latest.name ILIKE $1
-        OR latest.version ILIKE $1
-        OR latest.description ILIKE $1
-      )
-    `;
+  // Admin delete must target one package: require exact @scope/name (no fuzzy browse).
+  if (!isValidScopeName(normalizedQuery)) {
+    return [];
   }
 
-  values.push(boundedLimit);
-  const limitParam = `$${values.length}`;
-
+  const boundedLimit = Math.min(Math.max(limit, 1), 100);
   const result = await pool.query<{
     name: string;
     version: string;
@@ -1730,12 +1718,14 @@ export async function listAdminPackages(
          pv.created_at
        FROM package_versions pv
        WHERE pv.yanked_at IS NULL
+         AND pv.name = $1
        ORDER BY pv.name, pv.created_at DESC
      ),
      version_counts AS (
        SELECT name, COUNT(*)::int AS version_count
        FROM package_versions
        WHERE yanked_at IS NULL
+         AND name = $1
        GROUP BY name
      )
      SELECT latest.name,
@@ -1749,10 +1739,9 @@ export async function listAdminPackages(
      LEFT JOIN package_reservations ON package_reservations.name = latest.name
      LEFT JOIN orgs ON orgs.id = package_reservations.org_id
      WHERE orgs.deleted_at IS NULL OR orgs.id IS NULL
-     ${filter}
      ORDER BY latest.created_at DESC
-     LIMIT ${limitParam}`,
-    values,
+     LIMIT $2`,
+    [normalizedQuery, boundedLimit],
   );
 
   return result.rows.map((row) => ({

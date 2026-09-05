@@ -12,9 +12,9 @@ export function isValidScopeName(name: string): boolean {
 
 /** Normalize admin/registry search input; strips trailing @version when present. */
 export function normalizePackageSearchQuery(query: string): string {
-  const trimmed = query.trim();
+  const trimmed = query.trim().toLowerCase();
   const withVersion = trimmed.match(PACKAGE_NAME_WITH_VERSION_REGEX);
-  if (withVersion?.[1]) return withVersion[1].toLowerCase();
+  if (withVersion?.[1]) return withVersion[1];
   return trimmed;
 }
 

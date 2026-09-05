@@ -157,11 +157,21 @@ describe.skipIf(!databaseUrl)("admin package management", () => {
 
     const list = await app!.inject({
       method: "GET",
-      url: `/v1/admin/packages?q=${encodeURIComponent(org.slug)}`,
+      url: `/v1/admin/packages?q=${encodeURIComponent(packageName)}`,
       headers: { cookie: authCookies },
     });
     expect(list.statusCode).toBe(200);
-    expect(list.json().packages.some((pkg: { name: string }) => pkg.name === packageName)).toBe(true);
+    expect(list.json().packages).toEqual([
+      expect.objectContaining({ name: packageName }),
+    ]);
+
+    const fuzzy = await app!.inject({
+      method: "GET",
+      url: `/v1/admin/packages?q=${encodeURIComponent(org.slug)}`,
+      headers: { cookie: authCookies },
+    });
+    expect(fuzzy.statusCode).toBe(200);
+    expect(fuzzy.json().packages).toEqual([]);
 
     const deleted = await app!.inject({
       method: "DELETE",

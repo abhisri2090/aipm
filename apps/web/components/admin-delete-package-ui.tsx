@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useState } from "react";
-import { normalizePackageSearchQuery } from "@aipm-registry/schemas";
+import { isValidScopeName, normalizePackageSearchQuery } from "@aipm-registry/schemas";
 import { api } from "../lib/api-client";
 import { publicApiError } from "../lib/public-api-error";
 import { cn, dash, shell } from "../lib/page-styles";
@@ -55,8 +55,8 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
   async function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalized = normalizePackageSearchQuery(query);
-    if (!normalized) {
-      setError("Enter a package name to search (for example @scope/name).");
+    if (!isValidScopeName(normalized)) {
+      setError("Enter the exact package name (for example @scope/name).");
       setPackages([]);
       setHasSearched(false);
       setActiveQuery("");
@@ -92,11 +92,11 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
       <h2>Delete package</h2>
       <p className={shell.muted}>
         Permanently remove any package from the registry, including all versions, blobs, and the
-        reserved name.
+        reserved name. Search by the exact package name only.
       </p>
 
       <form className={dash.formPanel} onSubmit={(event) => void onSearch(event)}>
-        <label htmlFor="admin-package-search">Search packages</label>
+        <label htmlFor="admin-package-search">Package name</label>
         <input
           id="admin-package-search"
           name="q"
@@ -107,7 +107,7 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
         />
         <div className={shell.actions}>
           <button className={shell.button} disabled={loading} type="submit">
-            {loading ? "Searching…" : "Search"}
+            {loading ? "Searching…" : "Find package"}
           </button>
         </div>
       </form>
@@ -142,7 +142,7 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
           ))}
         </ul>
       ) : hasSearched && !loading ? (
-        <p className={shell.muted}>No packages match this search.</p>
+        <p className={shell.muted}>No package found with that exact name.</p>
       ) : null}
 
       {selectedName ? (
