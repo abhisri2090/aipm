@@ -7,13 +7,13 @@ export async function promptForTool(): Promise<AiTool> {
   try {
     while (true) {
       const answer = await rl.question(
-        "Which AI tool should this skill be installed for? (cursor/claude): ",
+        "Which AI tool should this skill be installed for? (cursor/claude/codex): ",
       );
       const normalized = answer.trim().toLowerCase();
-      if (normalized === "cursor" || normalized === "claude") {
+      if (normalized === "cursor" || normalized === "claude" || normalized === "codex") {
         return normalized;
       }
-      console.log('Please enter "cursor" or "claude".');
+      console.log('Please enter "cursor", "claude", or "codex".');
     }
   } finally {
     rl.close();

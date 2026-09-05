@@ -1,21 +1,20 @@
 {
-  "name": "@aipm-registry/engine",
+  "name": "@aipm-registry/adapter-codex",
   "version": "0.1.0",
-  "description": "Core AIPM install engine for project-ready AI skills.",
+  "description": "Codex adapter for installing AIPM skill packages.",
   "license": "Apache-2.0",
   "type": "module",
   "homepage": "https://www.aipm-registry.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/abhisri2090/aipm.git",
-    "directory": "packages/engine"
+    "directory": "packages/adapter-codex"
   },
   "bugs": {
     "url": "https://github.com/abhisri2090/aipm/issues"
   },
   "files": [
     "dist",
-    "!dist/**/*.test.*",
     "package.json"
   ],
   "engines": {
@@ -34,15 +33,12 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@aipm-registry/adapter-claude": "workspace:*",
-    "@aipm-registry/adapter-codex": "workspace:*",
-    "@aipm-registry/adapter-cursor": "workspace:*",
     "@aipm-registry/adapter-sdk": "workspace:*",
     "@aipm-registry/schemas": "workspace:*"
   },

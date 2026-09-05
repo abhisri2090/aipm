@@ -56,7 +56,7 @@ describe("CLI publish commands", () => {
     const root = await tempWorkspace();
 
     await expect(runCli(root, ["init", "--target", "vscode"])).rejects.toMatchObject({
-      stderr: expect.stringContaining('--target must be "cursor", "claude", or "*"'),
+      stderr: expect.stringContaining('--target must be "cursor", "claude", "codex", or "*"'),
     });
   });
 

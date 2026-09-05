@@ -9,10 +9,11 @@ describe("parseTargetFlag", () => {
   it("accepts concrete targets", () => {
     expect(parseTargetFlag("cursor")).toBe("cursor");
     expect(parseTargetFlag("claude")).toBe("claude");
+    expect(parseTargetFlag("codex")).toBe("codex");
   });
 
   it("rejects invalid targets", () => {
-    expect(() => parseTargetFlag("vscode")).toThrow(/cursor.*claude.*\*/);
+    expect(() => parseTargetFlag("vscode")).toThrow(/cursor.*claude.*codex.*\*/);
   });
 });
 
@@ -27,9 +28,10 @@ describe("parseTargetsFlag", () => {
 
   it("accepts concrete targets", () => {
     expect(parseTargetsFlag("cursor,claude")).toEqual(["cursor", "claude"]);
+    expect(parseTargetsFlag("cursor,claude,codex")).toEqual(["cursor", "claude", "codex"]);
   });
 
   it("rejects invalid targets", () => {
-    expect(() => parseTargetsFlag("vscode")).toThrow(/cursor.*claude.*\*/);
+    expect(() => parseTargetsFlag("vscode")).toThrow(/cursor.*claude.*codex.*\*/);
   });
 });

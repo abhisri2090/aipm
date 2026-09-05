@@ -87,8 +87,10 @@ export function resolveRegistryUrl(
 
 export function parseTargetFlag(target?: string): AiTool | undefined {
   if (!target) return undefined;
-  if (target === "cursor" || target === "claude" || target === "*") return target;
-  throw new Error('--target must be "cursor", "claude", or "*"');
+  if (target === "cursor" || target === "claude" || target === "codex" || target === "*") {
+    return target;
+  }
+  throw new Error('--target must be "cursor", "claude", "codex", or "*"');
 }
 
 export function parseTargetsFlag(value: string): AiTool[] {
@@ -98,8 +100,8 @@ export function parseTargetsFlag(value: string): AiTool[] {
     .filter(Boolean);
   if (targets.length === 0) throw new Error("At least one target is required.");
   for (const target of targets) {
-    if (target !== "cursor" && target !== "claude" && target !== "*") {
-      throw new Error('--targets must contain only "cursor", "claude", and/or "*"');
+    if (target !== "cursor" && target !== "claude" && target !== "codex" && target !== "*") {
+      throw new Error('--targets must contain only "cursor", "claude", "codex", and/or "*"');
     }
   }
   const unique = [...new Set(targets)] as AiTool[];

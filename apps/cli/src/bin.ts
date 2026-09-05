@@ -689,7 +689,7 @@ program
   .description("Create aipm.package.json in the current project or globally")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Default registry URL")
-  .option("--target <tool>", "Preferred install target: cursor, claude, or *")
+  .option("--target <tool>", "Preferred install target: cursor, claude, codex, or *")
   .action(async (opts: { registry?: string; global?: boolean; target?: string }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
@@ -832,7 +832,7 @@ program
   .description("Add a skill package or an AIPM prompt URL")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
-  .option("--target <tool>", "cursor, claude, or *")
+  .option("--target <tool>", "cursor, claude, codex, or *")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive; fail if prompt needed")
   .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
@@ -931,7 +931,7 @@ program
   .description("Install all packages from aipm.package.json")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
-  .option("--target <tool>", "cursor, claude, or *")
+  .option("--target <tool>", "cursor, claude, codex, or *")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
   .action(async (opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
@@ -1408,7 +1408,7 @@ program
   .description("Update one installed package, or all installed packages, to the latest registry version")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
-  .option("--target <tool>", "cursor, claude, or *")
+  .option("--target <tool>", "cursor, claude, codex, or *")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
   .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {

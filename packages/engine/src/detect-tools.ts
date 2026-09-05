@@ -23,6 +23,7 @@ export async function detectToolsInProject(
   const detected: ConcreteAiTool[] = [];
   if (await pathExists(join(projectRoot, ".cursor"))) detected.push("cursor");
   if (await pathExists(join(projectRoot, ".claude"))) detected.push("claude");
+  if (await pathExists(join(projectRoot, ".codex"))) detected.push("codex");
   return detected;
 }
 

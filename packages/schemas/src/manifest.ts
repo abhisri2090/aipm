@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { SCOPE_NAME_REGEX } from "./scope-name.js";
 
-export const AiToolSchema = z.enum(["cursor", "claude", "*"]);
+export const AiToolSchema = z.enum(["cursor", "claude", "codex", "*"]);
 export type AiTool = z.infer<typeof AiToolSchema>;
 
 /** Concrete tools supported by adapters (excludes wildcard "*"). */
-export const ALL_TOOLS = ["cursor", "claude"] as const satisfies ReadonlyArray<
+export const ALL_TOOLS = ["cursor", "claude", "codex"] as const satisfies ReadonlyArray<
   Exclude<AiTool, "*">
 >;
 export type ConcreteAiTool = (typeof ALL_TOOLS)[number];

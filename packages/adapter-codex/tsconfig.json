@@ -6,10 +6,7 @@
   },
   "references": [
     { "path": "../schemas" },
-    { "path": "../adapter-sdk" },
-    { "path": "../adapter-cursor" },
-    { "path": "../adapter-claude" },
-    { "path": "../adapter-codex" }
+    { "path": "../adapter-sdk" }
   ],
   "include": ["src/**/*"]
 }

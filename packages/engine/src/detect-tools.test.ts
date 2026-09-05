@@ -33,6 +33,12 @@ describe("detectToolsInProject", () => {
     await mkdir(join(root, ".claude"));
     expect(await detectToolsInProject(root)).toEqual(["cursor", "claude"]);
   });
+
+  it("detects codex folder", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    await mkdir(join(root, ".codex"));
+    expect(await detectToolsInProject(root)).toEqual(["codex"]);
+  });
 });
 
 describe("resolveInstallTools", () => {
@@ -46,6 +52,16 @@ describe("resolveInstallTools", () => {
     expect(tools).toEqual(["claude"]);
   });
 
+  it("uses explicit codex target", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    const tools = await resolveInstallTools({
+      projectRoot: root,
+      manifest: { ...baseManifest, targets: ["codex"] },
+      explicitTarget: "codex",
+    });
+    expect(tools).toEqual(["codex"]);
+  });
+
   it("expands explicit wildcard to all tools", async () => {
     const root = await mkdtemp(join(tmpdir(), "aipm-"));
     const tools = await resolveInstallTools({
@@ -53,7 +69,7 @@ describe("resolveInstallTools", () => {
       manifest: wildcardManifest,
       explicitTarget: "*",
     });
-    expect(tools).toEqual(["cursor", "claude"]);
+    expect(tools).toEqual(["cursor", "claude", "codex"]);
   });
 
   it("matches detected tools against wildcard manifest", async () => {
@@ -72,6 +88,6 @@ describe("resolveInstallTools", () => {
       projectRoot: root,
       manifest: wildcardManifest,
     });
-    expect(tools).toEqual(["cursor", "claude"]);
+    expect(tools).toEqual(["cursor", "claude", "codex"]);
   });
 });

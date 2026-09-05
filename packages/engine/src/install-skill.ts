@@ -1,12 +1,14 @@
 import type { SkillAdapter } from "@aipm-registry/adapter-sdk";
 import { claudeSkillAdapter } from "@aipm-registry/adapter-claude";
 import { cursorSkillAdapter } from "@aipm-registry/adapter-cursor";
+import { codexSkillAdapter } from "@aipm-registry/adapter-codex";
 import type { AiTool, ConcreteAiTool, PackageManifest } from "@aipm-registry/schemas";
 import { resolveInstallTools } from "./detect-tools.js";
 
 const adapters: Record<ConcreteAiTool, SkillAdapter> = {
   cursor: cursorSkillAdapter,
   claude: claudeSkillAdapter,
+  codex: codexSkillAdapter,
 };
 
 export interface InstallSkillOptions {
@@ -34,7 +36,7 @@ export async function installSkillPackage(
 
   if (tools.length === 0) {
     throw new Error(
-      "No AI tool detected (.cursor/ or .claude/). Use --target cursor|claude|* or set preferredTools in aipm.package.json.",
+      "No AI tool detected (.cursor/, .claude/, or .codex/). Use --target cursor|claude|codex|* or set preferredTools in aipm.package.json.",
     );
   }
 

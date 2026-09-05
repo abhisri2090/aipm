@@ -193,7 +193,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
   if (tools.length === 0) {
     if (options.ci) {
       throw new Error(
-        "No tool detected. Use --target cursor|claude|* in CI mode.",
+        "No tool detected. Use --target cursor|claude|codex|* in CI mode.",
       );
     }
     const choice = await promptForTool();

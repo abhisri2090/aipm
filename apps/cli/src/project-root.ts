@@ -18,7 +18,7 @@ export function resolveConfigRoot(options: ProjectScopeOptions = {}): string {
 }
 
 /**
- * Root directory passed to adapters (.cursor/, .claude/ under here).
+ * Root directory passed to adapters (.cursor/, .claude/, .codex/ under here).
  * Global installs write to the user's home so skills apply across projects.
  */
 export function resolveInstallRoot(options: ProjectScopeOptions = {}): string {
