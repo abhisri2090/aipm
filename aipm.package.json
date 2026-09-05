@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "registry": "https://api.aipm-registry.com",
+  "preferredTools": [
+    "claude"
+  ],
+  "packages": {
+    "@coreyhaines31/seo-audit": "1.0.0",
+    "@coreyhaines31/programmatic-seo": "1.0.0",
+    "@coreyhaines31/free-tools": "1.0.0",
+    "@coreyhaines31/copywriting": "1.0.0",
+    "@coreyhaines31/content-strategy": "1.0.0"
+  }
+}

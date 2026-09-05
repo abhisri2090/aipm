@@ -1,5 +1,5 @@
 import pg from "pg";
-import type { PackageManifest } from "@aipm-registry/schemas";
+import { normalizePackageSearchQuery, type PackageManifest } from "@aipm-registry/schemas";
 import { nextUsernameCandidate, normalizeUsernameCandidate } from "./aipm-username.js";
 
 const { Pool } = pg;
@@ -1695,7 +1695,7 @@ export async function listAdminPackages(
   query = "",
   limit = 50,
 ): Promise<AdminPackageSummary[]> {
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizePackageSearchQuery(query);
   const boundedLimit = Math.min(Math.max(limit, 1), 100);
   const values: Array<string | number> = [];
   let filter = "";

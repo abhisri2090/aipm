@@ -2,8 +2,20 @@
 export const SCOPE_NAME_REGEX =
   /^@[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?\/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?$/;
 
+/** Matches @scope/name@version so search can use the package name alone. */
+const PACKAGE_NAME_WITH_VERSION_REGEX =
+  /^(@[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?\/[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?)@[^\s]+$/i;
+
 export function isValidScopeName(name: string): boolean {
   return SCOPE_NAME_REGEX.test(name);
+}
+
+/** Normalize admin/registry search input; strips trailing @version when present. */
+export function normalizePackageSearchQuery(query: string): string {
+  const trimmed = query.trim();
+  const withVersion = trimmed.match(PACKAGE_NAME_WITH_VERSION_REGEX);
+  if (withVersion?.[1]) return withVersion[1].toLowerCase();
+  return trimmed;
 }
 
 export function shortNameFromScopeName(name: string): string {

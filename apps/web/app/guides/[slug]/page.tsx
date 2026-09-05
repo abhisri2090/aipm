@@ -214,15 +214,6 @@ export default async function GuidePage({ params }: GuideRouteProps) {
             </ul>
           </section>
         ) : null}
-
-        <section>
-          <h2>How this guide was checked</h2>
-          <p>
-            Abhishek Srivastava reviewed this guide for plain English and current product behavior.
-            Official references are linked above when the guide depends on outside product details.
-            Product details can change, so the review date is shown at the top of the page.
-          </p>
-        </section>
       </article>
 
       <section className={shell.panelSection} aria-labelledby="related-guides-title">

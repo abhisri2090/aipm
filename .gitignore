@@ -29,5 +29,8 @@ docs/*
 !docs/GROWTH_PLAN.md
 !docs/LAUNCH_ASSETS.md
 !docs/BACKLINK_TRACKER.md
+!docs/SEO_STRATEGY.md
 !docs/superpowers/
 !docs/superpowers/**
+.cursor/
+.claude/

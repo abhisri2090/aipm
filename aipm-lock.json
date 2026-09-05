@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "0.1",
+  "packages": {
+    "@coreyhaines31/seo-audit": {
+      "version": "1.0.0",
+      "integrity": "sha256-1ikJWQ+VnMHUUTGVPdfZV1O5zmmtDELapmTY/mLFLWY=",
+      "registry": "https://api.aipm-registry.com",
+      "resolvedTools": [
+        "claude"
+      ],
+      "installed": {
+        "claude": [
+          "/Users/abhisheksrivastava/Me/aipm/.claude/aipm/skills/seo-audit/SKILL.md"
+        ]
+      }
+    },
+    "@coreyhaines31/programmatic-seo": {
+      "version": "1.0.0",
+      "integrity": "sha256-3X8pDRnjLaprrtURnroDNQzf3k7EsfO5ne1DvrVJ8nQ=",
+      "registry": "https://api.aipm-registry.com",
+      "resolvedTools": [
+        "claude"
+      ],
+      "installed": {
+        "claude": [
+          "/Users/abhisheksrivastava/Me/aipm/.claude/aipm/skills/programmatic-seo/SKILL.md"
+        ]
+      }
+    },
+    "@coreyhaines31/free-tools": {
+      "version": "1.0.0",
+      "integrity": "sha256-q/ZFQ/ujuEv6iFh1yc1VviVBtCOOOwZjqPczgZs+sBI=",
+      "registry": "https://api.aipm-registry.com",
+      "resolvedTools": [
+        "claude"
+      ],
+      "installed": {
+        "claude": [
+          "/Users/abhisheksrivastava/Me/aipm/.claude/aipm/skills/free-tools/SKILL.md"
+        ]
+      }
+    },
+    "@coreyhaines31/copywriting": {
+      "version": "1.0.0",
+      "integrity": "sha256-CZOIDM+iVvSMYUGLnx2QsoxxuATQmt6hcAMJwsUUM20=",
+      "registry": "https://api.aipm-registry.com",
+      "resolvedTools": [
+        "claude"
+      ],
+      "installed": {
+        "claude": [
+          "/Users/abhisheksrivastava/Me/aipm/.claude/aipm/skills/copywriting/SKILL.md"
+        ]
+      }
+    },
+    "@coreyhaines31/content-strategy": {
+      "version": "1.0.0",
+      "integrity": "sha256-17CEV7nu7DVtaSncxK9G8bJskxA/itoUdQ4d6yEjdnk=",
+      "registry": "https://api.aipm-registry.com",
+      "resolvedTools": [
+        "claude"
+      ],
+      "installed": {
+        "claude": [
+          "/Users/abhisheksrivastava/Me/aipm/.claude/aipm/skills/content-strategy/SKILL.md"
+        ]
+      }
+    }
+  }
+}

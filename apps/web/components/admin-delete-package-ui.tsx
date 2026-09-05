@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
+import { normalizePackageSearchQuery } from "@aipm-registry/schemas";
 import { api } from "../lib/api-client";
 import { publicApiError } from "../lib/public-api-error";
 import { cn, dash, shell } from "../lib/page-styles";
@@ -15,8 +16,7 @@ type AdminPackage = {
 };
 
 async function fetchAdminPackages(query: string): Promise<AdminPackage[]> {
-  const params = new URLSearchParams({ limit: "50" });
-  if (query) params.set("q", query);
+  const params = new URLSearchParams({ limit: "50", q: query });
   const data = await api<{ packages?: AdminPackage[] }>(`/v1/admin/packages?${params}`);
   return data.packages ?? [];
 }
@@ -28,7 +28,9 @@ async function deleteAdminPackage(name: string): Promise<void> {
 export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promise<void> }) {
   const [query, setQuery] = useState("");
   const [packages, setPackages] = useState<AdminPackage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [activeQuery, setActiveQuery] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedName, setSelectedName] = useState<string | null>(null);
@@ -39,7 +41,9 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
     setLoading(true);
     setError(null);
     try {
-      setPackages(await fetchAdminPackages(nextQuery.trim()));
+      setPackages(await fetchAdminPackages(nextQuery));
+      setActiveQuery(nextQuery);
+      setHasSearched(true);
     } catch (requestError) {
       setPackages([]);
       setError(publicApiError(requestError));
@@ -48,13 +52,20 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
     }
   }, []);
 
-  useEffect(() => {
-    void loadPackages("");
-  }, [loadPackages]);
-
   async function onSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await loadPackages(query);
+    const normalized = normalizePackageSearchQuery(query);
+    if (!normalized) {
+      setError("Enter a package name to search (for example @scope/name).");
+      setPackages([]);
+      setHasSearched(false);
+      setActiveQuery("");
+      return;
+    }
+    setStatus(null);
+    setSelectedName(null);
+    setConfirmName("");
+    await loadPackages(normalized);
   }
 
   async function onDelete() {
@@ -67,7 +78,7 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
       setStatus(`Deleted ${selectedName}.`);
       setSelectedName(null);
       setConfirmName("");
-      await loadPackages(query);
+      if (activeQuery) await loadPackages(activeQuery);
       await onDeleted();
     } catch (requestError) {
       setError(publicApiError(requestError));
@@ -84,19 +95,19 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
         reserved name.
       </p>
 
-      <form className={dash.formPanel} onSubmit={onSearch}>
+      <form className={dash.formPanel} onSubmit={(event) => void onSearch(event)}>
         <label htmlFor="admin-package-search">Search packages</label>
+        <input
+          id="admin-package-search"
+          name="q"
+          placeholder="@scope/name"
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
         <div className={shell.actions}>
-          <input
-            id="admin-package-search"
-            name="q"
-            placeholder="@scope/name or description"
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
           <button className={shell.button} disabled={loading} type="submit">
-            {loading ? "Loading…" : "Search"}
+            {loading ? "Searching…" : "Search"}
           </button>
         </div>
       </form>
@@ -130,9 +141,9 @@ export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promis
             </li>
           ))}
         </ul>
-      ) : loading ? null : (
+      ) : hasSearched && !loading ? (
         <p className={shell.muted}>No packages match this search.</p>
-      )}
+      ) : null}
 
       {selectedName ? (
         <section className={dash.dangerAction}>
