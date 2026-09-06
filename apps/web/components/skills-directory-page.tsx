@@ -54,6 +54,10 @@ export async function SkillsDirectoryPage({
           AIPM is a public marketplace and registry for reusable AI agent skills. Check the source,
           publisher, version, supported tools, and install command before adding a skill to a project.
         </p>
+        <p>
+          Not sure how packages help? Read the plain-English guide to{" "}
+          <Link href="/guides/ai-package-manager">AI package managers</Link>.
+        </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/popular-skills">
             See popular skill ideas

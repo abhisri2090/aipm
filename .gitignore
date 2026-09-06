@@ -30,6 +30,7 @@ docs/*
 !docs/LAUNCH_ASSETS.md
 !docs/BACKLINK_TRACKER.md
 !docs/SEO_STRATEGY.md
+!docs/SEO_EXECUTION_PLAN.md
 !docs/superpowers/
 !docs/superpowers/**
 .cursor/

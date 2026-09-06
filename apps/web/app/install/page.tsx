@@ -37,6 +37,10 @@ export default function InstallPage() {
           <strong>Short answer:</strong> use npm on any supported system, or choose the native
           installer for your operating system. Run <code>aipm --version</code> when it finishes.
         </p>
+        <p>
+          New to this idea? Read <Link href="/guides/ai-package-manager">what an AI package manager is</Link>{" "}
+          and why developers use one for reusable AI skills.
+        </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/use">
             Use guide
@@ -53,17 +57,28 @@ export default function InstallPage() {
         {CLI_INSTALL_OPTIONS.map((option) => (
           <section key={option.label} id={option.slug}>
             <h3 className={docs.cliInstallVia}>{option.label}</h3>
-            <CodeBlock code={option.code} />
+            <CodeBlock
+              code={option.code}
+              trackingEvent="CLI Install Command Copied"
+              trackingProperties={{ method: option.slug }}
+            />
           </section>
         ))}
         <section id="via-scoop">
           <h3 className={docs.cliInstallVia}>via Scoop</h3>
-          <CodeBlock code={CLI_SCOOP_COMMAND} />
+          <CodeBlock
+            code={CLI_SCOOP_COMMAND}
+            trackingEvent="CLI Install Command Copied"
+            trackingProperties={{ method: "via-scoop" }}
+          />
         </section>
 
         <h2>Check the install</h2>
         <p>After installing, confirm the command is on your PATH and check your local setup.</p>
-        <CodeBlock code={`aipm --version\naipm doctor # (optional)`} />
+        <CodeBlock
+          code={`aipm --version\naipm doctor # (optional)`}
+          trackingEvent="CLI Check Command Copied"
+        />
         <p>
           Next, follow the <Link href="/use">use guide</Link> to install skills into a project, or the{" "}
           <Link href="/publish/guide">publishing guide</Link> to publish your first package.

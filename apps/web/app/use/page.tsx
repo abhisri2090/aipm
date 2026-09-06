@@ -44,7 +44,7 @@ export default function UsePage() {
           </p>
           <h2>Initialize a project</h2>
           <p>This creates aipm.package.json and points it at the public registry.</p>
-          <CodeBlock code="aipm init --target cursor" />
+          <CodeBlock code="aipm init --target cursor" trackingEvent="CLI Init Command Copied" />
         </section>
 
         <section aria-labelledby="use-private-packages">
@@ -57,11 +57,11 @@ export default function UsePage() {
             once from the CLI. AIPM opens the browser, confirms your account, and stores a local
             session so future installs do not need a token pasted into every command.
           </p>
-          <CodeBlock code={`aipm login\naipm whoami # (optional)`} />
+          <CodeBlock code={`aipm login\naipm whoami # (optional)`} trackingEvent="CLI Login Command Copied" />
 
           <h2>Sign out</h2>
           <p>Use this when you want to remove the local CLI session from your machine.</p>
-          <CodeBlock code="aipm logout" />
+          <CodeBlock code="aipm logout" trackingEvent="CLI Logout Command Copied" />
         </section>
 
         <section aria-labelledby="use-install-manage">
@@ -75,15 +75,18 @@ export default function UsePage() {
             work the same way after <code>aipm login</code>. See{" "}
             <Link href="/targets">supported targets</Link> for the folders AIPM writes to.
           </p>
-          <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
+          <CodeBlock
+            code="aipm add @scope/name@1.0.0 --target cursor --ci"
+            trackingEvent="Example Package Install Command Copied"
+          />
 
           <h2>List installed skills</h2>
           <p>Show the packages currently recorded in this project lockfile.</p>
-          <CodeBlock code="aipm list" />
+          <CodeBlock code="aipm list" trackingEvent="CLI List Command Copied" />
 
           <h2>Search and update installed skills</h2>
           <p>Search finds registry packages; update checks configured packages for newer versions.</p>
-          <CodeBlock code={`aipm search sentry\naipm update`} />
+          <CodeBlock code={`aipm search sentry\naipm update`} trackingEvent="CLI Discover Command Copied" />
 
           <h2>Updating a skill</h2>
           <p>
@@ -102,7 +105,10 @@ export default function UsePage() {
             token with <code>--token</code> or <code>AIPM_TOKEN</code> so the job can read private
             packages.
           </p>
-          <CodeBlock code="AIPM_TOKEN=<install-token> aipm add @scope/private-skill@1.0.0 --target cursor --ci" />
+          <CodeBlock
+            code="AIPM_TOKEN=<install-token> aipm add @scope/private-skill@1.0.0 --target cursor --ci"
+            trackingEvent="Private Package Install Command Copied"
+          />
         </section>
 
         <section aria-labelledby="use-file-layout">

@@ -71,6 +71,10 @@ export default async function PromptsPage({
             prompt shows what you need to provide, what it produces, and which AI tools it
             works with.
           </p>
+          <p>
+            Need reusable instructions with versions and install commands? Learn how an{" "}
+            <Link href="/guides/ai-package-manager">AI package manager</Link> works.
+          </p>
           <div className={shell.actions}>
             <Link className={shell.button} href="/prompts/new">
               List a prompt

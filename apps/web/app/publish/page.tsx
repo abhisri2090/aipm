@@ -72,6 +72,9 @@ export default function PublishPage() {
           <Link href="/publish/github">Import a public skill you own</Link> from the packages
           dashboard.
         </p>
+        <p>
+          For a simple overview first, read <Link href="/guides/ai-package-manager">what an AI package manager does</Link>.
+        </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/login">
             Sign in to publish

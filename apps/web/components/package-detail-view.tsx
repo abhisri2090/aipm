@@ -65,7 +65,11 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
   }));
   const targetLabel = displayTargets(summary.targets).join(", ");
   const sourceUrl = pkg.manifest.sourceUrl ?? summary.import?.sourceUrl;
-  const badgeMarkdown = `[![Install with AIPM](${new URL(canonicalUrl).origin}/install-with-aipm.svg)](${canonicalUrl})`;
+  const badgeDestination = new URL(canonicalUrl);
+  badgeDestination.searchParams.set("utm_source", "github");
+  badgeDestination.searchParams.set("utm_medium", "readme");
+  badgeDestination.searchParams.set("utm_campaign", "package_badge");
+  const badgeMarkdown = `[![Install with AIPM](${badgeDestination.origin}/install-with-aipm.svg)](${badgeDestination.toString()})`;
 
   return (
     <>
@@ -74,7 +78,12 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           <p className={shell.eyebrow}>AIPM package</p>
           <h1>{packageShortName(summary.name)}</h1>
           <p className={shell.lede}>{summary.description}</p>
-          <PackageShareButtons title={`${summary.name}@${summary.version}`} url={canonicalUrl} />
+          <PackageShareButtons
+            packageName={summary.name}
+            title={`${summary.name}@${summary.version}`}
+            url={canonicalUrl}
+            version={summary.version}
+          />
           {isUnverifiedImportedPackage(summary) ? (
             <div className={shell.actions}>
               {summary.import?.sourceUrl ? (
@@ -94,13 +103,21 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         <div className={shell.detailMain}>
           <article className={cn(shell.panel, cards.stepCard, shell.installPanel)}>
             <h2>Install Skill</h2>
-            <CodeBlock code={command} />
+            <CodeBlock
+              code={command}
+              trackingEvent="Package Install Command Copied"
+              trackingProperties={{ package: summary.name, target: "default", version: summary.version }}
+            />
           </article>
 
           <article className={cn(shell.panel, cards.stepCard, shell.howToUsePanel)}>
             <h2>How to use</h2>
             <p className={shell.muted}>Install the skill above, then run this in your AI tool:</p>
-            <CodeBlock code={invokeCommand} />
+            <CodeBlock
+              code={invokeCommand}
+              trackingEvent="Skill Invocation Copied"
+              trackingProperties={{ package: summary.name, version: summary.version }}
+            />
           </article>
 
           {about ? (
@@ -198,10 +215,18 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <dd title={summary.integrity}>SHA-256 recorded: {shortIntegrity(summary.integrity)}</dd>
             </div>
             <div className={shell.packageDetailItem}>
-              <dt>Safety status</dt>
+              <dt>Registry checks</dt>
               <dd>
-                <Link href="/security">Review required before install</Link>
+                <Link href="/security#automated-registry-checks">Automated checks passed</Link>
               </dd>
+            </div>
+            <div className={shell.packageDetailItem}>
+              <dt>Check date</dt>
+              <dd>{new Date(summary.createdAt).toLocaleString()}</dd>
+            </div>
+            <div className={shell.packageDetailItem}>
+              <dt>Check limits</dt>
+              <dd>Files checked; behavior not approved</dd>
             </div>
             <div className={shell.packageDetailItem}>
               <dt>Version published</dt>
@@ -231,25 +256,26 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         </article>
       </section>
 
-      {showHeader ? (
-        <section className={shell.panelSection} aria-labelledby="package-badge-title">
-          <article className={cn(shell.panel, cards.stepCard)}>
-            <p className={shell.eyebrow}>Share this package</p>
-            <h2 id="package-badge-title">Add an Install with AIPM badge</h2>
-            <p className={shell.muted}>
-              Add this badge to a GitHub README so readers can open the package page and install the same version.
-            </p>
-            <a href={canonicalUrl} aria-label={`Open ${summary.name}@${summary.version} on AIPM`}>
-              <img alt="Install with AIPM" height="28" src="/install-with-aipm.svg" width="154" />
-            </a>
-            <CodeBlock
-              code={badgeMarkdown}
-              trackingEvent="README Badge Copied"
-              trackingProperties={{ package: summary.name, version: summary.version }}
-            />
-          </article>
-        </section>
-      ) : null}
+      <section
+        className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
+        aria-labelledby="package-badge-title"
+      >
+        <article className={cn(shell.panel, cards.stepCard)}>
+          <p className={shell.eyebrow}>Share this package</p>
+          <h2 id="package-badge-title">Add an Install with AIPM badge</h2>
+          <p className={shell.muted}>
+            Add this badge to a GitHub README so readers can open the package page and install the same version.
+          </p>
+          <a href={canonicalUrl} aria-label={`Open ${summary.name}@${summary.version} on AIPM`}>
+            <img alt="Install with AIPM" height="28" src="/install-with-aipm.svg" width="154" />
+          </a>
+          <CodeBlock
+            code={badgeMarkdown}
+            trackingEvent="README Badge Copied"
+            trackingProperties={{ package: summary.name, version: summary.version }}
+          />
+        </article>
+      </section>
 
       <section
         className={cn(shell.panelSection, !showHeader && shell.panelSectionFlush)}
@@ -304,7 +330,11 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <article className={cn(shell.panel, cards.stepCard)} key={`${example.title}-${example.prompt}`}>
                 <h3>{example.title}</h3>
                 {example.description ? <p>{example.description}</p> : null}
-                <CodeBlock code={example.prompt} />
+              <CodeBlock
+                code={example.prompt}
+                trackingEvent="Package Example Copied"
+                trackingProperties={{ package: summary.name, version: summary.version }}
+              />
               </article>
             ))}
           </div>
@@ -381,7 +411,15 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             <article className={cn(shell.panel, cards.stepCard)} key={targetCommand.target}>
               <h3>{targetCommand.target}</h3>
               <p>Run this variant when you want to install the package into {targetCommand.target}.</p>
-              <CodeBlock code={targetCommand.command} />
+              <CodeBlock
+                code={targetCommand.command}
+                trackingEvent="Package Install Command Copied"
+                trackingProperties={{
+                  package: summary.name,
+                  target: targetCommand.target,
+                  version: summary.version,
+                }}
+              />
             </article>
           ))}
         </div>

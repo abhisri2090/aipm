@@ -281,7 +281,11 @@ export default async function HomePage() {
               <span className={cards.stepNumber}>1</span>
               <h3>Install the CLI</h3>
             </div>
-            <CodeBlock code={CLI_INSTALL_OPTIONS[0].code} />
+            <CodeBlock
+              code={CLI_INSTALL_OPTIONS[0].code}
+              trackingEvent="CLI Install Command Copied"
+              trackingProperties={{ method: "homepage-npm" }}
+            />
             <p className={cards.stepInstallMethods}>
               {"Other install methods ->"}{" "}
               <Link className={shell.textLink} href="/install">
@@ -295,7 +299,7 @@ export default async function HomePage() {
               <h3>Initialize your project</h3>
             </div>
             <p>Create an AIPM config file in the current project.</p>
-            <CodeBlock code="aipm init --target cursor" />
+            <CodeBlock code="aipm init --target cursor" trackingEvent="CLI Init Command Copied" />
           </article>
           <article className={cards.stepCard}>
             <div className={cards.stepHeading}>
@@ -303,7 +307,10 @@ export default async function HomePage() {
               <h3>Add a skill</h3>
             </div>
             <p>Install one package version into the selected AI tool target.</p>
-            <CodeBlock code="aipm add @scope/name@1.0.0 --target cursor --ci" />
+            <CodeBlock
+              code="aipm add @scope/name@1.0.0 --target cursor --ci"
+              trackingEvent="Example Package Install Command Copied"
+            />
           </article>
         </div>
       </section>

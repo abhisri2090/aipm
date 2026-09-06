@@ -2,10 +2,21 @@
 
 import { Check, Copy, Share2 } from "lucide-react";
 import { useState } from "react";
+import { track } from "@vercel/analytics";
 import { copyToClipboard } from "../lib/copy-to-clipboard";
 import styles from "./package-share-buttons.module.css";
 
-export function PackageShareButtons({ title, url }: { title: string; url: string }) {
+export function PackageShareButtons({
+  packageName,
+  title,
+  url,
+  version,
+}: {
+  packageName: string;
+  title: string;
+  url: string;
+  version: string;
+}) {
   const [copied, setCopied] = useState(false);
   const text = `Install ${title} with AIPM`;
   const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
@@ -14,6 +25,7 @@ export function PackageShareButtons({ title, url }: { title: string; url: string
   async function copyLink() {
     const didCopy = await copyToClipboard(url);
     if (!didCopy) return;
+    track("Package Shared", { method: "copy_link", package: packageName, version });
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
   }
@@ -22,6 +34,7 @@ export function PackageShareButtons({ title, url }: { title: string; url: string
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
+        track("Package Shared", { method: "web_share", package: packageName, version });
         return;
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -40,13 +53,25 @@ export function PackageShareButtons({ title, url }: { title: string; url: string
         {copied ? <Check aria-hidden="true" size={17} /> : <Copy aria-hidden="true" size={17} />}
         {copied ? "Copied" : "Copy link"}
       </button>
-      <a className={styles.button} href={linkedInUrl} rel="noreferrer" target="_blank">
+      <a
+        className={styles.button}
+        href={linkedInUrl}
+        onClick={() => track("Package Shared", { method: "linkedin", package: packageName, version })}
+        rel="noreferrer"
+        target="_blank"
+      >
         <span aria-hidden="true" className={styles.linkedInIcon}>
           in
         </span>
         LinkedIn
       </a>
-      <a className={styles.button} href={xUrl} rel="noreferrer" target="_blank">
+      <a
+        className={styles.button}
+        href={xUrl}
+        onClick={() => track("Package Shared", { method: "x", package: packageName, version })}
+        rel="noreferrer"
+        target="_blank"
+      >
         <span aria-hidden="true" className={styles.xIcon}>
           X
         </span>

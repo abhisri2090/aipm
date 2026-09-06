@@ -119,6 +119,21 @@ export default function SecurityPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
+          <h2 id="automated-registry-checks">Automated registry checks</h2>
+          <p>
+            Before AIPM accepts a package version, it checks the archive size, blocks unsafe file
+            paths, validates the manifest, confirms that declared files exist, and records a SHA-256
+            integrity hash. A package page shows <strong>Automated checks passed</strong> only after
+            these checks finish successfully.
+          </p>
+          <p>
+            These checks protect the registry from broken package files and common archive problems.
+            They do not prove that instructions are correct, private, or free from harmful behavior.
+            Read the source and package files before installing a skill you do not trust.
+          </p>
+        </section>
+
+        <section>
           <h2>Publisher safety checklist</h2>
           <ul className={docs.checkList}>
             {checklist.map((item) => (
