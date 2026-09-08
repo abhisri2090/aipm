@@ -1,4 +1,5 @@
 import type { PackageManifest } from "@aipm-registry/schemas";
+import { recommendCmd } from "./recommend-cmd.js";
 
 export function encodePackageName(name: string): string {
   return encodeURIComponent(name);
@@ -14,7 +15,7 @@ function registryFetchError(registry: string, cause: unknown): Error {
     msg.includes("aborted")
   ) {
     return new Error(
-      `Cannot reach registry at ${registry}. Check your connection or pass --registry <url>.`,
+      `Cannot reach registry at ${registry}. Check your connection or pass ${recommendCmd("--registry <url>")}.`,
     );
   }
   return new Error(`Registry request failed (${registry}): ${msg}`);
@@ -41,14 +42,14 @@ function privateInstallHint(name: string, status: number, token?: string): strin
   if (status !== 404 || !name.startsWith("@") || token) {
     return `Package not found: ${name} (${status})`;
   }
-  return `Package not found: ${name} (${status}). If @org/pkg is private, run aipm login, or set AIPM_TOKEN for CI.`;
+  return `Package not found: ${name} (${status}). If @org/pkg is private, run ${recommendCmd("aipm login")}, or set AIPM_TOKEN for CI.`;
 }
 
 function publishTokenHint(name: string, error: string): string {
   if (error === "Publish token required") {
     return [
       `Publish token required for ${name}.`,
-      `Generate a fresh 5-minute publish token for ${name} from the package dashboard, then retry with AIPM_TOKEN=<token> aipm publish push --yes.`,
+      `Generate a fresh 5-minute publish token for ${name} from the package dashboard, then retry with ${recommendCmd("AIPM_TOKEN=<token> aipm publish push --yes")}.`,
     ].join(" ");
   }
 

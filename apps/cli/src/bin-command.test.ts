@@ -582,7 +582,7 @@ describe("CLI publish commands", () => {
     try {
       const result = await runCli(root, ["search", "private", "--registry", registry], { HOME: home });
       expect(result.stdout).toContain("No packages found.");
-      expect(result.stderr).toContain("Run aipm login to access private packages.");
+      expect(result.stderr).toContain('Run "aipm login" to access private packages.');
       const auth = await readJson(join(home, ".aipm", "auth.json"));
       expect(auth).toMatchObject({ registries: {} });
     } finally {
@@ -625,7 +625,7 @@ describe("CLI publish commands", () => {
 
     try {
       await expect(runCli(root, ["whoami", "--registry", registry], { HOME: home })).rejects.toMatchObject({
-        stderr: expect.stringContaining("Run aipm login to access private packages."),
+        stderr: expect.stringContaining('Run "aipm login" to access private packages.'),
       });
     } finally {
       await new Promise<void>((resolveClose, rejectClose) =>

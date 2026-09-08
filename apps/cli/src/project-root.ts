@@ -1,6 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { cwd } from "node:process";
+import { recommendCmd } from "./recommend-cmd.js";
 
 /** Directory for global AIPM config (aipm.package.json, lockfile). */
 export function globalConfigDir(env: NodeJS.ProcessEnv = process.env): string {
@@ -30,5 +31,7 @@ export function scopeLabel(options: ProjectScopeOptions): string {
 }
 
 export function initRequiredMessage(options: ProjectScopeOptions): string {
-  return options.global ? "Run aipm init -g first" : "Run aipm init first";
+  return options.global
+    ? `Run ${recommendCmd("aipm init -g")} first`
+    : `Run ${recommendCmd("aipm init")} first`;
 }

@@ -8,6 +8,7 @@ import {
   resolveRegistryUrl,
 } from "./project-files.js";
 import { initRequiredMessage, resolveConfigRoot, scopeLabel } from "./project-root.js";
+import { recommendCmd } from "./recommend-cmd.js";
 import {
   readManifest,
   statusPublishState,
@@ -149,9 +150,9 @@ export async function runDoctor(options: {
       ok: rows.length > 0 && changed.length === 0,
       detail:
         rows.length === 0
-          ? "No files staged. Run aipm publish add ."
+          ? `No files staged. Run ${recommendCmd("aipm publish add .")}`
           : changed.length > 0
-            ? `${changed.length} staged file(s) changed after add. Run aipm publish add . again.`
+            ? `${changed.length} staged file(s) changed after add. Run ${recommendCmd("aipm publish add .")} again.`
             : `${rows.length} file(s) staged.`,
     });
   } catch (error) {

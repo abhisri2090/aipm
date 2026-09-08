@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, normalize, relative, resolve, sep } from "node:path";
 import { PackageManifestSchema, type PackageManifest } from "@aipm-registry/schemas";
+import { recommendCmd } from "./recommend-cmd.js";
 
 export type PublishStateEntry = {
   path: string;
@@ -176,7 +177,9 @@ export async function readManifest(root: string): Promise<PackageManifest> {
     return PackageManifestSchema.parse(JSON.parse(raw));
   } catch (error) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-      throw new Error("No aipm.manifest.json found. Run aipm publish init --name @org/skill.");
+      throw new Error(
+        `No aipm.manifest.json found. Run ${recommendCmd("aipm publish init --name <@org/skill>")}.`,
+      );
     }
     throw error;
   }
@@ -194,7 +197,9 @@ function installReferencedFiles(manifest: PackageManifest): string[] {
 export async function validatePublishState(root: string): Promise<{ manifest: PackageManifest; size: number }> {
   const manifest = await readManifest(root);
   const state = await readPublishState(root);
-  if (state.files.length === 0) throw new Error("No files staged. Run aipm publish add <files...>.");
+  if (state.files.length === 0) {
+    throw new Error(`No files staged. Run ${recommendCmd("aipm publish add <files...>")}.`);
+  }
   const staged = new Set(state.files.map((entry) => entry.path));
   if (!staged.has("aipm.manifest.json")) throw new Error("aipm.manifest.json must be staged.");
   if (!staged.has(manifest.entry)) throw new Error(`Manifest entry must be staged: ${manifest.entry}`);
@@ -213,7 +218,9 @@ export async function validatePublishState(root: string): Promise<{ manifest: Pa
     if (!info?.isFile()) throw new Error(`Staged file is missing: ${entry.path}`);
     const hashed = await fileHash(abs);
     if (hashed.hash !== entry.hash) {
-      throw new Error(`Staged file changed after add: ${entry.path}. Run aipm publish add ${entry.path}`);
+      throw new Error(
+        `Staged file changed after add: ${entry.path}. Run ${recommendCmd(`aipm publish add ${entry.path}`)}.`,
+      );
     }
     await assertNoObviousSecrets(abs, entry.path);
     size += hashed.size;

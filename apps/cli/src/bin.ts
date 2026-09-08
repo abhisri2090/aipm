@@ -67,6 +67,7 @@ import {
   removeTrackedPrompt,
   resolveTrackedPrompt,
 } from "./prompt-install.js";
+import { recommendCmd } from "./recommend-cmd.js";
 import { getCliVersion } from "./version.js";
 import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
 
@@ -326,7 +327,7 @@ async function authTokenForRegistry(
     return refreshed.accessToken;
   } catch {
     await clearStoredRegistryAuth(registry);
-    const message = `CLI login for ${registry} expired or was revoked. Run aipm login to access private packages.`;
+    const message = `CLI login for ${registry} expired or was revoked. Run ${recommendCmd("aipm login")} to access private packages.`;
     if (options.throwOnFailure) throw new Error(message);
     if (!options.quiet) console.warn(`Warning: ${message}`);
     return undefined;
@@ -860,7 +861,7 @@ program
     const { name, version: requestedVersion } = parsePackageArg(pkgArg);
     const token = await tokenForRead(registry, opts.token);
     const version = requestedVersion ?? project.packages[name] ?? (await latestVersionForPackage(registry, name, token));
-    if (!version) throw new Error("Specify version: aipm add @scope/pkg@1.0.0");
+    if (!version) throw new Error(`Specify version: ${recommendCmd("aipm add <@scope/pkg>@<version>")}`);
 
     project = {
       ...project,
@@ -984,7 +985,7 @@ program
     if (reference && project.prompts[reference.alias] === reference.url) {
       const lock = await readLockfile(configRoot);
       const entry = lock?.prompts[reference.alias];
-      if (!entry) throw new Error(`Prompt is not installed: ${reference.url}. Run aipm install.`);
+      if (!entry) throw new Error(`Prompt is not installed: ${reference.url}. Run ${recommendCmd("aipm install")}.`);
       console.log(await readInstalledPrompt(configRoot, entry));
       return;
     }
@@ -1025,7 +1026,7 @@ promptCommand
   .action(async (file: string, opts: { registry?: string; yes?: boolean }) => {
     const registry = registryFromEnvOrDefault(opts.registry);
     const accessToken = await authTokenForRegistry(registry, { throwOnFailure: true });
-    if (!accessToken) throw new Error("Run aipm login before publishing prompts.");
+    if (!accessToken) throw new Error(`Run ${recommendCmd("aipm login")} before publishing prompts.`);
     const absoluteFile = resolve(file);
     const parsed = JSON.parse(await readFile(absoluteFile, "utf8")) as
       | PromptPublishFileItem
