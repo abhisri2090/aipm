@@ -27,7 +27,7 @@ jobs:
       LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
       KEY_VAULT_NAME: ${{ vars.AZURE_KEY_VAULT_NAME }}
       EXPECTED_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      AIPM_PUBLIC_SITE_URL: ${{ vars.AIPM_PUBLIC_SITE_URL || 'https://aipm-registry.com' }}
+      AIPM_PUBLIC_SITE_URL: ${{ vars.AIPM_PUBLIC_SITE_URL || 'https://www.aipm-registry.com' }}
       AIPM_API_URL: ${{ vars.AIPM_API_URL || 'https://api.aipm-registry.com' }}
       AIPM_COOKIE_DOMAIN: ${{ vars.AIPM_COOKIE_DOMAIN || '.aipm-registry.com' }}
       AIPM_EMAIL_SENDER_ADDRESS: ${{ vars.AIPM_EMAIL_SENDER_ADDRESS }}

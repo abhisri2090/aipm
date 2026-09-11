@@ -406,6 +406,16 @@ function assertIncludes(path, text, expected) {
   }
 }
 
+function assertCanonicalSitemapHosts(path, xml) {
+  const expectedOrigin = new URL(expectedCanonicalUrl).origin;
+  const locations = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g), (match) => match[1]);
+  for (const location of locations) {
+    if (new URL(location).origin !== expectedOrigin) {
+      fail(`${path} contains a non-canonical URL: ${location}`);
+    }
+  }
+}
+
 function extractJsonLd(html) {
   const matches = html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
   return Array.from(matches, (match) => match[1]?.trim()).filter(Boolean);
@@ -425,6 +435,16 @@ if (baseUrl.protocol === "https:") {
   for (const header of requiredHeaders) {
     if (!homeHead.response.headers.has(header)) {
       fail(`Missing security header on /: ${header}`);
+    }
+  }
+}
+
+if (baseUrl.hostname === "www.aipm-registry.com") {
+  const canonicalOrigin = new URL(expectedCanonicalUrl).origin;
+  for (const alias of ["https://aipm-registry.com/", "http://aipm-registry.com/", "http://www.aipm-registry.com/"]) {
+    const response = await fetch(alias, { redirect: "follow", signal: AbortSignal.timeout(timeoutMs) });
+    if (!response.redirected || new URL(response.url).origin !== canonicalOrigin) {
+      fail(`${alias} does not redirect to the canonical origin ${canonicalOrigin}`);
     }
   }
 }
@@ -491,6 +511,7 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
+assertCanonicalSitemapHosts("/sitemap.xml", sitemap.text);
 for (const path of [
   "/skills",
   "/prompts",
@@ -553,6 +574,7 @@ if (!Array.isArray(researchData.packages) || typeof researchData.totals?.package
 
 const packageSitemap = await fetchText("/package-sitemap.xml");
 assertStatus("/package-sitemap.xml", packageSitemap.response);
+assertCanonicalSitemapHosts("/package-sitemap.xml", packageSitemap.text);
 assertIncludes(
   "/package-sitemap.xml",
   packageSitemap.text,
