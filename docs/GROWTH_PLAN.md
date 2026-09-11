@@ -99,6 +99,16 @@ Later:
 - Show a separate "Source checked" date for imported GitHub skills.
 - Never change sitemap `lastmod` unless the public page content or package version changed.
 
+### Social copy: disclosure vs. hype (confirmed 2026-09-07, board sign-off on AIP-13)
+
+- Default register is optimistic, forward-looking, and enthusiastic about what's actually shipped — a team excited about its own product, not one hedging or apologizing. Cut hedging language ("we think", "hopefully", "we're trying to") for direct, confident statements about what the product does today.
+- When a constraint blocks the obvious execution path (e.g. no animation/video tool authorized), default to shipping the best available workaround (e.g. a written animation brief) rather than leading with the blocker. Still flag the constraint, but after delivering the workaround, not instead of it.
+- This personality sits on top of, not instead of, the rules below: enthusiasm comes from confident framing of real product facts, not from inventing ones.
+- Frame the security scan as a positive, concrete claim, not a hedge: "every package — this one included — goes through automated checks (path traversal, leaked secrets, oversized files, manifest validation) before it's live." Lead with this rather than a generic "we care about security" line.
+- For skill/prompt-spotlight posts on imported/unverified/unclaimed packages: drop the boxed "Disclosure:" label and dry tone, but keep the unclaimed/unverified fact — fold it into a natural, hook-first sentence instead of hiding it.
+- Do not state popularity/virality ("very popular", "used by many on social media") for a specific package without real data (install counts, a specific viral post, GitHub stars). If real numbers exist, use them — they're more persuasive than a vague claim anyway. Fabricating one is a specific, checkable claim that conflicts with the "verification never means AIPM guarantees safety" rule above and the copywriting skill's "honest over sensational" rule, and undercuts AIPM's trust-first pitch.
+- LinkedIn voice: hook-first opener (contrarian claim or provocative question), short-long sentence rhythm, minimal-to-moderate emoji as section markers not decoration, action-specific CTAs ("Type /command", not "Learn more"). Reference styles: linkedin.com/in/ruben-hassid (bold hooks, numbered frameworks, emoji dividers) and linkedin.com/in/vedikabhaia (narrative arc, soft/no explicit CTA, minimal emoji).
+
 ## 4. Initial Publisher Outreach
 
 Start with people whose public work is already relevant to Agent Skills. Ask them to review or claim listings; do not imply endorsement.
