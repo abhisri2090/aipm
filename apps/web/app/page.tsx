@@ -2,7 +2,7 @@ import { shell, cards, home, cn } from "../lib/page-styles";
 import Link from "next/link";
 import { CodeBlock } from "../components/code-block";
 import { RegistrySearch } from "../components/registry-search";
-import { CLI_INSTALL_OPTIONS } from "../lib/registry";
+import { CLI_INSTALL_OPTIONS, listPackagesPage } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
 type PackageTag = {
@@ -81,6 +81,8 @@ export const metadata = pageMetadata({
 });
 
 export default async function HomePage() {
+  const { packages: homeSearchPackages } = await listPackagesPage("", 3);
+
   return (
     <main>
       <script
@@ -325,7 +327,7 @@ export default async function HomePage() {
             Open skills registry
           </Link>
         </div>
-        <RegistrySearch compact initialPackages={[]} />
+        <RegistrySearch compact initialPackages={homeSearchPackages} />
       </section>
 
       <section className={cards.guideGrid} aria-label="AIPM basics">
