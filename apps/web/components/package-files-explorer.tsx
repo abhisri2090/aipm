@@ -30,6 +30,8 @@ type PackageFilesExplorerProps = {
   version: string;
   entryPath?: string;
   hideHeading?: boolean;
+  /** Render only the file tree + content pane, without the surrounding section/article chrome. */
+  bare?: boolean;
 };
 
 function filesBaseUrl(packageName: string, version: string): string {
@@ -52,6 +54,7 @@ export function PackageFilesExplorer({
   version,
   entryPath,
   hideHeading = false,
+  bare = false,
 }: PackageFilesExplorerProps) {
   const [files, setFiles] = useState<PackageFileEntry[]>([]);
   const [resolvedEntry, setResolvedEntry] = useState<string | null>(entryPath ?? null);
@@ -118,6 +121,57 @@ export function PackageFilesExplorer({
     void loadContent(selectedPath);
   }, [selectedPath, loadContent]);
 
+  const explorerBody = (
+    <>
+      {listLoading ? <p className={styles.status}>Loading package files…</p> : null}
+      {!listLoading && listError ? <p className={styles.status}>{listError}</p> : null}
+      {!listLoading && !listError && files.length === 0 ? (
+        <p className={styles.status}>This package has no readable files.</p>
+      ) : null}
+      {!listLoading && !listError && files.length > 0 ? (
+        <div className={styles.explorer}>
+          <nav aria-label="Package files" className={styles.fileTree}>
+            {files.map((file) => {
+              const isEntry = file.path === resolvedEntry;
+              const isActive = file.path === selectedPath;
+              return (
+                <button
+                  key={file.path}
+                  type="button"
+                  className={cn(styles.fileButton, isActive && styles.fileButtonActive)}
+                  aria-current={isActive ? "true" : undefined}
+                  onClick={() => setSelectedPath(file.path)}
+                >
+                  <span>{file.path}</span>
+                  {isEntry ? <span className={styles.entryBadge}>Entry</span> : null}
+                </button>
+              );
+            })}
+          </nav>
+          <div className={styles.contentPane}>
+            {selectedPath ? <p className={styles.contentHeader}>{selectedPath}</p> : null}
+            {contentLoading ? <p className={styles.status}>Loading file…</p> : null}
+            {!contentLoading && contentError ? <p className={styles.status}>{contentError}</p> : null}
+            {!contentLoading && !contentError && content?.binary ? (
+              <p className={shell.muted}>Binary file — not displayable in browser.</p>
+            ) : null}
+            {!contentLoading && !contentError && content && !content.binary && content.content != null ? (
+              isMarkdownPath(content.path) ? (
+                <div className={styles.markdown}>
+                  <Markdown>{content.content}</Markdown>
+                </div>
+              ) : (
+                <CodeBlock code={content.content} />
+              )
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+
+  if (bare) return explorerBody;
+
   return (
     <section
       className={cn(shell.panelSection, shell.panelSectionFlush)}
@@ -132,52 +186,7 @@ export function PackageFilesExplorer({
           </div>
         </div>
       )}
-      <article className={cn(shell.panel, cards.stepCard)}>
-        {listLoading ? <p className={styles.status}>Loading package files…</p> : null}
-        {!listLoading && listError ? <p className={styles.status}>{listError}</p> : null}
-        {!listLoading && !listError && files.length === 0 ? (
-          <p className={styles.status}>This package has no readable files.</p>
-        ) : null}
-        {!listLoading && !listError && files.length > 0 ? (
-          <div className={styles.explorer}>
-            <nav aria-label="Package files" className={styles.fileTree}>
-              {files.map((file) => {
-                const isEntry = file.path === resolvedEntry;
-                const isActive = file.path === selectedPath;
-                return (
-                  <button
-                    key={file.path}
-                    type="button"
-                    className={cn(styles.fileButton, isActive && styles.fileButtonActive)}
-                    aria-current={isActive ? "true" : undefined}
-                    onClick={() => setSelectedPath(file.path)}
-                  >
-                    <span>{file.path}</span>
-                    {isEntry ? <span className={styles.entryBadge}>Entry</span> : null}
-                  </button>
-                );
-              })}
-            </nav>
-            <div className={styles.contentPane}>
-              {selectedPath ? <p className={styles.contentHeader}>{selectedPath}</p> : null}
-              {contentLoading ? <p className={styles.status}>Loading file…</p> : null}
-              {!contentLoading && contentError ? <p className={styles.status}>{contentError}</p> : null}
-              {!contentLoading && !contentError && content?.binary ? (
-                <p className={shell.muted}>Binary file — not displayable in browser.</p>
-              ) : null}
-              {!contentLoading && !contentError && content && !content.binary && content.content != null ? (
-                isMarkdownPath(content.path) ? (
-                  <div className={styles.markdown}>
-                    <Markdown>{content.content}</Markdown>
-                  </div>
-                ) : (
-                  <CodeBlock code={content.content} />
-                )
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-      </article>
+      <article className={cn(shell.panel, cards.stepCard)}>{explorerBody}</article>
     </section>
   );
 }

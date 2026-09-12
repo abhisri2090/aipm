@@ -2,6 +2,7 @@ import Link from "next/link";
 import { shell, cards, dash, cn } from "../lib/page-styles";
 import { CodeBlock } from "./code-block";
 import { CommentsSection } from "./comments-section";
+import { PackageFilesExplorer } from "./package-files-explorer";
 import { PackageReadmePreview } from "./package-readme-preview";
 import { PackageShareButtons } from "./package-share-buttons";
 import {
@@ -246,11 +247,19 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
       >
         <article className={cn(shell.panel, cards.stepCard)}>
           <p className={shell.eyebrow}>Source</p>
-          <h2 id="package-content-title">Package content</h2>
-          <p className={shell.muted}>Browse manifest, skill files, and license bundled in this package.</p>
+          <h2 id="package-content-title">What gets added to your project</h2>
+          <p className={shell.muted}>
+            Preview every file this package writes on install before you run the command above.
+          </p>
+          <PackageFilesExplorer
+            entryPath={pkg.manifest.entry}
+            packageName={summary.name}
+            version={summary.version}
+            bare
+          />
           <div className={shell.actions}>
-            <Link className={shell.button} href={packageFilesPath(summary.name, summary.version)}>
-              View package content
+            <Link className={cn(shell.button, shell.secondary)} href={packageFilesPath(summary.name, summary.version)}>
+              Open full-page file browser
             </Link>
           </div>
         </article>
