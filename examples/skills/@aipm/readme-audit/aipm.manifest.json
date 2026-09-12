@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@aipm/readme-audit",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Audit a README against open-source best practices and rewrite the sections that close the biggest gaps.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude", "codex"],
+  "license": "Apache-2.0",
+  "usage": "Point this skill at a repo's README (and its actual install/run/test commands) to get a scored gap list and targeted rewrites.",
+  "agentDescription": "Use this skill when a user wants their README evaluated for open-source readiness or rewritten to close specific gaps. It checks the README against real repo commands (package.json, CI config) rather than trusting the README's own claims, scores it against a fixed checklist (what-it-is, install, quick start, config, contributing, license, support, accuracy), and prioritizes correctness issues over missing sections over polish. It never invents unverifiable details like license or contact info.",
+  "tags": ["documentation", "readme", "open-source", "developer-experience", "seo"],
+  "categories": ["Documentation", "Engineering"],
+  "examples": [
+    {
+      "title": "Audit an existing README",
+      "description": "Score a README and get a prioritized list of gaps before a public release.",
+      "prompt": "Audit this repo's README for open-source readiness and tell me what's missing before I make the repo public."
+    },
+    {
+      "title": "Rewrite the install section",
+      "description": "Close a specific, high-priority gap without a full rewrite.",
+      "prompt": "Use readme-audit to check whether the install instructions in this README still match package.json, and fix them if not."
+    }
+  ],
+  "releaseNotes": "Initial release."
+}

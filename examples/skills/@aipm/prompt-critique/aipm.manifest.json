@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@aipm/prompt-critique",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Critique an LLM prompt against a clarity/constraints/examples/failure-mode rubric and produce a revised version with a change rationale.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude", "codex"],
+  "license": "Apache-2.0",
+  "usage": "Share a prompt (system prompt, reusable template, or one-off instruction) plus a few realistic example inputs it needs to handle; get a scored critique, a revised prompt, and a change log tying each edit to a specific failure it prevents.",
+  "agentDescription": "Use this skill when a user wants an existing LLM prompt made more reliable rather than just reworded. It scores the prompt on task clarity, explicit constraints, example quality (including whether examples contradict the stated rules — a common failure), anticipated failure modes, and consistency across realistic input variation. It tests against 2-3 example inputs including an edge case rather than critiquing in the abstract, and every proposed edit must name the concrete failure it prevents.",
+  "tags": ["prompt-engineering", "llm", "prompt-review", "ai-tooling"],
+  "categories": ["Coding", "Learning"],
+  "examples": [
+    {
+      "title": "Tighten a system prompt for consistency",
+      "description": "Find where a reusable prompt will behave inconsistently across realistic inputs and fix it.",
+      "prompt": "Critique this system prompt using prompt-critique — here are three example inputs it needs to handle reliably."
+    },
+    {
+      "title": "Catch example/instruction conflicts",
+      "description": "Surface cases where a prompt's worked example contradicts its own stated rules.",
+      "prompt": "Use prompt-critique on this template prompt and check whether the example actually matches the constraints I wrote."
+    }
+  ],
+  "releaseNotes": "Initial release."
+}
