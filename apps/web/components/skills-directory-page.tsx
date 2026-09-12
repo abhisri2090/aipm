@@ -8,15 +8,18 @@ export async function SkillsDirectoryPage({
   searchParams,
   canonicalPath,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; target?: string; sort?: string }>;
   canonicalPath: "/registry" | "/skills";
 }) {
   const params = await searchParams;
   const query = params.q ?? "";
-  const { packages: initialPackages, nextCursor: initialNextCursor } = await listPackagesPage(
+  const { packages: initialPackages, nextCursor: initialNextCursor } = await listPackagesPage({
     query,
-    20,
-  );
+    limit: 20,
+    category: params.category,
+    target: params.target,
+    sort: params.sort,
+  });
 
   return (
     <main>
@@ -91,6 +94,9 @@ export async function SkillsDirectoryPage({
           initialPackages={initialPackages}
           initialNextCursor={initialNextCursor}
           initialQuery={query}
+          initialCategory={params.category}
+          initialTarget={params.target}
+          initialSort={params.sort}
         />
       </section>
     </main>

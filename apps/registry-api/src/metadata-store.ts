@@ -39,12 +39,23 @@ export function selectLatestPackageVersions<T extends { name: string; created_at
   return [...latest.values()];
 }
 
+export type PackageSortMode = "newest" | "popular" | "title";
+
+export interface PackageListOptions {
+  limit?: number;
+  cursor?: string;
+  offset?: number;
+  category?: string;
+  target?: string;
+  sort?: PackageSortMode;
+}
+
 export interface MetadataStore {
   readonly backend: "postgres" | "file";
   init(): Promise<void>;
   insert(row: PackageVersionInsert): Promise<void>;
   get(name: string, version: string): Promise<PackageVersionRow | null>;
-  list(query?: string, options?: { limit?: number; cursor?: string }): Promise<PackageVersionSummary[]>;
+  list(query?: string, options?: PackageListOptions): Promise<PackageVersionSummary[]>;
   listVersions(name: string): Promise<PackageVersionRow[]>;
   deletePackage(name: string): Promise<PackageVersionRow[]>;
   health(): Promise<void>;

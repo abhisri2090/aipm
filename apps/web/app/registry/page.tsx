@@ -7,6 +7,10 @@ export const metadata = pageMetadata({
   path: "/skills",
 });
 
-export default function RegistryPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default function RegistryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string; target?: string; sort?: string }>;
+}) {
   return <SkillsDirectoryPage searchParams={searchParams} canonicalPath="/skills" />;
 }
