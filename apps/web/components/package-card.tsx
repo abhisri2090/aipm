@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CopyButton } from "./copy-button";
+import { ScanBadge } from "./scan-badge";
 import {
   displayTargets,
   formatBytes,
@@ -66,6 +67,7 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
         )}
         <div className={cards.meta}>
           <span className={cards.pill}>{pkg.type}</span>
+          <ScanBadge status={pkg.scan?.status} />
           {pkg.installCount && pkg.installCount > 0 ? (
             <span className={cards.pill}>{formatInstallCount(pkg.installCount)}</span>
           ) : null}

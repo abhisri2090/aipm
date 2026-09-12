@@ -1,4 +1,5 @@
 import type { PackageManifest } from "@aipm-registry/schemas";
+import type { ScanFinding, ScanStatus } from "./security-scan.js";
 
 export interface PackageVersionRow {
   id: string;
@@ -10,12 +11,28 @@ export interface PackageVersionRow {
   size_bytes: number;
   created_at: Date;
   yanked_at?: Date | null;
+  scan_status: ScanStatus;
+  scan_findings: ScanFinding[];
+  scan_checks_performed: string[];
+  scanned_at: Date | null;
+  scanner_version: string | null;
 }
 
 export type PackageVersionInsert = Omit<PackageVersionRow, "id" | "created_at">;
 export type PackageVersionSummary = Pick<
   PackageVersionRow,
-  "name" | "version" | "manifest" | "integrity" | "size_bytes" | "created_at" | "yanked_at"
+  | "name"
+  | "version"
+  | "manifest"
+  | "integrity"
+  | "size_bytes"
+  | "created_at"
+  | "yanked_at"
+  | "scan_status"
+  | "scan_findings"
+  | "scan_checks_performed"
+  | "scanned_at"
+  | "scanner_version"
 >;
 
 export class DuplicateVersionError extends Error {

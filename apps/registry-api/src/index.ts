@@ -157,6 +157,7 @@ import {
   PackageFileNotFoundError,
   PackageFileTooLargeError,
   readTarballFile,
+  scanPackageTarball,
   validatePackageFilePath,
 } from "./publish.js";
 import { ensureSchema } from "./db.js";
@@ -638,6 +639,22 @@ function serializePublisher(row: PublicPackagePublisherRow | null) {
       avatarUrl: row.publisher_avatar_url,
       verified: row.publisher_verified,
     },
+  };
+}
+
+function serializePackageScan(row: {
+  scan_status: string;
+  scan_findings: { category: string; severity: string; label: string; location: string }[];
+  scan_checks_performed: string[];
+  scanned_at: Date | null;
+  scanner_version: string | null;
+}) {
+  return {
+    status: row.scan_status,
+    scannedAt: row.scanned_at,
+    scannerVersion: row.scanner_version,
+    checksPerformed: row.scan_checks_performed,
+    findings: row.scan_findings,
   };
 }
 
@@ -2274,6 +2291,8 @@ export async function createApp(): Promise<FastifyInstance> {
           .send({ error: `Manifest name ${manifest.name} does not match URL ${name}` });
       }
 
+      const scan = await scanPackageTarball(tarball, manifest);
+
       const blobPath = blobKeyForPackage(name, manifest.version);
       const tempBlobPath = `${blobPath}.tmp-${randomUUID()}`;
       let tempWritten = false;
@@ -2287,6 +2306,11 @@ export async function createApp(): Promise<FastifyInstance> {
           integrity,
           blob_path: blobPath,
           size_bytes: tarball.length,
+          scan_status: scan.status,
+          scan_findings: scan.findings,
+          scan_checks_performed: scan.checksPerformed,
+          scanned_at: new Date(),
+          scanner_version: scan.scannerVersion,
         });
         await storage.copy(tempBlobPath, blobPath);
       } catch (e) {
@@ -2307,7 +2331,12 @@ export async function createApp(): Promise<FastifyInstance> {
       if (publishedReservation?.visibility !== "private") {
         queueSearchNotification([packagePublicUrl(name, manifest.version)], request.log);
       }
-      return reply.status(201).send({ name, version: manifest.version, integrity });
+      return reply.status(201).send({
+        name,
+        version: manifest.version,
+        integrity,
+        scan: { status: scan.status, findingsCount: scan.findings.length },
+      });
     },
   );
 
@@ -2416,6 +2445,7 @@ export async function createApp(): Promise<FastifyInstance> {
         type: row.manifest.type,
         targets: row.manifest.targets,
         createdAt: row.created_at,
+        scan: serializePackageScan(row),
       })),
     };
   });
@@ -2447,6 +2477,7 @@ export async function createApp(): Promise<FastifyInstance> {
         createdAt: row.created_at,
         yanked: Boolean(row.yanked_at),
         yankedAt: row.yanked_at ?? null,
+        scan: serializePackageScan(row),
         visibility: reservation?.visibility ?? "public",
         deprecated: reservation?.deprecated_at
           ? {
@@ -2651,6 +2682,7 @@ export async function createApp(): Promise<FastifyInstance> {
             sizeBytes: Number(row.size_bytes),
             createdAt: row.created_at,
             installCount: installCountByName.get(row.name) ?? 0,
+            scan: serializePackageScan(row),
             publisher: serializePublisher(publisherByName.get(row.name) ?? null),
             import: provenance
               ? { imported: true, sourceUrl: provenance.source_url }

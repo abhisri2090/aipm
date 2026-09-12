@@ -1,4 +1,4 @@
-import { REGISTRY_API_BASE_URL } from "./registry";
+import { REGISTRY_API_BASE_URL, type ScanInfo } from "./registry";
 
 export const PROMPT_CATEGORIES = [
   "All",
@@ -63,6 +63,7 @@ export type PromptSummary = {
   path: string;
   hasSampleImage: boolean;
   canEdit?: boolean;
+  scan: ScanInfo;
 };
 
 export type PromptDetail = PromptSummary & {

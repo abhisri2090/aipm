@@ -41,6 +41,7 @@ function toSummary(pkg: Awaited<ReturnType<typeof getPackage>>): PackageSummary 
     installCount: pkg.installCount,
     publisher: pkg.publisher,
     import: pkg.import,
+    scan: pkg.scan,
   };
 }
 

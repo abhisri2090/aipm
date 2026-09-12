@@ -172,6 +172,13 @@
   gap: 12px;
 }
 
+.cardToplineBadges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .editLink {
   position: relative;
   z-index: 2;

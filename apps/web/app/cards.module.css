@@ -555,6 +555,15 @@ img.packageTitleAvatar {
   font-size: 13px;
 }
 
+.pillFlagged {
+  border: 1px solid var(--warning);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .packageIntegrity {
   margin: 12px 0 0;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
