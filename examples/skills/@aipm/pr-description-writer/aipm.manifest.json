@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@aipm/pr-description-writer",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Turn a diff, ticket, and test notes into a clear, reviewer-ready pull request description.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude", "codex"],
+  "license": "Apache-2.0",
+  "usage": "Use after staging changes or opening a branch for review. Provide the diff and any ticket context; ask the skill to draft the PR description before you open the PR.",
+  "agentDescription": "Use this skill when a diff or set of staged/branch changes is ready for review and needs a pull request description. It groups changes by intent rather than by file, separates what changed from why, requires test-plan claims to be backed by actually-run commands or observed behavior, and calls out risky changes (hot-path behavior changes, schema/migration changes, new external calls) explicitly rather than with generic hedging.",
+  "tags": ["pull-request", "code-review", "git", "documentation", "productivity"],
+  "categories": ["Engineering", "Productivity"],
+  "examples": [
+    {
+      "title": "Draft a PR description from a diff",
+      "description": "Generate a summary/changes/test-plan description from `git diff main...HEAD` and the linked ticket.",
+      "prompt": "Here's my diff against main and the ticket it closes. Write a PR description using the pr-description-writer format."
+    },
+    {
+      "title": "Flag risk in a behavior-changing PR",
+      "description": "Surface risky changes a reviewer needs to know about before approving.",
+      "prompt": "Use pr-description-writer on this diff and make sure any risky or behavior-changing parts are called out clearly."
+    }
+  ],
+  "releaseNotes": "Initial release."
+}

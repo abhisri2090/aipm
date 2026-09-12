@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@aipm/meeting-notes-to-tasks",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Convert raw meeting notes or a transcript into structured, assignable action items and issue-ready descriptions.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude", "codex"],
+  "license": "Apache-2.0",
+  "usage": "Paste meeting notes or a transcript and ask for follow-up tasks; the skill separates decisions, action items, and open questions and writes each action item as an outcome-stated, issue-ready line.",
+  "agentDescription": "Use this skill when a user has raw meeting notes or a call transcript and needs concrete follow-up work extracted rather than a summary. It separates decisions from action items from open questions, requires action item titles to state the outcome rather than the topic, and refuses to invent an owner or deadline that wasn't stated or clearly implied — marking those as unassigned instead of guessing.",
+  "tags": ["meeting-notes", "task-extraction", "productivity", "project-management"],
+  "categories": ["Productivity", "Work"],
+  "examples": [
+    {
+      "title": "Extract action items from a standup transcript",
+      "description": "Turn a rough transcript into owner-assigned, issue-ready tasks.",
+      "prompt": "Here are today's standup notes. Use meeting-notes-to-tasks to pull out the action items with owners."
+    },
+    {
+      "title": "Separate decisions from open questions",
+      "description": "Get a clean split of what was decided versus what's still unresolved.",
+      "prompt": "Go through this meeting transcript and tell me what was actually decided versus what's still an open question."
+    }
+  ],
+  "releaseNotes": "Initial release."
+}

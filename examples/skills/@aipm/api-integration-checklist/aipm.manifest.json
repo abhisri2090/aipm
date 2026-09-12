@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "0.1",
+  "name": "@aipm/api-integration-checklist",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Walk through a structured checklist covering auth, errors, retries, rate limits, secrets, and tests before shipping an API integration.",
+  "entry": "SKILL.md",
+  "targets": ["cursor", "claude", "codex"],
+  "license": "Apache-2.0",
+  "usage": "Point this skill at code that calls a third-party or internal API before merging it. It reads the actual implementation and checks it against an auth/errors/retries/rate-limits/secrets/tests checklist, prioritized by what would cause an incident.",
+  "agentDescription": "Use this skill when a user is adding or has written code that calls an external or internal API and wants a production-readiness review, not just a happy-path check. It reads the actual code rather than asking generic yes/no questions, checks for hardcoded secrets, missing non-2xx handling, retry loops that retry non-idempotent calls or 4xx errors, missing rate-limit/backoff handling, missing timeouts, and log lines that could leak tokens or user data. Findings are prioritized by whether they'd cause data loss, duplicate side effects, or silent failures versus being minor robustness nits.",
+  "tags": ["api", "code-review", "reliability", "security", "testing"],
+  "categories": ["Engineering"],
+  "examples": [
+    {
+      "title": "Review a new API client before merge",
+      "description": "Check a newly written API integration for missing error handling, retries, and rate-limit handling.",
+      "prompt": "Use api-integration-checklist on this new Stripe webhook handler before I open the PR."
+    },
+    {
+      "title": "Audit retry logic for duplicate side effects",
+      "description": "Confirm retries on a POST endpoint can't create duplicate resources.",
+      "prompt": "Check this API call's retry logic with api-integration-checklist — I'm worried retries could double-create records."
+    }
+  ],
+  "releaseNotes": "Initial release."
+}
