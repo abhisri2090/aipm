@@ -15,6 +15,11 @@ interface FileIndexEntry {
   blob_path: string;
   size_bytes: number;
   created_at: string;
+  scan_status: PackageVersionRow["scan_status"];
+  scan_findings: PackageVersionRow["scan_findings"];
+  scan_checks_performed: PackageVersionRow["scan_checks_performed"];
+  scanned_at: string | null;
+  scanner_version: string | null;
 }
 
 interface FileIndex {
@@ -55,6 +60,11 @@ export class FileMetadataStore implements MetadataStore {
       blob_path: row.blob_path,
       size_bytes: row.size_bytes,
       created_at: new Date().toISOString(),
+      scan_status: row.scan_status,
+      scan_findings: row.scan_findings,
+      scan_checks_performed: row.scan_checks_performed,
+      scanned_at: row.scanned_at ? row.scanned_at.toISOString() : null,
+      scanner_version: row.scanner_version,
     };
     await this.writeIndex(index);
   }
@@ -72,6 +82,29 @@ export class FileMetadataStore implements MetadataStore {
       blob_path: entry.blob_path,
       size_bytes: entry.size_bytes,
       created_at: new Date(entry.created_at),
+      scan_status: entry.scan_status,
+      scan_findings: entry.scan_findings,
+      scan_checks_performed: entry.scan_checks_performed,
+      scanned_at: entry.scanned_at ? new Date(entry.scanned_at) : null,
+      scanner_version: entry.scanner_version,
+    };
+  }
+
+  private toRow(name: string, version: string, entry: FileIndexEntry): PackageVersionRow {
+    return {
+      id: randomUUID(),
+      name,
+      version,
+      manifest: PackageManifestSchema.parse(entry.manifest),
+      integrity: entry.integrity,
+      blob_path: entry.blob_path,
+      size_bytes: entry.size_bytes,
+      created_at: new Date(entry.created_at),
+      scan_status: entry.scan_status,
+      scan_findings: entry.scan_findings,
+      scan_checks_performed: entry.scan_checks_performed,
+      scanned_at: entry.scanned_at ? new Date(entry.scanned_at) : null,
+      scanner_version: entry.scanner_version,
     };
   }
 
@@ -111,16 +144,7 @@ export class FileMetadataStore implements MetadataStore {
           .join(" ")
           .toLowerCase();
 
-        rows.push({
-          id: randomUUID(),
-          name,
-          version,
-          manifest,
-          integrity: entry.integrity,
-          blob_path: entry.blob_path,
-          size_bytes: entry.size_bytes,
-          created_at: new Date(entry.created_at),
-        });
+        rows.push(this.toRow(name, version, entry));
         haystacks.set(`${name}@${version}`, haystack);
       }
     }
@@ -141,16 +165,7 @@ export class FileMetadataStore implements MetadataStore {
     const versions = index.packages[name];
     if (!versions) return [];
     return Object.entries(versions)
-      .map(([version, entry]) => ({
-        id: randomUUID(),
-        name,
-        version,
-        manifest: PackageManifestSchema.parse(entry.manifest),
-        integrity: entry.integrity,
-        blob_path: entry.blob_path,
-        size_bytes: entry.size_bytes,
-        created_at: new Date(entry.created_at),
-      }))
+      .map(([version, entry]) => this.toRow(name, version, entry))
       .sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
   }
 
@@ -160,16 +175,7 @@ export class FileMetadataStore implements MetadataStore {
     if (!versions) return [];
     const deleted: PackageVersionRow[] = [];
     for (const [version, entry] of Object.entries(versions)) {
-      deleted.push({
-        id: randomUUID(),
-        name,
-        version,
-        manifest: PackageManifestSchema.parse(entry.manifest),
-        integrity: entry.integrity,
-        blob_path: entry.blob_path,
-        size_bytes: entry.size_bytes,
-        created_at: new Date(entry.created_at),
-      });
+      deleted.push(this.toRow(name, version, entry));
     }
     delete index.packages[name];
     await this.writeIndex(index);

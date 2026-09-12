@@ -15,7 +15,7 @@ import {
   type UserRow,
 } from "./db.js";
 import { DuplicateVersionError } from "./metadata-store.js";
-import { extractManifestFromTarball } from "./publish.js";
+import { extractManifestFromTarball, scanPackageTarball } from "./publish.js";
 import type { MetadataStore } from "./metadata-store.js";
 import type { BlobStorage } from "./storage.js";
 import { blobKeyForPackage } from "./storage.js";
@@ -128,6 +128,7 @@ async function writeImportedPackageVersion(options: {
   provenance: ImportProvenancePayload;
 }): Promise<{ name: string; version: string; integrity: string; userId: string }> {
   const { manifest, integrity } = await extractManifestFromTarball(options.tarball);
+  const scan = await scanPackageTarball(options.tarball, manifest);
   const blobPath = blobKeyForPackage(manifest.name, manifest.version);
   const tempBlobPath = `${blobPath}.tmp-${randomUUID()}`;
   let tempWritten = false;
@@ -141,6 +142,11 @@ async function writeImportedPackageVersion(options: {
       integrity,
       blob_path: blobPath,
       size_bytes: options.tarball.length,
+      scan_status: scan.status,
+      scan_findings: scan.findings,
+      scan_checks_performed: scan.checksPerformed,
+      scanned_at: new Date(),
+      scanner_version: scan.scannerVersion,
     });
     await options.storage.copy(tempBlobPath, blobPath);
   } finally {

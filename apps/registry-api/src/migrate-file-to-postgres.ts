@@ -30,6 +30,11 @@ for (const row of rows) {
       integrity: row.integrity,
       blob_path: row.blob_path,
       size_bytes: row.size_bytes,
+      scan_status: row.scan_status,
+      scan_findings: row.scan_findings,
+      scan_checks_performed: row.scan_checks_performed,
+      scanned_at: row.scanned_at,
+      scanner_version: row.scanner_version,
     });
     inserted += 1;
   } catch (error) {

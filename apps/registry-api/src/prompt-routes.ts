@@ -9,6 +9,7 @@ import {
   type AccountAuth,
 } from "./user-auth.js";
 import { promptPublicUrl, queueSearchNotification } from "./search-notification.js";
+import { scanFields, type ScanFinding, type ScanStatus } from "./security-scan.js";
 
 const MAX_SAMPLE_IMAGE_BYTES = 5 * 1024 * 1024;
 const PROMPT_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?$/;
@@ -93,6 +94,11 @@ type PromptRow = {
   org_id: string | null;
   org_slug: string | null;
   org_name: string | null;
+  scan_status: ScanStatus;
+  scan_findings: ScanFinding[];
+  scan_checks_performed: string[];
+  scanned_at: Date | null;
+  scanner_version: string | null;
 };
 
 const PROMPT_SELECT = `
@@ -130,7 +136,12 @@ const PROMPT_SELECT = `
   users.verified AS publisher_verified,
   prompts.org_id,
   orgs.slug AS org_slug,
-  orgs.name AS org_name
+  orgs.name AS org_name,
+  prompts.scan_status,
+  prompts.scan_findings,
+  prompts.scan_checks_performed,
+  prompts.scanned_at,
+  prompts.scanner_version
 `;
 
 function cleanString(
@@ -367,6 +378,13 @@ function serializeSummary(
     path: `/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(row.slug)}`,
     hasSampleImage: Boolean(row.sample_image_blob_path),
     canEdit: Boolean(options?.canEdit),
+    scan: {
+      status: row.scan_status,
+      scannedAt: row.scanned_at,
+      scannerVersion: row.scanner_version,
+      checksPerformed: row.scan_checks_performed,
+      findings: row.scan_findings,
+    },
   };
 }
 
@@ -476,7 +494,27 @@ async function ensurePromptSchema(pool: pg.Pool): Promise<void> {
       ON prompts (org_id, slug) WHERE org_id IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_prompts_public
       ON prompts (published_at DESC) WHERE status = 'published';
+
+    ALTER TABLE prompts ADD COLUMN IF NOT EXISTS scan_status TEXT NOT NULL DEFAULT 'not_scanned';
+    ALTER TABLE prompts DROP CONSTRAINT IF EXISTS prompts_scan_status_check;
+    ALTER TABLE prompts ADD CONSTRAINT prompts_scan_status_check
+      CHECK (scan_status IN ('not_scanned', 'clean', 'flagged', 'error'));
+    ALTER TABLE prompts ADD COLUMN IF NOT EXISTS scan_findings JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE prompts ADD COLUMN IF NOT EXISTS scan_checks_performed JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE prompts ADD COLUMN IF NOT EXISTS scanned_at TIMESTAMPTZ;
+    ALTER TABLE prompts ADD COLUMN IF NOT EXISTS scanner_version TEXT;
   `);
+}
+
+function scanPromptInput(input: PromptInput) {
+  return scanFields({
+    title: input.title,
+    summary: input.summary,
+    promptText: input.promptText,
+    usageNotes: input.usageNotes,
+    exampleInput: input.exampleInput,
+    exampleOutput: input.exampleOutput,
+  });
 }
 
 async function findPublicPrompt(
@@ -689,17 +727,20 @@ export async function registerPromptRoutes(
     const id = randomUUID();
     const blobPath = sampleImage ? `prompts/${id}/sample.${sampleImage.extension}` : null;
     if (sampleImage && blobPath) await options.storage.put(blobPath, sampleImage.data);
+    const scan = scanPromptInput(input);
     try {
       const result = await options.accountAuth.pool.query<{ slug: string }>(
         `INSERT INTO prompts (
            id, slug, title, summary, prompt_text, category, tags, input_types, output_types,
            tested_models, effort, variables, example_input, example_output, usage_notes, language,
            source_url, license, status, sample_image_blob_path, sample_image_content_type,
-           sample_image_alt, owner_user_id, org_id, published_at
+           sample_image_alt, owner_user_id, org_id, published_at,
+           scan_status, scan_findings, scan_checks_performed, scanned_at, scanner_version
          ) VALUES (
            $1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9::jsonb,
            $10::jsonb, $11, $12::jsonb, $13, $14, $15, $16,
-           $17, $18, 'published', $19, $20, $21, $22, $23, NOW()
+           $17, $18, 'published', $19, $20, $21, $22, $23, NOW(),
+           $24, $25::jsonb, $26::jsonb, NOW(), $27
          )
          RETURNING *`,
         [
@@ -726,6 +767,10 @@ export async function registerPromptRoutes(
           input.sampleImageAlt || null,
           user.id,
           orgId,
+          scan.status,
+          JSON.stringify(scan.findings),
+          JSON.stringify(scan.checksPerformed),
+          scan.scannerVersion,
         ],
       );
       const created = result.rows[0]!;
@@ -799,6 +844,7 @@ export async function registerPromptRoutes(
         });
       }
 
+      const scan = scanPromptInput(input);
       const previousBlobPath = existing.sample_image_blob_path;
       let nextBlobPath = previousBlobPath;
       let nextContentType = existing.sample_image_content_type;
@@ -841,6 +887,11 @@ export async function registerPromptRoutes(
              sample_image_blob_path = $19,
              sample_image_content_type = $20,
              sample_image_alt = $21,
+             scan_status = $22,
+             scan_findings = $23::jsonb,
+             scan_checks_performed = $24::jsonb,
+             scanned_at = NOW(),
+             scanner_version = $25,
              updated_at = NOW()
            WHERE id = $1`,
           [
@@ -865,6 +916,10 @@ export async function registerPromptRoutes(
             nextBlobPath,
             nextContentType,
             nextAlt,
+            scan.status,
+            JSON.stringify(scan.findings),
+            JSON.stringify(scan.checksPerformed),
+            scan.scannerVersion,
           ],
         );
       } catch (error) {

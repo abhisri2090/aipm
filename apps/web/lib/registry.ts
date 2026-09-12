@@ -21,6 +21,23 @@ export type PackageImportMeta = {
   contentHash?: string | null;
 };
 
+export type ScanStatus = "not_scanned" | "clean" | "flagged" | "error";
+
+export type ScanFinding = {
+  category: "secret" | "prompt-injection" | "network-or-filesystem";
+  severity: "warning" | "block";
+  label: string;
+  location: string;
+};
+
+export type ScanInfo = {
+  status: ScanStatus;
+  scannedAt: string | null;
+  scannerVersion: string | null;
+  checksPerformed: string[];
+  findings: ScanFinding[];
+};
+
 export type PackageSummary = {
   name: string;
   version: string;
@@ -38,6 +55,7 @@ export type PackageSummary = {
   installCount?: number;
   publisher?: PackagePublisher | null;
   import?: PackageImportMeta;
+  scan?: ScanInfo;
 };
 
 export type PackageDetail = {
@@ -67,6 +85,7 @@ export type PackageDetail = {
   installCount?: number;
   publisher?: PackagePublisher | null;
   import?: PackageImportMeta;
+  scan?: ScanInfo;
 };
 
 export const REGISTRY_API_BASE_URL = (process.env.AIPM_API_BASE_URL ?? "https://api.aipm-registry.com").replace(
@@ -244,6 +263,19 @@ export function formatInstallCount(count: number): string {
   const value = count / 1000;
   const formatted = value >= 10 ? value.toFixed(0) : value.toFixed(1);
   return `${formatted}K installs`;
+}
+
+export function scanBadgeLabel(status: ScanStatus | undefined): string {
+  switch (status) {
+    case "clean":
+      return "Scanned · no issues";
+    case "flagged":
+      return "Scanned · flagged";
+    case "error":
+      return "Scan incomplete";
+    default:
+      return "Not yet scanned";
+  }
 }
 
 export function shortIntegrity(value: string): string {

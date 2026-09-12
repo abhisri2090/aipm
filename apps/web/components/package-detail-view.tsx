@@ -4,6 +4,7 @@ import { CodeBlock } from "./code-block";
 import { CommentsSection } from "./comments-section";
 import { PackageReadmePreview } from "./package-readme-preview";
 import { PackageShareButtons } from "./package-share-buttons";
+import { ScanBadge } from "./scan-badge";
 import {
   commandTargets,
   displayTargets,
@@ -19,6 +20,7 @@ import {
   publisherPath,
   resolveSkillAbout,
   resolveSkillInvokeCommand,
+  scanBadgeLabel,
   shortIntegrity,
   type PackageDetail,
   type PackageSummary,
@@ -42,6 +44,7 @@ function toSummary(pkg: PackageDetail): PackageSummary {
     installCount: pkg.installCount,
     publisher: pkg.publisher,
     import: pkg.import,
+    scan: pkg.scan,
   };
 }
 
@@ -78,6 +81,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           <p className={shell.eyebrow}>AIPM package</p>
           <h1>{packageShortName(summary.name)}</h1>
           <p className={shell.lede}>{summary.description}</p>
+          <ScanBadge status={pkg.scan?.status} />
           <PackageShareButtons
             packageName={summary.name}
             title={`${summary.name}@${summary.version}`}
@@ -215,18 +219,26 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <dd title={summary.integrity}>SHA-256 recorded: {shortIntegrity(summary.integrity)}</dd>
             </div>
             <div className={shell.packageDetailItem}>
-              <dt>Registry checks</dt>
+              <dt>Security scan</dt>
               <dd>
-                <Link href="/security#automated-registry-checks">Automated checks passed</Link>
+                <Link href="/security#automated-registry-checks">{scanBadgeLabel(pkg.scan?.status)}</Link>
+                {pkg.scan?.findings.length ? (
+                  <> — {pkg.scan.findings.length} pattern {pkg.scan.findings.length === 1 ? "match" : "matches"} found</>
+                ) : null}
               </dd>
             </div>
-            <div className={shell.packageDetailItem}>
-              <dt>Check date</dt>
-              <dd>{new Date(summary.createdAt).toLocaleString()}</dd>
-            </div>
+            {pkg.scan?.scannedAt ? (
+              <div className={shell.packageDetailItem}>
+                <dt>Scanned at</dt>
+                <dd>{new Date(pkg.scan.scannedAt).toLocaleString()}</dd>
+              </div>
+            ) : null}
             <div className={shell.packageDetailItem}>
               <dt>Check limits</dt>
-              <dd>Files checked; behavior not approved</dd>
+              <dd>
+                Pattern-based checks for secrets, prompt-injection instructions, and suspicious network or
+                filesystem actions; behavior is not sandboxed or approved.
+              </dd>
             </div>
             <div className={shell.packageDetailItem}>
               <dt>Version published</dt>

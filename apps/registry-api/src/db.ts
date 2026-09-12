@@ -1,6 +1,7 @@
 import pg from "pg";
 import { isValidScopeName, normalizePackageSearchQuery, type PackageManifest } from "@aipm-registry/schemas";
 import { nextUsernameCandidate, normalizeUsernameCandidate } from "./aipm-username.js";
+import type { ScanFinding, ScanStatus } from "./security-scan.js";
 
 const { Pool } = pg;
 
@@ -14,6 +15,11 @@ export interface PackageVersionRow {
   size_bytes: number;
   created_at: Date;
   yanked_at: Date | null;
+  scan_status: ScanStatus;
+  scan_findings: ScanFinding[];
+  scan_checks_performed: string[];
+  scanned_at: Date | null;
+  scanner_version: string | null;
 }
 
 export type AuthProvider = "github" | "email";
@@ -66,7 +72,7 @@ const ORG_ROW_FIELDS =
 const PACKAGE_RESERVATION_FIELDS =
   "id, name, org_id, owner_user_id, created_at, visibility, deprecated_at, deprecation_message, install_count";
 const PACKAGE_VERSION_FIELDS =
-  "id, name, version, manifest, integrity, blob_path, size_bytes, created_at, yanked_at";
+  "id, name, version, manifest, integrity, blob_path, size_bytes, created_at, yanked_at, scan_status, scan_findings, scan_checks_performed, scanned_at, scanner_version";
 
 export type OrgRole = "owner" | "admin" | "member" | "viewer";
 export type PackageVisibility = "public" | "private";
@@ -290,6 +296,15 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
       UNIQUE (name, version)
     );
     CREATE INDEX IF NOT EXISTS idx_package_versions_name ON package_versions (name);
+
+    ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS scan_status TEXT NOT NULL DEFAULT 'not_scanned';
+    ALTER TABLE package_versions DROP CONSTRAINT IF EXISTS package_versions_scan_status_check;
+    ALTER TABLE package_versions ADD CONSTRAINT package_versions_scan_status_check
+      CHECK (scan_status IN ('not_scanned', 'clean', 'flagged', 'error'));
+    ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS scan_findings JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS scan_checks_performed JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS scanned_at TIMESTAMPTZ;
+    ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS scanner_version TEXT;
 
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY DEFAULT md5(random()::text || clock_timestamp()::text),
@@ -624,8 +639,11 @@ export async function insertPackageVersion(
   row: Omit<PackageVersionRow, "id" | "created_at" | "yanked_at">,
 ): Promise<void> {
   await pool.query(
-    `INSERT INTO package_versions (name, version, manifest, integrity, blob_path, size_bytes)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO package_versions (
+       name, version, manifest, integrity, blob_path, size_bytes,
+       scan_status, scan_findings, scan_checks_performed, scanned_at, scanner_version
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::jsonb, $10, $11)`,
     [
       row.name,
       row.version,
@@ -633,6 +651,11 @@ export async function insertPackageVersion(
       row.integrity,
       row.blob_path,
       row.size_bytes,
+      row.scan_status,
+      JSON.stringify(row.scan_findings),
+      JSON.stringify(row.scan_checks_performed),
+      row.scanned_at,
+      row.scanner_version,
     ],
   );
 }

@@ -49,6 +49,11 @@ describe.skipIf(!databaseUrl)("admin internal stats", () => {
       integrity: "sha256:abc",
       blob_path: "blob/path",
       size_bytes: 10,
+      scan_status: "clean",
+      scan_findings: [],
+      scan_checks_performed: [],
+      scanned_at: new Date(),
+      scanner_version: "test",
     });
     await insertPackageVersion(pool, {
       name: packageName,
@@ -57,6 +62,11 @@ describe.skipIf(!databaseUrl)("admin internal stats", () => {
       integrity: "sha256:def",
       blob_path: "blob/path2",
       size_bytes: 12,
+      scan_status: "clean",
+      scan_findings: [],
+      scan_checks_performed: [],
+      scanned_at: new Date(),
+      scanner_version: "test",
     });
 
     const beforeYank = await getInternalStats(pool);

@@ -15,6 +15,7 @@ import {
   type PromptSummary,
 } from "../lib/prompts";
 import { LoadMoreSentinel } from "./load-more-sentinel";
+import { ScanBadge } from "./scan-badge";
 import styles from "./prompt-directory.module.css";
 
 const PAGE_SIZE = 40;
@@ -334,7 +335,10 @@ export function PromptDirectory({
                 />
                 <div className={styles.cardTopline}>
                   <OutputMark output={prompt.outputTypes[0] ?? "text"} />
-                  <span className={styles.categoryBadge}>{prompt.category}</span>
+                  <div className={styles.cardToplineBadges}>
+                    <span className={styles.categoryBadge}>{prompt.category}</span>
+                    <ScanBadge status={prompt.scan?.status} />
+                  </div>
                 </div>
                 {prompt.outputTypes.includes("image") && prompt.hasSampleImage ? (
                   <img

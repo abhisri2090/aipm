@@ -6,10 +6,13 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { PackageManifestSchema } from "@aipm-registry/schemas";
+import { errorScanResult, scanFiles, type ScanResult } from "./security-scan.js";
 
 const execFileAsync = promisify(execFile);
 const MAX_TARBALL_BYTES = 50 * 1024 * 1024;
 export const MAX_PACKAGE_FILE_BYTES = 512 * 1024;
+const MAX_SCANNED_FILES = 200;
+const MAX_SCANNED_BYTES_TOTAL = 5 * 1024 * 1024;
 
 export class PackageFileNotFoundError extends Error {
   constructor(message: string) {
@@ -151,6 +154,56 @@ export async function readTarballFile(
     return { content: buffer.toString("utf8"), sizeBytes, binary: false };
   } finally {
     await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+function manifestScanFields(
+  manifest: ReturnType<typeof PackageManifestSchema.parse>,
+): { path: string; content: string }[] {
+  const fields: { path: string; content: string }[] = [
+    { path: "aipm.manifest.json#description", content: manifest.description },
+  ];
+  if (manifest.usage) fields.push({ path: "aipm.manifest.json#usage", content: manifest.usage });
+  if (manifest.agentDescription) {
+    fields.push({ path: "aipm.manifest.json#agentDescription", content: manifest.agentDescription });
+  }
+  if (manifest.releaseNotes) {
+    fields.push({ path: "aipm.manifest.json#releaseNotes", content: manifest.releaseNotes });
+  }
+  for (const [index, example] of (manifest.examples ?? []).entries()) {
+    fields.push({ path: `aipm.manifest.json#examples[${index}]`, content: example.prompt });
+  }
+  return fields;
+}
+
+/**
+ * Runs the automated security scan (see security-scan.ts) over every text file in a published
+ * tarball plus the manifest's free-text fields. Never throws: scan failures degrade to an
+ * "error" status rather than blocking publish.
+ */
+export async function scanPackageTarball(
+  tarball: Buffer,
+  manifest: ReturnType<typeof PackageManifestSchema.parse>,
+): Promise<ScanResult> {
+  try {
+    const entries = await listTarballFiles(tarball);
+    const files: { path: string; content: string }[] = [...manifestScanFields(manifest)];
+    let scannedBytes = 0;
+    for (const entry of entries.slice(0, MAX_SCANNED_FILES)) {
+      if (scannedBytes >= MAX_SCANNED_BYTES_TOTAL) break;
+      if (entry.sizeBytes > MAX_PACKAGE_FILE_BYTES) continue;
+      try {
+        const file = await readTarballFile(tarball, entry.path);
+        if (file.binary) continue;
+        scannedBytes += file.sizeBytes;
+        files.push({ path: entry.path, content: file.content });
+      } catch {
+        // Unreadable individual file; skip rather than fail the whole scan.
+      }
+    }
+    return scanFiles(files);
+  } catch {
+    return errorScanResult();
   }
 }
 

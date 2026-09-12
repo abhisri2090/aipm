@@ -5,13 +5,14 @@ import { PromptCopyButton } from "../../../../components/prompt-copy-button";
 import { CommentsSection } from "../../../../components/comments-section";
 import { PromptEditLink } from "../../../../components/prompt-edit-link";
 import { PromptRunner } from "../../../../components/prompt-runner";
+import { ScanBadge } from "../../../../components/scan-badge";
 import {
   displayPromptType,
   formatCopyCount,
   formatPromptDate,
   getPrompt,
 } from "../../../../lib/prompts";
-import { SITE_URL } from "../../../../lib/registry";
+import { SITE_URL, scanBadgeLabel } from "../../../../lib/registry";
 import { cn, shell } from "../../../../lib/page-styles";
 import styles from "../../[slug]/prompt-detail.module.css";
 
@@ -130,6 +131,7 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
           </div>
           <h1>{prompt.title}</h1>
           <p className={shell.lede}>{prompt.summary}</p>
+          <ScanBadge status={prompt.scan?.status} />
           <p className={styles.byline}>
             Published by {publisherName} · Updated {formatPromptDate(prompt.updatedAt)} ·{" "}
             {formatCopyCount(prompt.copyCount)}
@@ -248,6 +250,20 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
                 <dt>License</dt>
                 <dd>{prompt.license}</dd>
               </div>
+              <div>
+                <dt>Security scan</dt>
+                <dd>
+                  <Link href="/security#automated-registry-checks">
+                    {scanBadgeLabel(prompt.scan?.status)}
+                  </Link>
+                </dd>
+              </div>
+              {prompt.scan?.scannedAt ? (
+                <div>
+                  <dt>Scanned at</dt>
+                  <dd>{new Date(prompt.scan.scannedAt).toLocaleString()}</dd>
+                </div>
+              ) : null}
             </dl>
           </section>
 
