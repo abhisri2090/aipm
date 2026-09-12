@@ -43,19 +43,23 @@ async function listAllPublicPackages(): Promise<PackageSummary[]> {
   const packages: PackageSummary[] = [];
   let cursor: string | undefined;
 
-  for (let page = 0; page < 20; page += 1) {
-    const params = new URLSearchParams({ limit: "100" });
-    if (cursor) params.set("cursor", cursor);
-    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
-      next: { revalidate: 3600 },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) throw new Error(`Registry returned ${response.status}`);
+  try {
+    for (let page = 0; page < 20; page += 1) {
+      const params = new URLSearchParams({ limit: "100" });
+      if (cursor) params.set("cursor", cursor);
+      const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
+        next: { revalidate: 3600 },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!response.ok) throw new Error(`Registry returned ${response.status}`);
 
-    const data = (await response.json()) as PackageListResponse;
-    packages.push(...(data.packages ?? []));
-    if (!data.nextCursor) break;
-    cursor = data.nextCursor;
+      const data = (await response.json()) as PackageListResponse;
+      packages.push(...(data.packages ?? []));
+      if (!data.nextCursor) break;
+      cursor = data.nextCursor;
+    }
+  } catch {
+    return [];
   }
 
   return packages;
