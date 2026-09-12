@@ -95,6 +95,7 @@ import {
   updateOrgMemberRole,
   yankPackageVersion,
   type OrgRole,
+  type PackageSortMode,
   type PackageVisibility,
   type PublicPackagePublisherRow,
 } from "./db.js";
@@ -2549,7 +2550,19 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string; includeDemo?: string; includePrivate?: string } }>(
+  app.get<{
+    Querystring: {
+      q?: string;
+      limit?: string;
+      cursor?: string;
+      offset?: string;
+      category?: string;
+      target?: string;
+      sort?: string;
+      includeDemo?: string;
+      includePrivate?: string;
+    };
+  }>(
     "/v1/packages",
     {
       config: {
@@ -2569,10 +2582,20 @@ export async function createApp(): Promise<FastifyInstance> {
       const includeDemo = request.query.includeDemo === "true";
       const includePrivate = request.query.includePrivate === "true";
       const query = request.query.q?.trim() ?? "";
+      const category = request.query.category?.trim() ?? "";
+      const target = request.query.target?.trim() ?? "";
+      const sortRaw = request.query.sort?.trim() || "newest";
+      const sort: PackageSortMode = sortRaw === "popular" || sortRaw === "title" ? sortRaw : "newest";
+      const useCursor = sort === "newest";
+      const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const readAccess = await resolveReadAccess(accountAuth, request);
       const rows = await metadata.list(query, {
         limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT,
         cursor: parsedCursor.value,
+        offset: useCursor ? undefined : offset,
+        category,
+        target,
+        sort,
       });
       let visibleRows = includeDemo ? rows : rows.filter((row) => !isHiddenPublicPackage(row.name));
       visibleRows = visibleRows.filter((row) => !row.yanked_at);
@@ -2597,8 +2620,9 @@ export async function createApp(): Promise<FastifyInstance> {
       }
 
       const page = visibleRows.slice(0, limit);
-      const nextCursor =
-        visibleRows.length > limit ? page[page.length - 1]?.created_at.toISOString() : null;
+      const hasMore = visibleRows.length > limit;
+      const nextCursor = useCursor && hasMore ? page[page.length - 1]?.created_at.toISOString() : null;
+      const nextOffset = !useCursor && hasMore ? offset + page.length : null;
       const publishers = accountAuth
         ? await listPublicPackagePublishers(accountAuth.pool, [...new Set(page.map((row) => row.name))])
         : [];
@@ -2634,6 +2658,7 @@ export async function createApp(): Promise<FastifyInstance> {
           };
         }),
         nextCursor,
+        nextOffset,
       };
     },
   );

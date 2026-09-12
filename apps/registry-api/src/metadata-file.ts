@@ -5,6 +5,7 @@ import {
   DuplicateVersionError,
   selectLatestPackageVersions,
   type MetadataStore,
+  type PackageListOptions,
   type PackageVersionInsert,
   type PackageVersionRow,
 } from "./metadata-store.js";
@@ -75,13 +76,14 @@ export class FileMetadataStore implements MetadataStore {
     };
   }
 
-  async list(
-    query = "",
-    options: { limit?: number; cursor?: string } = {},
-  ): Promise<PackageVersionRow[]> {
+  async list(query = "", options: PackageListOptions = {}): Promise<PackageVersionRow[]> {
     const normalizedQuery = query.trim().toLowerCase();
     const limit = options.limit ?? 100;
-    const cursorTime = options.cursor ? new Date(options.cursor).getTime() : null;
+    const sort = options.sort ?? "newest";
+    const useCursor = sort === "newest";
+    const cursorTime = useCursor && options.cursor ? new Date(options.cursor).getTime() : null;
+    const category = options.category?.trim().toLowerCase();
+    const target = options.target?.trim().toLowerCase();
     const index = await this.readIndex();
     const rows: PackageVersionRow[] = [];
     const haystacks = new Map<string, string>();
@@ -125,15 +127,31 @@ export class FileMetadataStore implements MetadataStore {
       }
     }
 
-    return selectLatestPackageVersions(rows)
-      .filter((row) => {
-        if (normalizedQuery && !haystacks.get(`${row.name}@${row.version}`)?.includes(normalizedQuery)) {
-          return false;
-        }
-        return !cursorTime || row.created_at.getTime() < cursorTime;
-      })
-      .sort((a, b) => b.created_at.getTime() - a.created_at.getTime())
-      .slice(0, limit);
+    const filtered = selectLatestPackageVersions(rows).filter((row) => {
+      if (normalizedQuery && !haystacks.get(`${row.name}@${row.version}`)?.includes(normalizedQuery)) {
+        return false;
+      }
+      if (category && category !== "all" && !row.manifest.categories?.some((item) => item.toLowerCase() === category)) {
+        return false;
+      }
+      if (
+        target &&
+        target !== "all" &&
+        !row.manifest.targets.some((item) => item === target || item === "*")
+      ) {
+        return false;
+      }
+      return !cursorTime || row.created_at.getTime() < cursorTime;
+    });
+
+    if (sort === "title") {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      filtered.sort((a, b) => b.created_at.getTime() - a.created_at.getTime());
+    }
+
+    const offset = !useCursor ? Math.max(options.offset ?? 0, 0) : 0;
+    return filtered.slice(offset, offset + limit);
   }
 
   async listVersions(name: string): Promise<PackageVersionRow[]> {

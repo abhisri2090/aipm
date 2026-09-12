@@ -279,6 +279,56 @@ describe("registry API production behavior", () => {
     });
   });
 
+  it("filters packages by category and target, and sorts by title", async () => {
+    const publishSkill = async (
+      name: string,
+      version: string,
+      manifestExtras: Record<string, unknown>,
+    ) => {
+      const tarball = await createTarball(version, name, manifestExtras);
+      const payload = multipartPayload(tarball);
+      const publish = await app!.inject({
+        method: "POST",
+        url: `/v1/packages/${encodeURIComponent(name)}/versions`,
+        headers: { "content-type": payload.contentType, authorization: `Bearer ${token}` },
+        payload: payload.body,
+      });
+      expect(publish.statusCode).toBe(201);
+    };
+
+    await publishSkill("@team/zebra-skill", "1.0.0", {
+      targets: ["cursor"],
+      categories: ["Testing"],
+    });
+    await publishSkill("@team/apex-skill", "1.0.0", {
+      targets: ["claude"],
+      categories: ["Documentation"],
+    });
+
+    const byCategory = await app!.inject({ method: "GET", url: "/v1/packages?category=Testing" });
+    expect(byCategory.statusCode).toBe(200);
+    expect(byCategory.json().packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+      "@team/zebra-skill",
+    ]);
+
+    const byTarget = await app!.inject({ method: "GET", url: "/v1/packages?target=claude" });
+    expect(byTarget.statusCode).toBe(200);
+    expect(byTarget.json().packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+      "@team/apex-skill",
+    ]);
+
+    const byTitle = await app!.inject({
+      method: "GET",
+      url: `/v1/packages?sort=title&q=${encodeURIComponent("skill")}`,
+    });
+    expect(byTitle.statusCode).toBe(200);
+    const titleOrderedNames = byTitle
+      .json()
+      .packages.map((pkg: { name: string }) => pkg.name)
+      .filter((name: string) => name === "@team/apex-skill" || name === "@team/zebra-skill");
+    expect(titleOrderedNames).toEqual(["@team/apex-skill", "@team/zebra-skill"]);
+  });
+
   it.each(["0", "-5", "abc", "101"])("rejects invalid list limit %s", async (limit) => {
     const response = await app!.inject({ method: "GET", url: `/v1/packages?limit=${encodeURIComponent(limit)}` });
     expect(response.statusCode).toBe(400);

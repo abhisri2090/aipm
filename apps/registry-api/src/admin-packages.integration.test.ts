@@ -228,4 +228,45 @@ describe.skipIf(!databaseUrl)("admin package management", () => {
     expect(privateList.statusCode).toBe(200);
     expect(privateList.json().packages.some((pkg: { name: string }) => pkg.name === packageName)).toBe(true);
   });
+
+  it("sorts packages by install count when sort=popular", async () => {
+    const suffix = unique();
+    const pool = createPool(databaseUrl!);
+    await ensureSchema(pool);
+    const owner = await upsertGithubUser(pool, {
+      githubId: `popular-owner-${suffix}`,
+      githubLogin: `popular-owner-${suffix}`,
+    });
+    const org = await createOrg(pool, {
+      slug: `popular-org-${suffix}`,
+      name: "Popular Org",
+      ownerUserId: owner.id,
+    });
+    const popularName = `@${org.slug}/popular-skill`;
+    const quietName = `@${org.slug}/quiet-skill`;
+    await reservePackageName(pool, { name: popularName, orgId: org.id, ownerUserId: owner.id });
+    await reservePackageName(pool, { name: quietName, orgId: org.id, ownerUserId: owner.id });
+    await pool.end();
+
+    await publishPackage(popularName, "1.0.0");
+    await publishPackage(quietName, "1.0.0");
+
+    for (let i = 0; i < 3; i += 1) {
+      const install = await app!.inject({
+        method: "POST",
+        url: `/v1/packages/${encodeURIComponent(popularName)}/installs`,
+      });
+      expect(install.statusCode).toBe(200);
+    }
+
+    const response = await app!.inject({
+      method: "GET",
+      url: `/v1/packages?sort=popular&q=${encodeURIComponent(org.slug)}`,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+      popularName,
+      quietName,
+    ]);
+  });
 });

@@ -18,7 +18,7 @@ export const metadata = pageMetadata({
 export default function SkillsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; category?: string; target?: string; sort?: string }>;
 }) {
   return <SkillsDirectoryPage searchParams={searchParams} canonicalPath="/skills" />;
 }

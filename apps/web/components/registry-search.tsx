@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PackageCard } from "./package-card";
 import { LoadMoreSentinel } from "./load-more-sentinel";
 import { api } from "../lib/api-client";
-import type { PackageSummary } from "../lib/registry";
+import { PACKAGE_TARGET_FILTERS, type PackageSummary } from "../lib/registry";
 import { publicApiError } from "../lib/public-api-error";
 import { cn } from "../lib/class-names";
 import cards from "../app/cards.module.css";
@@ -23,25 +24,50 @@ const PAGE_SIZE = 20;
 type PackagesPage = {
   packages?: PackageSummary[];
   nextCursor?: string | null;
+  nextOffset?: number | null;
 };
+
+function collectCategories(current: string[], packages: PackageSummary[]): string[] {
+  const seen = new Set(current);
+  for (const pkg of packages) {
+    for (const category of pkg.categories ?? []) seen.add(category);
+  }
+  return [...seen];
+}
 
 export function RegistrySearch({
   initialPackages,
   initialNextCursor = null,
   initialQuery = "",
+  initialCategory = "All",
+  initialTarget = "all",
+  initialSort = "newest",
   compact = false,
 }: {
   initialPackages: PackageSummary[];
   initialNextCursor?: string | null;
   initialQuery?: string;
+  initialCategory?: string;
+  initialTarget?: string;
+  initialSort?: string;
   compact?: boolean;
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [packages, setPackages] = useState(initialPackages);
   const [query, setQuery] = useState(initialQuery);
-  const [target, setTarget] = useState("all");
+  const [target, setTarget] = useState(
+    PACKAGE_TARGET_FILTERS.find((item) => item === initialTarget) ?? "all",
+  );
+  const [category, setCategory] = useState(initialCategory.trim() || "All");
+  const [sort, setSort] = useState(initialSort || "newest");
+  const [categories, setCategories] = useState<string[]>(() =>
+    collectCategories([], initialPackages),
+  );
   const [nextCursor, setNextCursor] = useState<string | null>(
     compact ? null : initialNextCursor,
   );
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [status, setStatus] = useState(
     initialPackages.length === 0
@@ -52,15 +78,18 @@ export function RegistrySearch({
   );
   const loadingMoreRef = useRef(false);
 
-  const filtered = useMemo(
-    () =>
-      target === "all"
-        ? packages
-        : packages.filter(
-            (pkg) => pkg.targets.includes(target) || pkg.targets.includes("*"),
-          ),
-    [packages, target],
-  );
+  function updateFilterUrl(nextCategory: string, nextTarget: string, nextSort: string) {
+    if (compact) return;
+    const params = new URLSearchParams(window.location.search);
+    if (nextCategory === "All") params.delete("category");
+    else params.set("category", nextCategory);
+    if (nextTarget === "all") params.delete("target");
+    else params.set("target", nextTarget);
+    if (nextSort === "newest") params.delete("sort");
+    else params.set("sort", nextSort);
+    const search = params.toString();
+    router.replace(`${pathname}${search ? `?${search}` : ""}`, { scroll: false });
+  }
 
   const updateStatus = useCallback((count: number, hasMore: boolean) => {
     if (count === 0) {
@@ -72,58 +101,83 @@ export function RegistrySearch({
   }, []);
 
   const search = useCallback(
-    async (nextQuery: string) => {
+    async (options: { queryValue?: string; categoryValue?: string; targetValue?: string; sortValue?: string }) => {
       setStatus("Searching");
-      const params = new URLSearchParams({ limit: compact ? "3" : String(PAGE_SIZE) });
-      if (nextQuery) params.set("q", nextQuery);
+      const queryValue = options.queryValue ?? query;
+      const categoryValue = options.categoryValue ?? category;
+      const targetValue = options.targetValue ?? target;
+      const sortValue = options.sortValue ?? sort;
+      const params = new URLSearchParams({
+        limit: compact ? "3" : String(PAGE_SIZE),
+        sort: sortValue,
+      });
+      if (queryValue.trim()) params.set("q", queryValue.trim());
+      if (categoryValue !== "All") params.set("category", categoryValue);
+      if (targetValue !== "all") params.set("target", targetValue);
       try {
         const data = await api<PackagesPage>(`/v1/packages?${params}`);
         const nextPackages = data.packages ?? [];
         const cursor = compact ? null : (data.nextCursor ?? null);
+        const offset = compact ? null : (data.nextOffset ?? null);
         setPackages(nextPackages);
+        setCategories((current) => collectCategories(current, nextPackages));
         setNextCursor(cursor);
-        updateStatus(nextPackages.length, Boolean(cursor));
+        setNextOffset(offset);
+        updateStatus(nextPackages.length, Boolean(cursor) || offset != null);
       } catch (error) {
         setPackages([]);
         setNextCursor(null);
+        setNextOffset(null);
         setStatus(publicApiError(error));
       }
     },
-    [compact, updateStatus],
+    [category, compact, query, sort, target, updateStatus],
   );
 
   const loadMore = useCallback(async () => {
-    if (compact || !nextCursor || loadingMoreRef.current) return;
+    if (compact || loadingMoreRef.current) return;
+    if (sort === "newest" && !nextCursor) return;
+    if (sort !== "newest" && nextOffset == null) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
-    const params = new URLSearchParams({
-      limit: String(PAGE_SIZE),
-      cursor: nextCursor,
-    });
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), sort });
     if (query.trim()) params.set("q", query.trim());
+    if (category !== "All") params.set("category", category);
+    if (target !== "all") params.set("target", target);
+    if (sort === "newest" && nextCursor) params.set("cursor", nextCursor);
+    if (sort !== "newest" && nextOffset != null) params.set("offset", String(nextOffset));
     try {
       const data = await api<PackagesPage>(`/v1/packages?${params}`);
       const nextPackages = data.packages ?? [];
       const cursor = data.nextCursor ?? null;
+      const offset = data.nextOffset ?? null;
       setPackages((current) => {
         const seen = new Set(current.map((pkg) => pkg.name));
         const merged = [...current, ...nextPackages.filter((pkg) => !seen.has(pkg.name))];
-        updateStatus(merged.length, Boolean(cursor));
+        updateStatus(merged.length, Boolean(cursor) || offset != null);
         return merged;
       });
+      setCategories((current) => collectCategories(current, nextPackages));
       setNextCursor(cursor);
+      setNextOffset(offset);
     } catch (error) {
       setStatus(publicApiError(error));
       setNextCursor(null);
+      setNextOffset(null);
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-  }, [compact, nextCursor, query, updateStatus]);
+  }, [category, compact, nextCursor, nextOffset, query, sort, target, updateStatus]);
 
+  const didBootstrap = useRef(false);
   useEffect(() => {
-    if (initialPackages.length === 0) void search(initialQuery.trim());
+    if (didBootstrap.current) return;
+    didBootstrap.current = true;
+    if (initialPackages.length === 0) void search({ queryValue: initialQuery.trim() });
   }, [initialPackages.length, initialQuery, search]);
+
+  const hasMore = sort === "newest" ? Boolean(nextCursor) : nextOffset != null;
 
   return (
     <>
@@ -132,7 +186,7 @@ export function RegistrySearch({
         role="search"
         onSubmit={(event) => {
           event.preventDefault();
-          void search(query.trim());
+          void search({ queryValue: query });
         }}
       >
         <label htmlFor={compact ? "home-search-input" : "registry-search-input"}>
@@ -155,14 +209,37 @@ export function RegistrySearch({
       {!compact ? (
         <>
           <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>Category</span>
+            <div className={styles.filters} aria-label="Category filters">
+              {["All", ...categories].map((item) => (
+                <button
+                  className={cn(styles.chip, category === item && styles.chipActive)}
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    setCategory(item);
+                    updateFilterUrl(item, target, sort);
+                    void search({ categoryValue: item });
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className={styles.filterGroup}>
             <span className={styles.filterLabel}>Tool</span>
             <div className={styles.filters} aria-label="Target filters">
-              {["all", "cursor", "claude"].map((filter) => (
+              {PACKAGE_TARGET_FILTERS.map((filter) => (
                 <button
                   className={cn(styles.chip, target === filter && styles.chipActive)}
                   key={filter}
                   type="button"
-                  onClick={() => setTarget(filter)}
+                  onClick={() => {
+                    setTarget(filter);
+                    updateFilterUrl(category, filter, sort);
+                    void search({ targetValue: filter });
+                  }}
                 >
                   {filter === "all" ? "All" : filter[0]?.toUpperCase() + filter.slice(1)}
                 </button>
@@ -183,7 +260,7 @@ export function RegistrySearch({
                     onClick={() => {
                       const nextQuery = selected ? "" : filter.query;
                       setQuery(nextQuery);
-                      void search(nextQuery);
+                      void search({ queryValue: nextQuery });
                     }}
                   >
                     {filter.label}
@@ -192,15 +269,35 @@ export function RegistrySearch({
               })}
             </div>
           </div>
+          <div className={styles.resultsHeader}>
+            <p className={shell.muted}>{status}</p>
+            <label className={styles.sortLabel}>
+              Sort
+              <select
+                value={sort}
+                onChange={(event) => {
+                  const nextSort = event.target.value;
+                  setSort(nextSort);
+                  updateFilterUrl(category, target, nextSort);
+                  void search({ sortValue: nextSort });
+                }}
+              >
+                <option value="newest">Recently updated</option>
+                <option value="popular">Most installed</option>
+                <option value="title">Title A–Z</option>
+              </select>
+            </label>
+          </div>
         </>
-      ) : null}
+      ) : (
+        <p className={shell.muted}>{status}</p>
+      )}
 
-      <p className={shell.muted}>{status}</p>
       <div className={cards.results} aria-live="polite">
-        {filtered.length > 0 ? (
-          filtered.slice(0, compact ? 3 : filtered.length).map((pkg) => (
-            <PackageCard compact={compact} key={pkg.name} pkg={pkg} />
-          ))
+        {packages.length > 0 ? (
+          packages
+            .slice(0, compact ? 3 : packages.length)
+            .map((pkg) => <PackageCard compact={compact} key={pkg.name} pkg={pkg} />)
         ) : (
           <div className={shell.empty}>
             {status === "Search unavailable" || status.includes("timed out")
@@ -211,7 +308,7 @@ export function RegistrySearch({
       </div>
       {!compact ? (
         <LoadMoreSentinel
-          enabled={Boolean(nextCursor)}
+          enabled={hasMore}
           loading={loadingMore}
           onLoadMore={() => void loadMore()}
           label="Loading more skills…"

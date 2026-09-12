@@ -650,50 +650,99 @@ export async function getPackageVersion(
   return result.rows[0] ?? null;
 }
 
+export type PackageSortMode = "newest" | "popular" | "title";
+
 export async function listPackageVersions(
   pool: pg.Pool,
   query = "",
-  options: { limit?: number; cursor?: string } = {},
+  options: {
+    limit?: number;
+    cursor?: string;
+    offset?: number;
+    category?: string;
+    target?: string;
+    sort?: PackageSortMode;
+  } = {},
 ): Promise<PackageVersionRow[]> {
   const normalizedQuery = query.trim();
   const limit = Math.min(Math.max(options.limit ?? 100, 1), 101);
+  const sort = options.sort ?? "newest";
+  const useCursor = sort === "newest";
   const values: Array<string | number> = [];
   const filters: string[] = [];
   if (normalizedQuery) {
     values.push(`%${normalizedQuery}%`);
     filters.push(`
-      (name ILIKE $1
-        OR version ILIKE $1
-        OR manifest->>'description' ILIKE $1
-        OR manifest->>'type' ILIKE $1
-        OR manifest->>'usage' ILIKE $1
-        OR manifest->>'sourceUrl' ILIKE $1
-        OR manifest->>'releaseNotes' ILIKE $1
-        OR (manifest->'targets')::text ILIKE $1
-        OR (manifest->'tags')::text ILIKE $1
-        OR (manifest->'categories')::text ILIKE $1
-        OR (manifest->'examples')::text ILIKE $1)
+      (latest.name ILIKE $${values.length}
+        OR latest.version ILIKE $${values.length}
+        OR latest.manifest->>'description' ILIKE $${values.length}
+        OR latest.manifest->>'type' ILIKE $${values.length}
+        OR latest.manifest->>'usage' ILIKE $${values.length}
+        OR latest.manifest->>'sourceUrl' ILIKE $${values.length}
+        OR latest.manifest->>'releaseNotes' ILIKE $${values.length}
+        OR (latest.manifest->'targets')::text ILIKE $${values.length}
+        OR (latest.manifest->'tags')::text ILIKE $${values.length}
+        OR (latest.manifest->'categories')::text ILIKE $${values.length}
+        OR (latest.manifest->'examples')::text ILIKE $${values.length})
     `);
   }
 
-  if (options.cursor) {
+  const category = options.category?.trim();
+  if (category && category.toLowerCase() !== "all") {
+    values.push(category);
+    filters.push(`EXISTS (
+      SELECT 1 FROM jsonb_array_elements_text(COALESCE(latest.manifest->'categories', '[]'::jsonb)) cat
+      WHERE cat ILIKE $${values.length}
+    )`);
+  }
+
+  const target = options.target?.trim();
+  if (target && target.toLowerCase() !== "all") {
+    values.push(target);
+    filters.push(`EXISTS (
+      SELECT 1 FROM jsonb_array_elements_text(COALESCE(latest.manifest->'targets', '[]'::jsonb)) tgt
+      WHERE tgt = $${values.length} OR tgt = '*'
+    )`);
+  }
+
+  if (useCursor && options.cursor) {
     values.push(options.cursor);
-    filters.push(`created_at < $${values.length}`);
+    filters.push(`latest.created_at < $${values.length}`);
+  }
+
+  let joinSql = "";
+  let orderSql = "latest.created_at DESC";
+  if (sort === "popular") {
+    joinSql = "LEFT JOIN package_reservations reservations ON reservations.name = latest.name";
+    orderSql = "COALESCE(reservations.install_count, 0) DESC, latest.created_at DESC";
+  } else if (sort === "title") {
+    orderSql = "LOWER(latest.name) ASC";
   }
 
   values.push(limit);
+  const limitParam = values.length;
+  let offsetSql = "";
+  if (!useCursor && options.offset) {
+    values.push(options.offset);
+    offsetSql = ` OFFSET $${values.length}`;
+  }
+
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+  const selectFields = PACKAGE_VERSION_FIELDS.split(", ")
+    .map((field) => `latest.${field}`)
+    .join(", ");
   const result = await pool.query<PackageVersionRow>(
-    `SELECT ${PACKAGE_VERSION_FIELDS}
+    `SELECT ${selectFields}
      FROM (
        SELECT DISTINCT ON (name) ${PACKAGE_VERSION_FIELDS}
        FROM package_versions
        WHERE yanked_at IS NULL
        ORDER BY name, created_at DESC
      ) latest
+     ${joinSql}
      ${where}
-     ORDER BY created_at DESC
-     LIMIT $${values.length}`,
+     ORDER BY ${orderSql}
+     LIMIT $${limitParam}${offsetSql}`,
     values,
   );
 

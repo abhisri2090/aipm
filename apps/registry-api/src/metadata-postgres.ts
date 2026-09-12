@@ -12,6 +12,7 @@ import {
 import {
   DuplicateVersionError,
   type MetadataStore,
+  type PackageListOptions,
   type PackageVersionInsert,
   type PackageVersionRow,
 } from "./metadata-store.js";
@@ -44,10 +45,7 @@ export class PostgresMetadataStore implements MetadataStore {
     return getPackageVersion(this.pool, name, version);
   }
 
-  async list(
-    query = "",
-    options: { limit?: number; cursor?: string } = {},
-  ): Promise<PackageVersionRow[]> {
+  async list(query = "", options: PackageListOptions = {}): Promise<PackageVersionRow[]> {
     return listPackageVersions(this.pool, query, options);
   }
 

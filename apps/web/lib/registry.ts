@@ -252,38 +252,56 @@ export function shortIntegrity(value: string): string {
   return `${algorithm}-${hash.slice(0, 14)}...`;
 }
 
+export const PACKAGE_TARGET_FILTERS = ["all", "cursor", "claude", "codex"] as const;
+export const PACKAGE_SORT_OPTIONS = ["newest", "popular", "title"] as const;
+export type PackageSortMode = (typeof PACKAGE_SORT_OPTIONS)[number];
+
 export async function listPackages(
   query = "",
   limit = 50,
 ): Promise<PackageSummary[]> {
-  const page = await listPackagesPage(query, limit);
+  const page = await listPackagesPage({ query, limit });
   return page.packages;
 }
 
-export async function listPackagesPage(
-  query = "",
-  limit = 50,
-  cursor?: string | null,
-): Promise<{ packages: PackageSummary[]; nextCursor: string | null }> {
-  const params = new URLSearchParams({ limit: String(limit) });
-  if (query) params.set("q", query);
-  if (cursor) params.set("cursor", cursor);
+export async function listPackagesPage(options: {
+  query?: string;
+  limit?: number;
+  cursor?: string | null;
+  offset?: number | null;
+  category?: string;
+  target?: string;
+  sort?: string;
+}): Promise<{
+  packages: PackageSummary[];
+  nextCursor: string | null;
+  nextOffset: number | null;
+}> {
+  const params = new URLSearchParams({ limit: String(options.limit ?? 50) });
+  if (options.query) params.set("q", options.query);
+  if (options.cursor) params.set("cursor", options.cursor);
+  if (options.offset != null && options.offset > 0) params.set("offset", String(options.offset));
+  if (options.category && options.category !== "All") params.set("category", options.category);
+  if (options.target && options.target !== "all") params.set("target", options.target);
+  if (options.sort) params.set("sort", options.sort);
   try {
     const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(3000),
     });
-    if (!response.ok) return { packages: [], nextCursor: null };
+    if (!response.ok) return { packages: [], nextCursor: null, nextOffset: null };
     const data = (await response.json()) as {
       packages?: PackageSummary[];
       nextCursor?: string | null;
+      nextOffset?: number | null;
     };
     return {
       packages: data.packages ?? [],
       nextCursor: data.nextCursor ?? null,
+      nextOffset: data.nextOffset ?? null,
     };
   } catch {
-    return { packages: [], nextCursor: null };
+    return { packages: [], nextCursor: null, nextOffset: null };
   }
 }
 
