@@ -81,7 +81,7 @@ export const metadata = pageMetadata({
 });
 
 export default async function HomePage() {
-  const { packages: homeSearchPackages } = await listPackagesPage("", 3);
+  const { packages: homeSearchPackages } = await listPackagesPage({ query: "", limit: 3 });
 
   return (
     <main>
