@@ -157,14 +157,15 @@ export async function getPrompt(
   publisher: string,
   slug: string,
 ): Promise<PromptDetail | null> {
-  try {
-    const response = await fetch(
-      `${REGISTRY_API_BASE_URL}/v1/prompts/${encodeURIComponent(publisher)}/${encodeURIComponent(slug)}`,
-      { cache: "no-store", signal: AbortSignal.timeout(3000) },
-    );
-    if (!response.ok) return null;
-    return (await response.json()) as PromptDetail;
-  } catch {
-    return null;
+  const response = await fetch(
+    `${REGISTRY_API_BASE_URL}/v1/prompts/${encodeURIComponent(publisher)}/${encodeURIComponent(slug)}`,
+    { cache: "no-store", signal: AbortSignal.timeout(3000) },
+  );
+  // Only a confirmed missing prompt should send the page to notFound().
+  // Temporary API failures must propagate to Next's error handling instead.
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`Prompt request failed (${response.status})`);
   }
+  return (await response.json()) as PromptDetail;
 }

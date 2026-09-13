@@ -1,6 +1,57 @@
 # AIPM SEO Execution Plan
 
-Updated: 6 September 2026
+Updated: 13 September 2026
+
+## Weekly review — 13 September 2026
+
+Search Console's latest complete day was 10 September. For 4–10 September versus
+28 August–3 September, web search recorded **9 vs 3 clicks**, **616 vs 604
+impressions**, **1.5% vs 0.5% CTR**, and **10.4 vs 15.2 average position**.
+For 14 August–10 September versus 17 July–13 August, it recorded **19 vs 4
+clicks**, **1.57k vs 357 impressions**, **1.2% vs 1.1% CTR**, and **13.2 vs
+9.1 average position**. The 28-day position decline reflects a much larger
+query/page surface and is not, by itself, evidence that established pages fell.
+
+Leading 28-day queries: `aipm` (2 clicks, 94 impressions), `ai package manager`
+(1, 20), `cursor rules vs skills` (0, 10), and `how to install claude skills`
+(0, 7). Leading pages: home (12 clicks, 389 impressions), AI package manager
+guide (2, 264), skills listing (2, 67), Cursor rules versus Agent Skills guide
+(1, 220), and roadmap (0, 317). Query rows do not sum to site totals because
+Search Console suppresses some low-volume queries.
+
+Indexing report (last updated 4 September): **41 indexed**, **115 not indexed**,
+including 104 discovered, 9 redirects, and 2 crawled but not indexed. Both
+sitemaps report Success: main 154 discovered URLs (read 12 September) and
+package 88 (read 10 September). The live sitemaps returned 200 with 242 URLs.
+The production web verifier passed. A fast crawl hit the API's 120/minute rate
+limit and temporarily returned 404 for prompt detail pages; a sampled prompt
+returned 200 after the limit reset. A paced recrawl is needed before treating
+those responses as permanent URL failures. Core Web Vitals has insufficient
+Chrome UX data on both mobile and desktop (updated 11 September).
+
+The CLI had **338 npm downloads** for 5–11 September, versus the prior plan's
+142-download baseline. Search Console still shows only **libraries.io** as an
+external linking site (10 links); no new referring domain is confirmed there.
+Vercel Analytics is accessible, but custom-event totals require a Pro team, so
+package views, command copies, shares, README badge copies, and GitHub badge
+visits could not be quantified this run. September 13 is not the first Sunday
+of the month, so the monthly Semrush competitor benchmark was not refreshed.
+
+Priorities, ranked by expected impact and confidence:
+
+1. **High impact, high confidence:** Earn relevant publisher/repository links;
+   Search Console confirms one referring domain, while new page impressions are
+   growing. Abhishek owns publisher contact and badge permission.
+2. **High impact, medium confidence:** Investigate the 104 discovered but not
+   indexed pages once Google's report reflects the September deployment;
+   compare exclusions against the current 242-URL sitemap inventory.
+3. **Medium impact, high confidence:** Add a rate-aware sitemap crawl and check
+   prompt availability under normal load before changing index rules.
+4. **Medium impact, medium confidence:** Monitor the AI package manager and Cursor
+   comparison guides for another 28 days before testing titles or descriptions.
+5. **Medium impact, high confidence:** Choose an accessible custom-event reporting
+   path so copy/share/badge conversion can be measured; Vercel Hobby currently
+   does not expose these totals.
 
 This is the final working plan for improving AIPM's SEO, AI search visibility,
 publisher growth, and product adoption. It clearly separates the work Codex will

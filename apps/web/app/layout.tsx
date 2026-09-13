@@ -28,10 +28,9 @@ export const metadata: Metadata = {
   category: "developer tools",
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/aipm-icon-192.png", sizes: "192x192", type: "image/png" },
     ],
-    shortcut: "/favicon.svg",
+    shortcut: "/aipm-icon-192.png",
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/site.webmanifest",
