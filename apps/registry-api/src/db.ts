@@ -638,6 +638,10 @@ export async function insertPackageVersion(
   pool: pg.Pool,
   row: Omit<PackageVersionRow, "id" | "created_at" | "yanked_at">,
 ): Promise<void> {
+  // Older file-index rows predate scan columns; default so migrates/inserts never write NULL.
+  const scanStatus = row.scan_status ?? "not_scanned";
+  const scanFindings = row.scan_findings ?? [];
+  const scanChecksPerformed = row.scan_checks_performed ?? [];
   await pool.query(
     `INSERT INTO package_versions (
        name, version, manifest, integrity, blob_path, size_bytes,
@@ -651,11 +655,11 @@ export async function insertPackageVersion(
       row.integrity,
       row.blob_path,
       row.size_bytes,
-      row.scan_status,
-      JSON.stringify(row.scan_findings),
-      JSON.stringify(row.scan_checks_performed),
-      row.scanned_at,
-      row.scanner_version,
+      scanStatus,
+      JSON.stringify(scanFindings),
+      JSON.stringify(scanChecksPerformed),
+      row.scanned_at ?? null,
+      row.scanner_version ?? null,
     ],
   );
 }

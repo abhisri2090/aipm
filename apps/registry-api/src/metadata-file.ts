@@ -16,11 +16,11 @@ interface FileIndexEntry {
   blob_path: string;
   size_bytes: number;
   created_at: string;
-  scan_status: PackageVersionRow["scan_status"];
-  scan_findings: PackageVersionRow["scan_findings"];
-  scan_checks_performed: PackageVersionRow["scan_checks_performed"];
-  scanned_at: string | null;
-  scanner_version: string | null;
+  scan_status?: PackageVersionRow["scan_status"];
+  scan_findings?: PackageVersionRow["scan_findings"];
+  scan_checks_performed?: PackageVersionRow["scan_checks_performed"];
+  scanned_at?: string | null;
+  scanner_version?: string | null;
 }
 
 interface FileIndex {
@@ -74,21 +74,7 @@ export class FileMetadataStore implements MetadataStore {
     const index = await this.readIndex();
     const entry = index.packages[name]?.[version];
     if (!entry) return null;
-    return {
-      id: randomUUID(),
-      name,
-      version,
-      manifest: PackageManifestSchema.parse(entry.manifest),
-      integrity: entry.integrity,
-      blob_path: entry.blob_path,
-      size_bytes: entry.size_bytes,
-      created_at: new Date(entry.created_at),
-      scan_status: entry.scan_status,
-      scan_findings: entry.scan_findings,
-      scan_checks_performed: entry.scan_checks_performed,
-      scanned_at: entry.scanned_at ? new Date(entry.scanned_at) : null,
-      scanner_version: entry.scanner_version,
-    };
+    return this.toRow(name, version, entry);
   }
 
   private toRow(name: string, version: string, entry: FileIndexEntry): PackageVersionRow {
@@ -101,11 +87,12 @@ export class FileMetadataStore implements MetadataStore {
       blob_path: entry.blob_path,
       size_bytes: entry.size_bytes,
       created_at: new Date(entry.created_at),
-      scan_status: entry.scan_status,
-      scan_findings: entry.scan_findings,
-      scan_checks_performed: entry.scan_checks_performed,
+      // Legacy index entries may omit scan fields entirely.
+      scan_status: entry.scan_status ?? "not_scanned",
+      scan_findings: entry.scan_findings ?? [],
+      scan_checks_performed: entry.scan_checks_performed ?? [],
       scanned_at: entry.scanned_at ? new Date(entry.scanned_at) : null,
-      scanner_version: entry.scanner_version,
+      scanner_version: entry.scanner_version ?? null,
     };
   }
 
