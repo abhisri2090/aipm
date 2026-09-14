@@ -67,7 +67,7 @@ pnpm --filter @aipm-registry/web verify:local
 ```
 
 The verifier checks core pages, page titles, canonical URLs, JSON-LD on SEO
-pages, `robots.txt`, `sitemap.xml`, `package-sitemap.xml`, `llms.txt`, and
+pages, `robots.txt`, `sitemap.xml`, `ai-skills-sitemap.xml`, `prompt-sitemap.xml`, `llms.txt`, and
 production security headers when the target URL is HTTPS.
 
 Production deployment and OAuth configuration: [`infra/azure/`](../../infra/azure/).

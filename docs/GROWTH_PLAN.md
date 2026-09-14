@@ -1,6 +1,6 @@
 # AIPM Growth Plan
 
-Updated: 4 September 2026
+Updated: 14 September 2026
 
 This plan focuses on useful adoption, not empty traffic. A good result is a person who finds a trusted skill, installs it, and returns or publishes one of their own.
 
@@ -217,3 +217,63 @@ Week 4:
 - [ ] Decide the legal and evidence requirements for each verification badge.
 - [ ] Choose who reviews security-scan false positives and abuse reports.
 - [ ] Maintain the backlink and outreach tracking sheet.
+
+## 8. Grow the Skill Catalog to 10,000
+
+### Goal and counting rule
+
+Target 10,000 **distinct, searchable skill records**, not 10,000 automatically mirrored packages. Show a separate count for packages that have passed licensing, validation, and security checks and are installable from AIPM. Count a source skill by canonical GitHub repository and directory; do not inflate the total with forks, duplicate copies, or versions.
+
+### Discovery sources and initial candidates
+
+Use skills.sh's leaderboard as a demand signal and discovery feed, then resolve and fetch content from the canonical GitHub repository. The skills.sh public API requires Vercel OIDC authentication; do not build a crawler that evades its access controls or rate limits. Supplement it with GitHub repository discovery, publisher submissions, and opt-in publisher GitHub App installations. Verify current license and skill-directory counts before any batch import. The numbers below are **appearances among the first 600 skills.sh leaderboard entries observed on 3 September 2026**, not complete repository inventories.
+
+| Source repository | Leaderboard appearances | License observed on 3 Sep | Candidate categories |
+| --- | ---: | --- | --- |
+| https://github.com/coreyhaines31/marketingskills | 61 | MIT | SEO, copywriting, content strategy |
+| https://github.com/heygen-com/hyperframes | 38 | Apache-2.0 | Video, animation, captions |
+| https://github.com/prime-skills/runcomfy-agent-skills | 30 | MIT | Image, video, music generation |
+| https://github.com/larksuite/cli | 27 | MIT | Documents, sheets, calendar, messaging |
+| https://github.com/pbakaus/impeccable | 22 | Apache-2.0 | UI critique and polish |
+| https://github.com/googleworkspace/cli | 15 | Apache-2.0 | Gmail, Drive, Docs, Sheets |
+| https://github.com/obra/superpowers | 14 | MIT | Debugging, planning, code review |
+| https://github.com/firebase/agent-skills | 14 | Apache-2.0 | Auth, Firestore, hosting |
+| https://github.com/cloudflare/skills | 10 | Apache-2.0 | Workers, Wrangler, performance |
+| https://github.com/prisma/skills | 9 | MIT | Database setup and upgrades |
+| https://github.com/expo/skills | 8 | MIT | React Native and deployment |
+| https://github.com/google/agents-cli | 7 | Apache-2.0 | Agent scaffolding and evaluation |
+
+Additional candidates to assess: https://github.com/mattpocock/skills, https://github.com/microsoft/azure-skills, https://github.com/anthropics/skills, https://github.com/remotion-dev/skills, https://github.com/firecrawl/cli, https://github.com/amd/skills, and https://github.com/JayRHa/AgentSkills. A missing or unclear GitHub SPDX result is **not** permission to redistribute; inspect the actual repository and directory licenses. Repository-level license observations are only screening signals and may not cover every file or subdirectory.
+
+### Required ingestion architecture
+
+1. **Discover without publishing.** Store source repository, directory, source type, discovery time, and any ranking signal in a candidate table. Deduplicate by canonical repository plus skill path, and flag identical content hashes and forks.
+2. **Queue repository snapshots.** Resolve one default-branch commit SHA and download each repository archive once per commit. Recursively locate directories containing `SKILL.md`, including nested paths; do not treat every `README.md` as a skill. One repository can yield many candidates without repeated archive downloads.
+3. **Validate and classify.** Parse skill frontmatter, cap archive/file sizes, reject traversal and unsafe symlinks, identify binaries/scripts/dependencies, and resolve the applicable license. Preserve license and notice files. Missing or unclear license means metadata-only or manual review, never an invented Apache-2.0 license.
+4. **Scan and review.** Run structural and secret checks plus suspicious-instruction/script checks. Record scanner version, evidence, warnings, and blocking findings. Quarantine failures; use human review for ambiguous licenses, security findings, and high-visibility imports. Do not call automated checks a guarantee of safety.
+5. **Publish idempotently.** Use a stable source identity (repository + path + commit SHA) and content hash. Skip unchanged content, preserve source URL and SHA, and generate immutable AIPM versions. Resolve package-name collisions explicitly rather than overwriting a publisher's reservation.
+6. **Represent ownership truthfully.** Imported/unclaimed packages must not appear to have been published or endorsed by the upstream author. Keep upstream attribution distinct from an authenticated AIPM publisher account, and provide claim, correction, and takedown workflows.
+7. **Keep sources fresh.** Poll default-branch SHAs at a bounded interval; use GitHub App push webhooks only for repositories where the app is installed. Re-fetch and rescan changed snapshots before releasing new versions. Honor API rate-limit headers, retry with backoff, and retain dead-letter jobs and per-skill failure reports.
+
+Suggested states: `discovered → fetched → validated → scanned → approved → published`, with `metadata-only`, `manual-review`, `quarantined`, and `removed` side paths. Use a durable queue with per-host concurrency, resumable jobs, partial success, and an audit trail; the interactive admin import endpoint remains for small manual batches.
+
+### Current importer gaps to address before mass ingestion
+
+- `/v1/admin/import-from-url` is limited to 10 requests per minute; at that ceiling 10,000 individual requests require at least 16.7 hours before network time or failures.
+- `importSkillFromGitHubUrl` downloads a repository archive for each skill. Bulk import lists immediate child folders and stops on the first failure; its default maximum is 50.
+- `detectLicense` currently falls back to `Apache-2.0` when no license is detected. Remove this fallback and make redistribution eligibility an explicit gate.
+- Admin import currently creates/upserts a GitHub-author user and org. A mass import must not imply the author signed up, published, or endorsed AIPM.
+- Folder-name-based package names can collide across repositories; require stable source identity and collision policy.
+
+### Rollout and measures
+
+| Stage | Target | Exit criterion |
+| --- | ---: | --- |
+| Curated | 250 installable packages | Clear licenses, provenance, scan results, manual spot checks |
+| Repository ingestion | 1,000 installable packages | One-fetch-per-commit worker, idempotency, retries, partial success |
+| Broad discovery | 5,000 searchable records | Candidate deduplication, metadata-only states, source freshness |
+| Scale | 10,000 searchable records | Stable queue operations, license/scan coverage, claim and takedown flow |
+
+Track distinct candidates, approved/installable packages, license rejection rate, scan quarantine rate, duplicate rate, import success rate, cost per accepted skill, source freshness, install-to-activation rate, and author-claim rate. Do not optimize the 10,000 count at the expense of useful or trustworthy installs.
+
+References: [skills.sh API](https://skills.sh/docs/api), [skills.sh terms](https://skills.sh/terms), [GitHub REST rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api), [GitHub App webhooks](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/using-webhooks-with-github-apps).

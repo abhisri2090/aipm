@@ -134,9 +134,22 @@ Success means:
 - New public prompts and qualifying packages enter the correct sitemap automatically.
 - Search engines can reach important pages through links, not only through a sitemap.
 
-Possible improvement after measurement:
+Current sitemap layout:
 
-Split the current sitemaps into guides, prompts, packages, publishers, and discovery pages. AIPM does not need this for sitemap size yet. It may still help us compare indexation by page type in Search Console. We need Search Console data before deciding whether the extra sitemap structure is useful.
+- `/sitemap.xml` — static marketing pages, guides, and discovery hubs (including `/prompts` and `/skills`, not individual inventory pages).
+- `/ai-skills-sitemap.xml` — indexable AI skill (package) and publisher URLs from the registry API.
+- `/prompt-sitemap.xml` — every public prompt detail URL from the registry API.
+
+`robots.txt` and IndexNow must list all three files. Do not put individual prompt or skill URLs back into `/sitemap.xml`; that mixes slow inventory fetches with static pages and becomes hard to monitor as inventory grows.
+
+Rules for inventory sitemaps:
+
+- Paginate the registry API until every public URL is included, or fail closed. Never publish a partial prompt or skill list as if it were complete.
+- Use the real content update time for `lastmod` (prompt `updatedAt`, skill publish/create time).
+- Keep private, empty, duplicate, search-filter, and low-information pages out of sitemaps.
+- When a child sitemap approaches Google’s limits (50,000 URLs or 50 MB uncompressed), split that content type into numbered shards and switch `robots.txt` to a sitemap index that points at the shards. Prefer sharding by content type first (`prompt-sitemap`, `ai-skills-sitemap`), then by page within a type (`prompt-sitemap-0.xml`, `prompt-sitemap-1.xml`).
+- After any sitemap or routing change, run the web verify script and confirm Search Console still fetches each listed sitemap.
+- Keep `/package-sitemap.xml` as a permanent redirect to `/ai-skills-sitemap.xml` so older crawler bookmarks do not break.
 
 ### Priority 3: Use search demand to choose pages
 
@@ -350,14 +363,17 @@ Every generated page needs a quality threshold. Empty, duplicated, or very thin 
 
 ### Larger sitemap architecture
 
-When AIPM has thousands of qualifying URLs:
+AIPM already splits inventory by content type (`ai-skills-sitemap.xml`, `prompt-sitemap.xml`). When a single child sitemap grows toward Google’s limits:
 
-- Use a sitemap index.
-- Split sitemaps by content type.
-- Keep each child sitemap available and monitored.
-- Include only canonical and indexable URLs.
-- Use accurate `lastmod` values.
-- Test every child sitemap before publishing the index.
+1. Keep `/sitemap.xml` for static and guide pages only.
+2. Keep one logical sitemap per inventory type (prompts, AI skills/publishers).
+3. If one type exceeds ~45,000 URLs (leave headroom under the 50,000 limit), emit shards such as `/prompt-sitemap/0.xml`, `/prompt-sitemap/1.xml` (Next.js `generateSitemaps`) or `/prompt-sitemap-0.xml`, `/prompt-sitemap-1.xml`.
+4. Publish a sitemap index that lists every shard, and point `robots.txt` at the index (or at the index plus the static `/sitemap.xml`).
+5. Keep each child sitemap available, monitored, and covered by `verify-web`.
+6. Include only canonical, indexable URLs with accurate `lastmod` values.
+7. Test every child sitemap before advertising the index.
+
+Do not wait for a full sitemap-index migration to keep prompts or skills out of `/sitemap.xml`. Catalog URLs belong in their own files from the start so static page generation stays fast and failures stay isolated by content type.
 
 ## 8. Competitors
 

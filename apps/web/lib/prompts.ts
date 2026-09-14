@@ -107,6 +107,26 @@ export async function listPrompts(query = ""): Promise<PromptSummary[]> {
   return page.prompts;
 }
 
+/** Prompt sitemap generation must include every page or fail instead of publishing a partial list. */
+export async function listAllPrompts(): Promise<PromptSummary[]> {
+  const prompts = new Map<string, PromptSummary>();
+  const seenCursors = new Set<string>();
+  let cursor: string | null = null;
+  let expectedTotal = 0;
+  do {
+    const page = await listPromptsPage({ limit: 100, cursor, throwOnError: true });
+    expectedTotal = Math.max(expectedTotal, page.total);
+    for (const prompt of page.prompts) prompts.set(prompt.id, prompt);
+    cursor = page.nextCursor;
+    if (cursor && (seenCursors.has(cursor) || page.prompts.length === 0)) {
+      throw new Error("Prompt pagination did not advance");
+    }
+    if (cursor) seenCursors.add(cursor);
+  } while (cursor);
+  if (prompts.size < expectedTotal) throw new Error("Prompt listing is incomplete");
+  return [...prompts.values()];
+}
+
 export async function listPromptsPage(options: {
   query?: string;
   limit?: number;
@@ -115,6 +135,7 @@ export async function listPromptsPage(options: {
   category?: string;
   output?: string;
   sort?: string;
+  throwOnError?: boolean;
 }): Promise<{
   prompts: PromptSummary[];
   nextCursor: string | null;
@@ -134,7 +155,7 @@ export async function listPromptsPage(options: {
       signal: AbortSignal.timeout(3000),
     });
     if (!response.ok) {
-      return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
+      throw new Error(`Prompt listing failed (${response.status})`);
     }
     const data = (await response.json()) as {
       prompts?: PromptSummary[];
@@ -142,13 +163,17 @@ export async function listPromptsPage(options: {
       nextOffset?: number | null;
       total?: number;
     };
+    if (options.throwOnError && !Array.isArray(data.prompts)) {
+      throw new Error("Prompt listing response is invalid");
+    }
     return {
       prompts: data.prompts ?? [],
       nextCursor: data.nextCursor ?? null,
       nextOffset: data.nextOffset ?? null,
       total: data.total ?? data.prompts?.length ?? 0,
     };
-  } catch {
+  } catch (error) {
+    if (options.throwOnError) throw error;
     return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
   }
 }

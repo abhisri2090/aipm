@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/login", "/cli/login", "/dashboard", "/admin", "/internal"],
       },
     ],
-    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/package-sitemap.xml`],
+    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/ai-skills-sitemap.xml`, `${SITE_URL}/prompt-sitemap.xml`],
   };
 }

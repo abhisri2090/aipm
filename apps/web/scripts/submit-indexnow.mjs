@@ -15,7 +15,7 @@ function sitemapUrls(xml) {
 async function main() {
   const site = siteUrl();
   const host = new URL(site).hostname;
-  const sitemapPaths = ["/sitemap.xml", "/package-sitemap.xml"];
+  const sitemapPaths = ["/sitemap.xml", "/ai-skills-sitemap.xml", "/prompt-sitemap.xml"];
   const sitemapResponses = await Promise.all(
     sitemapPaths.map(async (path) => {
       const response = await fetch(`${site}${path}`, { signal: AbortSignal.timeout(15000) });

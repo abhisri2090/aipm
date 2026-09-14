@@ -2,12 +2,10 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "../lib/registry";
 import { SEO_GUIDES } from "../lib/seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
-import { listPrompts } from "../lib/prompts";
 
 const LAST_SIGNIFICANT_UPDATE = new Date("2026-09-04T00:00:00.000Z");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const prompts = await listPrompts();
   const staticPaths = [
     "/",
     "/skills",
@@ -49,14 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]),
   );
 
-  return [
-    ...staticPaths.map((path) => ({
-      url: `${SITE_URL}${path}`,
-      lastModified: guidePaths.has(path) ? guideUpdatedAt.get(path) : LAST_SIGNIFICANT_UPDATE,
-    })),
-    ...prompts.map((prompt) => ({
-      url: `${SITE_URL}${prompt.path}`,
-      lastModified: new Date(prompt.updatedAt),
-    })),
-  ];
+  return staticPaths.map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: guidePaths.has(path) ? guideUpdatedAt.get(path) : LAST_SIGNIFICANT_UPDATE,
+  }));
 }

@@ -506,7 +506,8 @@ for (const path of privatePages) {
 const robots = await fetchText("/robots.txt");
 assertStatus("/robots.txt", robots.response);
 assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/sitemap.xml`);
-assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/package-sitemap.xml`);
+assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/ai-skills-sitemap.xml`);
+assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/prompt-sitemap.xml`);
 assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 
 const sitemap = await fetchText("/sitemap.xml");
@@ -572,14 +573,38 @@ if (!Array.isArray(researchData.packages) || typeof researchData.totals?.package
   fail("/research/agent-skills-2026.json does not contain the expected reproducible dataset.");
 }
 
-const packageSitemap = await fetchText("/package-sitemap.xml");
-assertStatus("/package-sitemap.xml", packageSitemap.response);
-assertCanonicalSitemapHosts("/package-sitemap.xml", packageSitemap.text);
+const skillsSitemap = await fetchText("/ai-skills-sitemap.xml");
+assertStatus("/ai-skills-sitemap.xml", skillsSitemap.response);
+assertCanonicalSitemapHosts("/ai-skills-sitemap.xml", skillsSitemap.text);
 assertIncludes(
-  "/package-sitemap.xml",
-  packageSitemap.text,
+  "/ai-skills-sitemap.xml",
+  skillsSitemap.text,
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
 );
+
+const promptSitemap = await fetchText("/prompt-sitemap.xml");
+assertStatus("/prompt-sitemap.xml", promptSitemap.response);
+assertCanonicalSitemapHosts("/prompt-sitemap.xml", promptSitemap.text);
+assertIncludes(
+  "/prompt-sitemap.xml",
+  promptSitemap.text,
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+);
+if (/<loc>[^<]*\/prompts\/[^/<]+\/[^/<]+<\/loc>/.test(sitemap.text)) {
+  fail("/sitemap.xml contains individual prompt URLs; those belong in /prompt-sitemap.xml.");
+}
+
+const promptList = await fetchText("/v1/prompts?limit=1");
+if (promptList.response.ok) {
+  const data = JSON.parse(promptList.text);
+  const prompt = data.prompts?.[0];
+  if (prompt?.path) {
+    assertIncludes("/prompt-sitemap.xml", promptSitemap.text, `<loc>${expectedCanonicalUrl}${prompt.path}</loc>`);
+    if (sitemap.text.includes(`<loc>${expectedCanonicalUrl}${prompt.path}</loc>`)) {
+      fail(`/sitemap.xml contains prompt URL ${prompt.path}; use /prompt-sitemap.xml.`);
+    }
+  }
+}
 
 const packageList = await fetchText("/v1/packages?limit=1");
 if (packageList.response.ok) {
