@@ -68,9 +68,11 @@ function Publisher({ prompt }: { prompt: PromptSummary }) {
 }
 
 function sampleImagePath(prompt: PromptSummary): string {
-  return `/v1/prompts/${encodeURIComponent(prompt.publisher.scope)}/${encodeURIComponent(
+  const base = `/v1/prompts/${encodeURIComponent(prompt.publisher.scope)}/${encodeURIComponent(
     prompt.slug,
   )}/sample-image`;
+  const version = new Date(prompt.updatedAt).getTime();
+  return `${base}?v=${version}`;
 }
 
 export function PromptDirectory({

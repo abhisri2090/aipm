@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildSampleImageUrl,
   slugifyPromptTitle,
   userCanEditPrompt,
   validatePromptInput,
@@ -101,5 +102,29 @@ describe("userCanEditPrompt", () => {
   it("still allows the original owner of an org prompt", () => {
     const orgPrompt = { owner_user_id: "owner-1", org_id: "org-1" };
     expect(userCanEditPrompt("owner-1", orgPrompt, new Set())).toBe(true);
+  });
+});
+
+describe("buildSampleImageUrl", () => {
+  it("includes a cache-busting version parameter based on updated timestamp", () => {
+    const updatedAt = new Date("2026-09-14T12:00:00.000Z");
+    const url = buildSampleImageUrl("acme", "my-prompt", updatedAt);
+    expect(url).toBe(`/v1/prompts/acme/my-prompt/sample-image?v=${updatedAt.getTime()}`);
+  });
+
+  it("encodes special characters in scope and slug", () => {
+    const updatedAt = new Date("2026-01-01T00:00:00.000Z");
+    const url = buildSampleImageUrl("my org", "prompt/name", updatedAt);
+    expect(url).toContain("/v1/prompts/my%20org/prompt%2Fname/sample-image?v=");
+  });
+
+  it("produces different URLs when updated_at changes", () => {
+    const originalTime = new Date("2026-09-14T12:00:00.000Z");
+    const updatedTime = new Date("2026-09-14T13:00:00.000Z");
+    const originalUrl = buildSampleImageUrl("acme", "my-prompt", originalTime);
+    const updatedUrl = buildSampleImageUrl("acme", "my-prompt", updatedTime);
+    expect(originalUrl).not.toBe(updatedUrl);
+    expect(originalUrl).toContain(`v=${originalTime.getTime()}`);
+    expect(updatedUrl).toContain(`v=${updatedTime.getTime()}`);
   });
 });

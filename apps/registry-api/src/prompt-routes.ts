@@ -339,6 +339,14 @@ function publisherScope(row: PromptRow): string {
   return row.org_slug ?? row.username;
 }
 
+export function buildSampleImageUrl(
+  scope: string,
+  slug: string,
+  updatedAt: Date,
+): string {
+  return `/v1/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(slug)}/sample-image?v=${updatedAt.getTime()}`;
+}
+
 function serializePublisher(row: PromptRow) {
   return {
     scope: publisherScope(row),
@@ -393,6 +401,9 @@ function serializeDetail(
   options?: { canEdit?: boolean },
 ) {
   const scope = publisherScope(row);
+  const sampleImageUrl = row.sample_image_blob_path
+    ? buildSampleImageUrl(scope, row.slug, row.updated_at)
+    : null;
   return {
     ...serializeSummary(row, options),
     promptText: row.prompt_text,
@@ -404,9 +415,7 @@ function serializeDetail(
     sourceUrl: row.source_url,
     license: row.license,
     sampleImageAlt: row.sample_image_alt,
-    sampleImageUrl: row.sample_image_blob_path
-      ? `/v1/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(row.slug)}/sample-image`
-      : null,
+    sampleImageUrl,
   };
 }
 
