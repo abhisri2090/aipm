@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildPromptSampleImageUrl,
+  sampleImageBlobPath,
   slugifyPromptTitle,
   userCanEditPrompt,
   validatePromptInput,
@@ -101,5 +103,23 @@ describe("userCanEditPrompt", () => {
   it("still allows the original owner of an org prompt", () => {
     const orgPrompt = { owner_user_id: "owner-1", org_id: "org-1" };
     expect(userCanEditPrompt("owner-1", orgPrompt, new Set())).toBe(true);
+  });
+});
+
+describe("sample image storage keys", () => {
+  it("uses unique blob paths per upload so replacements can delete the previous file", () => {
+    const first = sampleImageBlobPath("prompt-1", "webp");
+    const second = sampleImageBlobPath("prompt-1", "webp");
+    expect(first).toMatch(/^prompts\/prompt-1\/sample-[0-9a-f-]+\.webp$/);
+    expect(second).toMatch(/^prompts\/prompt-1\/sample-[0-9a-f-]+\.webp$/);
+    expect(first).not.toBe(second);
+  });
+
+  it("cache-busts the public sample image URL from the blob key", () => {
+    expect(
+      buildPromptSampleImageUrl("coreyhaines31", "kyoto-poster", "prompts/abc/sample-1.webp"),
+    ).toBe(
+      "/v1/prompts/coreyhaines31/kyoto-poster/sample-image?v=prompts%2Fabc%2Fsample-1.webp",
+    );
   });
 });

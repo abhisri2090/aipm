@@ -142,8 +142,19 @@ export function PromptSubmissionForm({
     initialPrompt?.sampleImageAlt ?? "",
   );
   const [existingSampleImageUrl] = useState(initialPrompt?.sampleImageUrl ?? null);
+  const [sampleImagePreviewUrl, setSampleImagePreviewUrl] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!sampleImage) {
+      setSampleImagePreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(sampleImage);
+    setSampleImagePreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [sampleImage]);
 
   useEffect(() => {
     Promise.all([
@@ -593,7 +604,13 @@ export function PromptSubmissionForm({
                     ? "Keep the current sample, or upload a new JPEG, PNG, or WebP (maximum 5 MB)."
                     : "Upload a real result created with this prompt. JPEG, PNG, or WebP; maximum 5 MB."}
                 </p>
-                {isEdit && existingSampleImageUrl && !sampleImage ? (
+                {sampleImagePreviewUrl ? (
+                  <img
+                    alt={sampleImageAlt || "New sample image preview"}
+                    className={styles.existingSample}
+                    src={sampleImagePreviewUrl}
+                  />
+                ) : isEdit && existingSampleImageUrl ? (
                   <img
                     alt={sampleImageAlt || "Current sample image"}
                     className={styles.existingSample}

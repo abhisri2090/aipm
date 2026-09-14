@@ -70,7 +70,7 @@ function Publisher({ prompt }: { prompt: PromptSummary }) {
 function sampleImagePath(prompt: PromptSummary): string {
   return `/v1/prompts/${encodeURIComponent(prompt.publisher.scope)}/${encodeURIComponent(
     prompt.slug,
-  )}/sample-image`;
+  )}/sample-image?v=${encodeURIComponent(prompt.updatedAt)}`;
 }
 
 export function PromptDirectory({

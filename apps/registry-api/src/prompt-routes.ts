@@ -388,11 +388,28 @@ function serializeSummary(
   };
 }
 
+export function sampleImageBlobPath(promptId: string, extension: string): string {
+  return `prompts/${promptId}/sample-${randomUUID()}.${extension}`;
+}
+
+export function buildPromptSampleImageUrl(
+  scope: string,
+  slug: string,
+  cacheKey: string,
+): string {
+  return `/v1/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(slug)}/sample-image?v=${encodeURIComponent(cacheKey)}`;
+}
+
+function sampleImagePublicUrl(row: PromptRow): string | null {
+  if (!row.sample_image_blob_path) return null;
+  // Bust browser/CDN caches when the underlying blob key changes after a replace.
+  return buildPromptSampleImageUrl(publisherScope(row), row.slug, row.sample_image_blob_path);
+}
+
 function serializeDetail(
   row: PromptRow,
   options?: { canEdit?: boolean },
 ) {
-  const scope = publisherScope(row);
   return {
     ...serializeSummary(row, options),
     promptText: row.prompt_text,
@@ -404,9 +421,7 @@ function serializeDetail(
     sourceUrl: row.source_url,
     license: row.license,
     sampleImageAlt: row.sample_image_alt,
-    sampleImageUrl: row.sample_image_blob_path
-      ? `/v1/prompts/${encodeURIComponent(scope)}/${encodeURIComponent(row.slug)}/sample-image`
-      : null,
+    sampleImageUrl: sampleImagePublicUrl(row),
   };
 }
 
@@ -725,7 +740,9 @@ export async function registerPromptRoutes(
     }
 
     const id = randomUUID();
-    const blobPath = sampleImage ? `prompts/${id}/sample.${sampleImage.extension}` : null;
+    const blobPath = sampleImage
+      ? sampleImageBlobPath(id, sampleImage.extension)
+      : null;
     if (sampleImage && blobPath) await options.storage.put(blobPath, sampleImage.data);
     const scan = scanPromptInput(input);
     try {
@@ -856,7 +873,7 @@ export async function registerPromptRoutes(
         nextContentType = null;
         nextAlt = null;
       } else if (sampleImage) {
-        uploadedBlobPath = `prompts/${existing.id}/sample.${sampleImage.extension}`;
+        uploadedBlobPath = sampleImageBlobPath(existing.id, sampleImage.extension);
         nextBlobPath = uploadedBlobPath;
         nextContentType = sampleImage.contentType;
         await options.storage.put(uploadedBlobPath, sampleImage.data);
@@ -995,7 +1012,8 @@ export async function registerPromptRoutes(
       }
       const image = await options.storage.get(row.sample_image_blob_path);
       reply.header("Content-Type", row.sample_image_content_type);
-      reply.header("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+      // URL includes a ?v= cache-buster derived from updated_at; allow long-lived caching.
+      reply.header("Cache-Control", "public, max-age=31536000, immutable");
       return reply.send(image);
     },
   );

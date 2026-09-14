@@ -17,6 +17,7 @@
 .card {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   padding: 20px;
   min-width: 0;
