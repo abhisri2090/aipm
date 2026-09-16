@@ -304,6 +304,7 @@ export async function listPackagesPage(options: {
   category?: string;
   target?: string;
   sort?: string;
+  throwOnError?: boolean;
 }): Promise<{
   packages: PackageSummary[];
   nextCursor: string | null;
@@ -321,18 +322,22 @@ export async function listPackagesPage(options: {
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(3000),
     });
-    if (!response.ok) return { packages: [], nextCursor: null, nextOffset: null };
+    if (!response.ok) throw new Error(`Package listing failed (${response.status})`);
     const data = (await response.json()) as {
       packages?: PackageSummary[];
       nextCursor?: string | null;
       nextOffset?: number | null;
     };
+    if (options.throwOnError && !Array.isArray(data.packages)) {
+      throw new Error("Package listing response is invalid");
+    }
     return {
       packages: data.packages ?? [],
       nextCursor: data.nextCursor ?? null,
       nextOffset: data.nextOffset ?? null,
     };
-  } catch {
+  } catch (error) {
+    if (options.throwOnError) throw error;
     return { packages: [], nextCursor: null, nextOffset: null };
   }
 }
@@ -357,6 +362,7 @@ export async function listPublishersPage(
   query = "",
   limit = 24,
   cursor?: string | null,
+  throwOnError = false,
 ): Promise<{ publishers: PublisherSummary[]; nextCursor: string | null }> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (query) params.set("q", query);
@@ -366,16 +372,20 @@ export async function listPublishersPage(
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(3000),
     });
-    if (!response.ok) return { publishers: [], nextCursor: null };
+    if (!response.ok) throw new Error(`Publisher listing failed (${response.status})`);
     const data = (await response.json()) as {
       publishers?: PublisherSummary[];
       nextCursor?: string | null;
     };
+    if (throwOnError && !Array.isArray(data.publishers)) {
+      throw new Error("Publisher listing response is invalid");
+    }
     return {
       publishers: data.publishers ?? [],
       nextCursor: data.nextCursor ?? null,
     };
-  } catch {
+  } catch (error) {
+    if (throwOnError) throw error;
     return { publishers: [], nextCursor: null };
   }
 }

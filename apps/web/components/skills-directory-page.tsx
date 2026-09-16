@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { DirectoryPageLinks } from "./directory-page-links";
+import { directoryPageNumber, directoryPagePath, loadCursorDirectoryPage } from "../lib/directory-pagination";
 import { listPackagesPage, packagePath, SITE_URL } from "../lib/registry";
 import { cn, shell } from "../lib/page-styles";
 import { DirectoryListTile } from "./directory-list-tile";
@@ -8,18 +11,29 @@ export async function SkillsDirectoryPage({
   searchParams,
   canonicalPath,
 }: {
-  searchParams: Promise<{ q?: string; category?: string; target?: string; sort?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; category?: string; target?: string; sort?: string }>;
   canonicalPath: "/registry" | "/skills";
 }) {
   const params = await searchParams;
+  const currentPage = directoryPageNumber(params.page);
   const query = params.q ?? "";
-  const { packages: initialPackages, nextCursor: initialNextCursor } = await listPackagesPage({
-    query,
-    limit: 20,
-    category: params.category,
-    target: params.target,
-    sort: params.sort,
+  const sort = params.sort === "popular" || params.sort === "title" ? params.sort : "newest";
+  const filtered = Boolean(query || params.category || params.target || params.sort);
+  const listingOptions = { query, limit: 20, category: params.category, target: params.target, sort, throwOnError: true };
+  const result = sort === "newest"
+    ? await loadCursorDirectoryPage(currentPage, async (cursor) => {
+        const page = await listPackagesPage({ ...listingOptions, cursor });
+        return { items: page.packages, nextCursor: page.nextCursor };
+      })
+    : null;
+  const offsetPage = result ? null : await listPackagesPage({
+    ...listingOptions,
+    offset: (currentPage - 1) * 20,
   });
+  const initialPackages = result?.items ?? offsetPage?.packages ?? [];
+  const initialNextCursor = result?.nextCursor ?? null;
+  const initialNextOffset = offsetPage?.nextOffset ?? null;
+  if (currentPage > 1 && initialPackages.length === 0) notFound();
 
   return (
     <main>
@@ -31,13 +45,13 @@ export async function SkillsDirectoryPage({
             "@type": "CollectionPage",
             name: "AIPM AI Skills Registry",
             description: "Search public AIPM skills by name, tool, or description.",
-            url: `${SITE_URL}${canonicalPath}`,
+            url: `${SITE_URL}${filtered ? canonicalPath : directoryPagePath(canonicalPath, currentPage)}`,
             about: ["AI skills", "prompt packages", "Cursor skills", "Claude skills", "AI tool files"],
             mainEntity: {
               "@type": "ItemList",
               itemListElement: initialPackages.map((pkg, index) => ({
                 "@type": "ListItem",
-                position: index + 1,
+                position: (currentPage - 1) * 20 + index + 1,
                 name: `${pkg.name}@${pkg.version}`,
                 url: `${SITE_URL}${packagePath(pkg.name, pkg.version)}`,
               })),
@@ -91,13 +105,22 @@ export async function SkillsDirectoryPage({
         </div>
         <DirectoryListTile kind="skill" />
         <RegistrySearch
+          key={`${currentPage}:${query}:${params.category ?? ""}:${params.target ?? ""}:${sort}`}
           initialPackages={initialPackages}
           initialNextCursor={initialNextCursor}
+          initialNextOffset={initialNextOffset}
           initialQuery={query}
           initialCategory={params.category}
           initialTarget={params.target}
-          initialSort={params.sort}
+          initialSort={sort}
         />
+        {!filtered ? (
+          <DirectoryPageLinks
+            basePath={canonicalPath}
+            currentPage={currentPage}
+            hasNext={Boolean(initialNextCursor)}
+          />
+        ) : null}
       </section>
     </main>
   );

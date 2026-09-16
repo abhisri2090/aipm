@@ -109,6 +109,7 @@ export function PromptDirectory({
 
   function updateFilterUrl(nextCategory: string, nextOutput: string) {
     const params = new URLSearchParams(window.location.search);
+    params.delete("page");
     if (nextCategory === "All") params.delete("category");
     else params.set("category", nextCategory);
     if (nextOutput === "all") params.delete("output");

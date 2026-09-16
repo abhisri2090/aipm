@@ -42,4 +42,18 @@ describe("installSkillPackage", () => {
     const path = join(root, ".cursor", "aipm", "skills", "review-helper.md");
     expect(result.installed.cursor).toEqual([path]);
   });
+
+  it("installs Claude skills in Claude Code's native project directory", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-install-"));
+    const claudeManifest: PackageManifest = { ...manifest, targets: ["claude"] };
+    const result = await installSkillPackage({
+      projectRoot: root,
+      manifest: claudeManifest,
+      skillMarkdown: "# Claude skill\n",
+      explicitTarget: "claude",
+    });
+    const path = join(root, ".claude", "skills", "review-helper", "SKILL.md");
+    expect(result.installed.claude).toEqual([path]);
+    expect(await readFile(path, "utf8")).toBe("# Claude skill\n");
+  });
 });
