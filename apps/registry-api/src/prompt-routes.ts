@@ -622,7 +622,10 @@ export async function registerPromptRoutes(
       }
       if (output && output.toLowerCase() !== "all") {
         values.push(output);
-        conditions.push(`$${values.length} = ANY(prompts.output_types)`);
+        conditions.push(`EXISTS (
+          SELECT 1 FROM jsonb_array_elements_text(prompts.output_types) ot
+          WHERE ot ILIKE $${values.length}
+        )`);
       }
 
       const whereSql = conditions.join(" AND ");
