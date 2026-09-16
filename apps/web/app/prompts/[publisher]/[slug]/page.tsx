@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { PromptCopyButton } from "../../../../components/prompt-copy-button";
 import { CommentsSection } from "../../../../components/comments-section";
 import { PromptEditLink } from "../../../../components/prompt-edit-link";
@@ -76,6 +76,12 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
   const { publisher, slug } = await params;
   const prompt = await getPrompt(publisher, slug);
   if (!prompt) notFound();
+  if (
+    publisher.toLowerCase() !== prompt.publisher.scope.toLowerCase() ||
+    slug.toLowerCase() !== prompt.slug.toLowerCase()
+  ) {
+    permanentRedirect(prompt.path);
+  }
 
   const publisherName =
     prompt.publisher.org?.name ??
