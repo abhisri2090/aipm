@@ -532,7 +532,14 @@ function scanPromptInput(input: PromptInput) {
   });
 }
 
-async function findPublicPrompt(
+const PROMPT_PUBLISHER_ALIASES = new Map<string, string>([["aipm-e2e", "aipm"]]);
+
+export function canonicalPromptPublisher(scope: string): string {
+  const normalized = scope.trim().toLowerCase();
+  return PROMPT_PUBLISHER_ALIASES.get(normalized) ?? normalized;
+}
+
+async function findPublicPromptForScope(
   pool: pg.Pool,
   scope: string,
   slug: string,
@@ -549,6 +556,20 @@ async function findPublicPrompt(
     [scope, slug],
   );
   return result.rows[0] ?? null;
+}
+
+export async function findPublicPrompt(
+  pool: pg.Pool,
+  scope: string,
+  slug: string,
+): Promise<PromptRow | null> {
+  const normalizedScope = scope.trim().toLowerCase();
+  const exact = await findPublicPromptForScope(pool, normalizedScope, slug);
+  if (exact) return exact;
+
+  const canonicalScope = canonicalPromptPublisher(normalizedScope);
+  if (canonicalScope === normalizedScope) return null;
+  return findPublicPromptForScope(pool, canonicalScope, slug);
 }
 
 export async function registerPromptRoutes(

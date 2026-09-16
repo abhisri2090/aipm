@@ -1,12 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildPromptSampleImageUrl,
+  canonicalPromptPublisher,
+  findPublicPrompt,
   sampleImageBlobPath,
   slugifyPromptTitle,
   userCanEditPrompt,
   validatePromptInput,
   validatePromptSampleImage,
 } from "./prompt-routes.js";
+import type pg from "pg";
 
 const validPrompt = {
   title: "Plan a focused week",
@@ -121,5 +124,35 @@ describe("sample image storage keys", () => {
     ).toBe(
       "/v1/prompts/coreyhaines31/kyoto-poster/sample-image?v=prompts%2Fabc%2Fsample-1.webp",
     );
+  });
+});
+
+describe("legacy prompt publisher aliases", () => {
+  it("keeps exact legacy records working before migration", async () => {
+    const legacy = { id: "legacy-prompt" };
+    const query = vi.fn().mockResolvedValueOnce({ rows: [legacy] });
+
+    await expect(
+      findPublicPrompt({ query } as unknown as pg.Pool, "aipm-e2e", "example"),
+    ).resolves.toBe(legacy);
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0]?.[1]).toEqual(["aipm-e2e", "example"]);
+  });
+
+  it("falls back to the canonical publisher after migration", async () => {
+    const migrated = { id: "migrated-prompt" };
+    const query = vi
+      .fn()
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [migrated] });
+
+    await expect(
+      findPublicPrompt({ query } as unknown as pg.Pool, "AIPM-E2E", "example"),
+    ).resolves.toBe(migrated);
+    expect(query.mock.calls.map((call) => call[1])).toEqual([
+      ["aipm-e2e", "example"],
+      ["aipm", "example"],
+    ]);
+    expect(canonicalPromptPublisher(" AIPM-E2E ")).toBe("aipm");
   });
 });
