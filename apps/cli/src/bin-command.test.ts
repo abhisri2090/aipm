@@ -415,6 +415,13 @@ describe("CLI publish commands", () => {
           },
         },
       });
+
+      const remove = await runCli(root, ["remove", "@team/debug-helper"]);
+      expect(remove.stdout).toContain("Deleted 2 tracked installed files.");
+      await expect(stat(skillPath)).rejects.toThrow();
+      await expect(stat(mainPath)).rejects.toThrow();
+      expect(await readJson(join(root, "aipm.package.json"))).toMatchObject({ packages: {} });
+      expect(await readJson(join(root, "aipm-lock.json"))).toMatchObject({ packages: {} });
     } finally {
       await new Promise<void>((resolveClose, rejectClose) =>
         server.close((error) => (error ? rejectClose(error) : resolveClose())),

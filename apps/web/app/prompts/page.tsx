@@ -1,13 +1,14 @@
 import { PromptDirectory } from "../../components/prompt-directory";
 import { DirectoryListTile } from "../../components/directory-list-tile";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { listPromptsPage } from "../../lib/prompts";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
 import styles from "./prompts.module.css";
 
-export const metadata = pageMetadata({
+const directoryMetadata = {
   title: "AI Prompt Directory",
   description:
     "Browse useful AI prompts by category, output type, input, and compatible model. See variables and example outputs before you copy.",
@@ -19,22 +20,64 @@ export const metadata = pageMetadata({
     "work prompts",
     "productivity prompts",
   ],
-});
+};
+
+const PAGE_SIZE = 40;
+
+type PromptSearchParams = {
+  page?: string;
+  tag?: string;
+  q?: string;
+  category?: string;
+  output?: string;
+};
+
+function pageNumber(value: string | undefined): number {
+  if (value === undefined) return 1;
+  if (!/^[1-9]\d*$/.test(value)) notFound();
+  const number = Number(value);
+  if (!Number.isSafeInteger(number) || number > Math.floor(Number.MAX_SAFE_INTEGER / PAGE_SIZE)) notFound();
+  return number;
+}
+
+function directoryPath(page: number): string {
+  return page === 1 ? "/prompts" : `/prompts?page=${page}`;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<PromptSearchParams>;
+}) {
+  const params = await searchParams;
+  const number = pageNumber(params.page);
+  const filtered = Boolean(params.tag || params.q || params.category || params.output);
+  return {
+    ...pageMetadata({ ...directoryMetadata, path: filtered ? "/prompts" : directoryPath(number) }),
+    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 export default async function PromptsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; q?: string; category?: string; output?: string }>;
+  searchParams: Promise<PromptSearchParams>;
 }) {
   const params = await searchParams;
+  const currentPage = pageNumber(params.page);
   const initialQuery = params.tag ?? params.q ?? "";
+  const filtered = Boolean(initialQuery || params.category || params.output);
   const page = await listPromptsPage({
     query: initialQuery,
-    limit: 40,
+    limit: PAGE_SIZE,
+    offset: currentPage > 1 ? (currentPage - 1) * PAGE_SIZE : undefined,
     category: params.category,
     output: params.output,
     sort: "newest",
+    throwOnError: true,
   });
+  if (currentPage > 1 && page.prompts.length === 0) notFound();
+  const pageCount = Math.ceil(page.total / PAGE_SIZE);
   const outputCount = new Set(page.prompts.flatMap((prompt) => prompt.outputTypes)).size;
   const categoryCount = new Set(page.prompts.map((prompt) => prompt.category)).size;
 
@@ -49,12 +92,12 @@ export default async function PromptsPage({
             name: "AIPM AI Prompt Directory",
             description:
               "Curated AI prompts with clear inputs, output types, examples, and compatibility.",
-            url: `${SITE_URL}/prompts`,
+            url: `${SITE_URL}${filtered ? "/prompts" : directoryPath(currentPage)}`,
             mainEntity: {
               "@type": "ItemList",
               itemListElement: page.prompts.map((prompt, index) => ({
                 "@type": "ListItem",
-                position: index + 1,
+                position: (currentPage - 1) * PAGE_SIZE + index + 1,
                 name: prompt.title,
                 url: `${SITE_URL}${prompt.path}`,
               })),
@@ -106,6 +149,7 @@ export default async function PromptsPage({
         </div>
         <DirectoryListTile kind="prompt" />
         <PromptDirectory
+          key={`${currentPage}:${initialQuery}:${params.category ?? ""}:${params.output ?? ""}`}
           initialPrompts={page.prompts}
           initialNextCursor={page.nextCursor}
           initialNextOffset={page.nextOffset}
@@ -114,6 +158,17 @@ export default async function PromptsPage({
           initialCategory={params.category}
           initialOutput={params.output}
         />
+        {!filtered && pageCount > 1 ? (
+          <nav className={styles.pagination} aria-label="Prompt pages">
+            {currentPage > 1 ? (
+              <Link href={directoryPath(currentPage - 1)}>Previous page</Link>
+            ) : null}
+            <span>Page {currentPage} of {pageCount}</span>
+            {currentPage < pageCount ? (
+              <Link href={directoryPath(currentPage + 1)}>Next page</Link>
+            ) : null}
+          </nav>
+        ) : null}
       </section>
     </main>
   );
