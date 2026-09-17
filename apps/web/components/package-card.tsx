@@ -32,7 +32,7 @@ function PackageHeader({ pkg }: { pkg: PackageSummary }) {
   return (
     <div className={cards.packageHeader}>
       {avatarUrl ? (
-        <img alt="" className={cards.packageTitleAvatar} src={avatarUrl} />
+        <img alt="" className={cards.packageTitleAvatar} height={32} src={avatarUrl} width={32} />
       ) : (
         <span aria-hidden="true" className={cards.packageTitleAvatar}>
           {initial}

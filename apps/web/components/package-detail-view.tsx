@@ -304,7 +304,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
       >
         <article className={cn(shell.panel, shell.publisherPanel)}>
           {summary.publisher?.user.avatarUrl ? (
-            <img alt="" className={cn(dash.avatar, dash.avatarLarge)} src={summary.publisher.user.avatarUrl} />
+            <img alt="" className={cn(dash.avatar, dash.avatarLarge)} height={64} src={summary.publisher.user.avatarUrl} width={64} />
           ) : (
             <span className={cn(dash.avatar, dash.avatarLarge)}>
               {(summary.publisher?.user.name ?? summary.publisher?.user.githubLogin ?? "A").charAt(0).toUpperCase()}

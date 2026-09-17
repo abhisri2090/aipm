@@ -2,12 +2,14 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { shell, cards } from "../../lib/page-styles";
 import { DocLayout } from "../../components/doc-layout";
+import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "AIPM FAQ",
+  title: "AIPM FAQ - Troubleshooting and Common Questions",
   description: "Troubleshooting and frequently asked questions for AIPM users and publishers.",
   path: "/faq",
+  keywords: ["AIPM FAQ", "AIPM troubleshooting", "AI package manager help", "AIPM support"],
 });
 
 const faqs: { question: string; answer: ReactNode }[] = [
@@ -83,9 +85,34 @@ const faqs: { question: string; answer: ReactNode }[] = [
   },
 ];
 
+function faqAnswerToText(answer: ReactNode): string {
+  if (typeof answer === "string") return answer;
+  return String(answer);
+}
+
 export default function FaqPage() {
   return (
     <DocLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            name: "AIPM FAQ",
+            description: "Troubleshooting and frequently asked questions for AIPM users and publishers.",
+            url: `${SITE_URL}/faq`,
+            mainEntity: faqs.map(({ question, answer }) => ({
+              "@type": "Question",
+              name: question,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: faqAnswerToText(answer),
+              },
+            })),
+          }),
+        }}
+      />
       <section className={shell.pageHeader}>
         <p className={shell.eyebrow}>FAQ</p>
         <h1>Common questions and fixes.</h1>

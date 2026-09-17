@@ -64,7 +64,7 @@ function PublisherAvatar({
   name: string;
 }) {
   return avatarUrl ? (
-    <img alt="" className={styles.publisherAvatar} src={avatarUrl} />
+    <img alt="" className={styles.publisherAvatar} height={48} src={avatarUrl} width={48} />
   ) : (
     <span aria-hidden="true" className={styles.publisherAvatar}>
       {name.charAt(0).toUpperCase() || "A"}

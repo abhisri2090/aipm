@@ -218,8 +218,9 @@ function DashboardCommandSteps({
 function Avatar({ user, size = "normal" }: { user: Me | null; size?: "normal" | "large" }) {
   const label = user?.name ?? user?.githubLogin ?? "AIPM user";
   const initial = label.trim().charAt(0).toUpperCase() || "A";
+  const dimensions = size === "large" ? 64 : 32;
   return user?.avatarUrl ? (
-    <img alt="" className={cn(dash.avatar, size === "large" && dash.avatarLarge)} src={user.avatarUrl} />
+    <img alt="" className={cn(dash.avatar, size === "large" && dash.avatarLarge)} height={dimensions} src={user.avatarUrl} width={dimensions} />
   ) : (
     <span className={cn(dash.avatar, size === "large" && dash.avatarLarge)}>{initial}</span>
   );
@@ -322,7 +323,7 @@ function DashboardShell({
     <main className={dash.dashboardPage}>
       <aside className={dash.dashboardSidebar}>
         <Link className={dash.dashboardLogo} href="/dashboard">
-          <img alt="" src="/aipm-logo.svg" />
+          <img alt="" height={28} src="/aipm-logo.svg" width={28} />
           <span>AIPM</span>
         </Link>
         <div className={cn(dash.accountCard, dash.accountCardCompact)}>
@@ -552,7 +553,7 @@ export function LoginPanel() {
     <main>
       <section className={dash.loginScreen}>
         <div className={dash.loginCard}>
-          <img alt="" className={dash.loginLogo} src="/aipm-logo.svg" />
+          <img alt="" className={dash.loginLogo} height={48} src="/aipm-logo.svg" width={48} />
           <p className={shell.eyebrow}>Publisher access</p>
           <h1>Build and ship reusable AI skills.</h1>
           <p className={shell.lede}>
