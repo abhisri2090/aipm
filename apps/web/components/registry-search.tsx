@@ -38,6 +38,7 @@ function collectCategories(current: string[], packages: PackageSummary[]): strin
 export function RegistrySearch({
   initialPackages,
   initialNextCursor = null,
+  initialNextOffset = null,
   initialQuery = "",
   initialCategory = "All",
   initialTarget = "all",
@@ -46,6 +47,7 @@ export function RegistrySearch({
 }: {
   initialPackages: PackageSummary[];
   initialNextCursor?: string | null;
+  initialNextOffset?: number | null;
   initialQuery?: string;
   initialCategory?: string;
   initialTarget?: string;
@@ -67,7 +69,7 @@ export function RegistrySearch({
   const [nextCursor, setNextCursor] = useState<string | null>(
     compact ? null : initialNextCursor,
   );
-  const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [nextOffset, setNextOffset] = useState<number | null>(initialNextOffset);
   const [loadingMore, setLoadingMore] = useState(false);
   const [status, setStatus] = useState(
     initialPackages.length === 0
@@ -81,6 +83,7 @@ export function RegistrySearch({
   function updateFilterUrl(nextCategory: string, nextTarget: string, nextSort: string) {
     if (compact) return;
     const params = new URLSearchParams(window.location.search);
+    params.delete("page");
     if (nextCategory === "All") params.delete("category");
     else params.set("category", nextCategory);
     if (nextTarget === "all") params.delete("target");

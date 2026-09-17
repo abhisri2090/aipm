@@ -8,7 +8,7 @@ export class ClaudeSkillAdapter implements SkillAdapter {
 
   async installSkill(input: SkillInstallInput): Promise<SkillInstallResult> {
     const short = shortNameFromScopeName(input.packageName);
-    const skillDir = join(input.projectRoot, ".claude", "aipm", "skills", short);
+    const skillDir = join(input.projectRoot, ".claude", "skills", short);
     await mkdir(skillDir, { recursive: true });
     const filePath = join(skillDir, "SKILL.md");
     await writeFile(filePath, input.skillMarkdown, "utf8");

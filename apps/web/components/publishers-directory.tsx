@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { api } from "../lib/api-client";
 import { publicApiError } from "../lib/public-api-error";
@@ -27,6 +28,8 @@ export function PublishersDirectory({
   initialNextCursor?: string | null;
   initialQuery?: string;
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [publishers, setPublishers] = useState(initialPublishers);
   const [query, setQuery] = useState(initialQuery);
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
@@ -102,6 +105,12 @@ export function PublishersDirectory({
         role="search"
         onSubmit={(event) => {
           event.preventDefault();
+          const params = new URLSearchParams(window.location.search);
+          params.delete("page");
+          if (query.trim()) params.set("q", query.trim());
+          else params.delete("q");
+          const searchParams = params.toString();
+          router.replace(`${pathname}${searchParams ? `?${searchParams}` : ""}`, { scroll: false });
           void search(query.trim());
         }}
       >

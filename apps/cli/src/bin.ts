@@ -67,6 +67,7 @@ import {
   removeTrackedPrompt,
   resolveTrackedPrompt,
 } from "./prompt-install.js";
+import { removeInstalledPackageFiles } from "./remove-package.js";
 import { recommendCmd } from "./recommend-cmd.js";
 import { getCliVersion } from "./version.js";
 import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
@@ -1381,6 +1382,7 @@ program
   .action(async (pkgArg: string, opts: { global?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
+    const installRoot = resolveInstallRoot(scope);
     const project = await readProjectPackageJson(configRoot);
     if (!project) throw new Error(initRequiredMessage(scope));
     const promptReference = resolveTrackedPrompt(project, pkgArg);
@@ -1390,18 +1392,22 @@ program
       return;
     }
     const { name } = parsePackageArg(pkgArg);
+    const lock = await readLockfile(configRoot);
+    const lockEntry = lock?.packages[name];
+    if (lockEntry) {
+      const removedFiles = await removeInstalledPackageFiles({ configRoot, installRoot, entry: lockEntry });
+      console.log(`Deleted ${removedFiles} tracked installed ${removedFiles === 1 ? "file" : "files"}.`);
+    }
     const packages = { ...project.packages };
     delete packages[name];
     await writeProjectPackageJson(configRoot, { ...project, packages });
 
-    const lock = await readLockfile(configRoot);
     if (lock) {
       const lockPackages = { ...lock.packages };
       delete lockPackages[name];
       await writeLockfile(configRoot, { ...lock, packages: lockPackages });
     }
     console.log(`Removed ${name} from AIPM ${scopeLabel(scope)} files.`);
-    console.log("Adapter-written files are not deleted yet; review your project before committing.");
   });
 
 program

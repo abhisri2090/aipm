@@ -646,7 +646,8 @@ export async function registerPromptRoutes(
         orderSql = "prompts.title ASC, prompts.id ASC";
       }
 
-      const useCursor = sort === "newest";
+      // Numbered directory pages use offsets; existing infinite-scroll clients use cursors.
+      const useCursor = sort === "newest" && request.query.offset === undefined;
       const pageValues = [...values];
       let pageWhereSql = whereSql;
       if (useCursor && cursor) {
