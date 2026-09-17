@@ -4,9 +4,10 @@ import { DocLayout } from "../../../components/doc-layout";
 import { pageMetadata } from "../../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Publishing Guide",
+  title: "AIPM Publishing Guide - Create and Publish AI Skills",
   description: "Create, check, and publish AIPM skills for supported AI tools.",
   path: "/publish/guide",
+  keywords: ["publish AI skills", "AIPM publishing", "create AI skill package", "AI skill authoring"],
 });
 
 export default function PublishPage() {

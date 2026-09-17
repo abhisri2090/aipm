@@ -70,7 +70,7 @@ export function Header() {
     <header className={styles.topbar}>
       <div className={styles.topbarInner}>
         <Link className={styles.brand} href="/" aria-label="AIPM home">
-          <img alt="" className={styles.brandMark} src="/aipm-logo.svg" />
+          <img alt="" className={styles.brandMark} height={28} src="/aipm-logo.svg" width={28} />
           <span>AIPM</span>
         </Link>
         <nav className={styles.nav} aria-label="Main navigation">

@@ -47,7 +47,7 @@ export function Footer() {
       <div className={styles.footerInner}>
         <section className={styles.footerBrand} aria-label="AIPM summary">
           <Link className={styles.brand} href="/" aria-label="AIPM home">
-            <img alt="" className={styles.brandMark} src="/aipm-logo.svg" />
+            <img alt="" className={styles.brandMark} height={28} src="/aipm-logo.svg" width={28} />
             <span>AIPM</span>
           </Link>
           <p>Project-ready AI skills, prompts, and tool files that teams can publish, find, and install.</p>

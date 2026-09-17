@@ -160,7 +160,7 @@ export default async function HomePage() {
           </ul>
           <aside className={home.heroAuthor} aria-label="Author">
             <img
-              alt="Author profile"
+              alt="Abhishek Srivastava, AIPM creator"
               className={home.heroAvatar}
               height={88}
               src="/author.webp"

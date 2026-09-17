@@ -52,7 +52,7 @@ function Publisher({ prompt }: { prompt: PromptSummary }) {
   return (
     <div className={styles.publisher}>
       {user.avatarUrl ? (
-        <img alt="" src={user.avatarUrl} />
+        <img alt="" height={32} src={user.avatarUrl} width={32} />
       ) : (
         <span aria-hidden="true">{initial}</span>
       )}
@@ -342,11 +342,13 @@ export function PromptDirectory({
                 </div>
                 {prompt.outputTypes.includes("image") && prompt.hasSampleImage ? (
                   <img
-                    alt=""
+                    alt={`Sample output for ${prompt.title}`}
                     className={styles.sampleImage}
                     decoding="async"
+                    height={180}
                     loading="lazy"
                     src={sampleImagePath(prompt)}
+                    width={320}
                   />
                 ) : null}
                 <div className={styles.cardContent}>

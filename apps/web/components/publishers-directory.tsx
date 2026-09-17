@@ -135,7 +135,7 @@ export function PublishersDirectory({
                 />
                 <div className={styles.cardHeader}>
                   {avatar ? (
-                    <img alt="" className={styles.avatar} src={avatar} />
+                    <img alt="" className={styles.avatar} height={48} src={avatar} width={48} />
                   ) : (
                     <span aria-hidden="true" className={styles.avatar}>
                       {initial}

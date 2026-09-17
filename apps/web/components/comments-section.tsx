@@ -61,7 +61,7 @@ function Author({ author }: { author: CommentAuthor }) {
   return (
     <div className={styles.author}>
       {author.avatarUrl ? (
-        <img alt="" src={author.avatarUrl} />
+        <img alt="" height={32} src={author.avatarUrl} width={32} />
       ) : (
         <span aria-hidden="true">{initial}</span>
       )}

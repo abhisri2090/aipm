@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "../components/footer";
+import { GoogleAnalytics } from "../components/google-analytics";
 import { Header } from "../components/header";
 import { ToastProvider } from "../components/toast-provider";
 import { SITE_URL } from "../lib/registry";
@@ -82,6 +83,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
+        <GoogleAnalytics />
         <ToastProvider />
         <Header />
         {children}

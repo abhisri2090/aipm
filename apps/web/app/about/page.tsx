@@ -3,9 +3,10 @@ import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
 
 export const metadata = pageMetadata({
-  title: "About AIPM",
+  title: "About AIPM - AI Package Manager for Skills and Prompts",
   description: "AIPM helps teams install and publish AI skills, prompts, and tool files.",
   path: "/about",
+  keywords: ["about AIPM", "AI package manager", "AI skill registry", "AIPM mission"],
 });
 
 export default function AboutPage() {
