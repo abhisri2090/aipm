@@ -17,15 +17,18 @@ const PAGE_SIZE = 24;
 type PublishersPage = {
   publishers?: PublisherSummary[];
   nextCursor?: string | null;
+  nextOffset?: number | null;
 };
 
 export function PublishersDirectory({
   initialPublishers,
   initialNextCursor = null,
+  initialNextOffset = null,
   initialQuery = "",
 }: {
   initialPublishers: PublisherSummary[];
   initialNextCursor?: string | null;
+  initialNextOffset?: number | null;
   initialQuery?: string;
 }) {
   const pathname = usePathname();
@@ -33,6 +36,7 @@ export function PublishersDirectory({
   const [publishers, setPublishers] = useState(initialPublishers);
   const [query, setQuery] = useState(initialQuery);
   const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+  const [nextOffset, setNextOffset] = useState<number | null>(initialNextOffset);
   const [loadingMore, setLoadingMore] = useState(false);
   const [status, setStatus] = useState(
     initialPublishers.length === 0
@@ -49,54 +53,59 @@ export function PublishersDirectory({
       const data = await api<PublishersPage>(`/v1/publishers?${params}`);
       const next = data.publishers ?? [];
       const cursor = data.nextCursor ?? null;
+      const offset = data.nextOffset ?? null;
       setPublishers(next);
       setNextCursor(cursor);
+      setNextOffset(offset);
       setStatus(
         next.length === 0
           ? "No publishers found"
-          : cursor
+          : cursor || offset !== null
             ? `${next.length} publishers loaded · scroll for more`
             : `${next.length} publishers loaded`,
       );
     } catch (error) {
       setPublishers([]);
       setNextCursor(null);
+      setNextOffset(null);
       setStatus(publicApiError(error));
     }
   }, []);
 
   const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMoreRef.current) return;
+    if ((!nextCursor && nextOffset === null) || loadingMoreRef.current) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
-    const params = new URLSearchParams({
-      limit: String(PAGE_SIZE),
-      cursor: nextCursor,
-    });
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE) });
+    if (nextCursor) params.set("cursor", nextCursor);
+    else if (nextOffset !== null) params.set("offset", String(nextOffset));
     if (query.trim()) params.set("q", query.trim());
     try {
       const data = await api<PublishersPage>(`/v1/publishers?${params}`);
       const next = data.publishers ?? [];
       const cursor = data.nextCursor ?? null;
+      const offset = data.nextOffset ?? null;
       setPublishers((current) => {
         const seen = new Set(current.map((item) => item.slug));
         const merged = [...current, ...next.filter((item) => !seen.has(item.slug))];
         setStatus(
-          cursor
+          cursor || offset !== null
             ? `${merged.length} publishers loaded · scroll for more`
             : `${merged.length} publishers loaded`,
         );
         return merged;
       });
       setNextCursor(cursor);
+      setNextOffset(offset);
     } catch (error) {
       setStatus(publicApiError(error));
       setNextCursor(null);
+      setNextOffset(null);
     } finally {
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-  }, [nextCursor, query]);
+  }, [nextCursor, nextOffset, query]);
 
   return (
     <>
@@ -177,7 +186,7 @@ export function PublishersDirectory({
         )}
       </div>
       <LoadMoreSentinel
-        enabled={Boolean(nextCursor)}
+        enabled={Boolean(nextCursor || nextOffset !== null)}
         loading={loadingMore}
         onLoadMore={() => void loadMore()}
         label="Loading more publishers…"

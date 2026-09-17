@@ -363,10 +363,12 @@ export async function listPublishersPage(
   limit = 24,
   cursor?: string | null,
   throwOnError = false,
-): Promise<{ publishers: PublisherSummary[]; nextCursor: string | null }> {
+  offset?: number | null,
+): Promise<{ publishers: PublisherSummary[]; nextCursor: string | null; nextOffset: number | null }> {
   const params = new URLSearchParams({ limit: String(limit) });
   if (query) params.set("q", query);
   if (cursor) params.set("cursor", cursor);
+  if (offset != null && offset > 0) params.set("offset", String(offset));
   try {
     const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/publishers?${params}`, {
       next: { revalidate: 120 },
@@ -376,6 +378,7 @@ export async function listPublishersPage(
     const data = (await response.json()) as {
       publishers?: PublisherSummary[];
       nextCursor?: string | null;
+      nextOffset?: number | null;
     };
     if (throwOnError && !Array.isArray(data.publishers)) {
       throw new Error("Publisher listing response is invalid");
@@ -383,10 +386,11 @@ export async function listPublishersPage(
     return {
       publishers: data.publishers ?? [],
       nextCursor: data.nextCursor ?? null,
+      nextOffset: data.nextOffset ?? null,
     };
   } catch (error) {
     if (throwOnError) throw error;
-    return { publishers: [], nextCursor: null };
+    return { publishers: [], nextCursor: null, nextOffset: null };
   }
 }
 

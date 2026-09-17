@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DirectoryPageLinks } from "./directory-page-links";
-import { directoryPageNumber, directoryPagePath, loadCursorDirectoryPage } from "../lib/directory-pagination";
+import { directoryPageNumber, directoryPagePath } from "../lib/directory-pagination";
 import { listPackagesPage, packagePath, SITE_URL } from "../lib/registry";
 import { cn, shell } from "../lib/page-styles";
 import { DirectoryListTile } from "./directory-list-tile";
@@ -20,19 +20,13 @@ export async function SkillsDirectoryPage({
   const sort = params.sort === "popular" || params.sort === "title" ? params.sort : "newest";
   const filtered = Boolean(query || params.category || params.target || params.sort);
   const listingOptions = { query, limit: 20, category: params.category, target: params.target, sort, throwOnError: true };
-  const result = sort === "newest"
-    ? await loadCursorDirectoryPage(currentPage, async (cursor) => {
-        const page = await listPackagesPage({ ...listingOptions, cursor });
-        return { items: page.packages, nextCursor: page.nextCursor };
-      })
-    : null;
-  const offsetPage = result ? null : await listPackagesPage({
+  const page = await listPackagesPage({
     ...listingOptions,
-    offset: (currentPage - 1) * 20,
+    offset: currentPage > 1 ? (currentPage - 1) * 20 : undefined,
   });
-  const initialPackages = result?.items ?? offsetPage?.packages ?? [];
-  const initialNextCursor = result?.nextCursor ?? null;
-  const initialNextOffset = offsetPage?.nextOffset ?? null;
+  const initialPackages = page.packages;
+  const initialNextCursor = page.nextCursor;
+  const initialNextOffset = page.nextOffset;
   if (currentPage > 1 && initialPackages.length === 0) notFound();
 
   return (
@@ -118,7 +112,7 @@ export async function SkillsDirectoryPage({
           <DirectoryPageLinks
             basePath={canonicalPath}
             currentPage={currentPage}
-            hasNext={Boolean(initialNextCursor)}
+            hasNext={Boolean(initialNextCursor || initialNextOffset !== null)}
           />
         ) : null}
       </section>

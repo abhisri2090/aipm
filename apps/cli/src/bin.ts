@@ -1395,8 +1395,19 @@ program
     const lock = await readLockfile(configRoot);
     const lockEntry = lock?.packages[name];
     if (lockEntry) {
-      const removedFiles = await removeInstalledPackageFiles({ configRoot, installRoot, entry: lockEntry });
-      console.log(`Deleted ${removedFiles} tracked installed ${removedFiles === 1 ? "file" : "files"}.`);
+      const otherEntries = Object.entries(lock.packages)
+        .filter(([packageName]) => packageName !== name)
+        .map(([, entry]) => entry);
+      const removal = await removeInstalledPackageFiles({
+        configRoot,
+        installRoot,
+        entry: lockEntry,
+        otherEntries,
+      });
+      console.log(`Deleted ${removal.removed} tracked installed ${removal.removed === 1 ? "file" : "files"}.`);
+      if (removal.retainedShared > 0) {
+        console.log(`Retained ${removal.retainedShared} ${removal.retainedShared === 1 ? "file" : "files"} shared with another installed package.`);
+      }
     }
     const packages = { ...project.packages };
     delete packages[name];

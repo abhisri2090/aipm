@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, stat, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
@@ -25,7 +25,7 @@ describe("removeInstalledPackageFiles", () => {
 
     await expect(
       removeInstalledPackageFiles({ configRoot: root, installRoot: root, entry: entry([skill], [asset]) }),
-    ).resolves.toBe(2);
+    ).resolves.toEqual({ removed: 2, retainedShared: 0 });
     await expect(stat(skill)).rejects.toThrow();
     await expect(stat(asset)).rejects.toThrow();
     await expect(stat(join(root, ".claude", "skills", "review"))).rejects.toThrow();
@@ -43,6 +43,41 @@ describe("removeInstalledPackageFiles", () => {
       removeInstalledPackageFiles({ configRoot: root, installRoot: root, entry: entry([safe, outside]) }),
     ).rejects.toThrow("untrusted path");
     await expect(readFile(safe, "utf8")).resolves.toBe("safe\n");
+    await expect(readFile(outside, "utf8")).resolves.toBe("keep\n");
+  });
+
+  it("keeps a tracked file that another installed package also owns", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-remove-"));
+    const shared = join(root, ".claude", "skills", "review", "SKILL.md");
+    await mkdir(join(root, ".claude", "skills", "review"), { recursive: true });
+    await writeFile(shared, "# Shared\n");
+
+    await expect(
+      removeInstalledPackageFiles({
+        configRoot: root,
+        installRoot: root,
+        entry: entry([shared]),
+        otherEntries: [entry([shared])],
+      }),
+    ).resolves.toEqual({ removed: 0, retainedShared: 1 });
+    await expect(readFile(shared, "utf8")).resolves.toBe("# Shared\n");
+  });
+
+  it("rejects a file reached through a symlinked directory outside the install roots", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-remove-"));
+    const outsideRoot = await mkdtemp(join(tmpdir(), "aipm-outside-"));
+    const outside = join(outsideRoot, "keep.md");
+    const linkedDirectory = join(root, "linked");
+    await writeFile(outside, "keep\n");
+    await symlink(outsideRoot, linkedDirectory, "dir");
+
+    await expect(
+      removeInstalledPackageFiles({
+        configRoot: root,
+        installRoot: root,
+        entry: entry([join(linkedDirectory, "keep.md")]),
+      }),
+    ).rejects.toThrow("resolves outside");
     await expect(readFile(outside, "utf8")).resolves.toBe("keep\n");
   });
 });

@@ -100,7 +100,7 @@ export class FileMetadataStore implements MetadataStore {
     const normalizedQuery = query.trim().toLowerCase();
     const limit = options.limit ?? 100;
     const sort = options.sort ?? "newest";
-    const useCursor = sort === "newest";
+    const useCursor = sort === "newest" && options.offset === undefined;
     const cursorTime = useCursor && options.cursor ? new Date(options.cursor).getTime() : null;
     const category = options.category?.trim().toLowerCase();
     const target = options.target?.trim().toLowerCase();
