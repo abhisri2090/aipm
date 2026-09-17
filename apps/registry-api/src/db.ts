@@ -694,7 +694,7 @@ export async function listPackageVersions(
   const normalizedQuery = query.trim();
   const limit = Math.min(Math.max(options.limit ?? 100, 1), 101);
   const sort = options.sort ?? "newest";
-  const useCursor = sort === "newest";
+  const useCursor = sort === "newest" && options.offset === undefined;
   const values: Array<string | number> = [];
   const filters: string[] = [];
   if (normalizedQuery) {
@@ -1948,7 +1948,7 @@ export interface PublicPublisherListRow {
 
 export async function listPublicPublishers(
   pool: pg.Pool,
-  options: { query?: string; limit: number; cursor?: string },
+  options: { query?: string; limit: number; cursor?: string; offset?: number },
 ): Promise<PublicPublisherListRow[]> {
   const values: unknown[] = [];
   const conditions = ["orgs.deleted_at IS NULL", "package_reservations.visibility = 'public'"];
@@ -1965,6 +1965,12 @@ export async function listPublicPublishers(
   }
 
   values.push(options.limit);
+  const limitParam = values.length;
+  let offsetSql = "";
+  if (options.offset) {
+    values.push(options.offset);
+    offsetSql = ` OFFSET $${values.length}`;
+  }
   const result = await pool.query<PublicPublisherListRow>(
     `SELECT orgs.slug,
             orgs.name,
@@ -1984,7 +1990,7 @@ export async function listPublicPublishers(
      GROUP BY orgs.id, owners.id
      HAVING COUNT(DISTINCT package_reservations.name) > 0
      ORDER BY orgs.created_at DESC, orgs.slug ASC
-     LIMIT $${values.length}`,
+     LIMIT $${limitParam}${offsetSql}`,
     values,
   );
   return result.rows;

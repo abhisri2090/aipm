@@ -2531,7 +2531,7 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string } }>(
+  app.get<{ Querystring: { q?: string; limit?: string; cursor?: string; offset?: string } }>(
     "/v1/publishers",
     {
       config: {
@@ -2551,14 +2551,20 @@ export async function createApp(): Promise<FastifyInstance> {
       if (!parsedCursor.ok) return reply.status(400).send({ error: parsedCursor.error });
 
       const limit = parsedLimit.value;
+      const useCursor = request.query.offset === undefined;
+      const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const rows = await listPublicPublishers(accountAuth.pool, {
         query: request.query.q?.trim() ?? "",
         limit: limit + 1,
-        cursor: parsedCursor.value,
+        cursor: useCursor ? parsedCursor.value : undefined,
+        offset: useCursor ? undefined : offset,
       });
       const page = rows.slice(0, limit);
       const nextCursor =
-        rows.length > limit ? page[page.length - 1]?.created_at.toISOString() ?? null : null;
+        useCursor && rows.length > limit
+          ? page[page.length - 1]?.created_at.toISOString() ?? null
+          : null;
+      const nextOffset = !useCursor && rows.length > limit ? offset + page.length : null;
 
       return {
         publishers: page.map((row) => ({
@@ -2577,6 +2583,7 @@ export async function createApp(): Promise<FastifyInstance> {
           },
         })),
         nextCursor,
+        nextOffset,
       };
     },
   );
@@ -2617,7 +2624,7 @@ export async function createApp(): Promise<FastifyInstance> {
       const target = request.query.target?.trim() ?? "";
       const sortRaw = request.query.sort?.trim() || "newest";
       const sort: PackageSortMode = sortRaw === "popular" || sortRaw === "title" ? sortRaw : "newest";
-      const useCursor = sort === "newest";
+      const useCursor = sort === "newest" && request.query.offset === undefined;
       const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const readAccess = await resolveReadAccess(accountAuth, request);
       const rows = await metadata.list(query, {

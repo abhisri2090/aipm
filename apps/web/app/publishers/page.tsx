@@ -1,6 +1,7 @@
 import { PublishersDirectory } from "../../components/publishers-directory";
 import { DirectoryPageLinks } from "../../components/directory-page-links";
-import { directoryPageNumber, directoryPagePath, loadCursorDirectoryPage } from "../../lib/directory-pagination";
+import { directoryPageNumber, directoryPagePath } from "../../lib/directory-pagination";
+import { notFound } from "next/navigation";
 import { listPublishersPage, publisherPath, SITE_URL } from "../../lib/registry";
 import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
@@ -39,13 +40,15 @@ export default async function PublishersPage({
   const params = await searchParams;
   const currentPage = directoryPageNumber(params.page);
   const query = params.q ?? "";
-  const { items: publishers, nextCursor } = await loadCursorDirectoryPage(
-    currentPage,
-    async (cursor) => {
-      const page = await listPublishersPage(query, 24, cursor, true);
-      return { items: page.publishers, nextCursor: page.nextCursor };
-    },
+  const page = await listPublishersPage(
+    query,
+    24,
+    undefined,
+    true,
+    currentPage > 1 ? (currentPage - 1) * 24 : undefined,
   );
+  const publishers = page.publishers;
+  if (currentPage > 1 && publishers.length === 0) notFound();
 
   return (
     <main>
@@ -107,14 +110,15 @@ export default async function PublishersPage({
         <PublishersDirectory
           key={`${currentPage}:${query}`}
           initialPublishers={publishers}
-          initialNextCursor={nextCursor}
+          initialNextCursor={page.nextCursor}
+          initialNextOffset={page.nextOffset}
           initialQuery={query}
         />
         {!query ? (
           <DirectoryPageLinks
             basePath="/publishers"
             currentPage={currentPage}
-            hasNext={Boolean(nextCursor)}
+            hasNext={Boolean(page.nextCursor || page.nextOffset !== null)}
           />
         ) : null}
       </section>
