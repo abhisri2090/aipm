@@ -2,7 +2,7 @@ import { shell, cards, home, cn } from "../lib/page-styles";
 import Link from "next/link";
 import { CodeBlock } from "../components/code-block";
 import { RegistrySearch } from "../components/registry-search";
-import { CLI_INSTALL_OPTIONS, listPackagesPage } from "../lib/registry";
+import { CLI_INSTALL_OPTIONS, listPackagesPage, SITE_URL } from "../lib/registry";
 import { pageMetadata } from "../lib/seo";
 
 type PackageTag = {
@@ -93,54 +93,67 @@ export default async function HomePage() {
             "@graph": [
               {
                 "@type": "WebSite",
-                "@id": "https://www.aipm-registry.com/#website",
+                "@id": `${SITE_URL}/#website`,
                 name: "AIPM Registry",
                 alternateName: "AIPM",
-                url: "https://www.aipm-registry.com",
+                url: SITE_URL,
                 description:
                   "A registry and CLI for installing reusable AI skills, prompts, rules, MCP setup, and tool files into supported assistants.",
                 publisher: {
-                  "@id": "https://www.aipm-registry.com/#organization",
+                  "@id": `${SITE_URL}/#organization`,
                 },
                 potentialAction: {
                   "@type": "SearchAction",
-                target: "https://www.aipm-registry.com/skills?q={search_term_string}",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: `${SITE_URL}/skills?q={search_term_string}`,
+                  },
                   "query-input": "required name=search_term_string",
                 },
               },
               {
                 "@type": "Organization",
-                "@id": "https://www.aipm-registry.com/#organization",
+                "@id": `${SITE_URL}/#organization`,
                 name: "AIPM",
-                url: "https://www.aipm-registry.com",
-                logo: "https://www.aipm-registry.com/aipm-logo.svg",
+                url: SITE_URL,
+                logo: {
+                  "@type": "ImageObject",
+                  url: `${SITE_URL}/aipm-logo.svg`,
+                  width: 512,
+                  height: 512,
+                },
                 founder: {
-                  "@id": "https://www.aipm-registry.com/#abhishek-srivastava",
+                  "@id": `${SITE_URL}/#abhishek-srivastava`,
                 },
                 sameAs: ["https://github.com/abhisri2090/aipm"],
               },
               {
                 "@type": "Person",
-                "@id": "https://www.aipm-registry.com/#abhishek-srivastava",
+                "@id": `${SITE_URL}/#abhishek-srivastava`,
                 name: "Abhishek Srivastava",
                 url: "https://www.linkedin.com/in/abhisri2090",
                 sameAs: ["https://x.com/abhisri2090", "https://github.com/abhisri2090"],
               },
               {
                 "@type": "SoftwareApplication",
-                "@id": "https://www.aipm-registry.com/#cli",
+                "@id": `${SITE_URL}/#cli`,
                 name: "AIPM CLI",
                 applicationCategory: "DeveloperApplication",
                 operatingSystem: "macOS, Linux, Windows",
                 description:
                   "Command line tool for installing and publishing project-ready AI skills and tool files.",
-                installUrl: "https://www.aipm-registry.com/use",
-                softwareHelp: "https://www.aipm-registry.com/commands",
+                url: `${SITE_URL}/install`,
+                installUrl: `${SITE_URL}/install`,
+                softwareHelp: `${SITE_URL}/commands`,
                 codeRepository: "https://github.com/abhisri2090/aipm",
                 offers: {
                   "@type": "Offer",
                   price: "0",
                   priceCurrency: "USD",
+                  availability: "https://schema.org/InStock",
+                },
+                author: {
+                  "@id": `${SITE_URL}/#organization`,
                 },
               },
             ],
