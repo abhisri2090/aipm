@@ -82,6 +82,15 @@ export default async function GuidePage({ params }: GuideRouteProps) {
   const publishedAt = guide.publishedAt ?? GUIDE_PUBLISHED_AT;
   const updatedAt = guide.updatedAt ?? GUIDE_UPDATED_AT;
 
+  const faqItems = guide.faqs.length > 0 ? guide.faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })) : null;
+
   return (
     <DocLayout wide>
       <script
@@ -99,9 +108,24 @@ export default async function GuidePage({ params }: GuideRouteProps) {
                 datePublished: publishedAt,
                 dateModified: updatedAt,
                 inLanguage: "en",
-                author: { "@type": "Person", name: "Abhishek Srivastava" },
-                publisher: { "@type": "Organization", name: "AIPM" },
-                mainEntityOfPage: `${SITE_URL}/guides/${guide.slug}`,
+                author: {
+                  "@type": "Person",
+                  name: "Abhishek Srivastava",
+                  url: "https://www.linkedin.com/in/abhisri2090",
+                },
+                publisher: {
+                  "@type": "Organization",
+                  name: "AIPM",
+                  url: SITE_URL,
+                  logo: {
+                    "@type": "ImageObject",
+                    url: `${SITE_URL}/aipm-logo.svg`,
+                  },
+                },
+                mainEntityOfPage: {
+                  "@type": "WebPage",
+                  "@id": `${SITE_URL}/guides/${guide.slug}`,
+                },
                 isPartOf: { "@type": "WebSite", name: "AIPM Registry", url: SITE_URL },
                 breadcrumb: { "@id": `${SITE_URL}/guides/${guide.slug}#breadcrumbs` },
               },
@@ -119,6 +143,11 @@ export default async function GuidePage({ params }: GuideRouteProps) {
                   },
                 ],
               },
+              ...(faqItems ? [{
+                "@type": "FAQPage",
+                "@id": `${SITE_URL}/guides/${guide.slug}#faq`,
+                mainEntity: faqItems,
+              }] : []),
             ],
           }),
         }}

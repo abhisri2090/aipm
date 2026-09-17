@@ -2,14 +2,13 @@ import { PublishersDirectory } from "../../components/publishers-directory";
 import { DirectoryPageLinks } from "../../components/directory-page-links";
 import { directoryPageNumber, directoryPagePath, loadCursorDirectoryPage } from "../../lib/directory-pagination";
 import { listPublishersPage, publisherPath, SITE_URL } from "../../lib/registry";
-import { pageMetadata } from "../../lib/seo";
+import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
 
 const publishersMetadata = {
   title: "AI Skill Publishers",
   description:
-    "Browse publishers on AIPM — organizations and creators who publish or import reusable AI agent skills.",
-  path: "/publishers",
+    "Browse publishers on AIPM — organizations and creators who publish or import reusable AI agent skills",
   keywords: ["AI skill publishers", "AIPM publishers", "agent skill authors"],
 };
 
@@ -19,10 +18,17 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const params = await searchParams;
   const currentPage = directoryPageNumber(params.page);
   const filtered = Boolean(params.q);
-  return {
-    ...pageMetadata({ ...publishersMetadata, path: filtered ? "/publishers" : directoryPagePath("/publishers", currentPage) }),
-    ...(filtered ? { robots: { index: false, follow: true } } : {}),
-  };
+  if (filtered) {
+    return {
+      ...pageMetadata({ ...publishersMetadata, path: "/publishers" }),
+      robots: { index: false, follow: true },
+    };
+  }
+  return paginatedPageMetadata({
+    ...publishersMetadata,
+    path: directoryPagePath("/publishers", currentPage),
+    page: currentPage,
+  });
 }
 
 export default async function PublishersPage({
@@ -70,6 +76,27 @@ export default async function PublishersPage({
         <p className={shell.lede}>
           Browse every publisher with public skills on AIPM. Open a profile to inspect their
           packages, source links, and verification status.
+        </p>
+      </section>
+
+      <section className={shell.panelSection} aria-labelledby="publishers-about-title">
+        <div className={shell.sectionHeading}>
+          <h2 id="publishers-about-title">About publishers</h2>
+        </div>
+        <p>
+          Publishers are the individuals and organizations who create and maintain AI skill packages on AIPM.
+          Each publisher has a unique namespace that appears before the package name, like <code>@publisher/skill-name</code>.
+          When you install a skill, the publisher namespace tells you who created and maintains it.
+        </p>
+        <p>
+          Publisher profiles show all public packages under that namespace, along with source links and any
+          verification badges. Verified publishers have confirmed their identity through GitHub or another
+          connected account. This helps you decide whether to trust a skill before installing it in your project.
+        </p>
+        <p>
+          Anyone can become a publisher by creating an account and reserving a namespace. Organizations can
+          create org namespaces for team-owned packages. Read the{" "}
+          <a href="/publish">publishing guide</a> to learn how to publish your first skill.
         </p>
       </section>
 

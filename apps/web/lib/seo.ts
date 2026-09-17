@@ -58,3 +58,26 @@ export function noIndexPageMetadata(input: SeoInput): Metadata {
     },
   };
 }
+
+type PaginatedSeoInput = SeoInput & {
+  page: number;
+  pageLabel?: string;
+};
+
+export function paginatedPageMetadata({
+  title,
+  description,
+  page,
+  pageLabel = "Page",
+  ...rest
+}: PaginatedSeoInput): Metadata {
+  if (page <= 1) {
+    return pageMetadata({ title, description, ...rest });
+  }
+  const pageSuffix = `${pageLabel} ${page}`;
+  return pageMetadata({
+    title: `${title} - ${pageSuffix}`,
+    description: `${description} ${pageSuffix}.`,
+    ...rest,
+  });
+}

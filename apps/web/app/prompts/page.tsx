@@ -4,15 +4,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { listPromptsPage } from "../../lib/prompts";
 import { SITE_URL } from "../../lib/registry";
-import { pageMetadata } from "../../lib/seo";
+import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
 import styles from "./prompts.module.css";
 
 const directoryMetadata = {
   title: "AI Prompt Directory",
   description:
-    "Browse useful AI prompts by category, output type, input, and compatible model. See variables and example outputs before you copy.",
-  path: "/prompts",
+    "Browse useful AI prompts by category, output type, input, and compatible model. See variables and example outputs before you copy",
   keywords: [
     "AI prompt directory",
     "best AI prompts",
@@ -50,12 +49,19 @@ export async function generateMetadata({
   searchParams: Promise<PromptSearchParams>;
 }) {
   const params = await searchParams;
-  const number = pageNumber(params.page);
+  const currentPage = pageNumber(params.page);
   const filtered = Boolean(params.tag || params.q || params.category || params.output);
-  return {
-    ...pageMetadata({ ...directoryMetadata, path: filtered ? "/prompts" : directoryPath(number) }),
-    ...(filtered ? { robots: { index: false, follow: true } } : {}),
-  };
+  if (filtered) {
+    return {
+      ...pageMetadata({ ...directoryMetadata, path: "/prompts" }),
+      robots: { index: false, follow: true },
+    };
+  }
+  return paginatedPageMetadata({
+    ...directoryMetadata,
+    path: directoryPath(currentPage),
+    page: currentPage,
+  });
 }
 
 export default async function PromptsPage({

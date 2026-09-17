@@ -77,11 +77,25 @@ export default function TargetsPage() {
         </div>
       </section>
 
-      <p className={shell.lede}>
-        AIPM automatically detects the AI tool in your project and installs the skill in the matching
-        location. To force a specific target, use <code>--target cursor</code> or{" "}
-        <code>--target claude</code> with <code>aipm add</code>.
-      </p>
+      <section className={shell.panelSection}>
+        <h2>How target detection works</h2>
+        <p>
+          AIPM automatically detects the AI tool in your project and installs the skill in the matching
+          location. Detection looks for tool-specific directories in your project root. If AIPM finds
+          a <code>.cursor/</code> folder, it knows your project uses Cursor. If it finds <code>.claude/</code>,
+          it targets Claude Code.
+        </p>
+        <p>
+          When your project uses multiple AI tools, or when you want to override automatic detection,
+          use <code>--target cursor</code> or <code>--target claude</code> with <code>aipm add</code>.
+          The target flag tells AIPM exactly where to write the skill files.
+        </p>
+        <p>
+          Some packages support only one target, while others include files for multiple AI tools. The package
+          page shows which targets are available. If you request a target the package does not support,
+          AIPM will report an error and suggest available options.
+        </p>
+      </section>
 
       <section className={cards.targetGrid} aria-label="Supported AIPM targets">
         {targets.map((target) => (
@@ -107,6 +121,15 @@ export default function TargetsPage() {
 
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
+          <h2>Publishing for multiple targets</h2>
+          <p>
+            When you publish a package, you declare which targets it supports in the manifest file.
+            Each target can have different files or the same content adapted for that AI tool&apos;s format.
+            AIPM validates that your package includes the required files for each declared target.
+          </p>
+        </section>
+
+        <section>
           <h2>Manifest examples</h2>
           <div className={cards.exampleGrid}>
             <article className={cards.exampleCard}>
@@ -125,6 +148,15 @@ export default function TargetsPage() {
               <p>Installs the same package into multiple AI tools.</p>
             </article>
           </div>
+        </section>
+
+        <section>
+          <h2>Future targets</h2>
+          <p>
+            AIPM is designed to support additional AI tools as they adopt file-based skill formats.
+            The target system is extensible, so new tools can be added without changing the core CLI
+            or registry. Follow the <Link href="/roadmap">roadmap</Link> for updates on new target support.
+          </p>
         </section>
       </article>
     </DocLayout>
