@@ -60,14 +60,16 @@ const requiredPages = [
   },
   {
     path: "/publish/guide",
-    title: "Publishing Guide",
+    title: "AIPM Publishing Guide - Create and Publish AI Skills",
+    renderedTitle: "AIPM Publishing Guide - Create and Publish AI Skills",
     h1: "Create a skill package and publish it.",
     jsonLd: false,
     includes: ["install guide", "skill templates guide", "aipm publish init"],
   },
   {
     path: "/use",
-    title: "Use AIPM",
+    title: "Use AIPM - Install AI Skills Into Your Project",
+    renderedTitle: "Use AIPM - Install AI Skills Into Your Project",
     h1: "Install AI skills into your project.",
     jsonLd: false,
   },
@@ -296,7 +298,13 @@ const requiredPages = [
     jsonLd: true,
     includes: ["Global conferences &amp; communities", "NeurIPS", "ICLR", "CVPR", "AI Engineer"],
   },
-  { path: "/faq", title: "AIPM FAQ", h1: "Common questions and fixes.", jsonLd: false },
+  {
+    path: "/faq",
+    title: "AIPM FAQ - Troubleshooting and Common Questions",
+    renderedTitle: "AIPM FAQ - Troubleshooting and Common Questions",
+    h1: "Common questions and fixes.",
+    jsonLd: false,
+  },
   {
     path: "/guides/ai-package-manager",
     title: "What Is an AI Package Manager?",
