@@ -1,6 +1,10 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { SkillAdapter, SkillInstallInput, SkillInstallResult } from "@aipm-registry/adapter-sdk";
+import {
+  writeSkillDirectory,
+  type SkillAdapter,
+  type SkillInstallInput,
+  type SkillInstallResult,
+} from "@aipm-registry/adapter-sdk";
 import { shortNameFromScopeName } from "@aipm-registry/schemas";
 
 export class ClaudeSkillAdapter implements SkillAdapter {
@@ -9,10 +13,7 @@ export class ClaudeSkillAdapter implements SkillAdapter {
   async installSkill(input: SkillInstallInput): Promise<SkillInstallResult> {
     const short = shortNameFromScopeName(input.packageName);
     const skillDir = join(input.projectRoot, ".claude", "skills", short);
-    await mkdir(skillDir, { recursive: true });
-    const filePath = join(skillDir, "SKILL.md");
-    await writeFile(filePath, input.skillMarkdown, "utf8");
-    return { writtenPaths: [filePath] };
+    return writeSkillDirectory(skillDir, input);
   }
 }
 

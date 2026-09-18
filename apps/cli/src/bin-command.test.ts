@@ -314,12 +314,13 @@ describe("CLI publish commands", () => {
     expect(result.stdout).toContain("Next: Run cd existing-helper");
   });
 
-  it("installs helper files, shows manual setup prompts, and cleans helpers only", async () => {
+  it("installs skill support and helper files, then removes every tracked file", async () => {
     const root = await tempWorkspace();
-    await mkdir(join(root, ".cursor"));
+    await mkdir(join(root, ".agents"));
     const packageRoot = await tempWorkspace();
     await mkdir(join(packageRoot, "setup"), { recursive: true });
     await mkdir(join(packageRoot, "assets"), { recursive: true });
+    await mkdir(join(packageRoot, "references"), { recursive: true });
 
     const manifest = {
       schemaVersion: "0.1",
@@ -328,7 +329,7 @@ describe("CLI publish commands", () => {
       type: "skill",
       description: "Debug helper skill",
       entry: "SKILL.md",
-      targets: ["cursor"],
+      targets: ["codex"],
       install: {
         mainFiles: [{ from: "assets/server.js", to: "debug-log-server/server.js" }],
         helperFiles: [
@@ -347,6 +348,8 @@ describe("CLI publish commands", () => {
     await writeFile(join(packageRoot, "assets", "server.js"), "console.log('debug server')\n");
     await writeFile(join(packageRoot, "setup", "SETUP_PROMPT.md"), "Set up the debug logger now.\n");
     await writeFile(join(packageRoot, "setup", "GUIDE.md"), "# Debug logger guide\n");
+    await writeFile(join(packageRoot, "references", "API.md"), "# Debug API reference\n");
+    await writeFile(join(packageRoot, "LICENSE"), "Apache License 2.0\n");
     const tarball = await packDirectory(packageRoot);
 
     const encoded = encodeURIComponent("@team/debug-helper");
@@ -381,10 +384,12 @@ describe("CLI publish commands", () => {
     const registry = `http://127.0.0.1:${address.port}`;
 
     try {
-      await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      await runCli(root, ["init", "--registry", registry, "--target", "codex"]);
       const add = await runCli(root, ["add", "@team/debug-helper@1.0.0", "--ci"]);
 
-      const skillPath = join(root, ".cursor", "aipm", "skills", "debug-helper.md");
+      const skillPath = join(root, ".agents", "skills", "debug-helper", "SKILL.md");
+      const referencePath = join(root, ".agents", "skills", "debug-helper", "references", "API.md");
+      const licensePath = join(root, ".agents", "skills", "debug-helper", "LICENSE");
       const mainPath = join(root, "debug-log-server", "server.js");
       const promptPath = join(root, ".aipm", "helpers", "team__debug-helper", "1.0.0", "SETUP_PROMPT.md");
       const guidePath = join(root, ".aipm", "helpers", "team__debug-helper", "1.0.0", "GUIDE.md");
@@ -392,6 +397,8 @@ describe("CLI publish commands", () => {
       expect(add.stdout).toContain("This package requires AI-assisted setup.");
       expect(add.stdout).toContain("team__debug-helper/1.0.0/SETUP_PROMPT.md");
       await expect(stat(skillPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(readFile(referencePath, "utf8")).resolves.toContain("Debug API reference");
+      await expect(readFile(licensePath, "utf8")).resolves.toContain("Apache License 2.0");
       await expect(stat(mainPath)).resolves.toMatchObject({ size: expect.any(Number) });
       await expect(stat(promptPath)).resolves.toMatchObject({ size: expect.any(Number) });
       await expect(stat(guidePath)).resolves.toMatchObject({ size: expect.any(Number) });
@@ -407,6 +414,8 @@ describe("CLI publish commands", () => {
       await runCli(root, ["cleanup", "@team/debug-helper", "--yes"]);
       await expect(stat(promptPath)).rejects.toThrow();
       await expect(stat(skillPath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(stat(referencePath)).resolves.toMatchObject({ size: expect.any(Number) });
+      await expect(stat(licensePath)).resolves.toMatchObject({ size: expect.any(Number) });
       await expect(stat(mainPath)).resolves.toMatchObject({ size: expect.any(Number) });
       expect(await readJson(join(root, "aipm-lock.json"))).toMatchObject({
         packages: {
@@ -417,8 +426,10 @@ describe("CLI publish commands", () => {
       });
 
       const remove = await runCli(root, ["remove", "@team/debug-helper"]);
-      expect(remove.stdout).toContain("Deleted 2 tracked installed files.");
+      expect(remove.stdout).toContain("Deleted 4 tracked installed files.");
       await expect(stat(skillPath)).rejects.toThrow();
+      await expect(stat(referencePath)).rejects.toThrow();
+      await expect(stat(licensePath)).rejects.toThrow();
       await expect(stat(mainPath)).rejects.toThrow();
       expect(await readJson(join(root, "aipm.package.json"))).toMatchObject({ packages: {} });
       expect(await readJson(join(root, "aipm-lock.json"))).toMatchObject({ packages: {} });

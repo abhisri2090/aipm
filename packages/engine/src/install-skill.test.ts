@@ -1,4 +1,4 @@
-import { mkdtemp, readFile } from "node:fs/promises";
+import { mkdtemp, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
@@ -22,12 +22,20 @@ describe("installSkillPackage", () => {
       projectRoot: root,
       manifest,
       skillMarkdown: "# hello\n",
+      supportingFiles: [
+        { path: "references/guide.md", content: Buffer.from("# Guide\n") },
+        { path: "LICENSE", content: Buffer.from("Apache License\n") },
+      ],
       explicitTarget: "codex",
     });
     const path = join(root, ".agents", "skills", "review-helper", "SKILL.md");
+    const guidePath = join(root, ".agents", "skills", "review-helper", "references", "guide.md");
+    const licensePath = join(root, ".agents", "skills", "review-helper", "LICENSE");
     expect(result.resolvedTools).toEqual(["codex"]);
-    expect(result.installed.codex).toEqual([path]);
+    expect(result.installed.codex).toEqual([path, guidePath, licensePath]);
     expect(await readFile(path, "utf8")).toBe("# hello\n");
+    expect(await readFile(guidePath, "utf8")).toBe("# Guide\n");
+    expect(await readFile(licensePath, "utf8")).toBe("Apache License\n");
   });
 
   it("keeps cursor path shape", async () => {
@@ -50,10 +58,25 @@ describe("installSkillPackage", () => {
       projectRoot: root,
       manifest: claudeManifest,
       skillMarkdown: "# Claude skill\n",
+      supportingFiles: [{ path: "scripts/run.sh", content: Buffer.from("#!/bin/sh\n"), mode: 0o755 }],
       explicitTarget: "claude",
     });
     const path = join(root, ".claude", "skills", "review-helper", "SKILL.md");
-    expect(result.installed.claude).toEqual([path]);
+    const scriptPath = join(root, ".claude", "skills", "review-helper", "scripts", "run.sh");
+    expect(result.installed.claude).toEqual([path, scriptPath]);
     expect(await readFile(path, "utf8")).toBe("# Claude skill\n");
+    expect(await readFile(scriptPath, "utf8")).toBe("#!/bin/sh\n");
+    expect((await stat(scriptPath)).mode & 0o111).toBe(0o111);
+  });
+
+  it("rejects supporting files that can overwrite the skill entry", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-install-"));
+    await expect(installSkillPackage({
+      projectRoot: root,
+      manifest,
+      skillMarkdown: "# hello\n",
+      supportingFiles: [{ path: "skill.md", content: Buffer.from("overwrite") }],
+      explicitTarget: "codex",
+    })).rejects.toThrow(/Unsafe or duplicate skill supporting file path/);
   });
 });
