@@ -172,7 +172,7 @@ const examples: Example[] = [
       },
       {
         title: "5. Publish to the registry",
-        body: "Publish with a short-lived token from the package dashboard.",
+        body: "Publish with a short-lived token from the skill dashboard.",
         code: "AIPM_TOKEN=<5-minute-token> aipm publish push --yes",
       },
     ],

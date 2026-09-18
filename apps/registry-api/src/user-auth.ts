@@ -254,7 +254,7 @@ export async function startGithubConnect(
     return;
   }
   if (user.github_id) {
-    reply.redirect(`${auth.config.publicSiteUrl}/dashboard/packages?github=already_linked`);
+    reply.redirect(`${auth.config.publicSiteUrl}/dashboard/skills?github=already_linked`);
     return;
   }
   const state = encodeOauthState("connect", randomToken(24));
@@ -370,24 +370,24 @@ export async function finishGithubLogin(
         avatarUrl: githubUser.avatar_url ?? null,
         contactEmail,
       });
-      reply.redirect(`${auth.config.publicSiteUrl}/dashboard/packages?github=connected`);
+      reply.redirect(`${auth.config.publicSiteUrl}/dashboard/skills?github=connected`);
       return;
     } catch (error) {
       if (error instanceof GithubAlreadyLinkedError) {
         redirectAuthError(
           auth,
           reply,
-          "/dashboard/packages",
+          "/dashboard/skills",
           "This GitHub account is already used on AIPM. Sign in with GitHub to import.",
         );
         return;
       }
       if (error instanceof UserAlreadyHasGithubError) {
-        redirectAuthError(auth, reply, "/dashboard/packages", error.message);
+        redirectAuthError(auth, reply, "/dashboard/skills", error.message);
         return;
       }
       if (error instanceof GithubEmailConflictError) {
-        redirectAuthError(auth, reply, "/dashboard/packages", error.message);
+        redirectAuthError(auth, reply, "/dashboard/skills", error.message);
         return;
       }
       throw error;

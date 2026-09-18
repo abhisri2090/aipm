@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 
 export default async function NewPackagePage({ params }: { params: Promise<{ org: string }> }) {
   const { org } = await params;
-  redirect(`/dashboard/packages?org=${encodeURIComponent(decodeURIComponent(org))}`);
+  permanentRedirect(`/dashboard/skills?org=${encodeURIComponent(decodeURIComponent(org))}`);
 }

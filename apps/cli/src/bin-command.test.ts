@@ -79,7 +79,7 @@ describe("CLI publish commands", () => {
     );
 
     const server = createServer((request, response) => {
-      expect(request.url).toBe(`/v1/packages/${encodeURIComponent("@team/url-check")}/versions`);
+      expect(request.url).toBe(`/v1/skills/${encodeURIComponent("@team/url-check")}/versions`);
       response.writeHead(201, { "content-type": "application/json" });
       response.end(JSON.stringify({ name: "@team/url-check", version: "2.0.0", integrity: "sha256-test" }));
     });
@@ -98,7 +98,7 @@ describe("CLI publish commands", () => {
         "test-token",
       ]);
 
-      expect(result.stdout).toContain("View: https://www.aipm-registry.com/packages/team/url-check/2.0.0");
+      expect(result.stdout).toContain("View: https://www.aipm-registry.com/skills/team/url-check/2.0.0");
       expect(result.stdout).toContain("README badge: [![Install with AIPM]");
       expect(result.stdout).toContain("Install: aipm add @team/url-check@2.0.0 --target cursor --ci");
     } finally {
@@ -126,7 +126,7 @@ describe("CLI publish commands", () => {
     await runCli(root, ["publish", "add", "."]);
 
     const server = createServer((request, response) => {
-      expect(request.url).toBe(`/v1/packages/${encodeURIComponent("@team/verbose-publish")}/versions`);
+      expect(request.url).toBe(`/v1/skills/${encodeURIComponent("@team/verbose-publish")}/versions`);
       response.writeHead(201, { "content-type": "application/json" });
       response.end(JSON.stringify({ name: "@team/verbose-publish", version: "1.0.0", integrity: "sha256-test" }));
     });
@@ -174,7 +174,7 @@ describe("CLI publish commands", () => {
     await runCli(root, ["publish", "add", "."]);
 
     const server = createServer((request, response) => {
-      expect(request.url).toBe(`/v1/packages/${encodeURIComponent("@team/token-hint")}/versions`);
+      expect(request.url).toBe(`/v1/skills/${encodeURIComponent("@team/token-hint")}/versions`);
       response.writeHead(403, { "content-type": "application/json" });
       response.end(JSON.stringify({ error: "Invalid publish token" }));
     });
@@ -359,17 +359,17 @@ describe("CLI publish commands", () => {
         response.end(JSON.stringify({ ok: true }));
         return;
       }
-      if (request.url === `/v1/packages/${encoded}/versions/1.0.0`) {
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0`) {
         response.writeHead(200, { "content-type": "application/json" });
         response.end(JSON.stringify({ manifest, integrity: "sha256-test" }));
         return;
       }
-      if (request.url === `/v1/packages/${encoded}/versions/1.0.0/tarball`) {
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0/tarball`) {
         response.writeHead(200, { "content-type": "application/gzip" });
         response.end(tarball);
         return;
       }
-      if (request.url === `/v1/packages/${encoded}/installs`) {
+      if (request.url === `/v1/skills/${encoded}/installs`) {
         response.writeHead(200, { "content-type": "application/json" });
         response.end(JSON.stringify({ installCount: 1 }));
         return;
@@ -471,10 +471,10 @@ describe("CLI publish commands", () => {
         );
         return;
       }
-      if (request.url?.startsWith("/v1/packages?")) {
+      if (request.url?.startsWith("/v1/skills?")) {
         sawSearchAuth = request.headers.authorization === "Bearer aipm_cli_access_refreshed";
         response.writeHead(200, { "content-type": "application/json" });
-        response.end(JSON.stringify({ packages: [] }));
+        response.end(JSON.stringify({ skills: [] }));
         return;
       }
       response.writeHead(404);
@@ -522,10 +522,10 @@ describe("CLI publish commands", () => {
         response.end();
         return;
       }
-      if (request.url?.startsWith("/v1/packages?")) {
+      if (request.url?.startsWith("/v1/skills?")) {
         sawExplicitAuth = request.headers.authorization === "Bearer explicit-install-token";
         response.writeHead(200, { "content-type": "application/json" });
-        response.end(JSON.stringify({ packages: [] }));
+        response.end(JSON.stringify({ skills: [] }));
         return;
       }
       response.writeHead(404);
@@ -572,9 +572,9 @@ describe("CLI publish commands", () => {
         response.end(JSON.stringify({ error: "CLI session expired or revoked" }));
         return;
       }
-      if (request.url?.startsWith("/v1/packages?")) {
+      if (request.url?.startsWith("/v1/skills?")) {
         response.writeHead(200, { "content-type": "application/json" });
-        response.end(JSON.stringify({ packages: [] }));
+        response.end(JSON.stringify({ skills: [] }));
         return;
       }
       response.writeHead(404);

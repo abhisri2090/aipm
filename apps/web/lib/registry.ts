@@ -145,7 +145,7 @@ export const CLI_INSTALL_OPTIONS = [
 
 export function packagePath(packageName: string, version: string): string {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
-  return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+  return `/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
 export function packageFilesPath(packageName: string, version: string): string {
@@ -288,6 +288,10 @@ export const PACKAGE_TARGET_FILTERS = ["all", "cursor", "claude", "codex"] as co
 export const PACKAGE_SORT_OPTIONS = ["newest", "popular", "title"] as const;
 export type PackageSortMode = (typeof PACKAGE_SORT_OPTIONS)[number];
 
+export function skillListFromResponse<T>(data: { skills?: T[]; packages?: T[] } | null | undefined): T[] {
+  return data?.skills ?? data?.packages ?? [];
+}
+
 export async function listPackages(
   query = "",
   limit = 50,
@@ -318,21 +322,23 @@ export async function listPackagesPage(options: {
   if (options.target && options.target !== "all") params.set("target", options.target);
   if (options.sort) params.set("sort", options.sort);
   try {
-    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
+    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/skills?${params}`, {
       next: { revalidate: 120 },
       signal: AbortSignal.timeout(3000),
     });
     if (!response.ok) throw new Error(`Package listing failed (${response.status})`);
     const data = (await response.json()) as {
+      skills?: PackageSummary[];
       packages?: PackageSummary[];
       nextCursor?: string | null;
       nextOffset?: number | null;
     };
-    if (options.throwOnError && !Array.isArray(data.packages)) {
+    const skills = skillListFromResponse(data);
+    if (options.throwOnError && !Array.isArray(data.skills ?? data.packages)) {
       throw new Error("Package listing response is invalid");
     }
     return {
-      packages: data.packages ?? [],
+      packages: skills,
       nextCursor: data.nextCursor ?? null,
       nextOffset: data.nextOffset ?? null,
     };
@@ -397,7 +403,7 @@ export async function listPublishersPage(
 export async function getPackage(name: string, version: string): Promise<PackageDetail | null> {
   try {
     const response = await fetch(
-      `${REGISTRY_API_BASE_URL}/v1/packages/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`,
+      `${REGISTRY_API_BASE_URL}/v1/skills/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`,
       { next: { revalidate: 120 }, signal: AbortSignal.timeout(3000) },
     );
     if (!response.ok) return null;

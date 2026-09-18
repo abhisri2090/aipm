@@ -97,10 +97,10 @@ async function fetchPackages(query = "") {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   const suffix = params.toString() ? `?${params}` : "";
-  const response = await fetch(`/v1/packages${suffix}`);
+  const response = await fetch(`/v1/skills${suffix}`);
   if (!response.ok) throw new Error(`Registry search failed: ${response.status}`);
   const data = await response.json();
-  return data.packages ?? [];
+  return data.skills ?? data.packages ?? [];
 }
 
 function fillRegistryCommands() {
@@ -247,7 +247,7 @@ async function setupSkillPage() {
   }
 
   try {
-    const response = await fetch(`/v1/packages/${encodePackageName(name)}/versions/${encodeURIComponent(version)}`);
+    const response = await fetch(`/v1/skills/${encodePackageName(name)}/versions/${encodeURIComponent(version)}`);
     if (!response.ok) throw new Error(`Skill lookup failed: ${response.status}`);
     const pkg = await response.json();
     const summary = {

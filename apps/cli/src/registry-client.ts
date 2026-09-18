@@ -80,7 +80,7 @@ export async function publishPackage(
   token?: string,
 ): Promise<{ version: string; integrity: string }> {
   const base = registry.replace(/\/$/, "");
-  const url = `${base}/v1/packages/${encodePackageName(name)}/versions`;
+  const url = `${base}/v1/skills/${encodePackageName(name)}/versions`;
   const form = new FormData();
   form.append("tarball", new Blob([tarball]), "package.tgz");
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
@@ -125,12 +125,12 @@ export async function searchPackages(
   if (query) params.set("q", query);
   params.set("limit", String(limit));
   if (token) params.set("includePrivate", "true");
-  const res = await registryFetch(`${base}/v1/packages?${params}`, base, {
+  const res = await registryFetch(`${base}/v1/skills?${params}`, base, {
     headers: registryAuthHeaders(token),
   });
   if (!res.ok) throw new Error(`Search failed: ${res.status}`);
-  const data = (await res.json()) as { packages?: PackageSummary[] };
-  return data.packages ?? [];
+  const data = (await res.json()) as { skills?: PackageSummary[]; packages?: PackageSummary[] };
+  return data.skills ?? data.packages ?? [];
 }
 
 export type CliAuthUser = {
@@ -226,7 +226,7 @@ export async function fetchPackageMetadata(
   deprecated?: { at: string; message: string | null } | null;
 }> {
   const base = registry.replace(/\/$/, "");
-  const url = `${base}/v1/packages/${encodePackageName(name)}/versions/${version}`;
+  const url = `${base}/v1/skills/${encodePackageName(name)}/versions/${version}`;
   const res = await registryFetch(url, base, { headers: registryAuthHeaders(token) });
   if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status, token));
   const data = (await res.json()) as {
@@ -244,7 +244,7 @@ export async function fetchPackageTarball(
   token?: string,
 ): Promise<Buffer> {
   const base = registry.replace(/\/$/, "");
-  const url = `${base}/v1/packages/${encodePackageName(name)}/versions/${version}/tarball`;
+  const url = `${base}/v1/skills/${encodePackageName(name)}/versions/${version}/tarball`;
   const res = await registryFetch(url, base, { headers: registryAuthHeaders(token) });
   if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status, token));
   const ab = await res.arrayBuffer();
@@ -257,7 +257,7 @@ export async function recordPackageInstall(
   token?: string,
 ): Promise<{ installCount: number }> {
   const base = registry.replace(/\/$/, "");
-  const url = `${base}/v1/packages/${encodePackageName(name)}/installs`;
+  const url = `${base}/v1/skills/${encodePackageName(name)}/installs`;
   const res = await registryFetch(url, base, {
     method: "POST",
     headers: registryAuthHeaders(token),

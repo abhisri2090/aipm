@@ -52,11 +52,11 @@ export function packageVersionForRun(unixSeconds) {
 
 export function publicPackagePath(packageName, version) {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
-  return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+  return `/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
 export function dashboardPackagePath(packageName) {
-  return `/dashboard/packages/${packageName.replace(/^@/, "")}`;
+  return `/dashboard/skills/${packageName.replace(/^@/, "")}`;
 }
 
 export function defaultInstallShUrl(cliVersion) {

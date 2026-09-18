@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useState } from "react";
 import { isValidScopeName, normalizePackageSearchQuery } from "@aipm-registry/schemas";
 import { api } from "../lib/api-client";
+import { skillListFromResponse } from "../lib/registry";
 import { publicApiError } from "../lib/public-api-error";
 import { cn, dash, shell } from "../lib/page-styles";
 
@@ -17,12 +18,12 @@ type AdminPackage = {
 
 async function fetchAdminPackages(query: string): Promise<AdminPackage[]> {
   const params = new URLSearchParams({ limit: "50", q: query });
-  const data = await api<{ packages?: AdminPackage[] }>(`/v1/admin/packages?${params}`);
-  return data.packages ?? [];
+  const data = await api<{ skills?: AdminPackage[]; packages?: AdminPackage[] }>(`/v1/admin/skills?${params}`);
+  return skillListFromResponse(data);
 }
 
 async function deleteAdminPackage(name: string): Promise<void> {
-  await api<void>(`/v1/admin/packages/${encodeURIComponent(name)}`, { method: "DELETE" });
+  await api<void>(`/v1/admin/skills/${encodeURIComponent(name)}`, { method: "DELETE" });
 }
 
 export function AdminDeletePackagePanel({ onDeleted }: { onDeleted: () => Promise<void> }) {

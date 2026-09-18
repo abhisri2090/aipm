@@ -151,10 +151,10 @@ describe.skipIf(!databaseUrl)("admin import API", () => {
       version: "1.0.0",
     });
 
-    const list = await app!.inject({ method: "GET", url: `/v1/packages?q=${encodeURIComponent(githubLogin)}` });
+    const list = await app!.inject({ method: "GET", url: `/v1/skills?q=${encodeURIComponent(githubLogin)}` });
     expect(list.statusCode).toBe(200);
     expect(list.json()).toMatchObject({
-      packages: [
+      skills: [
         {
           name: packageName,
           import: { imported: true },

@@ -22,11 +22,11 @@ describe("resolveSeedConfig", () => {
 describe("seedFromPublicRegistry", () => {
   it("downloads from public API and publishes to local registry", async () => {
     const fetchMock = vi.fn(async (url, init) => {
-      if (url.endsWith("/v1/packages?limit=1")) {
+      if (url.endsWith("/v1/skills?limit=1")) {
         return {
           ok: true,
           async json() {
-            return { packages: [{ name: "@team/sample-skill", version: "1.0.0" }] };
+            return { skills: [{ name: "@team/sample-skill", version: "1.0.0" }] };
           },
         };
       }
@@ -39,7 +39,7 @@ describe("seedFromPublicRegistry", () => {
         };
       }
       if (url.includes("/versions") && init?.method === "POST") {
-        expect(url).toBe("http://127.0.0.1:8080/v1/packages/%40team%2Fsample-skill/versions");
+        expect(url).toBe("http://127.0.0.1:8080/v1/skills/%40team%2Fsample-skill/versions");
         return { ok: true, status: 201, async text() { return ""; } };
       }
       throw new Error(`Unexpected fetch: ${url}`);

@@ -71,6 +71,31 @@ const nextConfig: NextConfig = {
         destination: "/admin",
         permanent: true,
       },
+      {
+        source: "/dashboard/packages",
+        destination: "/dashboard/skills",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/packages/:scope/:name",
+        destination: "/dashboard/skills/:scope/:name",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/orgs/:org/packages/new",
+        destination: "/dashboard/skills?org=:org",
+        permanent: true,
+      },
+      {
+        source: "/packages/:scope/:name/:version",
+        destination: "/skills/:scope/:name/:version",
+        permanent: true,
+      },
+      {
+        source: "/packages/:scope/:name/:version/files",
+        destination: "/skills/:scope/:name/:version/files",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

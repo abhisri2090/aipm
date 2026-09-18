@@ -20,7 +20,7 @@ export function promptPublicUrl(publisher: string, slug: string): string {
 
 export function packagePublicUrl(name: string, version: string): string {
   const [scope, packageName] = name.replace(/^@/, "").split("/");
-  return `${siteUrl()}/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(packageName ?? "")}/${encodeURIComponent(version)}`;
+  return `${siteUrl()}/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(packageName ?? "")}/${encodeURIComponent(version)}`;
 }
 
 export async function notifySearchEngines(

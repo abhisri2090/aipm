@@ -19,7 +19,7 @@ const timeoutMs = Number(process.env.SMOKE_TIMEOUT_MS ?? 12000);
 
 const testPlan = [
   "Website: HTTPS, security headers, title, registry/publish/dashboard docs routes, robots.txt, sitemap.xml",
-  "Website API rewrite: /v1/packages returns a package list through the website host",
+  "Website API rewrite: /v1/skills returns a package list through the website host",
   "API: /health, /ready, auth config, public package search",
   "API package read: package detail, package files list, entry file content, tarball download",
   "Security: unauthenticated publish returns 401 or 403",
@@ -66,7 +66,7 @@ function encodePackageName(name) {
 
 function packagePagePath(packageName, version) {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
-  return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+  return `/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
 function packageShortName(packageName) {
@@ -229,30 +229,32 @@ await check("API health, readiness, and auth config", async () => {
 });
 
 await check("public package search and website API rewrite", async () => {
-  const apiPackages = await fetchJson(url(apiUrl, "/v1/packages?limit=1"));
-  assert(Array.isArray(apiPackages.packages), "API packages must be an array");
-  assert(apiPackages.packages.length > 0, "Production registry should list at least one public package");
-  state.publicPackage = apiPackages.packages[0];
+  const apiPackages = await fetchJson(url(apiUrl, "/v1/skills?limit=1"));
+  const apiSkills = apiPackages.skills ?? apiPackages.packages;
+  assert(Array.isArray(apiSkills), "API skills must be an array");
+  assert(apiSkills.length > 0, "Production registry should list at least one public skill");
+  state.publicPackage = apiSkills[0];
 
-  const webPackages = await fetchJson(url(webUrl, "/v1/packages?limit=1"));
-  assert(Array.isArray(webPackages.packages), "Website API rewrite packages must be an array");
+  const webPackages = await fetchJson(url(webUrl, "/v1/skills?limit=1"));
+  const webSkills = webPackages.skills ?? webPackages.packages;
+  assert(Array.isArray(webSkills), "Website API rewrite skills must be an array");
 });
 
 await check("package detail, files, content, tarball, and package page", async () => {
   const pkg = state.publicPackage;
   assert(pkg?.name && pkg?.version, "No public package selected");
   const encoded = encodePackageName(pkg.name);
-  const detail = await fetchJson(url(apiUrl, `/v1/packages/${encoded}/versions/${encodeURIComponent(pkg.version)}`));
+  const detail = await fetchJson(url(apiUrl, `/v1/skills/${encoded}/versions/${encodeURIComponent(pkg.version)}`));
   assert(detail.manifest?.description, "Package detail must include manifest");
-  const files = await fetchJson(url(apiUrl, `/v1/packages/${encoded}/versions/${encodeURIComponent(pkg.version)}/files`));
+  const files = await fetchJson(url(apiUrl, `/v1/skills/${encoded}/versions/${encodeURIComponent(pkg.version)}/files`));
   assert(Array.isArray(files.files), "Package files response must include files array");
   const entry = files.entry ?? detail.manifest.entry ?? "SKILL.md";
   const content = await fetchJson(
-    url(apiUrl, `/v1/packages/${encoded}/versions/${encodeURIComponent(pkg.version)}/files/content?path=${encodeURIComponent(entry)}`),
+    url(apiUrl, `/v1/skills/${encoded}/versions/${encodeURIComponent(pkg.version)}/files/content?path=${encodeURIComponent(entry)}`),
   );
   assert(content.path === entry, "Package content path mismatch");
   assert(typeof content.binary === "boolean", "Package content response must include binary flag");
-  const tarball = await fetchResponse(url(apiUrl, `/v1/packages/${encoded}/versions/${encodeURIComponent(pkg.version)}/tarball`));
+  const tarball = await fetchResponse(url(apiUrl, `/v1/skills/${encoded}/versions/${encodeURIComponent(pkg.version)}/tarball`));
   assert(tarball.response.ok, `Package tarball returned ${tarball.response.status}`);
 
   const page = await fetchResponse(url(webUrl, packagePagePath(pkg.name, pkg.version)), { redirect: "follow" });
@@ -263,7 +265,7 @@ await check("package detail, files, content, tarball, and package page", async (
 await check("unauthenticated publish is closed", async () => {
   const form = new FormData();
   form.append("tarball", new Blob([Buffer.from("not-a-real-tarball")]), "package.tgz");
-  const result = await fetchResponse(url(apiUrl, "/v1/packages/%40aipm%2Funauth-smoke/versions"), {
+  const result = await fetchResponse(url(apiUrl, "/v1/skills/%40aipm%2Funauth-smoke/versions"), {
     method: "POST",
     body: form,
   });

@@ -20,10 +20,10 @@ describe("e2e-user-flow helpers", () => {
     expect(packageNameForRun("acme-corp", 1700000000)).toBe("@acme-corp/e2e-1700000000");
     expect(packageVersionForRun(1700000000)).toBe("0.0.1700000000");
     expect(publicPackagePath("@acme-corp/e2e-1700000000", "0.0.1700000000")).toBe(
-      "/packages/acme-corp/e2e-1700000000/0.0.1700000000",
+      "/skills/acme-corp/e2e-1700000000/0.0.1700000000",
     );
     expect(dashboardPackagePath("@acme-corp/e2e-1700000000")).toBe(
-      "/dashboard/packages/acme-corp/e2e-1700000000",
+      "/dashboard/skills/acme-corp/e2e-1700000000",
     );
   });
 

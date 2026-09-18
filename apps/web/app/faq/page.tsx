@@ -64,7 +64,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
   {
     question: "My publish token expired.",
     answer:
-      "Generate a new token from the package dashboard. Tokens are short-lived and are not stored by the CLI.",
+      "Generate a new token from the skill dashboard. Tokens are short-lived and are not stored by the CLI.",
   },
   {
     question: "Publisher identity is unavailable on a package.",

@@ -120,7 +120,7 @@ describe("registry API production behavior", () => {
     const payload = multipartPayload(tarball);
     const response = await app!.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/versions`,
+      url: `/v1/skills/${encodeURIComponent("@team/api-skill")}/versions`,
       headers: { "content-type": payload.contentType },
       payload: payload.body,
     });
@@ -132,7 +132,7 @@ describe("registry API production behavior", () => {
     const payload = multipartPayload(tarball);
     const publish = await app!.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/versions`,
+      url: `/v1/skills/${encodeURIComponent("@team/api-skill")}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -141,15 +141,19 @@ describe("registry API production behavior", () => {
     });
     expect(publish.statusCode).toBe(201);
 
-    const list = await app!.inject({ method: "GET", url: "/v1/packages?limit=1" });
+    const list = await app!.inject({ method: "GET", url: "/v1/skills?limit=1" });
     expect(list.statusCode).toBe(200);
     expect(list.json()).toMatchObject({
-      packages: [{ name: "@team/api-skill", version: "1.0.1", publisher: null, import: { imported: false } }],
+      skills: [{ name: "@team/api-skill", version: "1.0.1", publisher: null, import: { imported: false } }],
     });
+
+    const legacyList = await app!.inject({ method: "GET", url: "/v1/packages?limit=1" });
+    expect(legacyList.statusCode).toBe(200);
+    expect(legacyList.json()).toEqual(list.json());
 
     const detail = await app!.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/versions/1.0.1`,
+      url: `/v1/skills/${encodeURIComponent("@team/api-skill")}/versions/1.0.1`,
     });
     expect(detail.statusCode).toBe(200);
     expect(detail.json()).toMatchObject({
@@ -164,7 +168,7 @@ describe("registry API production behavior", () => {
       const payload = multipartPayload(tarball);
       const publish = await app!.inject({
         method: "POST",
-        url: `/v1/packages/${encodeURIComponent("@team/listed-skill")}/versions`,
+        url: `/v1/skills/${encodeURIComponent("@team/listed-skill")}/versions`,
         headers: {
           "content-type": payload.contentType,
           authorization: `Bearer ${token}`,
@@ -176,16 +180,16 @@ describe("registry API production behavior", () => {
 
     const list = await app!.inject({
       method: "GET",
-      url: `/v1/packages?q=${encodeURIComponent("@team/listed-skill")}`,
+      url: `/v1/skills?q=${encodeURIComponent("@team/listed-skill")}`,
     });
     expect(list.statusCode).toBe(200);
-    expect(list.json().packages).toEqual([
+    expect(list.json().skills).toEqual([
       expect.objectContaining({ name: "@team/listed-skill", version: "1.0.1" }),
     ]);
 
     const versions = await app!.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent("@team/listed-skill")}/versions`,
+      url: `/v1/skills/${encodeURIComponent("@team/listed-skill")}/versions`,
     });
     expect(versions.statusCode).toBe(200);
     expect(versions.json().versions).toEqual([
@@ -199,7 +203,7 @@ describe("registry API production behavior", () => {
     const payload = multipartPayload(tarball);
     const publish = await app!.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@team/files-skill")}/versions`,
+      url: `/v1/skills/${encodeURIComponent("@team/files-skill")}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -210,7 +214,7 @@ describe("registry API production behavior", () => {
 
     const files = await app!.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent("@team/files-skill")}/versions/2.0.0/files`,
+      url: `/v1/skills/${encodeURIComponent("@team/files-skill")}/versions/2.0.0/files`,
     });
     expect(files.statusCode).toBe(200);
     expect(files.json()).toMatchObject({
@@ -223,7 +227,7 @@ describe("registry API production behavior", () => {
 
     const content = await app!.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent("@team/files-skill")}/versions/2.0.0/files/content?path=${encodeURIComponent("SKILL.md")}`,
+      url: `/v1/skills/${encodeURIComponent("@team/files-skill")}/versions/2.0.0/files/content?path=${encodeURIComponent("SKILL.md")}`,
     });
     expect(content.statusCode).toBe(200);
     expect(content.json()).toMatchObject({
@@ -245,7 +249,7 @@ describe("registry API production behavior", () => {
     const payload = multipartPayload(tarball);
     const publish = await app!.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@team/quality-skill")}/versions`,
+      url: `/v1/skills/${encodeURIComponent("@team/quality-skill")}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -254,9 +258,9 @@ describe("registry API production behavior", () => {
     });
     expect(publish.statusCode).toBe(201);
 
-    const list = await app!.inject({ method: "GET", url: "/v1/packages?q=issue-summarizer" });
+    const list = await app!.inject({ method: "GET", url: "/v1/skills?q=issue-summarizer" });
     expect(list.statusCode).toBe(200);
-    expect(list.json().packages).toEqual(
+    expect(list.json().skills).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           name: "@team/quality-skill",
@@ -269,7 +273,7 @@ describe("registry API production behavior", () => {
 
     const detail = await app!.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent("@team/quality-skill")}/versions/1.0.4`,
+      url: `/v1/skills/${encodeURIComponent("@team/quality-skill")}/versions/1.0.4`,
     });
     expect(detail.statusCode).toBe(200);
     expect(detail.json().manifest).toMatchObject({
@@ -289,7 +293,7 @@ describe("registry API production behavior", () => {
       const payload = multipartPayload(tarball);
       const publish = await app!.inject({
         method: "POST",
-        url: `/v1/packages/${encodeURIComponent(name)}/versions`,
+        url: `/v1/skills/${encodeURIComponent(name)}/versions`,
         headers: { "content-type": payload.contentType, authorization: `Bearer ${token}` },
         payload: payload.body,
       });
@@ -305,32 +309,32 @@ describe("registry API production behavior", () => {
       categories: ["Documentation"],
     });
 
-    const byCategory = await app!.inject({ method: "GET", url: "/v1/packages?category=Testing" });
+    const byCategory = await app!.inject({ method: "GET", url: "/v1/skills?category=Testing" });
     expect(byCategory.statusCode).toBe(200);
-    expect(byCategory.json().packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+    expect(byCategory.json().skills.map((pkg: { name: string }) => pkg.name)).toEqual([
       "@team/zebra-skill",
     ]);
 
-    const byTarget = await app!.inject({ method: "GET", url: "/v1/packages?target=claude" });
+    const byTarget = await app!.inject({ method: "GET", url: "/v1/skills?target=claude" });
     expect(byTarget.statusCode).toBe(200);
-    expect(byTarget.json().packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+    expect(byTarget.json().skills.map((pkg: { name: string }) => pkg.name)).toEqual([
       "@team/apex-skill",
     ]);
 
     const byTitle = await app!.inject({
       method: "GET",
-      url: `/v1/packages?sort=title&q=${encodeURIComponent("skill")}`,
+      url: `/v1/skills?sort=title&q=${encodeURIComponent("skill")}`,
     });
     expect(byTitle.statusCode).toBe(200);
     const titleOrderedNames = byTitle
       .json()
-      .packages.map((pkg: { name: string }) => pkg.name)
+      .skills.map((pkg: { name: string }) => pkg.name)
       .filter((name: string) => name === "@team/apex-skill" || name === "@team/zebra-skill");
     expect(titleOrderedNames).toEqual(["@team/apex-skill", "@team/zebra-skill"]);
   });
 
   it.each(["0", "-5", "abc", "101"])("rejects invalid list limit %s", async (limit) => {
-    const response = await app!.inject({ method: "GET", url: `/v1/packages?limit=${encodeURIComponent(limit)}` });
+    const response = await app!.inject({ method: "GET", url: `/v1/skills?limit=${encodeURIComponent(limit)}` });
     expect(response.statusCode).toBe(400);
     expect(response.json()).toMatchObject({
       error: "Invalid limit; use an integer from 1 to 100",
@@ -338,7 +342,7 @@ describe("registry API production behavior", () => {
   });
 
   it("rejects invalid list cursors without leaking storage errors", async () => {
-    const response = await app!.inject({ method: "GET", url: "/v1/packages?cursor=not-a-date" });
+    const response = await app!.inject({ method: "GET", url: "/v1/skills?cursor=not-a-date" });
     expect(response.statusCode).toBe(400);
     expect(response.json()).toEqual({
       error: "Invalid cursor; use an ISO timestamp returned as nextCursor",
@@ -391,7 +395,7 @@ describe("registry API production behavior", () => {
     const unreservedPayload = multipartPayload(unreservedTarball);
     const unreserved = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(`@${org.slug}/unreserved-skill`)}/versions`,
+      url: `/v1/skills/${encodeURIComponent(`@${org.slug}/unreserved-skill`)}/versions`,
       headers: {
         "content-type": unreservedPayload.contentType,
         authorization: `Bearer ${token}`,
@@ -405,7 +409,7 @@ describe("registry API production behavior", () => {
     const reservedPayload = multipartPayload(reservedTarball);
     const reserved = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(reservedName)}/versions`,
+      url: `/v1/skills/${encodeURIComponent(reservedName)}/versions`,
       headers: {
         "content-type": reservedPayload.contentType,
         authorization: `Bearer ${token}`,
@@ -426,7 +430,7 @@ describe("registry API production behavior", () => {
     const payload = multipartPayload(tarball);
     const publish = await app!.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@team/sample-skill")}/versions`,
+      url: `/v1/skills/${encodeURIComponent("@team/sample-skill")}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -435,17 +439,17 @@ describe("registry API production behavior", () => {
     });
     expect(publish.statusCode).toBe(201);
 
-    const publicList = await app!.inject({ method: "GET", url: "/v1/packages?q=sample" });
+    const publicList = await app!.inject({ method: "GET", url: "/v1/skills?q=sample" });
     expect(publicList.statusCode).toBe(200);
-    expect(publicList.json()).toMatchObject({ packages: [] });
+    expect(publicList.json()).toMatchObject({ skills: [] });
 
     const demoList = await app!.inject({
       method: "GET",
-      url: "/v1/packages?q=sample&includeDemo=true",
+      url: "/v1/skills?q=sample&includeDemo=true",
     });
     expect(demoList.statusCode).toBe(200);
     expect(demoList.json()).toMatchObject({
-      packages: [{ name: "@team/sample-skill", version: "1.0.2" }],
+      skills: [{ name: "@team/sample-skill", version: "1.0.2" }],
     });
   });
 
@@ -463,7 +467,7 @@ describe("registry API production behavior", () => {
   it("rejects install recording when account services are not configured", async () => {
     const response = await app!.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@team/api-skill")}/installs`,
+      url: `/v1/skills/${encodeURIComponent("@team/api-skill")}/installs`,
     });
     expect(response.statusCode).toBe(503);
     expect(response.json()).toMatchObject({ error: "Account services are not configured" });
@@ -504,7 +508,7 @@ describe("package install counter", () => {
     const payload = multipartPayload(tarball);
     const publish = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -515,24 +519,24 @@ describe("package install counter", () => {
 
     const record = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/installs`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/installs`,
     });
     expect(record.statusCode).toBe(200);
     expect(record.json()).toEqual({ installCount: 1 });
 
     const detail = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0`,
     });
     expect(detail.statusCode).toBe(200);
     expect(detail.json()).toMatchObject({ installCount: 1 });
 
     const list = await app.inject({
       method: "GET",
-      url: `/v1/packages?q=${encodeURIComponent(org.slug)}`,
+      url: `/v1/skills?q=${encodeURIComponent(org.slug)}`,
     });
     expect(list.statusCode).toBe(200);
-    expect(list.json().packages).toEqual(
+    expect(list.json().skills).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: packageName, installCount: 1 })]),
     );
   });
@@ -546,7 +550,7 @@ describe("package install counter", () => {
 
     const response = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent("@missing/pkg")}/installs`,
+      url: `/v1/skills/${encodeURIComponent("@missing/pkg")}/installs`,
     });
     expect(response.statusCode).toBe(404);
   });
@@ -585,7 +589,7 @@ describe("package install counter", () => {
     const payload = multipartPayload(tarball);
     const publish = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -596,7 +600,7 @@ describe("package install counter", () => {
 
     const response = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/installs`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/installs`,
     });
     expect(response.statusCode).toBe(404);
   });
@@ -795,7 +799,7 @@ describe("CLI auth flow", () => {
     const payload = multipartPayload(tarball);
     const publish = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions`,
       headers: {
         "content-type": payload.contentType,
         authorization: `Bearer ${token}`,
@@ -806,13 +810,13 @@ describe("CLI auth flow", () => {
 
     const anonymous = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0`,
     });
     expect(anonymous.statusCode).toBe(404);
 
     const withInstallToken = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0`,
       headers: { authorization: `Bearer ${installToken}` },
     });
     expect(withInstallToken.statusCode).toBe(200);
@@ -843,20 +847,20 @@ describe("CLI auth flow", () => {
 
     const withCliLogin = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0`,
       headers: { authorization: `Bearer ${cliToken.json().accessToken}` },
     });
     expect(withCliLogin.statusCode).toBe(200);
 
     const anonymousFiles = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0/files`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0/files`,
     });
     expect(anonymousFiles.statusCode).toBe(404);
 
     const privateFiles = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0/files`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0/files`,
       headers: { cookie: sessionCookie },
     });
     expect(privateFiles.statusCode).toBe(200);
@@ -867,7 +871,7 @@ describe("CLI auth flow", () => {
 
     const privateContent = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(packageName)}/versions/1.0.0/files/content?path=${encodeURIComponent("SKILL.md")}`,
+      url: `/v1/skills/${encodeURIComponent(packageName)}/versions/1.0.0/files/content?path=${encodeURIComponent("SKILL.md")}`,
       headers: { cookie: sessionCookie },
     });
     expect(privateContent.statusCode).toBe(200);
@@ -890,7 +894,7 @@ describe("CLI auth flow", () => {
     const publicPayload = multipartPayload(publicTarball);
     const publicPublish = await app.inject({
       method: "POST",
-      url: `/v1/packages/${encodeURIComponent(publicPackageName)}/versions`,
+      url: `/v1/skills/${encodeURIComponent(publicPackageName)}/versions`,
       headers: {
         "content-type": publicPayload.contentType,
         authorization: `Bearer ${token}`,
@@ -900,7 +904,7 @@ describe("CLI auth flow", () => {
     expect(publicPublish.statusCode).toBe(201);
     const publicRead = await app.inject({
       method: "GET",
-      url: `/v1/packages/${encodeURIComponent(publicPackageName)}/versions/1.0.0`,
+      url: `/v1/skills/${encodeURIComponent(publicPackageName)}/versions/1.0.0`,
     });
     expect(publicRead.statusCode).toBe(200);
   });

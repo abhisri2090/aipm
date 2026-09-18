@@ -16,6 +16,7 @@ import {
   type ImportProvenancePayload,
 } from "./admin-import.js";
 import { bulkImportSkillsFromGitHubFolder } from "./bulk-import-from-github.js";
+import { rewriteLegacyPackageApiPath } from "./legacy-package-api-path.js";
 import { httpStatusFromError, publicError } from "./api-error.js";
 import { GitHubSkillCollectionError, SkillAlreadyExistsError, importSkillFromGitHubUrl } from "./import-from-github.js";
 import {
@@ -721,6 +722,7 @@ export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
     logger: true,
     bodyLimit: MAX_PACKAGE_BYTES,
+    rewriteUrl: (request) => rewriteLegacyPackageApiPath(request.url ?? "/"),
     genReqId: (request) =>
       request.headers["x-request-id"]?.toString() ??
       randomUUID(),
@@ -1031,7 +1033,7 @@ export async function createApp(): Promise<FastifyInstance> {
     return getInternalStats(accountAuth.pool);
   });
 
-  app.get<{ Querystring: { q?: string; limit?: string } }>("/v1/admin/packages", async (request, reply) => {
+  app.get<{ Querystring: { q?: string; limit?: string } }>("/v1/admin/skills", async (request, reply) => {
     if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
     const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
     if (!user) return;
@@ -1041,7 +1043,7 @@ export async function createApp(): Promise<FastifyInstance> {
     const query = request.query.q?.trim() ?? "";
     const packages = await listAdminPackages(accountAuth.pool, query, parsedLimit.value);
     return {
-      packages: packages.map((pkg) => ({
+      skills: packages.map((pkg) => ({
         name: pkg.name,
         version: pkg.version,
         description: pkg.description,
@@ -1052,7 +1054,7 @@ export async function createApp(): Promise<FastifyInstance> {
     };
   });
 
-  app.delete<{ Params: { name: string } }>("/v1/admin/packages/:name", async (request, reply) => {
+  app.delete<{ Params: { name: string } }>("/v1/admin/skills/:name", async (request, reply) => {
     if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
     const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
     if (!user) return;
@@ -1481,7 +1483,7 @@ export async function createApp(): Promise<FastifyInstance> {
     return reply.status(204).send();
   });
 
-  app.get<{ Params: { org: string } }>("/v1/orgs/:org/packages", async (request, reply) => {
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/skills", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
@@ -1495,7 +1497,7 @@ export async function createApp(): Promise<FastifyInstance> {
     );
     const versionCountByName = new Map(versionCounts.map((row) => [row.name, row.count]));
     return {
-      packages: packages.map((pkg) => ({
+      skills: packages.map((pkg) => ({
         name: pkg.name,
         createdAt: pkg.created_at,
         visibility: pkg.visibility,
@@ -1507,7 +1509,7 @@ export async function createApp(): Promise<FastifyInstance> {
     };
   });
 
-  app.delete<{ Params: { org: string; name: string } }>("/v1/orgs/:org/packages/:name", async (request, reply) => {
+  app.delete<{ Params: { org: string; name: string } }>("/v1/orgs/:org/skills/:name", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const orgSlug = normalizeOrgSlug(request.params.org);
@@ -1536,7 +1538,7 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   app.post<{ Params: { org: string }; Body: { name?: string; visibility?: string } }>(
-    "/v1/orgs/:org/packages",
+    "/v1/orgs/:org/skills",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
@@ -2050,7 +2052,7 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.get<{ Params: { name: string } }>("/v1/packages/:name/members", async (request, reply) => {
+  app.get<{ Params: { name: string } }>("/v1/skills/:name/members", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const name = decodePackageName(request.params.name);
@@ -2060,7 +2062,7 @@ export async function createApp(): Promise<FastifyInstance> {
     return { members: members.map(serializePackageMember), access: { orgRole: access.org_role, packageRole: access.package_role } };
   });
 
-  app.put<{ Params: { name: string; userId: string } }>("/v1/packages/:name/members/:userId", async (request, reply) => {
+  app.put<{ Params: { name: string; userId: string } }>("/v1/skills/:name/members/:userId", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const name = decodePackageName(request.params.name);
@@ -2080,7 +2082,7 @@ export async function createApp(): Promise<FastifyInstance> {
     return { ok: true };
   });
 
-  app.delete<{ Params: { name: string; userId: string } }>("/v1/packages/:name/members/:userId", async (request, reply) => {
+  app.delete<{ Params: { name: string; userId: string } }>("/v1/skills/:name/members/:userId", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const name = decodePackageName(request.params.name);
@@ -2100,7 +2102,7 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   app.patch<{ Params: { name: string }; Body: { visibility?: string } }>(
-    "/v1/packages/:name",
+    "/v1/skills/:name",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
@@ -2144,7 +2146,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.post<{ Params: { name: string }; Body: { message?: string | null } }>(
-    "/v1/packages/:name/deprecate",
+    "/v1/skills/:name/deprecate",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
@@ -2172,7 +2174,7 @@ export async function createApp(): Promise<FastifyInstance> {
     },
   );
 
-  app.delete<{ Params: { name: string } }>("/v1/packages/:name/deprecate", async (request, reply) => {
+  app.delete<{ Params: { name: string } }>("/v1/skills/:name/deprecate", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
     const name = decodePackageName(request.params.name);
@@ -2193,7 +2195,7 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   app.post<{ Params: { name: string; version: string } }>(
-    "/v1/packages/:name/versions/:version/yank",
+    "/v1/skills/:name/versions/:version/yank",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
@@ -2226,7 +2228,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.post<{ Params: { name: string } }>(
-    "/v1/packages/:name/publish-tokens",
+    "/v1/skills/:name/publish-tokens",
     async (request, reply) => {
       const user = await requireCurrentUser(accountAuth, request, reply);
       if (!user || !accountAuth) return;
@@ -2245,7 +2247,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.post<{ Params: { name: string } }>(
-    "/v1/packages/:name/versions",
+    "/v1/skills/:name/versions",
     {
       config: {
         rateLimit: {
@@ -2389,7 +2391,7 @@ export async function createApp(): Promise<FastifyInstance> {
     }
   });
 
-  app.get<{ Params: { name: string } }>("/v1/packages/:name/import-meta", async (request, reply) => {
+  app.get<{ Params: { name: string } }>("/v1/skills/:name/import-meta", async (request, reply) => {
     const name = decodePackageName(request.params.name);
     if (!accountAuth) {
       return reply.status(503).send({ error: "Account services are not configured" });
@@ -2399,7 +2401,7 @@ export async function createApp(): Promise<FastifyInstance> {
     return serializeImportMeta(provenance, versions[0]?.version ?? null);
   });
 
-  app.delete<{ Params: { name: string } }>("/v1/packages/:name", async (request, reply) => {
+  app.delete<{ Params: { name: string } }>("/v1/skills/:name", async (request, reply) => {
     const name = decodePackageName(request.params.name);
     if (!isValidScopeName(name)) {
       return reply.status(400).send({ error: "Invalid package name; use @scope/name" });
@@ -2430,7 +2432,7 @@ export async function createApp(): Promise<FastifyInstance> {
     return reply.status(204).send();
   });
 
-  app.get<{ Params: { name: string } }>("/v1/packages/:name/versions", async (request, reply) => {
+  app.get<{ Params: { name: string } }>("/v1/skills/:name/versions", async (request, reply) => {
     const name = decodePackageName(request.params.name);
     const readAccess = await resolveReadAccess(accountAuth, request);
     if (!(await canViewPackage(accountAuth, name, readAccess))) {
@@ -2451,7 +2453,7 @@ export async function createApp(): Promise<FastifyInstance> {
   });
 
   app.get<{ Params: { name: string; version: string } }>(
-    "/v1/packages/:name/versions/:version",
+    "/v1/skills/:name/versions/:version",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
       const readAccess = await resolveReadAccess(accountAuth, request);
@@ -2501,7 +2503,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.post<{ Params: { name: string } }>(
-    "/v1/packages/:name/installs",
+    "/v1/skills/:name/installs",
     {
       config: {
         rateLimit: {
@@ -2601,7 +2603,7 @@ export async function createApp(): Promise<FastifyInstance> {
       includePrivate?: string;
     };
   }>(
-    "/v1/packages",
+    "/v1/skills",
     {
       config: {
         rateLimit: {
@@ -2672,7 +2674,7 @@ export async function createApp(): Promise<FastifyInstance> {
         ? await getPackageInstallCountMap(accountAuth.pool, [...new Set(page.map((row) => row.name))])
         : new Map<string, number>();
       return {
-        packages: page.map((row) => {
+        skills: page.map((row) => {
           const provenance = provenanceByName.get(row.name);
           return {
             name: row.name,
@@ -2703,7 +2705,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.get<{ Params: { name: string; version: string } }>(
-    "/v1/packages/:name/versions/:version/files",
+    "/v1/skills/:name/versions/:version/files",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
       const readAccess = await resolveReadAccess(accountAuth, request);
@@ -2727,7 +2729,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.get<{ Params: { name: string; version: string }; Querystring: { path?: string } }>(
-    "/v1/packages/:name/versions/:version/files/content",
+    "/v1/skills/:name/versions/:version/files/content",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
       const readAccess = await resolveReadAccess(accountAuth, request);
@@ -2766,7 +2768,7 @@ export async function createApp(): Promise<FastifyInstance> {
   );
 
   app.get<{ Params: { name: string; version: string } }>(
-    "/v1/packages/:name/versions/:version/tarball",
+    "/v1/skills/:name/versions/:version/tarball",
     async (request, reply) => {
       const name = decodePackageName(request.params.name);
       const readAccess = await resolveReadAccess(accountAuth, request);

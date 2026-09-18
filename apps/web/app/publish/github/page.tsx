@@ -19,15 +19,15 @@ export default function PublishFromGithubPage() {
         <h1>Import a skill from GitHub.</h1>
         <p className={shell.lede}>
           If your skill already lives in a public GitHub repo, you can publish it to AIPM from the
-          packages dashboard. You review the package name and details first. The skill files stay
+          skills dashboard. You review the skill name and details first. The skill files stay
           exactly as they are on GitHub.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/login">
             Sign in
           </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/dashboard/packages">
-            Open packages dashboard
+          <Link className={cn(shell.button, shell.secondary)} href="/dashboard/skills">
+            Open skills dashboard
           </Link>
         </div>
       </section>
@@ -44,7 +44,7 @@ export default function PublishFromGithubPage() {
         <h2>Steps</h2>
         <ol className={docs.flowList}>
           <li>
-            Sign in and open the <a href="/dashboard/packages">packages dashboard</a>.
+            Sign in and open the <a href="/dashboard/skills">skills dashboard</a>.
           </li>
           <li>If you signed in with email, choose Connect GitHub so we can verify repo ownership.</li>
           <li>Paste a public GitHub repo or folder URL, then preview.</li>

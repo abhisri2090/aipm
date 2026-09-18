@@ -159,7 +159,7 @@ export default async function StateOfAgentSkillsPage() {
         <section>
           <h2>Method</h2>
           <ol>
-            <li>Request every page from the public <code>/v1/packages</code> endpoint with a page size of 100.</li>
+            <li>Request every page from the public <code>/v1/skills</code> endpoint with a page size of 100.</li>
             <li>Count one row for each package version returned by that endpoint.</li>
             <li>Use only public metadata: package name, version, description, targets, license, source, integrity, date, installs, publisher, and import state.</li>
             <li>Refresh the displayed totals and downloadable dataset every hour.</li>
@@ -180,7 +180,7 @@ export default async function StateOfAgentSkillsPage() {
         <section>
           <h2>Sources and reproducibility</h2>
           <ul>
-            <li><a href={`${SITE_URL}/v1/packages?limit=100`}>AIPM public packages API</a></li>
+            <li><a href={`${SITE_URL}/v1/skills?limit=100`}>AIPM public packages API</a></li>
             <li><a href={datasetUrl}>Normalized JSON dataset</a></li>
             <li><a href="https://github.com/abhisri2090/aipm">AIPM source code and test suite</a></li>
             <li><a href="https://code.claude.com/docs/en/skills">Anthropic Agent Skills documentation</a></li>

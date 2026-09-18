@@ -33,7 +33,7 @@ curl -fsS "${API_URL}/ready"
 echo
 
 echo "Checking direct API package search"
-curl -fsS "${API_URL}/v1/packages?limit=1" | node -e '
+curl -fsS "${API_URL}/v1/skills?limit=1" | node -e '
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
@@ -43,7 +43,7 @@ process.stdin.on("end", () => {
 '
 
 echo "Checking website rewrite to API"
-curl -fsSL "${WEB_URL}/v1/packages?limit=1" | node -e '
+curl -fsSL "${WEB_URL}/v1/skills?limit=1" | node -e '
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
@@ -81,7 +81,7 @@ popd >/dev/null
 
 STATUS="$(curl -sS -o "${TMP_ROOT}/publish-response.json" -w "%{http_code}" \
   -F "tarball=@${TMP_ROOT}/package.tgz" \
-  "${API_URL}/v1/packages/%40team%2Fcutover-verify/versions")"
+  "${API_URL}/v1/skills/%40team%2Fcutover-verify/versions")"
 if [[ "${STATUS}" != "401" ]]; then
   echo "Expected unauthenticated publish to return 401, got ${STATUS}" >&2
   cat "${TMP_ROOT}/publish-response.json" >&2

@@ -81,7 +81,7 @@ async function publishPackage(name: string, version: string): Promise<void> {
   const payload = multipartPayload(tarball);
   const response = await app!.inject({
     method: "POST",
-    url: `/v1/packages/${encodeURIComponent(name)}/versions`,
+    url: `/v1/skills/${encodeURIComponent(name)}/versions`,
     headers: {
       "content-type": payload.contentType,
       authorization: `Bearer ${publishToken}`,
@@ -157,25 +157,25 @@ describe.skipIf(!databaseUrl)("admin package management", () => {
 
     const list = await app!.inject({
       method: "GET",
-      url: `/v1/admin/packages?q=${encodeURIComponent(packageName)}`,
+      url: `/v1/admin/skills?q=${encodeURIComponent(packageName)}`,
       headers: { cookie: authCookies },
     });
     expect(list.statusCode).toBe(200);
-    expect(list.json().packages).toEqual([
+    expect(list.json().skills).toEqual([
       expect.objectContaining({ name: packageName }),
     ]);
 
     const fuzzy = await app!.inject({
       method: "GET",
-      url: `/v1/admin/packages?q=${encodeURIComponent(org.slug)}`,
+      url: `/v1/admin/skills?q=${encodeURIComponent(org.slug)}`,
       headers: { cookie: authCookies },
     });
     expect(fuzzy.statusCode).toBe(200);
-    expect(fuzzy.json().packages).toEqual([]);
+    expect(fuzzy.json().skills).toEqual([]);
 
     const deleted = await app!.inject({
       method: "DELETE",
-      url: `/v1/admin/packages/${encodeURIComponent(packageName)}`,
+      url: `/v1/admin/skills/${encodeURIComponent(packageName)}`,
       headers: { cookie: authCookies },
     });
     expect(deleted.statusCode).toBe(204);
@@ -214,19 +214,19 @@ describe.skipIf(!databaseUrl)("admin package management", () => {
 
     const publicList = await app!.inject({
       method: "GET",
-      url: `/v1/packages?q=${encodeURIComponent(org.slug)}`,
+      url: `/v1/skills?q=${encodeURIComponent(org.slug)}`,
       headers: { cookie: sessionCookie },
     });
     expect(publicList.statusCode).toBe(200);
-    expect(publicList.json().packages.some((pkg: { name: string }) => pkg.name === packageName)).toBe(false);
+    expect(publicList.json().skills.some((pkg: { name: string }) => pkg.name === packageName)).toBe(false);
 
     const privateList = await app!.inject({
       method: "GET",
-      url: `/v1/packages?q=${encodeURIComponent(org.slug)}&includePrivate=true`,
+      url: `/v1/skills?q=${encodeURIComponent(org.slug)}&includePrivate=true`,
       headers: { cookie: sessionCookie },
     });
     expect(privateList.statusCode).toBe(200);
-    expect(privateList.json().packages.some((pkg: { name: string }) => pkg.name === packageName)).toBe(true);
+    expect(privateList.json().skills.some((pkg: { name: string }) => pkg.name === packageName)).toBe(true);
   });
 
   it("sorts packages by install count when sort=popular", async () => {
@@ -254,17 +254,17 @@ describe.skipIf(!databaseUrl)("admin package management", () => {
     for (let i = 0; i < 3; i += 1) {
       const install = await app!.inject({
         method: "POST",
-        url: `/v1/packages/${encodeURIComponent(popularName)}/installs`,
+        url: `/v1/skills/${encodeURIComponent(popularName)}/installs`,
       });
       expect(install.statusCode).toBe(200);
     }
 
     const response = await app!.inject({
       method: "GET",
-      url: `/v1/packages?sort=popular&q=${encodeURIComponent(org.slug)}`,
+      url: `/v1/skills?sort=popular&q=${encodeURIComponent(org.slug)}`,
     });
     expect(response.statusCode).toBe(200);
-    expect(response.json().packages.map((pkg: { name: string }) => pkg.name)).toEqual([
+    expect(response.json().skills.map((pkg: { name: string }) => pkg.name)).toEqual([
       popularName,
       quietName,
     ]);

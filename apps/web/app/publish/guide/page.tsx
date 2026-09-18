@@ -37,7 +37,7 @@ export default function PublishPage() {
         </p>
         <p>
           Already have a public skill on GitHub? You can{" "}
-          <a href="/publish/github">import it from the packages dashboard</a> instead of using the
+          <a href="/publish/github">import it from the skills dashboard</a> instead of using the
           CLI for the first publish.
         </p>
 
@@ -46,7 +46,7 @@ export default function PublishPage() {
           <li>Sign in with GitHub.</li>
           <li>Create an org namespace, such as @team.</li>
           <li>Reserve a package name, such as @team/review-helper.</li>
-          <li>Open the package dashboard. You will use it later to generate a 5-minute publish token.</li>
+          <li>Open the skill dashboard. You will use it later to generate a 5-minute publish token.</li>
         </ol>
 
         <h2>2. Create a skill folder</h2>

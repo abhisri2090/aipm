@@ -122,7 +122,7 @@ function registryFromEnvOrDefault(flag?: string): string {
 
 function packagePageUrl(packageName: string, version: string): string {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
-  return `${SITE_URL}/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+  return `${SITE_URL}/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
 function packageBadgeMarkdown(packageName: string, version: string): string {
@@ -208,7 +208,7 @@ function formatBytes(bytes?: number): string | null {
 
 function packageDashboardUrl(name?: string): string {
   if (!name) return DASHBOARD_URL;
-  return `${DASHBOARD_URL}/packages/${name.replace(/^@/, "")}`;
+  return `${DASHBOARD_URL}/skills/${name.replace(/^@/, "")}`;
 }
 
 function helperRootFromTrackedPath(path: string): string | null {
@@ -908,7 +908,7 @@ program
     const token = await tokenForRead(registry, opts.token, { quiet: opts.json });
     const packages = await searchPackages(registry, query, Number(opts.limit), token);
     if (opts.json) {
-      console.log(JSON.stringify({ packages }, null, 2));
+      console.log(JSON.stringify({ skills: packages }, null, 2));
       return;
     }
     if (packages.length === 0) {
