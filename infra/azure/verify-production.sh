@@ -57,7 +57,7 @@ if [[ "${CLI_REFRESH_STATUS}" != "401" ]]; then
 fi
 
 echo "Checking public package search"
-curl -fsS "${REGISTRY_URL}/v1/packages?limit=1" | node -e '
+curl -fsS "${REGISTRY_URL}/v1/skills?limit=1" | node -e '
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
@@ -95,7 +95,7 @@ popd >/dev/null
 
 STATUS="$(curl -sS -o "${TMP_ROOT}/publish-response.json" -w "%{http_code}" \
   -F "tarball=@${TMP_ROOT}/package.tgz" \
-  "${REGISTRY_URL}/v1/packages/%40team%2Fprod-verify/versions")"
+  "${REGISTRY_URL}/v1/skills/%40team%2Fprod-verify/versions")"
 if [[ "${STATUS}" != "401" && "${STATUS}" != "403" ]]; then
   echo "Expected unauthenticated publish to return 401 or 403, got ${STATUS}" >&2
   cat "${TMP_ROOT}/publish-response.json" >&2
@@ -104,7 +104,7 @@ fi
 
 echo "Checking install path with latest listed sample package when available"
 pnpm --dir "${REPO_ROOT}" build >/dev/null
-SAMPLE_VERSION="$(curl -fsS "${REGISTRY_URL}/v1/packages?q=sample&limit=1" | node -e '
+SAMPLE_VERSION="$(curl -fsS "${REGISTRY_URL}/v1/skills?q=sample&limit=1" | node -e '
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {

@@ -29,7 +29,7 @@ type PackageReadmePreviewProps = {
 };
 
 function filesBaseUrl(packageName: string, version: string): string {
-  return `/v1/packages/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(version)}/files`;
+  return `/v1/skills/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(version)}/files`;
 }
 
 function findReadmePath(files: PackageFileEntry[]): string | null {

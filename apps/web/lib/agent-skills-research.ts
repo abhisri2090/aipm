@@ -1,4 +1,4 @@
-import { REGISTRY_API_BASE_URL, type PackageSummary } from "./registry";
+import { REGISTRY_API_BASE_URL, skillListFromResponse, type PackageSummary } from "./registry";
 
 export const AGENT_SKILLS_REPORT_DATE = "2026-09-04";
 
@@ -35,6 +35,7 @@ export type AgentSkillsSnapshot = {
 };
 
 type PackageListResponse = {
+  skills?: PackageSummary[];
   packages?: PackageSummary[];
   nextCursor?: string | null;
 };
@@ -47,14 +48,14 @@ async function listAllPublicPackages(): Promise<PackageSummary[]> {
     for (let page = 0; page < 20; page += 1) {
       const params = new URLSearchParams({ limit: "100" });
       if (cursor) params.set("cursor", cursor);
-      const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
+      const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/skills?${params}`, {
         next: { revalidate: 3600 },
         signal: AbortSignal.timeout(5000),
       });
       if (!response.ok) throw new Error(`Registry returned ${response.status}`);
 
       const data = (await response.json()) as PackageListResponse;
-      packages.push(...(data.packages ?? []));
+      packages.push(...skillListFromResponse(data));
       if (!data.nextCursor) break;
       cursor = data.nextCursor;
     }

@@ -40,7 +40,7 @@ async function packDirectory(dir) {
 
 async function fetchImportMeta(registryUrl, packageName) {
   const response = await fetch(
-    `${registryUrl}/v1/packages/${encodeURIComponent(packageName)}/import-meta`,
+    `${registryUrl}/v1/skills/${encodeURIComponent(packageName)}/import-meta`,
   );
   if (response.status === 404) {
     return { latestVersion: null, latestContentHash: null };

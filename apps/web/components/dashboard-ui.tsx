@@ -13,6 +13,7 @@ import {
   packagePath,
   packageShortName,
   SITE_URL,
+  skillListFromResponse,
   type PackageDetail,
 } from "../lib/registry";
 import { api } from "../lib/api-client";
@@ -158,7 +159,7 @@ function orgJoinUrl(orgSlug: string): string {
 }
 
 function packageHref(name: string): string {
-  return `/dashboard/packages/${name.replace(/^@/, "")}`;
+  return `/dashboard/skills/${name.replace(/^@/, "")}`;
 }
 
 function packageFolderName(name: string): string {
@@ -267,7 +268,7 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "members" | "packages" | "prompts" | "tokens" | "activity" | "settings" | "profile";
+  active: "overview" | "orgs" | "members" | "skills" | "prompts" | "tokens" | "activity" | "settings" | "profile";
   children: (context: { me: Me; orgs: Org[]; activeOrg: Org | null; setActiveOrgSlug: (slug: string) => void }) => ReactNode;
   intro?: string;
   title: string;
@@ -311,7 +312,7 @@ function DashboardShell({
     { href: "/dashboard", id: "overview", label: "Overview" },
     { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
     { href: "/dashboard/members", id: "members", label: "Members" },
-    { href: "/dashboard/packages", id: "packages", label: "Skills" },
+    { href: "/dashboard/skills", id: "skills", label: "Skills" },
     { href: "/dashboard/prompts", id: "prompts", label: "Prompts" },
     { href: "/dashboard/tokens", id: "tokens", label: "Tokens" },
     { href: "/dashboard/activity", id: "activity", label: "Activity" },
@@ -770,7 +771,7 @@ export function DashboardHome() {
           ? { href: "/dashboard/profile", label: "Complete profile" }
           : orgs.length === 0
             ? { href: "/dashboard/orgs", label: "Create org" }
-            : { href: "/dashboard/packages", label: "Manage skills" };
+            : { href: "/dashboard/skills", label: "Manage skills" };
         return (
           <>
             <InviteAcceptBanner />
@@ -1037,8 +1038,8 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
   const [status, setStatus] = useState("");
 
   const reloadPackages = useCallback(async () => {
-    const data = await api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`);
-    setPackages(data.packages);
+    const data = await api<{ skills?: ReservedPackage[]; packages?: ReservedPackage[] }>(`/v1/orgs/${org.slug}/skills`);
+    setPackages(skillListFromResponse(data));
   }, [org.slug]);
 
   useEffect(() => {
@@ -1080,7 +1081,7 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
                     onClick={async () => {
                       if (!window.confirm(`Unreserve ${pkg.name}?`)) return;
                       try {
-                        await api<void>(`/v1/orgs/${org.slug}/packages/${encodeURIComponent(pkg.name)}`, {
+                        await api<void>(`/v1/orgs/${org.slug}/skills/${encodeURIComponent(pkg.name)}`, {
                           method: "DELETE",
                         });
                         setPackages((current) => current.filter((item) => item.name !== pkg.name));
@@ -1105,7 +1106,7 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
           event.preventDefault();
           setStatus("");
           try {
-            const pkg = await api<ReservedPackage>(`/v1/orgs/${org.slug}/packages`, {
+            const pkg = await api<ReservedPackage>(`/v1/orgs/${org.slug}/skills`, {
               method: "POST",
               body: JSON.stringify({ name: packageName }),
             });
@@ -1150,7 +1151,7 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
 export function PackagesDashboard() {
   return (
     <DashboardShell
-      active="packages"
+      active="skills"
       intro="Reserve and manage skill names for the selected workspace."
       title="Skills"
     >
@@ -1616,10 +1617,11 @@ function TokensContent({ org }: { org: Org }) {
   }, [canInstallTokens, org.slug]);
 
   useEffect(() => {
-    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${org.slug}/packages`)
+    api<{ skills?: ReservedPackage[]; packages?: ReservedPackage[] }>(`/v1/orgs/${org.slug}/skills`)
       .then((data) => {
-        setPackages(data.packages);
-        setSelectedPackage((current) => current || data.packages[0]?.name || "");
+        const skills = skillListFromResponse(data);
+        setPackages(skills);
+        setSelectedPackage((current) => current || skills[0]?.name || "");
       })
       .catch((err: unknown) => setStatus(publicApiError(err)));
     reloadInstallTokens();
@@ -1642,7 +1644,7 @@ function TokensContent({ org }: { org: Org }) {
             try {
               setToken(
                 await api<{ token: string; expiresAt: string }>(
-                  `/v1/packages/${encodeURIComponent(selectedPackage)}/publish-tokens`,
+                  `/v1/skills/${encodeURIComponent(selectedPackage)}/publish-tokens`,
                   { method: "POST", body: "{}" },
                 ),
               );
@@ -1877,12 +1879,12 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
     setError("");
     Promise.all([
       api<Org>(`/v1/orgs/${orgSlug}`),
-      api<{ packages: ReservedPackage[] }>(`/v1/orgs/${orgSlug}/packages`),
+      api<{ skills?: ReservedPackage[]; packages?: ReservedPackage[] }>(`/v1/orgs/${orgSlug}/skills`),
       api<{ members: OrgMember[] }>(`/v1/orgs/${orgSlug}/members`),
     ])
       .then(([orgData, packageData, memberData]) => {
         setOrg(orgData);
-        setPackages(packageData.packages);
+        setPackages(skillListFromResponse(packageData));
         setMembers(memberData.members);
         if (canManageOrg(orgData.role)) {
           return Promise.all([
@@ -1909,7 +1911,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
 
   return (
     <DashboardShell
-      active="packages"
+      active="skills"
       intro="Control skills, teammates, invites, and access for this publisher namespace."
       title={`@${orgSlug}`}
     >
@@ -1942,7 +1944,7 @@ export function OrgDashboard({ orgSlug }: { orgSlug: string }) {
                   <h2>Reserved skill names</h2>
                 </div>
                 {manageOrg ? (
-                  <Link className={shell.button} href={`/dashboard/orgs/${orgSlug}/packages/new`}>
+                  <Link className={shell.button} href={`/dashboard/skills?org=${encodeURIComponent(orgSlug)}`}>
                     Reserve skill
                   </Link>
                 ) : null}
@@ -2259,7 +2261,7 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
 
   return (
     <DashboardShell
-      active="packages"
+      active="skills"
       intro="Reserve a stable skill name before generating publish tokens."
       title={`Reserve skill in @${orgSlug}`}
     >
@@ -2270,7 +2272,7 @@ export function NewPackageForm({ orgSlug }: { orgSlug: string }) {
             event.preventDefault();
             setError("");
             try {
-              const pkg = await api<ReservedPackage>(`/v1/orgs/${orgSlug}/packages`, {
+              const pkg = await api<ReservedPackage>(`/v1/orgs/${orgSlug}/skills`, {
                 method: "POST",
                 body: JSON.stringify({ name }),
               });
@@ -2324,7 +2326,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
 
   useEffect(() => {
     api<{ versions: PublishedPackageVersion[] }>(
-      `/v1/packages/${encodeURIComponent(packageName)}/versions`,
+      `/v1/skills/${encodeURIComponent(packageName)}/versions`,
     )
       .then((data) => {
         setVersions(data.versions);
@@ -2335,7 +2337,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
 
   const loadMembers = useCallback(() => {
     api<{ members: PackageMember[]; access: { orgRole: OrgRole | null; packageRole: "maintainer" | null } }>(
-      `/v1/packages/${encodeURIComponent(packageName)}/members`,
+      `/v1/skills/${encodeURIComponent(packageName)}/members`,
     )
       .then((data) => {
         setMembers(data.members);
@@ -2350,9 +2352,9 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
   }, [loadMembers]);
 
   useEffect(() => {
-    api<{ packages: ReservedPackage[] }>(`/v1/orgs/${scope}/packages`, undefined, { silent: true })
+    api<{ skills?: ReservedPackage[]; packages?: ReservedPackage[] }>(`/v1/orgs/${scope}/skills`, undefined, { silent: true })
       .then((data) => {
-        const pkg = data.packages.find((item) => item.name === packageName);
+        const pkg = skillListFromResponse(data).find((item) => item.name === packageName);
         if (pkg) {
           setVisibility(pkg.visibility ?? "public");
           setDeprecatedAt(pkg.deprecatedAt ?? null);
@@ -2369,7 +2371,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
       return;
     }
     api<PackageDetail>(
-      `/v1/packages/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(latestVersion.version)}`,
+      `/v1/skills/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(latestVersion.version)}`,
     )
       .then((detail) => {
         setPackageDetail(detail);
@@ -2449,7 +2451,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
 
   return (
     <DashboardShell
-      active="packages"
+      active="skills"
       intro={dashboardIntro}
       title={dashboardTitle}
     >
@@ -2507,7 +2509,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                 try {
                   setToken(
                     await api<{ token: string; expiresAt: string }>(
-                      `/v1/packages/${encodeURIComponent(packageName)}/publish-tokens`,
+                      `/v1/skills/${encodeURIComponent(packageName)}/publish-tokens`,
                       { method: "POST", body: "{}" },
                     ),
                   );
@@ -2542,7 +2544,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                         onClick={async () => {
                           setMemberStatus("");
                           try {
-                            await api<void>(`/v1/packages/${encodeURIComponent(packageName)}/members/${member.userId}`, {
+                            await api<void>(`/v1/skills/${encodeURIComponent(packageName)}/members/${member.userId}`, {
                               method: "DELETE",
                             });
                             loadMembers();
@@ -2570,7 +2572,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                   setMemberStatus("");
                   try {
                     await api<{ ok: boolean }>(
-                      `/v1/packages/${encodeURIComponent(packageName)}/members/${memberUserId.trim()}`,
+                      `/v1/skills/${encodeURIComponent(packageName)}/members/${memberUserId.trim()}`,
                       { method: "PUT", body: "{}" },
                     );
                     setMemberUserId("");
@@ -2629,7 +2631,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                           if (!window.confirm(`Yank ${version.name}@${version.version}?`)) return;
                           setVersionsError("");
                           try {
-                            await api(`/v1/packages/${encodeURIComponent(packageName)}/versions/${version.version}/yank`, {
+                            await api(`/v1/skills/${encodeURIComponent(packageName)}/versions/${version.version}/yank`, {
                               method: "POST",
                               body: "{}",
                             });
@@ -2686,7 +2688,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                         if (next === "public" && visibility === "private" && !window.confirm("Make this skill public?")) return;
                         setPackageStatus("");
                         try {
-                          await api<{ visibility: "public" | "private" }>(`/v1/packages/${encodeURIComponent(packageName)}`, {
+                          await api<{ visibility: "public" | "private" }>(`/v1/skills/${encodeURIComponent(packageName)}`, {
                             method: "PATCH",
                             body: JSON.stringify({ visibility: next }),
                           });
@@ -2728,7 +2730,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                         onClick={async () => {
                           setPackageStatus("");
                           try {
-                            await api(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, { method: "DELETE" });
+                            await api(`/v1/skills/${encodeURIComponent(packageName)}/deprecate`, { method: "DELETE" });
                             setDeprecatedAt(null);
                             setDeprecationMessage("");
                           } catch (err) {
@@ -2746,7 +2748,7 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                         event.preventDefault();
                         setPackageStatus("");
                         try {
-                          await api<{ deprecatedAt: string }>(`/v1/packages/${encodeURIComponent(packageName)}/deprecate`, {
+                          await api<{ deprecatedAt: string }>(`/v1/skills/${encodeURIComponent(packageName)}/deprecate`, {
                             method: "POST",
                             body: JSON.stringify({ message: deprecationMessage || null }),
                           });
@@ -2785,8 +2787,8 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                     onClick={async () => {
                       setPackageStatus("");
                       try {
-                        await api<void>(`/v1/packages/${encodeURIComponent(packageName)}`, { method: "DELETE" });
-                        window.location.href = "/dashboard/packages";
+                        await api<void>(`/v1/skills/${encodeURIComponent(packageName)}`, { method: "DELETE" });
+                        window.location.href = "/dashboard/skills";
                       } catch (err) {
                         setPackageStatus((err as Error).message);
                       }

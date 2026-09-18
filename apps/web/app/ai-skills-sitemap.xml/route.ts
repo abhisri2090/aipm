@@ -4,12 +4,14 @@ import {
   publisherPath,
   REGISTRY_API_BASE_URL,
   SITE_URL,
+  skillListFromResponse,
   type PackageSummary,
 } from "../../lib/registry";
 
 export const dynamic = "force-dynamic";
 
 type PackageListResponse = {
+  skills?: PackageSummary[];
   packages?: PackageSummary[];
   nextCursor?: string | null;
 };
@@ -32,13 +34,13 @@ async function listPackageUrls(): Promise<PackageSummary[]> {
     if (cursor) params.set("cursor", cursor);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2500);
-    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/packages?${params}`, {
+    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/skills?${params}`, {
       cache: "no-store",
       signal: controller.signal,
     }).finally(() => clearTimeout(timeout));
     if (!response.ok) break;
     const data = (await response.json()) as PackageListResponse;
-    packages.push(...(data.packages ?? []));
+    packages.push(...skillListFromResponse(data));
     if (!data.nextCursor) break;
     cursor = data.nextCursor;
   }

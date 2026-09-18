@@ -13,17 +13,18 @@ export function resolveSeedConfig(env = process.env) {
 }
 
 export async function fetchPublicPackages(publicRegistry, limit, fetchImpl = fetch) {
-  const response = await fetchImpl(`${publicRegistry}/v1/packages?limit=${limit}`);
+  const response = await fetchImpl(`${publicRegistry}/v1/skills?limit=${limit}`);
   if (!response.ok) {
     throw new Error(`Failed to list public packages: ${response.status}`);
   }
   const data = await response.json();
-  return Array.isArray(data.packages) ? data.packages : [];
+  const skills = data.skills ?? data.packages;
+  return Array.isArray(skills) ? skills : [];
 }
 
 export async function downloadTarball(publicRegistry, name, version, fetchImpl = fetch) {
   const response = await fetchImpl(
-    `${publicRegistry}/v1/packages/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}/tarball`,
+    `${publicRegistry}/v1/skills/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}/tarball`,
   );
   if (!response.ok) {
     throw new Error(`Failed to download ${name}@${version}: ${response.status}`);
@@ -48,7 +49,7 @@ export function buildPublishPayload(tarball) {
 export async function publishToLocalRegistry(localRegistry, name, tarball, fetchImpl = fetch) {
   const payload = buildPublishPayload(tarball);
   const response = await fetchImpl(
-    `${localRegistry}/v1/packages/${encodeURIComponent(name)}/versions`,
+    `${localRegistry}/v1/skills/${encodeURIComponent(name)}/versions`,
     {
       method: "POST",
       headers: { "content-type": payload.contentType },

@@ -166,7 +166,7 @@ const requiredPages = [
     title: "Anthropic AI Skills",
     h1: "Anthropic",
     jsonLd: true,
-    includes: ["/packages/anthropics/", "has not claimed the AIPM account yet"],
+    includes: ["/skills/anthropics/", "has not claimed the AIPM account yet"],
   },
   {
     path: "/skills/cursor",
@@ -360,7 +360,7 @@ const requiredPages = [
   },
 ];
 
-const privatePages = ["/login", "/cli/login", "/dashboard", "/dashboard/profile", "/dashboard/orgs/new"];
+const privatePages = ["/login", "/cli/login", "/dashboard", "/dashboard/skills", "/dashboard/profile", "/dashboard/orgs/new"];
 
 const requiredHeaders = [
   "strict-transport-security",
@@ -428,7 +428,7 @@ function extractJsonLd(html) {
 
 function packagePath(packageName, version) {
   const [scope, name] = packageName.replace(/^@/, "").split("/");
-  return `/packages/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
+  return `/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
 }
 
 console.log(`Verifying web app: ${baseUrl.href.replace(/\/$/, "")}`);
@@ -508,6 +508,27 @@ for (const path of privatePages) {
   assertIncludes(path, text, "nofollow");
 }
 
+{
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(urlFor("/dashboard/packages"), {
+      redirect: "manual",
+      signal: controller.signal,
+    });
+    const location = response.headers.get("location") ?? "";
+    if (![301, 302, 307, 308].includes(response.status) || !location.includes("/dashboard/skills")) {
+      fail(
+        `/dashboard/packages did not redirect to /dashboard/skills (status ${response.status}, location ${location})`,
+      );
+    }
+  } catch (error) {
+    fail(`/dashboard/packages redirect check failed: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const robots = await fetchText("/robots.txt");
 assertStatus("/robots.txt", robots.response);
 assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/sitemap.xml`);
@@ -518,6 +539,9 @@ assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
 assertCanonicalSitemapHosts("/sitemap.xml", sitemap.text);
+if (sitemap.text.includes("/dashboard/packages") || /<loc>[^<]*\/packages\//.test(sitemap.text)) {
+  fail("/sitemap.xml still contains /packages URLs");
+}
 for (const path of [
   "/skills",
   "/prompts",
@@ -581,6 +605,12 @@ if (!Array.isArray(researchData.packages) || typeof researchData.totals?.package
 const skillsSitemap = await fetchText("/ai-skills-sitemap.xml");
 assertStatus("/ai-skills-sitemap.xml", skillsSitemap.response);
 assertCanonicalSitemapHosts("/ai-skills-sitemap.xml", skillsSitemap.text);
+if (
+  skillsSitemap.text.includes("/dashboard/packages") ||
+  /<loc>[^<]*\/packages\//.test(skillsSitemap.text)
+) {
+  fail("/ai-skills-sitemap.xml still contains /packages URLs");
+}
 assertIncludes(
   "/ai-skills-sitemap.xml",
   skillsSitemap.text,
@@ -611,12 +641,13 @@ if (promptList.response.ok) {
   }
 }
 
-const packageList = await fetchText("/v1/packages?limit=1");
+const packageList = await fetchText("/v1/skills?limit=1");
 if (packageList.response.ok) {
   const data = JSON.parse(packageList.text);
-  const pkg = data.packages?.[0];
+  const pkg = (data.skills ?? data.packages)?.[0];
   if (pkg?.name && pkg?.version) {
     const path = packagePath(pkg.name, pkg.version);
+    assertIncludes("/ai-skills-sitemap.xml", skillsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
     const page = await fetchText(path);
     assertStatus(path, page.response);
     assertIncludes(path, page.text, `<title>${pkg.name}@${pkg.version} | AIPM</title>`);

@@ -137,7 +137,7 @@ const publishCommands: CommandItem[] = [
   },
   {
     title: "Open publishing pages",
-    description: "Opens the publishing guide or the package dashboard from the terminal.",
+    description: "Opens the publishing guide or the skill dashboard from the terminal.",
     code: "aipm publish open --package @team/review-helper",
     options: ["--docs: open the publishing guide", "--no-open: print the URL instead of opening a browser"],
   },
@@ -170,7 +170,7 @@ const publishCommands: CommandItem[] = [
   },
   {
     title: "Open token page",
-    description: "Opens the package dashboard so you can generate a 5-minute publish token.",
+    description: "Opens the skill dashboard so you can generate a 5-minute publish token.",
     code: "aipm publish token --package @team/review-helper",
     options: ["--no-open: print the URL instead of opening a browser"],
   },

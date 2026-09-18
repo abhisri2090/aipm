@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PackageCard } from "./package-card";
 import { LoadMoreSentinel } from "./load-more-sentinel";
 import { api } from "../lib/api-client";
-import { PACKAGE_TARGET_FILTERS, type PackageSummary } from "../lib/registry";
+import { PACKAGE_TARGET_FILTERS, skillListFromResponse, type PackageSummary } from "../lib/registry";
 import { publicApiError } from "../lib/public-api-error";
 import { cn } from "../lib/class-names";
 import cards from "../app/cards.module.css";
@@ -22,6 +22,7 @@ const QUICK_FILTERS = [
 const PAGE_SIZE = 20;
 
 type PackagesPage = {
+  skills?: PackageSummary[];
   packages?: PackageSummary[];
   nextCursor?: string | null;
   nextOffset?: number | null;
@@ -118,8 +119,8 @@ export function RegistrySearch({
       if (categoryValue !== "All") params.set("category", categoryValue);
       if (targetValue !== "all") params.set("target", targetValue);
       try {
-        const data = await api<PackagesPage>(`/v1/packages?${params}`);
-        const nextPackages = data.packages ?? [];
+        const data = await api<PackagesPage>(`/v1/skills?${params}`);
+        const nextPackages = skillListFromResponse(data);
         const cursor = compact ? null : (data.nextCursor ?? null);
         const offset = compact ? null : (data.nextOffset ?? null);
         setPackages(nextPackages);
@@ -150,8 +151,8 @@ export function RegistrySearch({
     if (sort === "newest" && nextCursor) params.set("cursor", nextCursor);
     if (sort !== "newest" && nextOffset != null) params.set("offset", String(nextOffset));
     try {
-      const data = await api<PackagesPage>(`/v1/packages?${params}`);
-      const nextPackages = data.packages ?? [];
+      const data = await api<PackagesPage>(`/v1/skills?${params}`);
+      const nextPackages = skillListFromResponse(data);
       const cursor = data.nextCursor ?? null;
       const offset = data.nextOffset ?? null;
       setPackages((current) => {

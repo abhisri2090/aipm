@@ -15,7 +15,7 @@ describe("search notifications", () => {
       "https://www.aipm-registry.com/prompts/a%20publisher/use%20photos",
     );
     expect(packagePublicUrl("@team/code review", "1.0.0-beta.1")).toBe(
-      "https://www.aipm-registry.com/packages/team/code%20review/1.0.0-beta.1",
+      "https://www.aipm-registry.com/skills/team/code%20review/1.0.0-beta.1",
     );
   });
 

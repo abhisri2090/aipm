@@ -120,7 +120,7 @@ async function sessionDelete(path) {
 }
 
 async function apiPackageGone() {
-  const href = `${cfg.apiUrl}/v1/packages/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(packageVersion)}`;
+  const href = `${cfg.apiUrl}/v1/skills/${encodeURIComponent(packageName)}/versions/${encodeURIComponent(packageVersion)}`;
   const response = await fetch(href, { headers: { "cache-control": "no-cache" } });
   return response.status === 404;
 }
@@ -137,13 +137,13 @@ async function cleanup(originalError) {
         if (await deleteInput.count()) {
           await deleteInput.fill(packageName);
           await state.page.getByRole("button", { name: "Delete skill" }).click();
-          await state.page.waitForURL("**/dashboard/packages**", { timeout: 15000 }).catch(() => {});
+          await state.page.waitForURL("**/dashboard/skills**", { timeout: 15000 }).catch(() => {});
         }
       }
-      const deleted = await sessionDelete(`/v1/packages/${encodeURIComponent(packageName)}`);
+      const deleted = await sessionDelete(`/v1/skills/${encodeURIComponent(packageName)}`);
       if (![204, 404, 0].includes(deleted.status)) {
         const reservedDel = await sessionDelete(
-          `/v1/orgs/${encodeURIComponent(cfg.org)}/packages/${encodeURIComponent(packageName)}`,
+          `/v1/orgs/${encodeURIComponent(cfg.org)}/skills/${encodeURIComponent(packageName)}`,
         );
         if (![204, 404, 0].includes(reservedDel.status)) {
           errors.push(`cleanup delete returned ${deleted.status}/${reservedDel.status}`);
@@ -257,9 +257,9 @@ async function loginAndPreparePackage() {
   await page.goto(`${cfg.webUrl}/dashboard`, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Sign out" }).waitFor({ timeout: 30000 });
   await ensureOrg(page);
-  await page.goto(`${cfg.webUrl}/dashboard/packages`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${cfg.webUrl}/dashboard/skills`, { waitUntil: "domcontentloaded" });
   await page.locator("#package-name").fill(packageName);
-  await page.getByRole("button", { name: "Reserve package" }).click();
+  await page.getByRole("button", { name: "Reserve skill" }).click();
   await page
     .getByText(`Reserved ${packageName}`)
     .waitFor({ timeout: 15000 })
