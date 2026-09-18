@@ -62,7 +62,8 @@ let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
   const parsed = JSON.parse(data);
-  if (!Array.isArray(parsed.packages)) throw new Error("packages must be an array");
+  const skills = parsed.skills ?? parsed.packages;
+  if (!Array.isArray(skills)) throw new Error("skills must be an array");
 });
 '
 
@@ -108,7 +109,8 @@ SAMPLE_VERSION="$(curl -fsS "${REGISTRY_URL}/v1/skills?q=sample&limit=1" | node 
 let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
-  const pkg = JSON.parse(data).packages?.[0];
+  const parsed = JSON.parse(data);
+  const pkg = (parsed.skills ?? parsed.packages)?.[0];
   if (pkg) process.stdout.write(pkg.version);
 });
 ')"

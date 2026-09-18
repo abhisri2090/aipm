@@ -38,7 +38,8 @@ let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
   const parsed = JSON.parse(data);
-  if (!Array.isArray(parsed.packages)) throw new Error("packages must be an array");
+  const skills = parsed.skills ?? parsed.packages;
+  if (!Array.isArray(skills)) throw new Error("skills must be an array");
 });
 '
 
@@ -48,7 +49,8 @@ let data = "";
 process.stdin.on("data", (chunk) => data += chunk);
 process.stdin.on("end", () => {
   const parsed = JSON.parse(data);
-  if (!Array.isArray(parsed.packages)) throw new Error("packages must be an array");
+  const skills = parsed.skills ?? parsed.packages;
+  if (!Array.isArray(skills)) throw new Error("skills must be an array");
 });
 '
 
