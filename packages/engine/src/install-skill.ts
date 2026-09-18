@@ -1,4 +1,4 @@
-import type { SkillAdapter } from "@aipm-registry/adapter-sdk";
+import type { SkillAdapter, SkillSupportingFile } from "@aipm-registry/adapter-sdk";
 import { claudeSkillAdapter } from "@aipm-registry/adapter-claude";
 import { cursorSkillAdapter } from "@aipm-registry/adapter-cursor";
 import { codexSkillAdapter } from "@aipm-registry/adapter-codex";
@@ -15,6 +15,7 @@ export interface InstallSkillOptions {
   projectRoot: string;
   manifest: PackageManifest;
   skillMarkdown: string;
+  supportingFiles?: SkillSupportingFile[];
   preferredTools?: AiTool[];
   explicitTarget?: AiTool;
 }
@@ -48,6 +49,7 @@ export async function installSkillPackage(
       packageName: options.manifest.name,
       version: options.manifest.version,
       skillMarkdown: options.skillMarkdown,
+      supportingFiles: options.supportingFiles,
       projectRoot: options.projectRoot,
     });
     installed[tool] = result.writtenPaths;

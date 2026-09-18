@@ -5,7 +5,7 @@ import type {
   LockfilePackageEntry,
   PackageInstall,
 } from "@aipm-registry/schemas";
-import { cp, mkdir, readFile, rm, stat } from "node:fs/promises";
+import { cp, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
 import { basename, dirname, join, normalize, relative, resolve, sep } from "node:path";
 import { unpackTarballToDirectory } from "./pack.js";
 import {
@@ -38,6 +38,12 @@ export interface InstallOneOptions {
 export type InstalledPackageAssets = {
   main: string[];
   helper: string[];
+};
+
+type SkillSupportingFile = {
+  path: string;
+  content: Uint8Array;
+  mode?: number;
 };
 
 function normalizeRelativePath(path: string): string {
@@ -77,6 +83,67 @@ async function assertSourceFile(packageRoot: string, relPath: string): Promise<s
   const info = await stat(source).catch(() => null);
   if (!info?.isFile()) throw new Error(`Package install file not found: ${relPath}`);
   return source;
+}
+
+function installReferencedFiles(install?: PackageInstall): string[] {
+  return [
+    ...(install?.mainFiles ?? []).map((file) => file.from),
+    ...(install?.helperFiles ?? []).map((file) => file.from),
+  ];
+}
+
+function isRootLicenseOrNotice(path: string): boolean {
+  return !path.includes("/") && /^(?:licen[cs]e|notice|copying)(?:$|[._-])/i.test(path);
+}
+
+async function listRegularPackageFiles(root: string, current = root): Promise<string[]> {
+  const files: string[] = [];
+  for (const entry of await readdir(current, { withFileTypes: true })) {
+    const absolute = join(current, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...await listRegularPackageFiles(root, absolute));
+    } else if (entry.isFile()) {
+      files.push(normalizeRelativePath(relative(root, absolute)));
+    }
+  }
+  return files;
+}
+
+export async function collectSkillSupportingFiles(
+  packageRoot: string,
+  manifest: { entry: string; install?: PackageInstall },
+): Promise<SkillSupportingFile[]> {
+  const entry = assertSafeRelativePath(manifest.entry);
+  const entryDirectory = dirname(entry);
+  const excluded = new Set([
+    entry,
+    "aipm.manifest.json",
+    "pkg.tgz",
+    ...installReferencedFiles(manifest.install).map(assertSafeRelativePath),
+  ]);
+  const supportingFiles: SkillSupportingFile[] = [];
+
+  for (const sourcePath of await listRegularPackageFiles(packageRoot)) {
+    if (excluded.has(sourcePath)) continue;
+    const fromEntryDirectory = normalizeRelativePath(relative(entryDirectory, sourcePath));
+    const isEntrySibling =
+      fromEntryDirectory !== ".." &&
+      !fromEntryDirectory.startsWith("../") &&
+      !fromEntryDirectory.startsWith("/");
+    if (!isEntrySibling && !isRootLicenseOrNotice(sourcePath)) continue;
+    const destinationPath = isEntrySibling ? fromEntryDirectory : basename(sourcePath);
+    if (destinationPath.toLowerCase() === "skill.md") {
+      throw new Error(`Package supporting file conflicts with installed SKILL.md: ${sourcePath}`);
+    }
+    const source = safeJoin(packageRoot, sourcePath);
+    supportingFiles.push({
+      path: destinationPath,
+      content: await readFile(source),
+      mode: (await stat(source)).mode,
+    });
+  }
+
+  return supportingFiles.sort((a, b) => a.path.localeCompare(b.path));
 }
 
 async function copyMainFile(input: {
@@ -216,11 +283,13 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
   const packageRoot = await unpackTarballToDirectory(tarball);
   try {
     const skillMarkdown = await readFile(safeJoin(packageRoot, manifest.entry), "utf8");
+    const supportingFiles = await collectSkillSupportingFiles(packageRoot, manifest);
 
     const result = await installSkillPackage({
       projectRoot: installRoot,
       manifest,
       skillMarkdown,
+      supportingFiles,
       preferredTools,
       explicitTarget,
     });
