@@ -14,6 +14,7 @@ import {
   getPackageReservationByName,
   getOrgBySlug,
   listPackageVersionsForName,
+  setPackageGithubStars,
   type PackageVisibility,
   type UserRow,
 } from "./db.js";
@@ -59,6 +60,7 @@ type GitHubRepoMeta = {
   private?: boolean;
   default_branch?: string;
   license?: { spdx_id?: string } | null;
+  stargazers_count?: number;
   owner?: { login?: string; type?: string };
   permissions?: { admin?: boolean; push?: boolean; pull?: boolean };
 };
@@ -376,6 +378,17 @@ export async function confirmUserGithubImport(options: {
         visibility: options.visibility,
         provenance,
       });
+      const stars =
+        typeof repo.stargazers_count === "number" && Number.isFinite(repo.stargazers_count)
+          ? Math.max(0, Math.floor(repo.stargazers_count))
+          : null;
+      if (stars !== null) {
+        try {
+          await setPackageGithubStars(options.pool, published.name, stars);
+        } catch {
+          // Import succeeded; stars can be filled later via admin sync.
+        }
+      }
       return {
         packageName: published.name,
         version: published.version,

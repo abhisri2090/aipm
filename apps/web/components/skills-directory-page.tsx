@@ -17,7 +17,10 @@ export async function SkillsDirectoryPage({
   const params = await searchParams;
   const currentPage = directoryPageNumber(params.page);
   const query = params.q ?? "";
-  const sort = params.sort === "popular" || params.sort === "title" ? params.sort : "newest";
+  const sort =
+    params.sort === "popular" || params.sort === "title" || params.sort === "stars"
+      ? params.sort
+      : "newest";
   const filtered = Boolean(query || params.category || params.target || params.sort);
   const listingOptions = { query, limit: 20, category: params.category, target: params.target, sort, throwOnError: true };
   const page = await listPackagesPage({

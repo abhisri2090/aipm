@@ -9,6 +9,7 @@ import { showErrorToast } from "../lib/toast";
 import { InternalStatsPanel } from "./internal-stats-ui";
 import { AdminImportSkillPanel } from "./admin-import-ui";
 import { AdminBulkImportSkillPanel } from "./admin-bulk-import-ui";
+import { AdminGithubStarsPanel } from "./admin-github-stars-ui";
 import { AdminDeletePackagePanel } from "./admin-delete-package-ui";
 import type { InternalStats } from "./internal-stats-types";
 import { cn, dash, shell } from "../lib/page-styles";
@@ -295,6 +296,7 @@ export function AdminPanel() {
         </div>
         <AdminImportSkillPanel onImported={loadStats} />
         <AdminBulkImportSkillPanel onImported={loadStats} />
+        <AdminGithubStarsPanel />
         <AdminDeletePackagePanel onDeleted={loadStats} />
         <InternalStatsPanel stats={stats} />
       </section>

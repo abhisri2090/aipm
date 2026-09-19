@@ -53,6 +53,7 @@ export type PackageSummary = {
   sizeBytes: number;
   createdAt: string;
   installCount?: number;
+  githubStars?: number | null;
   publisher?: PackagePublisher | null;
   import?: PackageImportMeta;
   scan?: ScanInfo;
@@ -83,6 +84,7 @@ export type PackageDetail = {
   sizeBytes: number;
   createdAt: string;
   installCount?: number;
+  githubStars?: number | null;
   publisher?: PackagePublisher | null;
   import?: PackageImportMeta;
   scan?: ScanInfo;
@@ -265,6 +267,14 @@ export function formatInstallCount(count: number): string {
   return `${formatted}K installs`;
 }
 
+export function formatGithubStars(count: number): string {
+  if (!Number.isFinite(count) || count < 0) return "★ 0";
+  if (count < 1000) return `★ ${count}`;
+  const value = count / 1000;
+  const formatted = value >= 10 ? value.toFixed(0) : value.toFixed(1);
+  return `★ ${formatted}K`;
+}
+
 export function scanBadgeLabel(status: ScanStatus | undefined): string {
   switch (status) {
     case "clean":
@@ -285,7 +295,7 @@ export function shortIntegrity(value: string): string {
 }
 
 export const PACKAGE_TARGET_FILTERS = ["all", "cursor", "claude", "codex"] as const;
-export const PACKAGE_SORT_OPTIONS = ["newest", "popular", "title"] as const;
+export const PACKAGE_SORT_OPTIONS = ["newest", "popular", "stars", "title"] as const;
 export type PackageSortMode = (typeof PACKAGE_SORT_OPTIONS)[number];
 
 export function skillListFromResponse<T>(data: { skills?: T[]; packages?: T[] } | null | undefined): T[] {

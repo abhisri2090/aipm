@@ -70,7 +70,7 @@ const USER_ROW_SELECT = `users.${USER_ROW_FIELDS.replace(/, /g, ", users.")}`;
 const ORG_ROW_FIELDS =
   "id, slug, name, owner_user_id, created_at, default_package_visibility, description, website_url, avatar_url, default_member_role, invite_ttl_hours, auto_join_domain, deleted_at";
 const PACKAGE_RESERVATION_FIELDS =
-  "id, name, org_id, owner_user_id, created_at, visibility, deprecated_at, deprecation_message, install_count";
+  "id, name, org_id, owner_user_id, created_at, visibility, deprecated_at, deprecation_message, install_count, github_stars";
 const PACKAGE_VERSION_FIELDS =
   "id, name, version, manifest, integrity, blob_path, size_bytes, created_at, yanked_at, scan_status, scan_findings, scan_checks_performed, scanned_at, scanner_version";
 
@@ -200,6 +200,7 @@ export interface PackageReservationRow {
   deprecated_at: Date | null;
   deprecation_message: string | null;
   install_count: number;
+  github_stars: number | null;
 }
 
 export interface InstallTokenRow {
@@ -488,6 +489,7 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS deprecated_at TIMESTAMPTZ;
     ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS deprecation_message TEXT;
     ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS install_count BIGINT NOT NULL DEFAULT 0;
+    ALTER TABLE package_reservations ADD COLUMN IF NOT EXISTS github_stars BIGINT;
 
     ALTER TABLE package_versions ADD COLUMN IF NOT EXISTS yanked_at TIMESTAMPTZ;
 
@@ -677,7 +679,7 @@ export async function getPackageVersion(
   return result.rows[0] ?? null;
 }
 
-export type PackageSortMode = "newest" | "popular" | "title";
+export type PackageSortMode = "newest" | "popular" | "title" | "stars";
 
 export async function listPackageVersions(
   pool: pg.Pool,
@@ -742,6 +744,9 @@ export async function listPackageVersions(
   if (sort === "popular") {
     joinSql = "LEFT JOIN package_reservations reservations ON reservations.name = latest.name";
     orderSql = "COALESCE(reservations.install_count, 0) DESC, latest.created_at DESC";
+  } else if (sort === "stars") {
+    joinSql = "LEFT JOIN package_reservations reservations ON reservations.name = latest.name";
+    orderSql = "COALESCE(reservations.github_stars, 0) DESC, latest.created_at DESC";
   } else if (sort === "title") {
     orderSql = "LOWER(latest.name) ASC";
   }
@@ -1424,6 +1429,72 @@ export async function getPackageInstallCountMap(
   return new Map(result.rows.map((row) => [row.name, Number(row.install_count)]));
 }
 
+export async function getPackageGithubStarsMap(
+  pool: pg.Pool,
+  names: string[],
+): Promise<Map<string, number | null>> {
+  if (names.length === 0) return new Map();
+  const result = await pool.query<{ name: string; github_stars: string | null }>(
+    `SELECT name, github_stars
+     FROM package_reservations
+     WHERE name = ANY($1::text[])`,
+    [names],
+  );
+  return new Map(
+    result.rows.map((row) => [
+      row.name,
+      row.github_stars == null ? null : Number(row.github_stars),
+    ]),
+  );
+}
+
+export async function setPackageGithubStars(
+  pool: pg.Pool,
+  name: string,
+  stars: number,
+): Promise<boolean> {
+  const result = await pool.query(
+    `UPDATE package_reservations
+     SET github_stars = $2
+     WHERE name = $1`,
+    [name, stars],
+  );
+  return (result.rowCount ?? 0) > 0;
+}
+
+export async function setPackageGithubStarsForNames(
+  pool: pg.Pool,
+  names: string[],
+  stars: number,
+): Promise<number> {
+  if (names.length === 0) return 0;
+  const result = await pool.query(
+    `UPDATE package_reservations
+     SET github_stars = $2
+     WHERE name = ANY($1::text[])`,
+    [names, stars],
+  );
+  return result.rowCount ?? 0;
+}
+
+export type GithubStarsSyncMode = "fill-missing" | "refresh-all";
+
+export async function listPackagesForGithubStarsSync(
+  pool: pg.Pool,
+  mode: GithubStarsSyncMode,
+): Promise<Array<{ name: string; source_url: string }>> {
+  const result = await pool.query<{ name: string; source_url: string }>(
+    `SELECT DISTINCT ON (r.name) r.name, p.source_url
+     FROM package_reservations r
+     INNER JOIN package_provenance p ON p.name = r.name
+     WHERE p.source_url ~* 'github\\.com'
+       AND ($1::text = 'refresh-all' OR r.github_stars IS NULL)
+     ORDER BY r.name, p.imported_at DESC`,
+    [mode],
+  );
+  return result.rows;
+}
+
 export async function getOwnedPackageReservation(
   pool: pg.Pool,
   name: string,
@@ -1453,6 +1524,7 @@ export async function getPackageReservationForUser(
             package_reservations.deprecated_at,
             package_reservations.deprecation_message,
             package_reservations.install_count,
+            package_reservations.github_stars,
             org_memberships.role AS org_role,
             package_memberships.role AS package_role
      FROM package_reservations

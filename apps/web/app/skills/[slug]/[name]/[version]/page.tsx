@@ -39,6 +39,7 @@ function toSummary(pkg: Awaited<ReturnType<typeof getPackage>>): PackageSummary 
     sizeBytes: pkg.sizeBytes,
     createdAt: pkg.createdAt,
     installCount: pkg.installCount,
+    githubStars: pkg.githubStars,
     publisher: pkg.publisher,
     import: pkg.import,
     scan: pkg.scan,

@@ -56,7 +56,7 @@ export function selectLatestPackageVersions<T extends { name: string; created_at
   return [...latest.values()];
 }
 
-export type PackageSortMode = "newest" | "popular" | "title";
+export type PackageSortMode = "newest" | "popular" | "title" | "stars";
 
 export interface PackageListOptions {
   limit?: number;

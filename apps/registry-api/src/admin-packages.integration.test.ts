@@ -17,6 +17,7 @@ import {
   createPool,
   ensureSchema,
   reservePackageName,
+  setPackageGithubStars,
   upsertGithubUser,
 } from "./db.js";
 
@@ -268,5 +269,40 @@ describe.skipIf(!databaseUrl)("admin package management", () => {
       popularName,
       quietName,
     ]);
+  });
+
+  it("sorts packages by github stars when sort=stars", async () => {
+    const suffix = unique();
+    const pool = createPool(databaseUrl!);
+    await ensureSchema(pool);
+    const owner = await upsertGithubUser(pool, {
+      githubId: `stars-owner-${suffix}`,
+      githubLogin: `stars-owner-${suffix}`,
+    });
+    const org = await createOrg(pool, {
+      slug: `stars-org-${suffix}`,
+      name: "Stars Org",
+      ownerUserId: owner.id,
+    });
+    const hotName = `@${org.slug}/hot-skill`;
+    const coldName = `@${org.slug}/cold-skill`;
+    await reservePackageName(pool, { name: hotName, orgId: org.id, ownerUserId: owner.id });
+    await reservePackageName(pool, { name: coldName, orgId: org.id, ownerUserId: owner.id });
+    await setPackageGithubStars(pool, hotName, 500);
+    await setPackageGithubStars(pool, coldName, 10);
+    await pool.end();
+
+    await publishPackage(hotName, "1.0.0");
+    await publishPackage(coldName, "1.0.0");
+
+    const response = await app!.inject({
+      method: "GET",
+      url: `/v1/skills?sort=stars&q=${encodeURIComponent(org.slug)}`,
+    });
+    expect(response.statusCode).toBe(200);
+    const skills = response.json().skills as Array<{ name: string; githubStars: number | null }>;
+    expect(skills.map((pkg) => pkg.name)).toEqual([hotName, coldName]);
+    expect(skills[0]?.githubStars).toBe(500);
+    expect(skills[1]?.githubStars).toBe(10);
   });
 });

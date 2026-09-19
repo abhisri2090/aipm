@@ -11,6 +11,7 @@ import {
   displayTargets,
   formatBytes,
   formatInstallCount,
+  formatGithubStars,
   GITHUB_LOGIN_URL,
   installCommand,
   installCommandForTarget,
@@ -43,6 +44,7 @@ function toSummary(pkg: PackageDetail): PackageSummary {
     sizeBytes: pkg.sizeBytes,
     createdAt: pkg.createdAt,
     installCount: pkg.installCount,
+    githubStars: pkg.githubStars,
     publisher: pkg.publisher,
     import: pkg.import,
     scan: pkg.scan,
@@ -185,6 +187,12 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <div className={shell.packageDetailItem}>
                 <dt>Installs</dt>
                 <dd>{formatInstallCount(summary.installCount)}</dd>
+              </div>
+            ) : null}
+            {summary.githubStars != null ? (
+              <div className={shell.packageDetailItem}>
+                <dt>GitHub stars</dt>
+                <dd>{formatGithubStars(summary.githubStars)}</dd>
               </div>
             ) : null}
             {summary.categories && summary.categories.length > 0 ? (

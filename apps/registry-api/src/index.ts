@@ -16,6 +16,7 @@ import {
   type ImportProvenancePayload,
 } from "./admin-import.js";
 import { bulkImportSkillsFromGitHubFolder } from "./bulk-import-from-github.js";
+import { syncGithubStarsForPackages } from "./admin-github-stars.js";
 import { rewriteLegacyPackageApiPath } from "./legacy-package-api-path.js";
 import { httpStatusFromError, publicError } from "./api-error.js";
 import { GitHubSkillCollectionError, SkillAlreadyExistsError, importSkillFromGitHubUrl } from "./import-from-github.js";
@@ -55,6 +56,7 @@ import {
   getPackageReservationByName,
   getPackageReservationForUser,
   getPackageInstallCountMap,
+  getPackageGithubStarsMap,
   getPackageVisibilityMap,
   getPendingInviteByTokenHash,
   getProvenance,
@@ -1069,6 +1071,38 @@ export async function createApp(): Promise<FastifyInstance> {
       return reply.status(404).send({ error: "Package not found" });
     }
     return reply.status(204).send();
+  });
+
+  app.post("/v1/admin/github-stars/fill-missing", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+    if (!user) return;
+    try {
+      const result = await syncGithubStarsForPackages({
+        pool: accountAuth.pool,
+        mode: "fill-missing",
+      });
+      return result;
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(500).send({ error: publicError(error, "Failed to fill missing GitHub stars") });
+    }
+  });
+
+  app.post("/v1/admin/github-stars/refresh-all", async (request, reply) => {
+    if (!accountAuth) return reply.status(503).send({ error: "Account services are not configured" });
+    const user = await requireCurrentAdminUser(accountAuth, adminAuthConfig, request, reply);
+    if (!user) return;
+    try {
+      const result = await syncGithubStarsForPackages({
+        pool: accountAuth.pool,
+        mode: "refresh-all",
+      });
+      return result;
+    } catch (error) {
+      request.log.error(error);
+      return reply.status(500).send({ error: publicError(error, "Failed to refresh GitHub stars") });
+    }
   });
 
   app.post<{ Body: { sourceUrl?: string } }>(
@@ -2498,6 +2532,8 @@ export async function createApp(): Promise<FastifyInstance> {
             }
           : { imported: false, sourceUrl: null },
         installCount: reservation ? Number(reservation.install_count) : 0,
+        githubStars:
+          reservation && reservation.github_stars != null ? Number(reservation.github_stars) : null,
       };
     },
   );
@@ -2625,7 +2661,8 @@ export async function createApp(): Promise<FastifyInstance> {
       const category = request.query.category?.trim() ?? "";
       const target = request.query.target?.trim() ?? "";
       const sortRaw = request.query.sort?.trim() || "newest";
-      const sort: PackageSortMode = sortRaw === "popular" || sortRaw === "title" ? sortRaw : "newest";
+      const sort: PackageSortMode =
+        sortRaw === "popular" || sortRaw === "title" || sortRaw === "stars" ? sortRaw : "newest";
       const useCursor = sort === "newest" && request.query.offset === undefined;
       const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const readAccess = await resolveReadAccess(accountAuth, request);
@@ -2673,6 +2710,9 @@ export async function createApp(): Promise<FastifyInstance> {
       const installCountByName = accountAuth
         ? await getPackageInstallCountMap(accountAuth.pool, [...new Set(page.map((row) => row.name))])
         : new Map<string, number>();
+      const githubStarsByName = accountAuth
+        ? await getPackageGithubStarsMap(accountAuth.pool, [...new Set(page.map((row) => row.name))])
+        : new Map<string, number | null>();
       return {
         skills: page.map((row) => {
           const provenance = provenanceByName.get(row.name);
@@ -2691,6 +2731,9 @@ export async function createApp(): Promise<FastifyInstance> {
             sizeBytes: Number(row.size_bytes),
             createdAt: row.created_at,
             installCount: installCountByName.get(row.name) ?? 0,
+            githubStars: githubStarsByName.has(row.name)
+              ? (githubStarsByName.get(row.name) ?? null)
+              : null,
             scan: serializePackageScan(row),
             publisher: serializePublisher(publisherByName.get(row.name) ?? null),
             import: provenance

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { promisify } from "node:util";
 import type pg from "pg";
-import { getLatestProvenance, listPackageVersionsForName } from "./db.js";
+import { getLatestProvenance, listPackageVersionsForName, setPackageGithubStars } from "./db.js";
 import {
   importSkillPackage,
   type ImportAuthorPayload,
@@ -286,7 +286,11 @@ type GitHubUser = {
   twitter_username?: string | null;
   html_url?: string | null;
 };
-type GitHubRepo = { default_branch?: string; license?: { spdx_id?: string } | null };
+type GitHubRepo = {
+  default_branch?: string;
+  license?: { spdx_id?: string } | null;
+  stargazers_count?: number;
+};
 type GitHubContentEntry = {
   name: string;
   path: string;
@@ -617,6 +621,17 @@ export async function importSkillFromGitHubUrl(options: {
         author,
         provenance: provenancePayload,
       });
+      const stars =
+        typeof repoMeta.stargazers_count === "number" && Number.isFinite(repoMeta.stargazers_count)
+          ? Math.max(0, Math.floor(repoMeta.stargazers_count))
+          : null;
+      if (stars !== null) {
+        try {
+          await setPackageGithubStars(options.pool, result.name, stars);
+        } catch {
+          // Import succeeded; stars can be filled later via admin sync.
+        }
+      }
       return {
         action: "published",
         sourceUrl: options.sourceUrl,
