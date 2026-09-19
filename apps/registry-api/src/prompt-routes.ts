@@ -1001,6 +1001,36 @@ export async function registerPromptRoutes(
     },
   );
 
+  app.delete<{ Params: { publisher: string; slug: string } }>(
+    "/v1/prompts/:publisher/:slug",
+    async (request, reply) => {
+      const user = await requireCurrentUser(options.accountAuth, request, reply);
+      if (!user || !options.accountAuth) return;
+
+      const existing = await findPublicPrompt(
+        options.accountAuth.pool,
+        request.params.publisher.toLowerCase(),
+        request.params.slug.toLowerCase(),
+      );
+      if (!existing) return reply.status(404).send({ error: "Prompt not found" });
+
+      const editableOrgIds = await listEditableOrgIds(options.accountAuth.pool, user.id);
+      if (!userCanEditPrompt(user.id, existing, editableOrgIds)) {
+        return reply.status(403).send({ error: "You cannot delete this prompt" });
+      }
+
+      const blobPath = existing.sample_image_blob_path;
+      await options.accountAuth.pool.query(`DELETE FROM prompts WHERE id = $1`, [existing.id]);
+      if (blobPath) await options.storage.delete(blobPath).catch(() => undefined);
+
+      queueSearchNotification(
+        [promptPublicUrl(publisherScope(existing), existing.slug)],
+        request.log,
+      );
+      return reply.status(204).send();
+    },
+  );
+
   app.get<{ Params: { publisher: string; slug: string } }>(
     "/v1/prompts/:publisher/:slug",
     async (request, reply) => {
