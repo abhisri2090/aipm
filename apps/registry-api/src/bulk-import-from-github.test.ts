@@ -2,6 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const listGitHubSubfolders = vi.fn();
 const importSkillFromGitHubUrl = vi.fn();
+const githubRequest = vi.fn();
+const setPackageGithubStars = vi.fn();
+
+vi.mock("./db.js", () => ({
+  setPackageGithubStars: (...args: unknown[]) => setPackageGithubStars(...args),
+}));
 
 vi.mock("./import-from-github.js", () => ({
   parseGitHubFolderUrl: vi.fn(() => ({
@@ -15,6 +21,7 @@ vi.mock("./import-from-github.js", () => ({
   ),
   listGitHubSubfolders: (...args: unknown[]) => listGitHubSubfolders(...args),
   importSkillFromGitHubUrl: (...args: unknown[]) => importSkillFromGitHubUrl(...args),
+  githubRequest: (...args: unknown[]) => githubRequest(...args),
 }));
 
 import { bulkImportSkillsFromGitHubFolder } from "./bulk-import-from-github.js";
@@ -23,6 +30,10 @@ describe("bulkImportSkillsFromGitHubFolder", () => {
   beforeEach(() => {
     listGitHubSubfolders.mockReset();
     importSkillFromGitHubUrl.mockReset();
+    githubRequest.mockReset();
+    setPackageGithubStars.mockReset();
+    githubRequest.mockResolvedValue({ stargazers_count: 42 });
+    setPackageGithubStars.mockResolvedValue(true);
   });
 
   it("imports each subfolder and summarizes results", async () => {
@@ -60,6 +71,9 @@ describe("bulkImportSkillsFromGitHubFolder", () => {
       summary: { published: 1, skipped: 1, failed: 0 },
     });
 
+    expect(githubRequest).toHaveBeenCalledTimes(1);
+    expect(githubRequest).toHaveBeenCalledWith("/repos/anthropics/skills", undefined);
+    expect(setPackageGithubStars).toHaveBeenCalledWith({}, "@anthropics/alpha-skill", 42);
     expect(importSkillFromGitHubUrl).toHaveBeenCalledWith(
       expect.objectContaining({ orgName: "my-org" }),
     );

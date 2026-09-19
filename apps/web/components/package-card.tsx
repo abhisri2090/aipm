@@ -5,6 +5,7 @@ import {
   displayTargets,
   formatBytes,
   formatInstallCount,
+  formatGithubStars,
   GITHUB_LOGIN_URL,
   installCommand,
   isUnverifiedImportedPackage,
@@ -70,6 +71,9 @@ export function PackageCard({ pkg, compact = false }: { pkg: PackageSummary; com
           <ScanBadge status={pkg.scan?.status} />
           {pkg.installCount && pkg.installCount > 0 ? (
             <span className={cards.pill}>{formatInstallCount(pkg.installCount)}</span>
+          ) : null}
+          {pkg.githubStars != null ? (
+            <span className={cards.pill}>{formatGithubStars(pkg.githubStars)}</span>
           ) : null}
           {isUnverifiedImportedPackage(pkg) ? (
             <span className={cards.pill}>Imported · Unverified</span>

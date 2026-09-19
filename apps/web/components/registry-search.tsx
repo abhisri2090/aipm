@@ -288,6 +288,7 @@ export function RegistrySearch({
               >
                 <option value="newest">Recently updated</option>
                 <option value="popular">Most installed</option>
+                <option value="stars">Most GitHub stars</option>
                 <option value="title">Title A–Z</option>
               </select>
             </label>
