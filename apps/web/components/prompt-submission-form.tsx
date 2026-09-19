@@ -145,6 +145,8 @@ export function PromptSubmissionForm({
   const [sampleImagePreviewUrl, setSampleImagePreviewUrl] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deleteConfirmSlug, setDeleteConfirmSlug] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!sampleImage) {
@@ -191,6 +193,22 @@ export function PromptSubmissionForm({
     if (publisher === "personal") return me ? `@${me.username}` : "Personal profile";
     return `@${publisher}`;
   }, [me, publisher]);
+
+  async function onDeletePrompt() {
+    if (!initialPrompt || deleteConfirmSlug !== initialPrompt.slug) return;
+    setDeleting(true);
+    setStatus("");
+    try {
+      await api<void>(
+        `/v1/prompts/${encodeURIComponent(initialPrompt.publisher.scope)}/${encodeURIComponent(initialPrompt.slug)}`,
+        { method: "DELETE" },
+      );
+      router.push("/dashboard/prompts");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to delete prompt");
+      setDeleting(false);
+    }
+  }
 
   function applyFormDetails(details: PromptFormAutofill, preparedPrompt: string) {
     setPromptText(preparedPrompt);
@@ -726,7 +744,7 @@ export function PromptSubmissionForm({
 
           {status ? <p className={shell.notice}>{status}</p> : null}
           <div className={styles.submitRow}>
-            <button disabled={submitting} type="submit">
+            <button disabled={submitting || deleting} type="submit">
               {submitting
                 ? isEdit
                   ? "Saving…"
@@ -739,6 +757,33 @@ export function PromptSubmissionForm({
               Cancel
             </Link>
           </div>
+
+          {isEdit && initialPrompt ? (
+            <section className={styles.dangerZone}>
+              <h2>Delete prompt</h2>
+              <p className={shell.muted}>
+                Permanently removes this prompt and its sample image. This cannot be undone.
+              </p>
+              <label htmlFor="delete-prompt-slug">
+                Type {initialPrompt.slug} to confirm
+              </label>
+              <input
+                id="delete-prompt-slug"
+                value={deleteConfirmSlug}
+                onChange={(event) => setDeleteConfirmSlug(event.target.value)}
+                placeholder={initialPrompt.slug}
+                autoComplete="off"
+              />
+              <button
+                className={styles.deleteButton}
+                disabled={deleting || deleteConfirmSlug !== initialPrompt.slug}
+                type="button"
+                onClick={() => void onDeletePrompt()}
+              >
+                {deleting ? "Deleting…" : "Delete prompt"}
+              </button>
+            </section>
+          ) : null}
         </div>
 
         <div className={styles.previewColumn}>

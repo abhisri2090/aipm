@@ -386,6 +386,37 @@
   opacity: 0.65;
 }
 
+.dangerZone {
+  display: grid;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, #b42318 35%, var(--line));
+  border-radius: 12px;
+  background: color-mix(in srgb, #b42318 6%, var(--panel));
+  padding: 24px;
+}
+
+.dangerZone h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dangerZone p {
+  margin: 0;
+}
+
+.deleteButton {
+  justify-self: start;
+  margin-top: 4px;
+  border-color: color-mix(in srgb, #b42318 50%, var(--line));
+  background: transparent;
+  color: #b42318;
+}
+
+.deleteButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 @media (max-width: 900px) {
   .header,
   .formLayout {
