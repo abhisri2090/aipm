@@ -7,7 +7,7 @@
   "homepage": "https://www.aipm-registry.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/abhisri2090/aipm.git",
+    "url": "git+https://github.com/abhisri2090/aipm.git",
     "directory": "apps/cli"
   },
   "bugs": {
@@ -15,7 +15,7 @@
   },
   "main": "./dist/bin.cjs",
   "bin": {
-    "aipm": "./dist/bin.cjs"
+    "aipm": "dist/bin.cjs"
   },
   "exports": {
     ".": "./dist/bin.cjs"

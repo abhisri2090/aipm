@@ -10,6 +10,7 @@ const requiredFiles = [
   ".github/workflows/ci.yml",
   ".github/workflows/deploy-api-vm.yml",
   ".github/workflows/release-cli.yml",
+  "apps/cli/LICENSE",
   "infra/azure/deploy-registry-vm.sh",
   "infra/azure/verify-production.sh",
   "scripts/build-cli-binaries.mjs",
@@ -27,7 +28,7 @@ const fileChecks = [
     patterns: [
       /"release:cli:binaries":\s*"node scripts\/build-cli-binaries\.mjs"/,
       /"release:cli:templates":\s*"node scripts\/render-cli-distribution-templates\.mjs"/,
-      /"release:cli:publish":/,
+      /"release:cli:publish":\s*"[^"]*npm publish \.\/apps\/cli --access public"/,
       /"release:check":\s*"node scripts\/check-release-plumbing\.mjs"/,
       /"release:version-from-tag":\s*"node scripts\/set-package-version-from-tag\.mjs"/,
     ],
@@ -40,7 +41,9 @@ const fileChecks = [
       /pnpm release:cli:binaries/,
       /pnpm release:cli:templates/,
       /softprops\/action-gh-release@v2/,
-      /NODE_AUTH_TOKEN:\s*\$\{\{ secrets\.NPM_TOKEN \}\}/,
+      /id-token:\s*write/,
+      /node-version:\s*24/,
+      /npm install --global npm@11\.19\.1/,
       /release\/homebrew\/Formula\/aipm\.rb/,
       /release\/scoop\/bucket\/aipm\.json/,
       /release\/winget\/aipm\.yaml/,
@@ -70,6 +73,7 @@ const forbiddenFiles = [
 const forbiddenRepoPatterns = [
   { name: "Azure Web App deploy action", pattern: /azure\/webapps-deploy/i },
   { name: "Web App publish profile secret", pattern: /AZURE_WEBAPP_PUBLISH_PROFILE/i },
+  { name: "long-lived npm publish token", pattern: /secrets\.NPM_TOKEN/ },
 ];
 
 function read(relativePath) {
@@ -78,6 +82,14 @@ function read(relativePath) {
 
 export function scanReleasePlumbing() {
   const findings = [];
+
+  if (
+    existsSync(join(repoRoot, "LICENSE")) &&
+    existsSync(join(repoRoot, "apps", "cli", "LICENSE")) &&
+    read("LICENSE") !== read("apps/cli/LICENSE")
+  ) {
+    findings.push("apps/cli/LICENSE: must match the repository license used in published tarballs");
+  }
 
   for (const file of requiredFiles) {
     if (!existsSync(join(repoRoot, file))) {
