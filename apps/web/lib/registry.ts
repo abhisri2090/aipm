@@ -343,7 +343,13 @@ export async function listPackagesPage(options: {
       nextOffset: data.nextOffset ?? null,
     };
   } catch (error) {
-    if (options.throwOnError) throw error;
+    // Network/timeout failures should not crash directory pages in local/dev.
+    // throwOnError is for bad API responses after a successful connection.
+    const isNetworkFailure =
+      error instanceof TypeError ||
+      (error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError" || /fetch failed/i.test(error.message)));
+    if (options.throwOnError && !isNetworkFailure) throw error;
     return { packages: [], nextCursor: null, nextOffset: null };
   }
 }
@@ -395,7 +401,11 @@ export async function listPublishersPage(
       nextOffset: data.nextOffset ?? null,
     };
   } catch (error) {
-    if (throwOnError) throw error;
+    const isNetworkFailure =
+      error instanceof TypeError ||
+      (error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError" || /fetch failed/i.test(error.message)));
+    if (throwOnError && !isNetworkFailure) throw error;
     return { publishers: [], nextCursor: null, nextOffset: null };
   }
 }

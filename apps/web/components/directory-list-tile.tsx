@@ -10,22 +10,27 @@ export function DirectoryListTile({ kind }: { kind: "skill" | "prompt" }) {
 
   return (
     <div className={styles.tileGroup}>
-      <Link className={styles.tile} href={isSkill ? "/publish" : "/prompts/new"}>
-        <span className={styles.eyebrow}>Create something useful</span>
-        <span className={styles.content}>
-          <strong>{label}</strong>
-          <span>{description}</span>
-        </span>
-        <span className={styles.arrow} aria-hidden="true">
-          →
-        </span>
-      </Link>
-      {isSkill ? (
-        <p className={styles.githubHint}>
-          Already on GitHub?{" "}
-          <Link href="/publish/github">Import a public skill you own</Link>.
-        </p>
-      ) : null}
+      <div className={styles.tile}>
+        <Link
+          className={styles.tileLink}
+          href={isSkill ? "/publish" : "/prompts/new"}
+        >
+          <span className={styles.eyebrow}>Create something useful</span>
+          <span className={styles.content}>
+            <strong>{label}</strong>
+            <span>{description}</span>
+          </span>
+          <span className={styles.arrow} aria-hidden="true">
+            →
+          </span>
+        </Link>
+        {isSkill ? (
+          <p className={styles.githubHint}>
+            Already on GitHub?{" "}
+            <Link href="/publish/github">Import a public skill you own</Link>.
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }

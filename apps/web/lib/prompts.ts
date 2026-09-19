@@ -173,7 +173,11 @@ export async function listPromptsPage(options: {
       total: data.total ?? data.prompts?.length ?? 0,
     };
   } catch (error) {
-    if (options.throwOnError) throw error;
+    const isNetworkFailure =
+      error instanceof TypeError ||
+      (error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError" || /fetch failed/i.test(error.message)));
+    if (options.throwOnError && !isNetworkFailure) throw error;
     return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
   }
 }

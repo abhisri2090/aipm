@@ -123,14 +123,14 @@ export function PublishersDirectory({
           void search(query.trim());
         }}
       >
-        <label htmlFor="publishers-search-input">Publisher name or handle</label>
         <div className={styles.searchRow}>
           <input
             id="publishers-search-input"
             name="q"
             type="search"
             autoComplete="off"
-            placeholder="anthropics, coreyhaines31…"
+            aria-label="Publisher name or handle"
+            placeholder="Publisher name or handle — anthropics, coreyhaines31…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
