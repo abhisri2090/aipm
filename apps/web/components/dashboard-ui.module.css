@@ -650,6 +650,9 @@ img.avatar {
 
 .dangerPanel {
   grid-column: 1 / -1;
+  border-color: var(--danger);
+  border-width: 2px;
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
 }
 
 .commandSteps {

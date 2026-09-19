@@ -60,11 +60,7 @@ export async function SkillsDirectoryPage({
       />
       <section className={cn(shell.pageHeader, shell.compactPageHeader)}>
         <p className={shell.eyebrow}>Agent skills registry</p>
-        <h1>Find AI agent skills you can inspect and install.</h1>
-        <p className={shell.lede}>
-          AIPM is a public marketplace and registry for reusable AI agent skills. Check the source,
-          publisher, version, supported tools, and install command before adding a skill to a project.
-        </p>
+        <h1>AI skills that you can trust</h1>
         <p>
           Not sure how packages help? Read the plain-English guide to{" "}
           <Link href="/guides/ai-package-manager">AI package managers</Link>.
@@ -77,20 +73,6 @@ export async function SkillsDirectoryPage({
             Browse publishers
           </Link>
         </div>
-      </section>
-
-      <section className={shell.panelSection} aria-labelledby="skills-answer-title">
-        <div className={shell.sectionHeading}>
-          <div>
-            <p className={shell.eyebrow}>Short answer</p>
-            <h2 id="skills-answer-title">What is an AI agent skills registry?</h2>
-          </div>
-        </div>
-        <p>
-          It is a searchable collection of reusable instructions for AI tools. AIPM adds package
-          versions and source details so developers can review a skill, install the exact release
-          they need, and use the same setup across projects.
-        </p>
       </section>
 
       <section className={shell.panelSection} aria-labelledby="registry-search-title">

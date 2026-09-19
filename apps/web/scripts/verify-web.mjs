@@ -34,15 +34,15 @@ const requiredPages = [
     path: "/registry",
     canonicalPath: "/skills",
     title: "Search the AIPM Skills Registry",
-    h1: "Find AI agent skills you can inspect and install.",
+    h1: "AI skills that you can trust",
     jsonLd: true,
   },
   {
     path: "/skills",
     title: "AI Agent Skills Registry and Marketplace",
-    h1: "Find AI agent skills you can inspect and install.",
+    h1: "AI skills that you can trust",
     jsonLd: true,
-    includes: ["What is an AI agent skills registry?", "Claude Code", "Cursor"],
+    includes: ["Claude Code", "Cursor"],
   },
   {
     path: "/prompts",
@@ -159,7 +159,7 @@ const requiredPages = [
     title: "AI Skill Publishers",
     h1: "Meet the people and orgs behind public skills.",
     jsonLd: true,
-    includes: ["All publishers", "Publisher name or handle"],
+    includes: ["Publisher name or handle"],
   },
   {
     path: "/publishers/anthropics",

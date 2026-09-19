@@ -82,31 +82,7 @@ export default async function PublishersPage({
         </p>
       </section>
 
-      <section className={shell.panelSection} aria-labelledby="publishers-about-title">
-        <div className={shell.sectionHeading}>
-          <h2 id="publishers-about-title">About publishers</h2>
-        </div>
-        <p>
-          Publishers are the individuals and organizations who create and maintain AI skill packages on AIPM.
-          Each publisher has a unique namespace that appears before the package name, like <code>@publisher/skill-name</code>.
-          When you install a skill, the publisher namespace tells you who created and maintains it.
-        </p>
-        <p>
-          Publisher profiles show all public packages under that namespace, along with source links and any
-          verification badges. Verified publishers have confirmed their identity through GitHub or another
-          connected account. This helps you decide whether to trust a skill before installing it in your project.
-        </p>
-        <p>
-          Anyone can become a publisher by creating an account and reserving a namespace. Organizations can
-          create org namespaces for team-owned packages. Read the{" "}
-          <a href="/publish">publishing guide</a> to learn how to publish your first skill.
-        </p>
-      </section>
-
-      <section className={shell.panelSection} aria-labelledby="publishers-directory-title">
-        <div className={shell.sectionHeading}>
-          <h2 id="publishers-directory-title">All publishers</h2>
-        </div>
+      <section className={shell.panelSection} aria-label="Publishers directory">
         <PublishersDirectory
           key={`${currentPage}:${query}`}
           initialPublishers={publishers}
