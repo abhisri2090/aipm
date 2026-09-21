@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CodeBlock } from "../../../components/code-block";
 import { notFound } from "next/navigation";
 import { PackageCard } from "../../../components/package-card";
 import { SKILL_DISCOVERY_PAGES, getSkillDiscoveryPage } from "../../../lib/skill-discovery";
@@ -44,25 +45,44 @@ export default async function SkillDiscoveryPage({ params }: SkillDiscoveryRoute
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            name: page.title,
-            description: page.description,
-            url: `${SITE_URL}/skills/${page.slug}`,
-            about: page.keywords,
-            isPartOf: {
-              "@type": "WebSite",
-              name: "AIPM Registry",
-              url: SITE_URL,
-            },
-            mainEntity: {
-              "@type": "ItemList",
-              itemListElement: filteredPackages.map((pkg, index) => ({
-                "@type": "ListItem",
-                position: index + 1,
-                name: `${pkg.name}@${pkg.version}`,
-                url: `${SITE_URL}${packagePath(pkg.name, pkg.version)}`,
-              })),
-            },
+            "@graph": [
+              {
+                "@type": "CollectionPage",
+                name: page.title,
+                description: page.description,
+                url: `${SITE_URL}/skills/${page.slug}`,
+                about: page.keywords,
+                isPartOf: {
+                  "@type": "WebSite",
+                  name: "AIPM Registry",
+                  url: SITE_URL,
+                },
+                mainEntity: {
+                  "@type": "ItemList",
+                  itemListElement: filteredPackages.map((pkg, index) => ({
+                    "@type": "ListItem",
+                    position: index + 1,
+                    name: `${pkg.name}@${pkg.version}`,
+                    url: `${SITE_URL}${packagePath(pkg.name, pkg.version)}`,
+                  })),
+                },
+              },
+              ...(page.faqs?.length
+                ? [
+                    {
+                      "@type": "FAQPage",
+                      mainEntity: page.faqs.map((faq) => ({
+                        "@type": "Question",
+                        name: faq.question,
+                        acceptedAnswer: {
+                          "@type": "Answer",
+                          text: faq.answer,
+                        },
+                      })),
+                    },
+                  ]
+                : []),
+            ],
           }),
         }}
       />
@@ -73,6 +93,9 @@ export default async function SkillDiscoveryPage({ params }: SkillDiscoveryRoute
         <div className={shell.actions}>
           <Link className={shell.button} href={`/registry?q=${encodeURIComponent(page.query)}`}>
             Search registry
+          </Link>
+          <Link className={shell.button} href="/install">
+            Install AIPM
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/publish">
             Publish a skill
@@ -130,6 +153,77 @@ export default async function SkillDiscoveryPage({ params }: SkillDiscoveryRoute
           )}
         </div>
       </section>
+
+      {page.installCommands?.length ? (
+        <section className={shell.panelSection} aria-labelledby="install-skills-title">
+          <div className={shell.sectionHeading}>
+            <div>
+              <p className={shell.eyebrow}>Install</p>
+              <h2 id="install-skills-title">Install these skills with AIPM</h2>
+            </div>
+            <Link className={shell.textLink} href="/install">
+              Full install guide
+            </Link>
+          </div>
+          <p>
+            Package-manager install keeps a pinned version in your repo. Browse a skill above, then
+            run the matching target commands.
+          </p>
+          <div className={cards.steps}>
+            {page.installCommands.map((step, index) => (
+              <article className={cards.stepCard} key={step.label}>
+                <div className={cards.stepHeading}>
+                  <span className={cards.stepNumber}>{index + 1}</span>
+                  <h3>{step.label}</h3>
+                </div>
+                <CodeBlock code={step.code} trackingEvent="Skill Hub Install Command Copied" />
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {page.faqs?.length ? (
+        <section className={shell.panelSection} aria-labelledby="skill-faq-title">
+          <div className={shell.sectionHeading}>
+            <div>
+              <p className={shell.eyebrow}>FAQ</p>
+              <h2 id="skill-faq-title">Common questions</h2>
+            </div>
+          </div>
+          <dl className={cards.guideGrid}>
+            {page.faqs.map((faq) => (
+              <div className={cards.guideCard} key={faq.question}>
+                <dt>
+                  <h3>{faq.question}</h3>
+                </dt>
+                <dd>
+                  <p>{faq.answer}</p>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      ) : null}
+
+      {page.relatedLinks?.length ? (
+        <section className={shell.panelSection} aria-labelledby="skill-related-links-title">
+          <div className={shell.sectionHeading}>
+            <div>
+              <p className={shell.eyebrow}>Next steps</p>
+              <h2 id="skill-related-links-title">Install guides and related hubs</h2>
+            </div>
+          </div>
+          <div className={cards.templateGrid}>
+            {page.relatedLinks.map((link) => (
+              <Link className={cards.templateCard} href={link.href} key={link.href}>
+                <h3>{link.label}</h3>
+                <p>Open {link.label.toLowerCase()}.</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className={shell.panelSection} aria-labelledby="related-skills-title">
         <div className={shell.sectionHeading}>

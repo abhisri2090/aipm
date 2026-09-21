@@ -1243,15 +1243,22 @@ export const SEO_GUIDES: SeoGuide[] = [
   },
   {
     slug: "aipm-vs-skills-sh",
-    title: "AIPM vs Skills.sh",
-    h1: "What is the difference between AIPM and Skills.sh?",
+    title: "AIPM vs Skills.sh — Skills.sh Alternative for Versioned Agent Skills",
+    h1: "Looking for a skills.sh alternative? Here is how AIPM compares.",
     description:
-      "Compare AIPM and Skills.sh in plain English. Understand discovery, installation, versions, publishing, and project use before choosing a skill workflow.",
+      "Honest AIPM vs skills.sh comparison: discovery vs versioned packages, install targets for Claude Code and Cursor, and when a package-manager workflow fits better than a directory.",
     answer:
-      "Both help people find and install Agent Skills. Skills.sh is an Agent Skills directory with its own install command. AIPM is a registry and package-manager workflow for publishing named, versioned skill packages and installing target-specific files into projects.",
-    keywords: ["AIPM vs Skills.sh", "Skills.sh alternative", "Agent Skills directory", "AI skill package manager"],
+      "Both help people find and install Agent Skills. Skills.sh is a popular Agent Skills directory with its own install command. AIPM is a skills registry plus package-manager workflow for named, versioned packages and target-specific installs (Claude Code, Cursor, and more). Use whichever has the skill you trust; AIPM is a strong skills.sh alternative when you need pinned versions and project-local installs.",
+    keywords: [
+      "skills.sh alternative",
+      "AIPM vs Skills.sh",
+      "Claude Code skills directory",
+      "Agent Skills directory",
+      "skillmd alternative",
+      "AI skill package manager",
+    ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-01",
+    updatedAt: "2026-09-21",
     sections: [
       {
         title: "Where they overlap",
@@ -1266,7 +1273,12 @@ export const SEO_GUIDES: SeoGuide[] = [
       {
         title: "How to choose",
         body:
-          "Use the directory that contains the skill you trust. AIPM is useful when your team wants package names, explicit versions, publisher ownership, project-local installation, and a workflow for publishing updates. Check the source and license in either directory before installing.",
+          "Use the directory that contains the skill you trust. AIPM is useful when your team wants package names, explicit versions, publisher ownership, project-local installation for Claude Code or Cursor, and a workflow for publishing updates. Other catalogs (including Skills.sh and SkillMD) may list overlapping or different skills—always check the source and license before installing.",
+      },
+      {
+        title: "What AIPM is not claiming",
+        body:
+          "AIPM does not claim a larger catalog than Skills.sh or identical safety scanning to every competitor. The honest differentiator is package-manager semantics: named scopes, pinned versions, integrity metadata, and target-aware installs into your repo.",
       },
     ],
     steps: [
@@ -1277,6 +1289,11 @@ export const SEO_GUIDES: SeoGuide[] = [
       "Test the skill in a non-critical project before team-wide use.",
     ],
     faqs: [
+      {
+        question: "Is AIPM a skills.sh alternative?",
+        answer:
+          "Yes, for teams that want a registry plus CLI with pinned versions and Claude Code or Cursor install targets. If you only need to browse and run a directory install command, Skills.sh may already fit. Choose based on the skill source you trust and the install workflow you need.",
+      },
       {
         question: "Is AIPM connected to Skills.sh?",
         answer: "No. They are separate products and directories with separate publishing and installation workflows.",

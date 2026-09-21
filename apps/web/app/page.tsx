@@ -12,6 +12,8 @@ type PackageTag = {
 };
 
 const PACKAGE_TAGS: readonly PackageTag[] = [
+  { href: "/skills/claude", label: "Claude Code", status: "done" },
+  { href: "/skills/cursor", label: "Cursor", status: "done" },
   { href: "/skills", label: "Skills", status: "done" },
   { label: "Rules", status: "pending" },
   { href: "/prompts", label: "Prompts", status: "done" },
@@ -64,19 +66,19 @@ function TagStatusIcon({ status }: { status: "done" | "pending" }) {
 }
 
 export const metadata = pageMetadata({
-  title: "AIPM - AI Package Manager for Skills and Tool Files",
+  title: "Claude Code & Cursor Skills Registry — Install with AIPM",
   description:
-    "AIPM is an AI package manager for installing reusable skills, prompts, MCP setup, rules, and tool files into Cursor, Claude, Codex, and other assistants.",
+    "Browse versioned Claude Code and Cursor skills, plus AI prompts. Review source, then install with the AIPM CLI — like packages for your AI tools.",
   keywords: [
-    "AI package manager",
-    "AI skill registry",
-    "agent package manager",
+    "Claude Code skills",
     "Cursor skills",
-    "Claude skills",
-    "Codex skills",
+    "agent skills registry",
+    "Claude Code skills marketplace",
+    "Cursor skills registry",
+    "AI agent skills",
+    "install Claude Code skills",
+    "AI package manager",
     "prompt packages",
-    "MCP packages",
-    "AI tools",
   ],
 });
 
@@ -98,7 +100,7 @@ export default async function HomePage() {
                 alternateName: "AIPM",
                 url: SITE_URL,
                 description:
-                  "A registry and CLI for installing reusable AI skills, prompts, rules, MCP setup, and tool files into supported assistants.",
+                  "Claude Code and Cursor skills registry with versioned packages, prompts, and a CLI to install them like packages.",
                 publisher: {
                   "@id": `${SITE_URL}/#organization`,
                 },
@@ -161,8 +163,8 @@ export default async function HomePage() {
         }}
       />
       <section className={home.hero} aria-labelledby="hero-title">
-        <p className={shell.eyebrow}>AIPM — AI Package Manager</p>
-        <h1 id="hero-title">Install AI skills like packages.</h1>
+        <p className={shell.eyebrow}>Claude Code · Cursor · Agent skills registry</p>
+        <h1 id="hero-title">Claude Code and Cursor skills you can install like packages.</h1>
         <div className={home.heroManifestoRow}>
           <ul className={home.heroManifesto} aria-label="Why AIPM exists">
             <li>Software got npm.</li>
@@ -216,16 +218,16 @@ export default async function HomePage() {
           </aside>
         </div>
         <p className={shell.lede}>
-          AIPM gives you a registry and CLI for AI skills. Install prompts, rules, MCP setup, and
-          tool files into a repo for Cursor, Claude, Codex, and more. Start with one command, then
-          keep reusable AI setup with your project.
+          Browse a registry of Claude Code skills, Cursor skills, and AI prompts—then install a
+          pinned version with the AIPM CLI. Review source and files first; keep package-manager
+          versioning as the way you share skills across repos and teammates.
         </p>
         <dl className={home.answerGrid} aria-label="AIPM direct answers">
           <div>
             <dt>What is AIPM?</dt>
             <dd>
-              AIPM is an AI package manager: a public registry plus CLI for reusable AI skills,
-              prompts, rules, MCP setup, and tool files.
+              AIPM is a Claude Code and Cursor skills registry plus CLI: browse versioned agent
+              skills and prompts, then install them into supported tools like packages.
             </dd>
           </div>
           <div>
@@ -264,17 +266,20 @@ export default async function HomePage() {
           })}
         </div>
         <div className={shell.actions}>
-          <Link className={shell.button} href="#get-started">
-            Get started
+          <Link className={shell.button} href="/skills/claude">
+            Claude Code skills
+          </Link>
+          <Link className={shell.button} href="/skills/cursor">
+            Cursor skills
           </Link>
           <Link className={shell.button} href="/skills">
-            Browse skills
+            All agent skills
           </Link>
           <Link className={shell.button} href="/prompts">
             Browse prompts
           </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/publish">
-            Publish a skill
+          <Link className={cn(shell.button, shell.secondary)} href="/install">
+            Install AIPM
           </Link>
         </div>
       </section>
@@ -344,6 +349,26 @@ export default async function HomePage() {
       </section>
 
       <section className={cards.guideGrid} aria-label="AIPM basics">
+        <Link className={cards.guideCard} href="/skills/claude">
+          <h2>Claude Code skills marketplace</h2>
+          <p>Browse versioned Claude Code skills, review source, and install with AIPM.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/skills/cursor">
+          <h2>Cursor skills registry</h2>
+          <p>Find Cursor agent skills with clear versions, files, and install commands.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/aipm-vs-skills-sh">
+          <h2>AIPM vs skills.sh</h2>
+          <p>Honest comparison for anyone searching a skills.sh alternative or directory.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/how-to-install-claude-code-skills">
+          <h2>Install Claude Code skills</h2>
+          <p>Step-by-step install for Claude Code using the AIPM CLI and targets.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/how-to-install-cursor-skills">
+          <h2>Install Cursor skills</h2>
+          <p>Initialize a Cursor target and add a pinned skill version to your repo.</p>
+        </Link>
         <Link className={cards.guideCard} href="/use">
           <h2>Use skills</h2>
           <p>Create project config, install a skill, and see which files AIPM writes.</p>

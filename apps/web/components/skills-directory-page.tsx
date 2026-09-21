@@ -40,8 +40,8 @@ export async function SkillsDirectoryPage({
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "AIPM AI Skills Registry",
-            description: "Search public AIPM skills by name, tool, or description.",
+            name: "AI Agent Skills Registry and Marketplace",
+            description: "Browse versioned Claude Code, Cursor, and agent skills. Search by name, tool, or description.",
             url: `${SITE_URL}${filtered ? canonicalPath : directoryPagePath(canonicalPath, currentPage)}`,
             about: ["AI skills", "prompt packages", "Cursor skills", "Claude skills", "AI tool files"],
             mainEntity: {
@@ -63,17 +63,45 @@ export async function SkillsDirectoryPage({
       />
       <section className={cn(shell.pageHeader, shell.compactPageHeader)}>
         <p className={shell.eyebrow}>Agent skills registry</p>
-        <h1>AI skills that you can trust</h1>
+        <h1>AI agent skills registry for Claude Code, Cursor, and more</h1>
         <p>
-          Not sure how packages help? Read the plain-English guide to{" "}
-          <Link href="/guides/ai-package-manager">AI package managers</Link>.
+          Browse versioned skills, review source, then install with AIPM. Start with the{" "}
+          <Link href="/skills/claude">Claude Code skills</Link> or{" "}
+          <Link href="/skills/cursor">Cursor skills</Link> hubs—or read how an{" "}
+          <Link href="/guides/ai-package-manager">AI package manager</Link> differs from copy-paste.
         </p>
         <div className={shell.actions}>
-          <Link className={shell.button} href="/popular-skills">
-            See popular skill ideas
+          <Link className={shell.button} href="/skills/claude">
+            Claude Code skills
           </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/publishers">
-            Browse publishers
+          <Link className={shell.button} href="/skills/cursor">
+            Cursor skills
+          </Link>
+          <Link className={shell.button} href="/install">
+            Install AIPM
+          </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/guides/aipm-vs-skills-sh">
+            vs skills.sh
+          </Link>
+        </div>
+      </section>
+
+      <section className={shell.panelSection} aria-labelledby="skill-hubs-title">
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>High-intent hubs</p>
+            <h2 id="skill-hubs-title">Start with Claude Code or Cursor</h2>
+          </div>
+        </div>
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/skills/claude">
+            Claude Code skills marketplace
+          </Link>
+          <Link className={shell.button} href="/skills/cursor">
+            Cursor skills registry
+          </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/prompts">
+            AI prompt directory
           </Link>
         </div>
       </section>
