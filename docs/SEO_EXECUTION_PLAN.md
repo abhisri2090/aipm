@@ -93,8 +93,8 @@ linked`, or `Organization owner`.
 manager` searches.
 - [x] Check and improve internal links to this guide from the home, install,
       skills, prompts, and publish pages.
-- [ ] Strengthen the Claude Code, Cursor, and Codex hubs with real packages,
-      install steps, comparisons, and related guides.
+- [ ] Strengthen the Claude Code and Cursor hubs with real packages,
+      install steps, comparisons, and related guides. (Codex hub deferred until inventory exists.)
 - [ ] Create or improve content about reviewing, auditing, versioning, and safely
       installing Agent Skills.
 - [ ] Keep titles, headings, canonical URLs, structured data, sources, and

@@ -127,15 +127,20 @@ export default async function PromptsPage({
             <Link href="/skills">agent skills registry</Link>—and see how an{" "}
             <Link href="/guides/ai-package-manager">AI package manager</Link> differs from copy-paste.
           </p>
+          <p>
+            Looking for a specific photo use case? Start with{" "}
+            <Link href="/prompts/topics/linkedin-headshots">LinkedIn headshot prompts</Link> or{" "}
+            <Link href="/prompts/topics/product-photography">product photography prompts</Link>.
+          </p>
           <div className={shell.actions}>
             <Link className={shell.button} href="/prompts/new">
               List a prompt
             </Link>
-            <Link className={cn(shell.button, shell.secondary)} href="/skills/claude">
-              Claude Code skills
+            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/linkedin-headshots">
+              LinkedIn headshots
             </Link>
-            <Link className={cn(shell.button, shell.secondary)} href="/skills/cursor">
-              Cursor skills
+            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/product-photography">
+              Product photography
             </Link>
           </div>
         </div>

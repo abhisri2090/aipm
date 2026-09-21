@@ -4,14 +4,14 @@ import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 
 const skillsMetadata = {
   title: "AI Agent Skills Registry and Marketplace",
-  description: "Browse versioned AI agent skills for Claude Code, Cursor, Codex, code review, testing, documentation, and more. Inspect the source before installing",
+  description:
+    "Browse versioned AI agent skills for Claude Code, Cursor, code review, testing, documentation, and more. Inspect the source before installing",
   keywords: [
     "agent skills marketplace",
     "agent skills registry",
     "AI skills library",
     "Cursor skills",
     "Claude Code skills",
-    "Codex skills",
   ],
 };
 

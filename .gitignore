@@ -32,6 +32,8 @@ docs/*
 !docs/SEO_STRATEGY.md
 !docs/SEO_EXECUTION_PLAN.md
 !docs/SEO_15K_30_DAY.md
+!docs/product/
+!docs/product/**
 !docs/superpowers/
 !docs/superpowers/**
 .cursor/

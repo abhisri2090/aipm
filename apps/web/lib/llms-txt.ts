@@ -125,10 +125,10 @@ ${input.cliScoopCommand}
 - Examples combine templates, targets, publish tokens, and install commands for real scenarios.
 - The glossary defines AIPM package, skill, manifest, target, adapter, org namespace, private package, CLI login, install token, publish token, template, and .aipmignore.
 - Current supported install targets are cursor and claude.
-- AIPM currently focuses on Cursor, Claude, Codex-oriented workflows, and project-local AI files.
+- AIPM currently focuses on Cursor, Claude, and project-local AI files. A Codex skills hub is not published until there is real Codex inventory.
 - Plain English technical guides explain AI package managers, agent package managers, prompt packages, MCP setup, Cursor rules, Claude skills, and Git-based AI instructions for beginner/technical/non-technical readers.
 - The components guide explains models, goals, context, memory, tools, planning, actions, safety controls, and evaluation in plain English.
-- Comparison guides explain AIPM and Skills.sh, Claude Code and Codex skills, and the different roles of Agent Skills and MCP.
+- Comparison guides explain AIPM and Skills.sh, Claude Code and Codex skills (product comparison — not an AIPM Codex hub), and the different roles of Agent Skills and MCP.
 - The State of AI Agent Skills 2026 report publishes a reproducible snapshot of public AIPM package metadata and clearly explains the limits of each trust signal.
 
 ## Suggested Citations
