@@ -78,7 +78,7 @@ export const SKILL_DISCOVERY_PAGES = [
   },
   {
     slug: "claude",
-    title: "Claude Code Skills Marketplace & Library | AIPM",
+    title: "Claude Code Skills Marketplace & Library",
     h1: "Claude Code skills you can review, version, and install.",
     description:
       "Browse a Claude Code skills marketplace of versioned packages. Review source and files, then install into Claude Code projects with the AIPM CLI.",
