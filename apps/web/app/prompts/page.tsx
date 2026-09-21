@@ -121,12 +121,21 @@ export default async function PromptsPage({
             works with.
           </p>
           <p>
-            Need reusable instructions with versions and install commands? Learn how an{" "}
-            <Link href="/guides/ai-package-manager">AI package manager</Link> works.
+            Need reusable instructions with versions and install commands? Browse{" "}
+            <Link href="/skills/claude">Claude Code skills</Link>,{" "}
+            <Link href="/skills/cursor">Cursor skills</Link>, or the full{" "}
+            <Link href="/skills">agent skills registry</Link>—and see how an{" "}
+            <Link href="/guides/ai-package-manager">AI package manager</Link> differs from copy-paste.
           </p>
           <div className={shell.actions}>
             <Link className={shell.button} href="/prompts/new">
               List a prompt
+            </Link>
+            <Link className={cn(shell.button, shell.secondary)} href="/skills/claude">
+              Claude Code skills
+            </Link>
+            <Link className={cn(shell.button, shell.secondary)} href="/skills/cursor">
+              Cursor skills
             </Link>
           </div>
         </div>

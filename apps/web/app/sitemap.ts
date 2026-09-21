@@ -3,7 +3,44 @@ import { SITE_URL } from "../lib/registry";
 import { SEO_GUIDES } from "../lib/seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
 
-const LAST_SIGNIFICANT_UPDATE = new Date("2026-09-04T00:00:00.000Z");
+/** Fallback when a path has no content-specific date (hub SEO refresh). */
+const HUB_SEO_REFRESH = new Date("2026-09-21T00:00:00.000Z");
+
+/** Per-path lastmod for static marketing pages (ISO date → Date). */
+const STATIC_PAGE_LASTMOD: Record<string, Date> = {
+  "/": HUB_SEO_REFRESH,
+  "/skills": HUB_SEO_REFRESH,
+  "/prompts": HUB_SEO_REFRESH,
+  "/install": HUB_SEO_REFRESH,
+  "/use": new Date("2026-09-04T00:00:00.000Z"),
+  "/publish": new Date("2026-09-04T00:00:00.000Z"),
+  "/publish/guide": new Date("2026-09-04T00:00:00.000Z"),
+  "/publishers": new Date("2026-09-04T00:00:00.000Z"),
+  "/commands": new Date("2026-09-04T00:00:00.000Z"),
+  "/targets": new Date("2026-09-04T00:00:00.000Z"),
+  "/popular-skills": new Date("2026-09-04T00:00:00.000Z"),
+  "/about": new Date("2026-09-04T00:00:00.000Z"),
+  "/faq": new Date("2026-09-04T00:00:00.000Z"),
+  "/resources": new Date("2026-09-04T00:00:00.000Z"),
+  "/examples": new Date("2026-09-04T00:00:00.000Z"),
+  "/glossary": new Date("2026-09-04T00:00:00.000Z"),
+  "/ai-practices": new Date("2026-09-04T00:00:00.000Z"),
+  "/discoverability": new Date("2026-09-04T00:00:00.000Z"),
+  "/security": new Date("2026-09-04T00:00:00.000Z"),
+  "/privacy": new Date("2026-09-04T00:00:00.000Z"),
+  "/terms": new Date("2026-09-04T00:00:00.000Z"),
+  "/status": new Date("2026-09-04T00:00:00.000Z"),
+  "/roadmap": new Date("2026-09-04T00:00:00.000Z"),
+  "/changelog": new Date("2026-09-04T00:00:00.000Z"),
+  "/templates": new Date("2026-09-04T00:00:00.000Z"),
+  "/research/state-of-agent-skills-2026": new Date("2026-09-04T00:00:00.000Z"),
+  "/thanks": new Date("2026-09-04T00:00:00.000Z"),
+  "/compatibility": new Date("2026-09-04T00:00:00.000Z"),
+};
+
+function dateFromIsoDay(day: string): Date {
+  return new Date(`${day}T00:00:00.000Z`);
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths = [
@@ -39,16 +76,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
   ];
 
-  const guidePaths = new Set(SEO_GUIDES.map((guide) => `/guides/${guide.slug}`));
   const guideUpdatedAt = new Map(
     SEO_GUIDES.map((guide) => [
       `/guides/${guide.slug}`,
-      new Date(`${guide.updatedAt ?? "2026-09-04"}T00:00:00.000Z`),
+      dateFromIsoDay(guide.updatedAt ?? guide.publishedAt ?? "2026-09-04"),
     ]),
   );
 
-  return staticPaths.map((path) => ({
-    url: `${SITE_URL}${path}`,
-    lastModified: guidePaths.has(path) ? guideUpdatedAt.get(path) : LAST_SIGNIFICANT_UPDATE,
-  }));
+  const discoveryUpdatedAt = new Map(
+    SKILL_DISCOVERY_PAGES.map((page) => [
+      `/skills/${page.slug}`,
+      dateFromIsoDay(page.updatedAt ?? "2026-09-04"),
+    ]),
+  );
+
+  return staticPaths.map((path) => {
+    const lastModified =
+      guideUpdatedAt.get(path) ??
+      discoveryUpdatedAt.get(path) ??
+      STATIC_PAGE_LASTMOD[path] ??
+      HUB_SEO_REFRESH;
+
+    return {
+      url: `${SITE_URL}${path}`,
+      lastModified,
+    };
+  });
 }
