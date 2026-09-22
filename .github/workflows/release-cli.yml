@@ -83,7 +83,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
+          # Do NOT set registry-url here. setup-node writes
+          # //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}, which makes npm
+          # skip OIDC trusted publishing and fail with a misleading E404 when
+          # NODE_AUTH_TOKEN is missing or is a classic token blocked by npm 2FA rules.
 
       - name: Install npm with trusted publishing support
         run: npm install --global npm@11.19.1
@@ -115,8 +118,17 @@ jobs:
         run: |
           echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish CLI to npm
-        run: pnpm release:cli:publish
+      - name: Publish CLI to npm via OIDC trusted publishing
+        env:
+          # Ensure classic token auth cannot shadow OIDC (npm then reports E404).
+          NODE_AUTH_TOKEN: ""
+          NPM_TOKEN: ""
+        run: |
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "${NPM_CONFIG_USERCONFIG}" ]; then
+            sed -i '/_authToken/d' "${NPM_CONFIG_USERCONFIG}" || true
+          fi
+          npm --version
+          pnpm release:cli:publish
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
