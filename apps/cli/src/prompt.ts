@@ -1,10 +1,10 @@
-import type { AiTool } from "@aipm-registry/schemas";
+import type { ConcreteAiTool } from "@aipm-registry/schemas";
 import { confirmPrompt } from "./ui/confirm.js";
 import { selectPrompt } from "./ui/select.js";
 
 export async function promptForTool(
-  tools: ReadonlyArray<AiTool> = ["cursor", "claude", "codex"],
-): Promise<AiTool> {
+  tools: ReadonlyArray<ConcreteAiTool> = ["cursor", "claude", "codex"],
+): Promise<ConcreteAiTool> {
   const options = tools.map((tool) => ({
     value: tool,
     label: tool,
@@ -15,7 +15,7 @@ export async function promptForTool(
           ? ".claude/"
           : ".agents/ (Codex)",
   }));
-  return selectPrompt<AiTool>({
+  return selectPrompt<ConcreteAiTool>({
     message: "Which AI tool should this skill be installed for?",
     options,
   });
