@@ -20,7 +20,7 @@ export type SkillDiscoveryPage = {
 export const SKILL_DISCOVERY_PAGES = [
   {
     slug: "cursor",
-    title: "Cursor Skills Registry — Browse & Install with AIPM",
+    title: "Cursor Skills Registry — Browse & Install",
     h1: "Cursor skills you can review, version, and install.",
     description:
       "Browse a Cursor skills registry of reusable agent workflows. Inspect source and version, then install into your project with the AIPM CLI.",
