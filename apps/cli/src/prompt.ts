@@ -30,3 +30,21 @@ export async function promptForConfirmation(question: string): Promise<boolean> 
     rl.close();
   }
 }
+
+/** Interactive choice when --no-init is used on an already-initialized project. */
+export async function promptForNoInitConflict(): Promise<"no-init" | "tracked"> {
+  const rl = readline.createInterface({ input, output });
+  try {
+    while (true) {
+      console.log("  1) Continue without project tracking (keep --no-init)");
+      console.log("  2) Use normal project mode (drop --no-init for this run)");
+      const answer = await rl.question("Choose 1 or 2: ");
+      const normalized = answer.trim().toLowerCase();
+      if (normalized === "1" || normalized === "no-init") return "no-init";
+      if (normalized === "2" || normalized === "tracked" || normalized === "normal") return "tracked";
+      console.log('Please enter "1" or "2".');
+    }
+  } finally {
+    rl.close();
+  }
+}

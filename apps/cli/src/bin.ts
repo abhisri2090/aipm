@@ -68,6 +68,7 @@ import {
   resolveTrackedPrompt,
 } from "./prompt-install.js";
 import { removeInstalledPackageFiles } from "./remove-package.js";
+import { removeUntrackedPackage, resolveNoInitMode } from "./no-init.js";
 import { recommendCmd } from "./recommend-cmd.js";
 import { getCliVersion } from "./version.js";
 import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
@@ -837,11 +838,67 @@ program
   .option("--target <tool>", "cursor, claude, codex, or *")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive; fail if prompt needed")
-  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
+  .option("--no-init", "Install without creating or updating aipm.package.json / aipm-lock.json")
+  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean; init?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     let project = await readProjectPackageJson(configRoot);
+    const useNoInit = await resolveNoInitMode({
+      requested: opts.init === false,
+      projectExists: Boolean(project),
+      ci: opts.ci,
+    });
+
+    if (useNoInit) {
+      const promptReference = parsePromptUrl(pkgArg);
+      if (promptReference) {
+        throw new Error(
+          "Prompt URLs require project tracking. Drop --no-init, or run aipm init and add the prompt without --no-init.",
+        );
+      }
+
+      const registry = resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY);
+      const { name, version: requestedVersion } = parsePackageArg(pkgArg);
+      const token = await tokenForRead(registry, opts.token);
+      const version =
+        requestedVersion ?? (await latestVersionForPackage(registry, name, token));
+      if (!version) throw new Error(`Specify version: ${recommendCmd("aipm add <@scope/pkg>@<version>")}`);
+
+      const syntheticProject = {
+        schemaVersion: "0.1" as const,
+        registry,
+        packages: {},
+        prompts: {},
+      };
+      await installOnePackage({
+        configRoot,
+        installRoot,
+        registry,
+        name,
+        version: version.replace(/^\^/, ""),
+        project: syntheticProject,
+        explicitTarget: parseTargetFlag(opts.target),
+        ci: opts.ci,
+        token,
+        track: false,
+      });
+
+      try {
+        await recordPackageInstall(registry, name, token);
+      } catch (error) {
+        if (!opts.ci && !program.opts().quiet) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.warn(`Warning: could not record install count: ${message}`);
+        }
+      }
+
+      if (!opts.ci && !program.opts().quiet) {
+        await notifyCliUpdateIfNeeded(CLI_VERSION);
+      }
+      return;
+    }
+
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
 
@@ -1379,11 +1436,37 @@ program
   .alias("rm")
   .description("Remove a tracked skill or prompt and its installed files")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
-  .action(async (pkgArg: string, opts: { global?: boolean }) => {
+  .option("--no-init", "Remove by filesystem discovery without reading or writing aipm.package.json / aipm-lock.json")
+  .option("--ci", "Non-interactive; fail if --no-init conflicts with an initialized project")
+  .action(async (pkgArg: string, opts: { global?: boolean; init?: boolean; ci?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     const project = await readProjectPackageJson(configRoot);
+    const useNoInit = await resolveNoInitMode({
+      requested: opts.init === false,
+      projectExists: Boolean(project),
+      ci: opts.ci,
+    });
+
+    if (useNoInit) {
+      if (parsePromptUrl(pkgArg)) {
+        throw new Error(
+          "Prompt URLs require project tracking. Drop --no-init, or run aipm init and remove the prompt without --no-init.",
+        );
+      }
+      const { name } = parsePackageArg(pkgArg);
+      const removal = await removeUntrackedPackage({
+        installRoot,
+        configRoot,
+        packageName: name,
+      });
+      console.log(
+        `Removed ${removal.removed.length} untracked ${removal.removed.length === 1 ? "path" : "paths"} for ${name}.`,
+      );
+      return;
+    }
+
     if (!project) throw new Error(initRequiredMessage(scope));
     const promptReference = resolveTrackedPrompt(project, pkgArg);
     if (promptReference && project.prompts[promptReference.alias] === promptReference.url) {
@@ -1429,11 +1512,54 @@ program
   .option("--target <tool>", "cursor, claude, codex, or *")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
-  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
+  .option("--no-init", "Update without reading or writing aipm.package.json / aipm-lock.json (requires a package arg; always latest)")
+  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean; init?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     let project = await readProjectPackageJson(configRoot);
+    const useNoInit = await resolveNoInitMode({
+      requested: opts.init === false,
+      projectExists: Boolean(project),
+      ci: opts.ci,
+    });
+
+    if (useNoInit) {
+      if (!pkgArg) {
+        throw new Error(
+          `Update with --no-init requires a package: ${recommendCmd("aipm update <@scope/pkg> --no-init")}`,
+        );
+      }
+      if (parsePromptUrl(pkgArg)) {
+        throw new Error(
+          "Prompt URLs require project tracking. Drop --no-init, or run aipm init and update the prompt without --no-init.",
+        );
+      }
+      const registry = resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY);
+      const { name } = parsePackageArg(pkgArg);
+      const token = await tokenForRead(registry, opts.token);
+      const version = await latestVersionForPackage(registry, name, token);
+      const syntheticProject = {
+        schemaVersion: "0.1" as const,
+        registry,
+        packages: {},
+        prompts: {},
+      };
+      await installOnePackage({
+        configRoot,
+        installRoot,
+        registry,
+        name,
+        version,
+        project: syntheticProject,
+        explicitTarget: parseTargetFlag(opts.target),
+        ci: opts.ci,
+        token,
+        track: false,
+      });
+      return;
+    }
+
     if (!project) throw new Error(initRequiredMessage(scope));
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const requestedPrompt = pkgArg ? resolveTrackedPrompt(project, pkgArg) : null;

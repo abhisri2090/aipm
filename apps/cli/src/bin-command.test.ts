@@ -699,4 +699,217 @@ describe("CLI publish commands", () => {
       );
     }
   });
+
+  it("add --no-init installs skills without package.json or lockfile", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    const packageRoot = await tempWorkspace();
+    const manifest = {
+      schemaVersion: "0.1",
+      name: "@team/free-skill",
+      version: "1.0.0",
+      type: "skill",
+      description: "Untracked skill",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+    };
+    await writeFile(join(packageRoot, "aipm.manifest.json"), JSON.stringify(manifest, null, 2));
+    await writeFile(join(packageRoot, "SKILL.md"), "# Free skill v1\n");
+    const tarball = await packDirectory(packageRoot);
+    const encoded = encodeURIComponent("@team/free-skill");
+
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest, integrity: "sha256-test" }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarball);
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/installs`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ installCount: 1 }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+
+    try {
+      const result = await runCli(root, [
+        "add",
+        "@team/free-skill@1.0.0",
+        "--registry",
+        registry,
+        "--target",
+        "cursor",
+        "--no-init",
+        "--ci",
+      ]);
+      expect(result.stdout).toContain("Installed @team/free-skill@1.0.0");
+      await expect(readFile(join(root, ".cursor", "aipm", "skills", "free-skill.md"), "utf8")).resolves.toContain(
+        "Free skill v1",
+      );
+      await expect(stat(join(root, "aipm.package.json"))).rejects.toThrow();
+      await expect(stat(join(root, "aipm-lock.json"))).rejects.toThrow();
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("update --no-init overwrites the skill without writing a lockfile", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    const packageRootV1 = await tempWorkspace();
+    const packageRootV2 = await tempWorkspace();
+    const manifestV1 = {
+      schemaVersion: "0.1",
+      name: "@team/free-skill",
+      version: "1.0.0",
+      type: "skill",
+      description: "Untracked skill",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+    };
+    const manifestV2 = { ...manifestV1, version: "2.0.0" };
+    await writeFile(join(packageRootV1, "aipm.manifest.json"), JSON.stringify(manifestV1, null, 2));
+    await writeFile(join(packageRootV1, "SKILL.md"), "# Free skill v1\n");
+    await writeFile(join(packageRootV2, "aipm.manifest.json"), JSON.stringify(manifestV2, null, 2));
+    await writeFile(join(packageRootV2, "SKILL.md"), "# Free skill v2\n");
+    const tarballV1 = await packDirectory(packageRootV1);
+    const tarballV2 = await packDirectory(packageRootV2);
+    const encoded = encodeURIComponent("@team/free-skill");
+
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest: manifestV1, integrity: "sha256-v1" }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/2.0.0`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest: manifestV2, integrity: "sha256-v2" }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarballV1);
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/2.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarballV2);
+        return;
+      }
+      if (request.url?.startsWith(`/v1/skills?`)) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(
+          JSON.stringify({
+            skills: [{ name: "@team/free-skill", version: "2.0.0", targets: ["cursor"], description: "Untracked skill" }],
+          }),
+        );
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/installs`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ installCount: 1 }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+
+    try {
+      await runCli(root, [
+        "add",
+        "@team/free-skill@1.0.0",
+        "--registry",
+        registry,
+        "--target",
+        "cursor",
+        "--no-init",
+        "--ci",
+      ]);
+      const update = await runCli(root, [
+        "update",
+        "@team/free-skill",
+        "--registry",
+        registry,
+        "--target",
+        "cursor",
+        "--no-init",
+        "--ci",
+      ]);
+      expect(update.stdout).toContain("Installed @team/free-skill@2.0.0");
+      await expect(readFile(join(root, ".cursor", "aipm", "skills", "free-skill.md"), "utf8")).resolves.toContain(
+        "Free skill v2",
+      );
+      await expect(stat(join(root, "aipm.package.json"))).rejects.toThrow();
+      await expect(stat(join(root, "aipm-lock.json"))).rejects.toThrow();
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("remove --no-init deletes discovered skill paths", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor", "aipm", "skills"), { recursive: true });
+    await writeFile(join(root, ".cursor", "aipm", "skills", "free-skill.md"), "# Free skill\n");
+
+    const result = await runCli(root, ["remove", "@team/free-skill", "--no-init", "--ci"]);
+    expect(result.stdout).toContain("Removed 1 untracked path for @team/free-skill");
+    await expect(stat(join(root, ".cursor", "aipm", "skills", "free-skill.md"))).rejects.toThrow();
+  });
+
+  it("fails when --ci --no-init is used on an initialized project", async () => {
+    const root = await tempWorkspace();
+    await runCli(root, ["init", "--registry", "https://api.example.test", "--target", "cursor"]);
+
+    await expect(
+      runCli(root, ["add", "@team/free-skill@1.0.0", "--no-init", "--ci", "--target", "cursor"]),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining("already initialized"),
+    });
+  });
+
+  it("rejects prompt URLs with --no-init", async () => {
+    const root = await tempWorkspace();
+    await expect(
+      runCli(root, [
+        "add",
+        "https://www.aipm-registry.com/prompts/aipm/clear-summary",
+        "--no-init",
+        "--ci",
+      ]),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining("Prompt URLs require project tracking"),
+    });
+  });
 });

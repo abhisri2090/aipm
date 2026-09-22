@@ -33,6 +33,11 @@ export interface InstallOneOptions {
   explicitTarget?: AiTool;
   ci?: boolean;
   token?: string;
+  /**
+   * When false, skip aipm-lock.json writes (untracked / --no-init installs).
+   * Defaults to true.
+   */
+  track?: boolean;
 }
 
 export type InstalledPackageAssets = {
@@ -303,30 +308,33 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
       install: manifest.install,
     });
 
-    const lock: Lockfile = (await readLockfile(configRoot)) ?? {
-      schemaVersion: "0.1",
-      packages: {},
-      prompts: {},
-    };
+    const track = options.track !== false;
+    if (track) {
+      const lock: Lockfile = (await readLockfile(configRoot)) ?? {
+        schemaVersion: "0.1",
+        packages: {},
+        prompts: {},
+      };
 
-    const installed: LockfilePackageEntry["installed"] = {};
-    for (const tool of result.resolvedTools) {
-      const paths = result.installed[tool];
-      if (paths) installed[tool] = paths;
+      const installed: LockfilePackageEntry["installed"] = {};
+      for (const tool of result.resolvedTools) {
+        const paths = result.installed[tool];
+        if (paths) installed[tool] = paths;
+      }
+
+      await writeLockfile(
+        configRoot,
+        upsertLockEntry(lock, options.name, {
+          version: options.version,
+          integrity: remoteIntegrity,
+          registry: options.registry,
+          resolvedTools: result.resolvedTools,
+          installed,
+          ...(assets.main.length || assets.helper.length ? { installedAssets: assets } : {}),
+          ...(postInstall ? { postInstall } : {}),
+        }),
+      );
     }
-
-    await writeLockfile(
-      configRoot,
-      upsertLockEntry(lock, options.name, {
-        version: options.version,
-        integrity: remoteIntegrity,
-        registry: options.registry,
-        resolvedTools: result.resolvedTools,
-        installed,
-        ...(assets.main.length || assets.helper.length ? { installedAssets: assets } : {}),
-        ...(postInstall ? { postInstall } : {}),
-      }),
-    );
 
     console.log(`Installed ${options.name}@${options.version} → ${result.resolvedTools.join(", ")}`);
     printPostInstallNotice(options.name, postInstall);
