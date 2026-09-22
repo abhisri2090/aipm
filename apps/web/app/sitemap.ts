@@ -31,7 +31,7 @@ const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/terms": new Date("2026-09-04T00:00:00.000Z"),
   "/status": new Date("2026-09-04T00:00:00.000Z"),
   "/roadmap": new Date("2026-09-04T00:00:00.000Z"),
-  "/changelog": new Date("2026-09-04T00:00:00.000Z"),
+  "/changelog": new Date("2026-09-22T00:00:00.000Z"),
   "/templates": new Date("2026-09-04T00:00:00.000Z"),
   "/research/state-of-agent-skills-2026": new Date("2026-09-04T00:00:00.000Z"),
   "/thanks": new Date("2026-09-04T00:00:00.000Z"),

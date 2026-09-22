@@ -13,6 +13,7 @@ import {
   writeLockfile,
   writeProjectPackageJson,
 } from "./project-files.js";
+import { resolvePromptAliasConflict } from "./cli-recover.js";
 
 const PROMPT_SITE_ORIGIN = "https://www.aipm-registry.com";
 
@@ -130,6 +131,7 @@ export async function installTrackedPrompt(input: {
   track: boolean;
   recordCopy?: boolean;
   updateOnly?: boolean;
+  ci?: boolean;
 }): Promise<{ changed: boolean; path: string; prompt: RegistryPromptDetail }> {
   const prompt = await fetchPromptDetail(
     input.registry,
@@ -157,9 +159,12 @@ export async function installTrackedPrompt(input: {
   if (input.track) {
     const currentUrl = input.project.prompts[input.reference.alias];
     if (currentUrl && currentUrl !== canonicalReference.url) {
-      throw new Error(
-        `Prompt alias "${input.reference.alias}" already tracks ${currentUrl}. Remove it first or use a unique slug.`,
-      );
+      await resolvePromptAliasConflict({
+        ci: input.ci,
+        alias: input.reference.alias,
+        currentUrl,
+        nextUrl: canonicalReference.url,
+      });
     }
     await writeProjectPackageJson(input.configRoot, {
       ...input.project,

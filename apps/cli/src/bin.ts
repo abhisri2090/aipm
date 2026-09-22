@@ -10,10 +10,8 @@ import type { AddressInfo } from "node:net";
 import {
   PackageManifestSchema,
   isValidScopeName,
-  type AiTool,
   type PackageManifest,
 } from "@aipm-registry/schemas";
-import { detectToolsInProject } from "@aipm-registry/engine";
 import { packDirectory, packStagedFiles } from "./pack.js";
 import {
   exchangeCliAuthCode,
@@ -58,8 +56,9 @@ import {
   resolveRegistryUrl,
   writeLockfile,
   writeProjectPackageJson,
+  type ProjectPackageJson,
 } from "./project-files.js";
-import { promptForConfirmation, promptForTool } from "./prompt.js";
+import { promptForConfirmation } from "./prompt.js";
 import {
   installTrackedPrompt,
   parsePromptUrl,
@@ -69,6 +68,14 @@ import {
 } from "./prompt-install.js";
 import { removeInstalledPackageFiles } from "./remove-package.js";
 import { removeUntrackedPackage, resolveNoInitMode } from "./no-init.js";
+import { createProjectPackageJson, ensureProjectOrOffer } from "./ensure-project.js";
+import {
+  RecoveryCancelledError,
+  resolveLoginRequired,
+  resolvePrivateInstallFailure,
+  resolvePromptRequiresTracking,
+} from "./cli-recover.js";
+import { printNote } from "./ui/note.js";
 import { recommendCmd } from "./recommend-cmd.js";
 import { getCliVersion } from "./version.js";
 import { notifyCliUpdateIfNeeded } from "./cli-update-check.js";
@@ -344,6 +351,71 @@ async function tokenForRead(
   return explicitToken ?? env.AIPM_TOKEN ?? (await authTokenForRegistry(registry, options));
 }
 
+async function installOnePackageWithRecovery(
+  options: Parameters<typeof installOnePackage>[0],
+): Promise<void> {
+  try {
+    await installOnePackage(options);
+  } catch (error) {
+    if (error instanceof RecoveryCancelledError || (error instanceof Error && error.name === "SelectCancelledError")) {
+      throw error;
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    await resolvePrivateInstallFailure({ ci: options.ci, errorMessage: message });
+    await runLoopbackLogin({
+      registry: options.registry,
+      siteUrl: SITE_URL,
+      open: true,
+    });
+    const token = await authTokenForRegistry(options.registry, { throwOnFailure: true });
+    await installOnePackage({ ...options, token: token ?? options.token });
+  }
+}
+
+async function addUntrackedPackage(options: {
+  configRoot: string;
+  installRoot: string;
+  registry: string;
+  pkgArg: string;
+  target?: string;
+  token?: string;
+  ci?: boolean;
+}): Promise<void> {
+  const { name, version: requestedVersion } = parsePackageArg(options.pkgArg);
+  const token = await tokenForRead(options.registry, options.token);
+  const version =
+    requestedVersion ?? (await latestVersionForPackage(options.registry, name, token));
+  if (!version) throw new Error(`Specify version: ${recommendCmd("aipm add <@scope/pkg>@<version>")}`);
+
+  const syntheticProject: ProjectPackageJson = {
+    schemaVersion: "0.1",
+    registry: options.registry,
+    packages: {},
+    prompts: {},
+  };
+  await installOnePackageWithRecovery({
+    configRoot: options.configRoot,
+    installRoot: options.installRoot,
+    registry: options.registry,
+    name,
+    version: version.replace(/^\^/, ""),
+    project: syntheticProject,
+    explicitTarget: parseTargetFlag(options.target),
+    ci: options.ci,
+    token,
+    track: false,
+  });
+
+  try {
+    await recordPackageInstall(options.registry, name, token);
+  } catch (error) {
+    if (!options.ci && !program.opts().quiet) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`Warning: could not record install count: ${message}`);
+    }
+  }
+}
+
 async function runLoopbackLogin(options: {
   registry: string;
   siteUrl: string;
@@ -354,6 +426,13 @@ async function runLoopbackLogin(options: {
   const challenge = sha256Base64Url(verifier);
 
   const result = await new Promise<{ code: string; redirectUri: string }>((resolveLogin, rejectLogin) => {
+    let settled = false;
+    const settle = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      fn();
+    };
+
     const server = createServer((request, response) => {
       const host = request.headers.host ?? "127.0.0.1";
       const url = new URL(request.url ?? "/", `http://${host}`);
@@ -365,29 +444,34 @@ async function runLoopbackLogin(options: {
       if (url.searchParams.get("state") !== state) {
         response.writeHead(400, { "content-type": "text/html" });
         response.end("<h1>AIPM login failed</h1><p>Invalid state. Return to the terminal and try again.</p>");
-        rejectLogin(new Error("Invalid CLI login state"));
-        server.close();
+        forceCloseServer(server);
+        settle(() => rejectLogin(new Error("Invalid CLI login state")));
         return;
       }
       const code = url.searchParams.get("code");
       if (!code) {
         response.writeHead(400, { "content-type": "text/html" });
         response.end("<h1>AIPM login failed</h1><p>Missing code. Return to the terminal and try again.</p>");
-        rejectLogin(new Error("Missing CLI authorization code"));
-        server.close();
+        forceCloseServer(server);
+        settle(() => rejectLogin(new Error("Missing CLI authorization code")));
         return;
       }
       response.writeHead(200, { "content-type": "text/html" });
       response.end("<h1>AIPM CLI is signed in</h1><p>You can close this window and return to the terminal.</p>");
       const address = server.address();
       if (!address || typeof address === "string") {
-        rejectLogin(new Error("Could not read CLI callback address"));
-      } else {
-        resolveLogin({ code, redirectUri: `http://127.0.0.1:${address.port}/callback` });
+        forceCloseServer(server);
+        settle(() => rejectLogin(new Error("Could not read CLI callback address")));
+        return;
       }
-      server.close();
+      // Drop keep-alive sockets so the process can exit after login.
+      forceCloseServer(server);
+      settle(() => resolveLogin({ code, redirectUri: `http://127.0.0.1:${address.port}/callback` }));
     });
-    server.once("error", rejectLogin);
+    server.once("error", (error) => {
+      forceCloseServer(server);
+      settle(() => rejectLogin(error));
+    });
     server.listen(0, "127.0.0.1", () => {
       const address = server.address() as AddressInfo;
       const redirectUri = `http://127.0.0.1:${address.port}/callback`;
@@ -400,10 +484,12 @@ async function runLoopbackLogin(options: {
       if (options.open) void openUrl(loginUrl.toString());
       else console.log(`Open: ${loginUrl.toString()}`);
     });
-    server.setTimeout(5 * 60 * 1000, () => {
-      rejectLogin(new Error("CLI login timed out"));
-      server.close();
-    });
+    const timeout = setTimeout(() => {
+      forceCloseServer(server);
+      settle(() => rejectLogin(new Error("CLI login timed out")));
+    }, 5 * 60 * 1000);
+    timeout.unref?.();
+    server.once("close", () => clearTimeout(timeout));
   });
 
   const tokens = await exchangeCliAuthCode(options.registry, {
@@ -422,6 +508,13 @@ async function runLoopbackLogin(options: {
   const label = tokens.user?.username ?? tokens.user?.githubLogin ?? tokens.user?.email ?? "AIPM user";
   console.log(`Logged in as ${label}.`);
   console.log(`Credentials saved to ${authFilePath()}`);
+}
+
+function forceCloseServer(server: ReturnType<typeof createServer>): void {
+  if (typeof server.closeAllConnections === "function") {
+    server.closeAllConnections();
+  }
+  server.close();
 }
 
 function printPublishFlow(): void {
@@ -701,24 +794,11 @@ program
       console.log(`aipm.package.json already exists (${scopeLabel(scope)}).`);
       return;
     }
-    if (scope.global) await mkdir(configRoot, { recursive: true });
-    const installRoot = resolveInstallRoot(scope);
-    const detected = await detectToolsInProject(installRoot);
-    const parsedTarget = parseTargetFlag(opts.target);
-    let preferredTools: AiTool[] = parsedTarget ? [parsedTarget] : detected;
-    if (!opts.target && detected.length === 0) {
-      const choice = await promptForTool();
-      preferredTools = [choice];
-    }
-    const registry = registryFromEnvOrDefault(opts.registry);
-    await writeProjectPackageJson(configRoot, {
-      schemaVersion: "0.1",
-      registry,
-      preferredTools: preferredTools.length ? preferredTools : undefined,
-      packages: {},
-      prompts: {},
+    await createProjectPackageJson({
+      scope,
+      registry: registryFromEnvOrDefault(opts.registry),
+      target: opts.target,
     });
-    console.log(`Created aipm.package.json (${scopeLabel(scope)}, registry: ${registry})`);
   });
 
 program
@@ -844,59 +924,54 @@ program
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     let project = await readProjectPackageJson(configRoot);
-    const useNoInit = await resolveNoInitMode({
+    let useNoInit = await resolveNoInitMode({
       requested: opts.init === false,
       projectExists: Boolean(project),
       ci: opts.ci,
     });
 
+    if (!useNoInit && !project) {
+      const ensured = await ensureProjectOrOffer({
+        scope,
+        project,
+        ci: opts.ci,
+        registry: resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY),
+        target: opts.target,
+        allowNoInit: true,
+        command: "add",
+      });
+      if (ensured.action === "no-init") useNoInit = true;
+      else project = ensured.project;
+    }
+
     if (useNoInit) {
       const promptReference = parsePromptUrl(pkgArg);
       if (promptReference) {
-        throw new Error(
-          "Prompt URLs require project tracking. Drop --no-init, or run aipm init and add the prompt without --no-init.",
-        );
-      }
-
-      const registry = resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY);
-      const { name, version: requestedVersion } = parsePackageArg(pkgArg);
-      const token = await tokenForRead(registry, opts.token);
-      const version =
-        requestedVersion ?? (await latestVersionForPackage(registry, name, token));
-      if (!version) throw new Error(`Specify version: ${recommendCmd("aipm add <@scope/pkg>@<version>")}`);
-
-      const syntheticProject = {
-        schemaVersion: "0.1" as const,
-        registry,
-        packages: {},
-        prompts: {},
-      };
-      await installOnePackage({
-        configRoot,
-        installRoot,
-        registry,
-        name,
-        version: version.replace(/^\^/, ""),
-        project: syntheticProject,
-        explicitTarget: parseTargetFlag(opts.target),
-        ci: opts.ci,
-        token,
-        track: false,
-      });
-
-      try {
-        await recordPackageInstall(registry, name, token);
-      } catch (error) {
-        if (!opts.ci && !program.opts().quiet) {
-          const message = error instanceof Error ? error.message : String(error);
-          console.warn(`Warning: could not record install count: ${message}`);
+        await resolvePromptRequiresTracking({ ci: opts.ci, command: "add" });
+        useNoInit = false;
+        if (!project) {
+          project = await createProjectPackageJson({
+            scope,
+            registry: resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY),
+            target: opts.target,
+          });
         }
+      } else {
+        const registry = resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY);
+        await addUntrackedPackage({
+          configRoot,
+          installRoot,
+          registry,
+          pkgArg,
+          target: opts.target,
+          token: opts.token,
+          ci: opts.ci,
+        });
+        if (!opts.ci && !program.opts().quiet) {
+          await notifyCliUpdateIfNeeded(CLI_VERSION);
+        }
+        return;
       }
-
-      if (!opts.ci && !program.opts().quiet) {
-        await notifyCliUpdateIfNeeded(CLI_VERSION);
-      }
-      return;
     }
 
     if (!project) throw new Error(initRequiredMessage(scope));
@@ -911,6 +986,7 @@ program
         reference: promptReference,
         track: true,
         recordCopy: true,
+        ci: opts.ci,
       });
       console.log(`Installed prompt ${result.prompt.title} → ${result.path}`);
       return;
@@ -927,7 +1003,7 @@ program
     };
     await writeProjectPackageJson(configRoot, project);
 
-    await installOnePackage({
+    await installOnePackageWithRecovery({
       configRoot,
       installRoot,
       registry,
@@ -997,14 +1073,32 @@ program
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
-    const project = await readProjectPackageJson(configRoot);
-    if (!project) throw new Error(initRequiredMessage(scope));
+    let project = await readProjectPackageJson(configRoot);
+    if (!project) {
+      const ensured = await ensureProjectOrOffer({
+        scope,
+        project,
+        ci: opts.ci,
+        registry: resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY),
+        target: opts.target,
+        allowNoInit: false,
+        command: "install",
+      });
+      if (ensured.action !== "ready") throw new Error(initRequiredMessage(scope));
+      project = ensured.project;
+      printNote({
+        type: "info",
+        title: "Initialized",
+        message: "aipm.package.json is empty — add packages with aipm add, then run aipm install.",
+      });
+      return;
+    }
     const registry = resolveRegistryUrl(project, opts.registry, DEFAULT_REGISTRY);
     const target = parseTargetFlag(opts.target);
     const token = await tokenForRead(registry, opts.token);
 
     for (const [name, version] of Object.entries(project.packages)) {
-      await installOnePackage({
+      await installOnePackageWithRecovery({
         configRoot,
         installRoot,
         registry,
@@ -1026,6 +1120,7 @@ program
         project,
         reference: { ...reference, alias },
         track: false,
+        ci: opts.ci,
       });
       console.log(`Restored prompt ${result.prompt.title} → ${result.path}`);
     }
@@ -1035,10 +1130,22 @@ program
   .command("show <package-or-prompt>")
   .description("Show an installed prompt snapshot or tracked skill details")
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
-  .action(async (value: string, opts: { global?: boolean }) => {
-    const configRoot = resolveConfigRoot({ global: opts.global });
-    const project = await readProjectPackageJson(configRoot);
-    if (!project) throw new Error(initRequiredMessage({ global: opts.global }));
+  .action(async (value: string, opts: { global?: boolean; ci?: boolean }) => {
+    const scope = { global: opts.global };
+    const configRoot = resolveConfigRoot(scope);
+    let project = await readProjectPackageJson(configRoot);
+    if (!project) {
+      const ensured = await ensureProjectOrOffer({
+        scope,
+        project,
+        ci: opts.ci,
+        registry: DEFAULT_REGISTRY,
+        allowNoInit: false,
+        command: "show",
+      });
+      if (ensured.action !== "ready") throw new Error(initRequiredMessage(scope));
+      project = ensured.project;
+    }
     const reference = resolveTrackedPrompt(project, value);
     if (reference && project.prompts[reference.alias] === reference.url) {
       const lock = await readLockfile(configRoot);
@@ -1081,9 +1188,17 @@ promptCommand
   .description("Publish one prompt or a batch of prompts from JSON")
   .option("--registry <url>", "Registry API base URL")
   .option("--yes", "Confirm public publishing without an extra reminder")
-  .action(async (file: string, opts: { registry?: string; yes?: boolean }) => {
+  .action(async (file: string, opts: { registry?: string; yes?: boolean; ci?: boolean }) => {
     const registry = registryFromEnvOrDefault(opts.registry);
-    const accessToken = await authTokenForRegistry(registry, { throwOnFailure: true });
+    let accessToken = await authTokenForRegistry(registry, { throwOnFailure: false });
+    if (!accessToken) {
+      await resolveLoginRequired({
+        ci: opts.ci,
+        purpose: "Publishing prompts requires an AIPM login.",
+      });
+      await runLoopbackLogin({ registry, siteUrl: SITE_URL, open: true });
+      accessToken = await authTokenForRegistry(registry, { throwOnFailure: true });
+    }
     if (!accessToken) throw new Error(`Run ${recommendCmd("aipm login")} before publishing prompts.`);
     const absoluteFile = resolve(file);
     const parsed = JSON.parse(await readFile(absoluteFile, "utf8")) as
@@ -1442,29 +1557,48 @@ program
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
-    const project = await readProjectPackageJson(configRoot);
-    const useNoInit = await resolveNoInitMode({
+    let project = await readProjectPackageJson(configRoot);
+    let useNoInit = await resolveNoInitMode({
       requested: opts.init === false,
       projectExists: Boolean(project),
       ci: opts.ci,
     });
 
+    if (!useNoInit && !project) {
+      const ensured = await ensureProjectOrOffer({
+        scope,
+        project,
+        ci: opts.ci,
+        registry: DEFAULT_REGISTRY,
+        allowNoInit: true,
+        command: "remove",
+      });
+      if (ensured.action === "no-init") useNoInit = true;
+      else project = ensured.project;
+    }
+
     if (useNoInit) {
       if (parsePromptUrl(pkgArg)) {
-        throw new Error(
-          "Prompt URLs require project tracking. Drop --no-init, or run aipm init and remove the prompt without --no-init.",
+        await resolvePromptRequiresTracking({ ci: opts.ci, command: "remove" });
+        useNoInit = false;
+        if (!project) {
+          project = await createProjectPackageJson({
+            scope,
+            registry: DEFAULT_REGISTRY,
+          });
+        }
+      } else {
+        const { name } = parsePackageArg(pkgArg);
+        const removal = await removeUntrackedPackage({
+          installRoot,
+          configRoot,
+          packageName: name,
+        });
+        console.log(
+          `Removed ${removal.removed.length} untracked ${removal.removed.length === 1 ? "path" : "paths"} for ${name}.`,
         );
+        return;
       }
-      const { name } = parsePackageArg(pkgArg);
-      const removal = await removeUntrackedPackage({
-        installRoot,
-        configRoot,
-        packageName: name,
-      });
-      console.log(
-        `Removed ${removal.removed.length} untracked ${removal.removed.length === 1 ? "path" : "paths"} for ${name}.`,
-      );
-      return;
     }
 
     if (!project) throw new Error(initRequiredMessage(scope));
@@ -1518,11 +1652,25 @@ program
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
     let project = await readProjectPackageJson(configRoot);
-    const useNoInit = await resolveNoInitMode({
+    let useNoInit = await resolveNoInitMode({
       requested: opts.init === false,
       projectExists: Boolean(project),
       ci: opts.ci,
     });
+
+    if (!useNoInit && !project) {
+      const ensured = await ensureProjectOrOffer({
+        scope,
+        project,
+        ci: opts.ci,
+        registry: resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY),
+        target: opts.target,
+        allowNoInit: Boolean(pkgArg) && !parsePromptUrl(pkgArg ?? ""),
+        command: "update",
+      });
+      if (ensured.action === "no-init") useNoInit = true;
+      else project = ensured.project;
+    }
 
     if (useNoInit) {
       if (!pkgArg) {
@@ -1531,33 +1679,40 @@ program
         );
       }
       if (parsePromptUrl(pkgArg)) {
-        throw new Error(
-          "Prompt URLs require project tracking. Drop --no-init, or run aipm init and update the prompt without --no-init.",
-        );
+        await resolvePromptRequiresTracking({ ci: opts.ci, command: "update" });
+        useNoInit = false;
+        if (!project) {
+          project = await createProjectPackageJson({
+            scope,
+            registry: resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY),
+            target: opts.target,
+          });
+        }
+      } else {
+        const registry = resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY);
+        const { name } = parsePackageArg(pkgArg);
+        const token = await tokenForRead(registry, opts.token);
+        const version = await latestVersionForPackage(registry, name, token);
+        const syntheticProject: ProjectPackageJson = {
+          schemaVersion: "0.1",
+          registry,
+          packages: {},
+          prompts: {},
+        };
+        await installOnePackageWithRecovery({
+          configRoot,
+          installRoot,
+          registry,
+          name,
+          version,
+          project: syntheticProject,
+          explicitTarget: parseTargetFlag(opts.target),
+          ci: opts.ci,
+          token,
+          track: false,
+        });
+        return;
       }
-      const registry = resolveRegistryUrl(null, opts.registry, DEFAULT_REGISTRY);
-      const { name } = parsePackageArg(pkgArg);
-      const token = await tokenForRead(registry, opts.token);
-      const version = await latestVersionForPackage(registry, name, token);
-      const syntheticProject = {
-        schemaVersion: "0.1" as const,
-        registry,
-        packages: {},
-        prompts: {},
-      };
-      await installOnePackage({
-        configRoot,
-        installRoot,
-        registry,
-        name,
-        version,
-        project: syntheticProject,
-        explicitTarget: parseTargetFlag(opts.target),
-        ci: opts.ci,
-        token,
-        track: false,
-      });
-      return;
     }
 
     if (!project) throw new Error(initRequiredMessage(scope));
@@ -1574,6 +1729,7 @@ program
         reference: requestedPrompt,
         track: false,
         updateOnly: true,
+        ci: opts.ci,
       });
       console.log(result.changed ? `Updated prompt ${result.prompt.title} → ${result.path}` : `Prompt unchanged: ${result.prompt.title}`);
       return;
@@ -1589,7 +1745,7 @@ program
         packages: { ...project.packages, [name]: version },
       };
       await writeProjectPackageJson(configRoot, project);
-      await installOnePackage({
+      await installOnePackageWithRecovery({
         configRoot,
         installRoot,
         registry,
@@ -1613,6 +1769,7 @@ program
           reference: { ...reference, alias },
           track: false,
           updateOnly: true,
+          ci: opts.ci,
         });
         console.log(result.changed ? `Updated prompt ${result.prompt.title} → ${result.path}` : `Prompt unchanged: ${result.prompt.title}`);
       }
@@ -1632,6 +1789,10 @@ program
   .action((opts: { global?: boolean; registry?: string; json?: boolean; publish?: boolean }) => runDoctor(opts));
 
 program.parseAsync(normalizedArgv).catch((err: Error) => {
+  if (err.name === "RecoveryCancelledError" || err.name === "SelectCancelledError") {
+    printNote({ type: "info", title: "Cancelled", message: err.message || "Cancelled." });
+    process.exit(130);
+  }
   console.error(err.message);
   const message = err.message.toLowerCase();
   if (message.includes("token") || message.includes("unauthorized") || message.includes("forbidden")) {

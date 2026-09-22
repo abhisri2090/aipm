@@ -6,6 +6,16 @@ import { SITE_URL } from "../../lib/registry";
 
 const entries = [
   {
+    date: "September 22, 2026",
+    title: "CLI interactive UX and --no-init",
+    items: [
+      "Added mint-branded interactive menus (arrow keys, highlight bar) for recoverable CLI errors.",
+      "Added --no-init on add/update/remove for one-shot installs without aipm.package.json.",
+      "When a project is not initialized, the CLI can offer init now or continue without tracking.",
+      "Fixed aipm login hanging after credentials were saved (callback server keep-alive sockets).",
+    ],
+  },
+  {
     date: "June 14, 2026",
     title: "CLI 0.2.12 distribution",
     items: [
