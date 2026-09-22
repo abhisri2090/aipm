@@ -176,8 +176,8 @@ Queries to investigate next:
 - Publish an Agent Skill
 - Private Agent Skills registry
 - Agent Skills for teams
-- Codex skills directory
-- Install skills in Codex
+- Codex skills directory (investigate only — no AIPM Codex hub until inventory exists)
+- Install skills in Codex (investigate only)
 
 Need more information:
 

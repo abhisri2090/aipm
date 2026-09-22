@@ -17,6 +17,7 @@ import {
   SITE_URL,
   type PackageSummary,
 } from "../../../../../lib/registry";
+import { buildSkillSerpFields } from "../../../../../lib/skill-serp";
 
 type PackagePageProps = {
   params: Promise<{ slug: string; name: string; version: string }>;
@@ -70,9 +71,17 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
   const pkg = await getPackage(packageName, decodeURIComponent(version));
   if (!pkg) return { title: "Package not found | AIPM" };
   const summary = toSummary(pkg);
-  const title = `${pkg.name}@${pkg.version}`;
+  const serp = buildSkillSerpFields({
+    name: pkg.name,
+    version: pkg.version,
+    description: pkg.manifest.description,
+    targets: pkg.manifest.targets,
+    displayName: pkg.manifest.displayName,
+    title: pkg.manifest.title,
+  });
+  const title = { absolute: serp.title };
+  const description = serp.metaDescription;
   const targetLabel = displayTargets(pkg.manifest.targets).join(", ");
-  const description = `${pkg.manifest.description} Install ${pkg.name}@${pkg.version} for ${targetLabel} with AIPM.`;
   const path = packagePath(pkg.name, pkg.version);
   const publisher = pkg.publisher?.org.name ?? "AIPM";
   const indexable = isIndexablePackage(summary);
@@ -97,7 +106,7 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
       },
     },
     openGraph: {
-      title,
+      title: serp.title,
       description,
       url: `${SITE_URL}${path}`,
       siteName: "AIPM",
@@ -116,7 +125,7 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: serp.title,
       description,
       images: [`${SITE_URL}/og.svg`],
     },
@@ -148,6 +157,14 @@ export default async function PackagePage({ params }: PackagePageProps) {
   if (!pkg) notFound();
 
   const summary = toSummary(pkg);
+  const serp = buildSkillSerpFields({
+    name: summary.name,
+    version: summary.version,
+    description: summary.description,
+    targets: summary.targets,
+    displayName: pkg.manifest.displayName,
+    title: pkg.manifest.title,
+  });
   const command = installCommand(summary);
   const invokeCommand = resolveSkillInvokeCommand(summary.name);
   const canonicalUrl = `${SITE_URL}${packagePath(summary.name, summary.version)}`;
@@ -155,6 +172,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
   const aiContext = {
     packageName: summary.name,
     version: summary.version,
+    humanName: serp.humanName,
     description: summary.description,
     type: summary.type,
     targets: displayTargets(summary.targets),
@@ -213,8 +231,8 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 "@type": "WebPage",
                 "@id": `${canonicalUrl}#webpage`,
                 url: canonicalUrl,
-                name: `${summary.name}@${summary.version}`,
-                description: summary.description,
+                name: serp.title,
+                description: serp.metaDescription,
                 isPartOf: {
                   "@type": "WebSite",
                   "@id": `${SITE_URL}#website`,
@@ -230,9 +248,10 @@ export default async function PackagePage({ params }: PackagePageProps) {
               {
                 "@type": "SoftwareSourceCode",
                 "@id": `${canonicalUrl}#package`,
-                name: summary.name,
+                name: serp.humanName,
+                alternateName: serp.packageId,
                 version: summary.version,
-                description: summary.description,
+                description: serp.metaDescription,
                 url: canonicalUrl,
                 codeRepository: SITE_URL,
                 programmingLanguage: "AI tool configuration",
@@ -292,7 +311,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                   {
                     "@type": "ListItem",
                     position: 2,
-                    name: summary.name,
+                    name: serp.humanName,
                     item: canonicalUrl,
                   },
                 ],

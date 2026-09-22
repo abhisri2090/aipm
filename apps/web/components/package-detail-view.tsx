@@ -18,7 +18,6 @@ import {
   isUnverifiedImportedPackage,
   packagePath,
   packageFilesPath,
-  packageShortName,
   publisherPath,
   resolveSkillAbout,
   resolveSkillInvokeCommand,
@@ -27,6 +26,7 @@ import {
   type PackageDetail,
   type PackageSummary,
 } from "../lib/registry";
+import { buildSkillSerpFields } from "../lib/skill-serp";
 
 function toSummary(pkg: PackageDetail): PackageSummary {
   return {
@@ -59,6 +59,14 @@ type PackageDetailViewProps = {
 
 export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: PackageDetailViewProps) {
   const summary = toSummary(pkg);
+  const serp = buildSkillSerpFields({
+    name: summary.name,
+    version: summary.version,
+    description: summary.description,
+    targets: summary.targets,
+    displayName: pkg.manifest.displayName,
+    title: pkg.manifest.title,
+  });
   const command = installCommand(summary);
   const about = resolveSkillAbout({
     usage: pkg.manifest.usage,
@@ -82,12 +90,15 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
       {showHeader ? (
         <section className={shell.pageHeader}>
           <p className={shell.eyebrow}>AIPM package</p>
-          <h1>{packageShortName(summary.name)}</h1>
-          <p className={shell.lede}>{summary.description}</p>
+          <h1>{serp.humanName}</h1>
+          <p className={shell.muted}>
+            <code>{serp.packageId}</code>
+          </p>
+          <p className={shell.lede}>{serp.outcomeLine}</p>
           <ScanBadge status={pkg.scan?.status} />
           <PackageShareButtons
             packageName={summary.name}
-            title={`${summary.name}@${summary.version}`}
+            title={serp.title}
             url={canonicalUrl}
             version={summary.version}
           />

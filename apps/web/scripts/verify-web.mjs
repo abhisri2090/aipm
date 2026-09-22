@@ -401,6 +401,26 @@ async function fetchText(path, init = {}) {
   }
 }
 
+/** Optional registry API probes — skip quietly on timeout/network errors. */
+async function tryFetchText(path, init = {}) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const url = urlFor(path);
+  try {
+    const response = await fetch(url, {
+      ...init,
+      redirect: "follow",
+      signal: controller.signal,
+    });
+    const text = await response.text();
+    return { response, text, url };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function assertStatus(path, response, expected = 200) {
   if (response.status !== expected) {
     fail(`${path} returned ${response.status}; expected ${expected}`);
@@ -627,7 +647,9 @@ assertIncludes(
   promptSitemap.text,
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
 );
-if (/<loc>[^<]*\/prompts\/[^/<]+\/[^/<]+<\/loc>/.test(sitemap.text)) {
+// Topic hubs live at /prompts/topics/{topic} in the static sitemap; individual
+// prompt pages are /prompts/{publisher}/{slug} and belong in prompt-sitemap.xml.
+if (/<loc>[^<]*\/prompts\/(?!topics\/)[^/<]+\/[^/<]+<\/loc>/.test(sitemap.text)) {
   fail("/sitemap.xml contains individual prompt URLs; those belong in /prompt-sitemap.xml.");
 }
 
@@ -669,6 +691,66 @@ if (packageList.response.ok) {
       fail(`${path} contains deprecated FAQPage structured data.`);
     }
   }
+}
+
+// Publisher detail pages only render for orgs present in listPackages("", 100).
+// Prefer /publishers/{slug} entries already emitted in ai-skills-sitemap (same window),
+// then probe /publishers directory links — never hardcode a third-party org.
+async function assertPublisherDetail(slug, name) {
+  const publisherPath = `/publishers/${encodeURIComponent(slug)}`;
+  const publisherPage = await fetchText(publisherPath);
+  assertStatus(publisherPath, publisherPage.response);
+  assertIncludes(publisherPath, publisherPage.text, `<title>${name} AI Skills | AIPM</title>`);
+  assertIncludes(publisherPath, publisherPage.text, `<h1>${name}</h1>`);
+  assertIncludes(publisherPath, publisherPage.text, `rel="canonical" href="${expectedCanonicalUrl}${publisherPath}"`);
+  assertIncludes(publisherPath, publisherPage.text, `/skills/${slug}/`);
+  assertIncludes(publisherPath, publisherPage.text, "Account verification confirms account control");
+  const claimed = "This publisher has connected the linked GitHub account to AIPM.";
+  const unclaimed = "has not claimed the AIPM account yet";
+  if (!publisherPage.text.includes(claimed) && !publisherPage.text.includes(unclaimed)) {
+    fail(`${publisherPath} is missing publisher claim status copy`);
+  }
+  const publisherJsonLd = extractJsonLd(publisherPage.text).join("\n");
+  if (publisherJsonLd.length === 0) {
+    fail(`${publisherPath} is missing JSON-LD structured data`);
+  }
+  assertIncludes(publisherPath, publisherJsonLd, '"@type":"ProfilePage"');
+  assertIncludes(publisherPath, publisherJsonLd, `"name":"${name}"`);
+}
+
+const publisherCandidateSlugs = Array.from(
+  skillsSitemap.text.matchAll(/<loc>[^<]*\/publishers\/([^/<]+)<\/loc>/g),
+  (match) => decodeURIComponent(match[1]),
+);
+
+if (publisherCandidateSlugs.length === 0) {
+  const directory = await fetchText("/publishers");
+  assertStatus("/publishers", directory.response);
+  publisherCandidateSlugs.push(
+    ...Array.from(
+      directory.text.matchAll(/href="\/publishers\/([^"/?]+)"/g),
+      (match) => decodeURIComponent(match[1]),
+    ),
+  );
+}
+
+const uniquePublisherSlugs = publisherCandidateSlugs.filter(
+  (slug, index, all) => all.indexOf(slug) === index,
+);
+
+let publisherVerified = false;
+for (const slug of uniquePublisherSlugs.slice(0, 12)) {
+  const candidate = await tryFetchText(`/publishers/${encodeURIComponent(slug)}`);
+  if (!candidate || candidate.response.status !== 200) continue;
+  const h1 = candidate.text.match(/<h1>([^<]+)<\/h1>/)?.[1];
+  if (!h1) continue;
+  await assertPublisherDetail(slug, h1);
+  publisherVerified = true;
+  break;
+}
+
+if (!publisherVerified) {
+  fail("Could not discover a live /publishers/{slug} page from ai-skills-sitemap or /publishers");
 }
 
 const llms = await fetchText("/llms.txt");

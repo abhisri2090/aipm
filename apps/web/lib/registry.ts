@@ -66,6 +66,10 @@ export type PackageDetail = {
     description: string;
     type: string;
     targets: string[];
+    /** Optional human-facing name for SERP/UI when present on the package. */
+    displayName?: string;
+    /** Optional human-facing title alias used when displayName is absent. */
+    title?: string;
     license?: string;
     entry?: string;
     usage?: string;

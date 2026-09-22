@@ -45,7 +45,12 @@ describe("complete prompt sitemap", () => {
     );
     const entries = await sitemap();
     expect(entries.some((entry) => entry.url.endsWith("/prompts"))).toBe(true);
-    expect(entries.every((entry) => !/\/prompts\/[^/]+\/[^/]+/.test(entry.url))).toBe(true);
+    // Topic hubs (/prompts/topics/{slug}) belong in static sitemap; individual prompts
+    // (/prompts/{publisher}/{slug}) must stay only in /prompt-sitemap.xml.
+    expect(
+      entries.every((entry) => !/\/prompts\/(?!topics\/)[^/]+\/[^/]+/.test(entry.url)),
+    ).toBe(true);
+    expect(entries.some((entry) => /\/prompts\/topics\/[^/]+/.test(entry.url))).toBe(true);
   });
 
   it("fails generation when a later API page fails instead of returning a partial sitemap", async () => {

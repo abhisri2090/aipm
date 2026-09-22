@@ -235,7 +235,6 @@ export const metadata = pageMetadata({
     "AI skill ideas",
     "Cursor rules",
     "Claude Code skills",
-    "Codex skills",
     "AI coding workflows",
     "MCP setup",
   ],

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "../lib/registry";
 import { SEO_GUIDES } from "../lib/seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
+import { PROMPT_TOPIC_HUBS } from "../lib/prompt-topics";
 
 /** Fallback when a path has no content-specific date (hub SEO refresh). */
 const HUB_SEO_REFRESH = new Date("2026-09-21T00:00:00.000Z");
@@ -74,6 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/compatibility",
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
+    ...PROMPT_TOPIC_HUBS.map((hub) => `/prompts/topics/${hub.slug}`),
   ];
 
   const guideUpdatedAt = new Map(
@@ -90,10 +92,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]),
   );
 
+  const topicUpdatedAt = new Map(
+    PROMPT_TOPIC_HUBS.map((hub) => [`/prompts/topics/${hub.slug}`, dateFromIsoDay(hub.updatedAt)]),
+  );
+
   return staticPaths.map((path) => {
     const lastModified =
       guideUpdatedAt.get(path) ??
       discoveryUpdatedAt.get(path) ??
+      topicUpdatedAt.get(path) ??
       STATIC_PAGE_LASTMOD[path] ??
       HUB_SEO_REFRESH;
 

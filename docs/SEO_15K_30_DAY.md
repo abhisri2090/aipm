@@ -67,14 +67,14 @@ Still human: GSC sitemap resubmit + URL inspection for top hubs; Bing Webmaster;
 - [x] Add or harden comparison guide: AIPM vs skills.sh / skillmd (intent: “alternative”)  
 - [ ] GSC: resubmit all sitemaps; request indexing for top 20 hubs (manual if API unavailable)  
 - [ ] Bing Webmaster: submit sitemaps if not already  
-- [x] Internal links: prompts hub → top demand clusters; skills hub → Claude/Cursor/Codex  
+- [x] Internal links: prompts hub → top demand clusters; skills hub → Claude/Cursor (Codex hub deferred until inventory)  
 
 ### Week 2 (Sep 27–Oct 3) — Distribution + crawl fuel
 - [ ] Product Hunt: schedule with demo + “Claude Code / Cursor skills registry” framing  
 - [ ] Chase open awesome-list / directory PRs; follow up BACKLINK_TRACKER  
 - [ ] Publisher badge outreach (5–10 repos with permission)  
 - [ ] 2–3 technical posts or Dev.to/Hashnode: “Install Claude Code skills with AIPM”, “Cursor skills registry”  
-- [ ] Prompt cluster hubs if missing (headshots, product photos) with unique copy + links to listings  
+- [x] Prompt cluster hubs if missing (headshots, product photos) with unique copy + links to listings  
 - [ ] GSC checkpoint #1 (day 7): impressions, indexed pages, top queries  
 
 ### Week 3 (Oct 4–10) — Double down on winners
