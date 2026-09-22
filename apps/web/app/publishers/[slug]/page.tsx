@@ -9,7 +9,9 @@ type PublisherPageProps = {
 };
 
 async function getPublisher(slug: string) {
-  const packages = await listPackages("", 100);
+  // Search by slug so publishers remain reachable even when they fall outside the
+  // default unfiltered skills window (top N by recency/popularity).
+  const packages = await listPackages(slug, 100);
   const publisherPackages = packages.filter((pkg) => pkg.publisher?.org.slug === slug);
   const publisher = publisherPackages[0]?.publisher;
   return publisher ? { publisher, packages: publisherPackages } : null;
