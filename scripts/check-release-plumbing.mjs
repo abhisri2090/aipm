@@ -44,6 +44,8 @@ const fileChecks = [
       /id-token:\s*write/,
       /node-version:\s*24/,
       /npm install --global npm@11\.19\.1/,
+      /Publish CLI to npm via OIDC trusted publishing/,
+      /NODE_AUTH_TOKEN:\s*""/,
       /release\/homebrew\/Formula\/aipm\.rb/,
       /release\/scoop\/bucket\/aipm\.json/,
       /release\/winget\/aipm\.yaml/,
