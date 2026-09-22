@@ -120,15 +120,21 @@ jobs:
 
       - name: Publish CLI to npm via OIDC trusted publishing
         env:
-          # Ensure classic token auth cannot shadow OIDC (npm then reports E404).
+          # Ensure classic token auth cannot shadow OIDC (npm then reports E404/ENEEDAUTH).
           NODE_AUTH_TOKEN: ""
           NPM_TOKEN: ""
         run: |
           if [ -n "${NPM_CONFIG_USERCONFIG:-}" ] && [ -f "${NPM_CONFIG_USERCONFIG}" ]; then
             sed -i '/_authToken/d' "${NPM_CONFIG_USERCONFIG}" || true
           fi
-          npm --version
-          pnpm release:cli:publish
+          echo "npm=$(npm --version) node=$(node --version)"
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "ACTIONS_ID_TOKEN_REQUEST_URL is missing; id-token: write may not be granted." >&2
+            exit 1
+          fi
+          # Call npm directly — do not wrap publish in pnpm (can drop OIDC env).
+          pnpm --filter @aipm-registry/cli build
+          npm publish ./apps/cli --access public
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
