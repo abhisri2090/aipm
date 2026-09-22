@@ -49,7 +49,6 @@ export async function resolveInstallTools(
   options: ResolveToolsOptions,
 ): Promise<ConcreteAiTool[]> {
   const { manifest } = options;
-  const expandedAllowed = expandTargets(manifest.targets);
 
   if (options.explicitTarget) {
     if (options.explicitTarget === "*") {
@@ -79,7 +78,7 @@ export async function resolveInstallTools(
   );
   if (preferred.length > 0) return preferred;
 
-  if (manifest.targets.includes("*")) return expandedAllowed;
-
+  // No folders / preferred tools: return empty so the CLI can prompt.
+  // Do not expand "*" to every tool — that would create all adapter dirs silently.
   return [];
 }

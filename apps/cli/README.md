@@ -40,6 +40,14 @@ Start in any project folder:
 aipm init --target cursor
 ```
 
+Or install once **without** creating project files:
+
+```bash
+aipm add @scope/name@1.0.0 --target cursor --no-init
+```
+
+`--no-init` writes skills into your AI tool folders only (no `aipm.package.json` / lockfile). The same flag works on `update` and `remove`.
+
 *Search the registry at [aipm-registry.com](https://www.aipm-registry.com) for a skill:*
 
 ```bash
@@ -114,6 +122,20 @@ aipm install # restore all tracked skill and prompt files
 `aipm update` only rewrites a prompt snapshot when its published content changed. List
 prompts with `aipm list -p` or `aipm list -prompt`; list skills with `aipm list -s` or
 `aipm list -skill`.
+
+## Interactive CLI
+
+In a normal terminal, AIPM asks what to do next instead of exiting on recoverable problems. Use **↑↓** to move, **Enter** to choose, **Esc** / **Ctrl+C** to cancel.
+
+Common prompts:
+
+- **Not initialized** — create `aipm.package.json`, or continue once without project tracking
+- **No AI tool detected** — pick Cursor, Claude, or Codex
+- **Already initialized + `--no-init`** — keep one-shot mode, or use normal project mode
+- **Login needed** — sign in and retry (private packages / publish)
+- **File already exists** — overwrite or skip
+
+Automation and CI should pass **`--ci`**. Interactive menus are disabled; the CLI prints a clear error and exits non-zero.
 
 Signed-in publishers can publish one prompt or a JSON batch through the API-backed CLI:
 

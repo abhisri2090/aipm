@@ -82,12 +82,12 @@ describe("resolveInstallTools", () => {
     expect(tools).toEqual(["cursor"]);
   });
 
-  it("falls back to all tools when wildcard manifest has no detected tools", async () => {
+  it("returns empty when wildcard manifest has no detected tools (CLI should prompt)", async () => {
     const root = await mkdtemp(join(tmpdir(), "aipm-"));
     const tools = await resolveInstallTools({
       projectRoot: root,
       manifest: wildcardManifest,
     });
-    expect(tools).toEqual(["cursor", "claude", "codex"]);
+    expect(tools).toEqual([]);
   });
 });
