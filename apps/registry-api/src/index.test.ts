@@ -19,6 +19,7 @@ import {
 const execFileAsync = promisify(execFile);
 const tempDirs: string[] = [];
 let app: FastifyInstance | null = null;
+let currentDataDir = "";
 const token = "test-publish-token";
 const savedDatabaseUrl = process.env.DATABASE_URL;
 
@@ -73,6 +74,7 @@ function multipartPayload(tarball: Buffer): { body: Buffer; contentType: string 
 
 beforeEach(async () => {
   const dataDir = await mkdtemp(join(tmpdir(), "aipm-api-data-"));
+  currentDataDir = dataDir;
   tempDirs.push(dataDir);
   process.env.AIPM_DATA_DIR = dataDir;
   process.env.AIPM_METADATA_BACKEND = "file";
@@ -339,6 +341,51 @@ describe("registry API production behavior", () => {
     expect(response.json()).toMatchObject({
       error: "Invalid limit; use an integer from 1 to 100",
     });
+  });
+
+  it("returns a cursor when the maximum-size page has another skill", async () => {
+    const packages = Object.fromEntries(
+      Array.from({ length: 101 }, (_, index) => {
+        const name = `@catalog/skill-${String(index).padStart(3, "0")}`;
+        return [
+          name,
+          {
+            "1.0.0": {
+              manifest: {
+                schemaVersion: "0.1",
+                name,
+                version: "1.0.0",
+                type: "skill",
+                description: `Catalog skill ${index}`,
+                entry: "SKILL.md",
+                targets: ["*"],
+              },
+              integrity: `sha256-${index}`,
+              blob_path: `${index}.tgz`,
+              size_bytes: 100,
+              created_at: new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString(),
+            },
+          },
+        ];
+      }),
+    );
+    await writeFile(
+      join(currentDataDir, "package-index.json"),
+      JSON.stringify({ packages }),
+    );
+
+    const first = await app!.inject({ method: "GET", url: "/v1/skills?limit=100" });
+    expect(first.statusCode).toBe(200);
+    expect(first.json().skills).toHaveLength(100);
+    expect(first.json().nextCursor).toEqual(expect.any(String));
+
+    const second = await app!.inject({
+      method: "GET",
+      url: `/v1/skills?limit=100&cursor=${encodeURIComponent(first.json().nextCursor)}`,
+    });
+    expect(second.statusCode).toBe(200);
+    expect(second.json().skills).toHaveLength(1);
+    expect(second.json().nextCursor).toBeNull();
   });
 
   it("rejects invalid list cursors without leaking storage errors", async () => {

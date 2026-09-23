@@ -2667,7 +2667,7 @@ export async function createApp(): Promise<FastifyInstance> {
       const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const readAccess = await resolveReadAccess(accountAuth, request);
       const rows = await metadata.list(query, {
-        limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT,
+        limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT + 1,
         cursor: parsedCursor.value,
         offset: useCursor ? undefined : offset,
         category,
