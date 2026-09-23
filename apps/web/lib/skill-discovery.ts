@@ -29,7 +29,7 @@ export const SKILL_DISCOVERY_PAGES = [
     query: "cursor",
     registryQuery: "cursor",
     target: "cursor",
-    updatedAt: "2026-09-21",
+    updatedAt: "2026-09-23",
     keywords: [
       "Cursor skills",
       "Cursor agent skills",
@@ -87,7 +87,7 @@ export const SKILL_DISCOVERY_PAGES = [
     query: "claude",
     registryQuery: "claude",
     target: "claude",
-    updatedAt: "2026-09-21",
+    updatedAt: "2026-09-23",
     keywords: [
       "Claude Code skills marketplace",
       "Claude Code skills library",

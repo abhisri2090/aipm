@@ -142,6 +142,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     answer:
       "An AI package manager helps teams install, update, and share AI setup files. These files can include prompts, skills, rules, MCP setup, and tool instructions.",
     keywords: ["AI package manager", "AIPM", "AI skills", "prompt packages", "agent package manager"],
+    updatedAt: "2026-09-23",
     sections: [
       {
         title: "The simple idea",
@@ -890,6 +891,7 @@ export const SEO_GUIDES: SeoGuide[] = [
     answer:
       "Claude Code skills are reusable instruction packages for Claude workflows. They help Claude do a specific job, such as review code, write tests, or update docs.",
     keywords: ["Claude Code skills", "Claude skills", "Claude Code skill package", "AIPM Claude Code"],
+    updatedAt: "2026-09-23",
     sections: [
       {
         title: "Skills are for repeatable work",
@@ -1258,7 +1260,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       "AI skill package manager",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-21",
+    updatedAt: "2026-09-23",
     sections: [
       {
         title: "Where they overlap",
@@ -1422,7 +1424,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       "Install the AIPM CLI, run aipm init --target claude in your project, then run aipm add with the skill package name and --target claude. Review the installed SKILL.md before using it.",
     keywords: ["install Claude Code skills", "Claude Code skill install", "add Claude skill", ".claude skills"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-01",
+    updatedAt: "2026-09-23",
     sections: [
       {
         title: "Choose a skill you can trust",
@@ -1475,7 +1477,7 @@ export const SEO_GUIDES: SeoGuide[] = [
       "Install the AIPM CLI, run aipm init --target cursor in your project, then run aipm add with the package name and --target cursor. Review the installed instructions before using them.",
     keywords: ["install Cursor skills", "Cursor AI skills", "add Cursor skill", "Cursor project skill"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-01",
+    updatedAt: "2026-09-23",
     sections: [
       {
         title: "Start from the public package page",
