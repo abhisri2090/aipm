@@ -5,7 +5,7 @@ import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
 import { PROMPT_TOPIC_HUBS } from "../lib/prompt-topics";
 
 /** Fallback when a path has no content-specific date (hub SEO refresh). */
-const HUB_SEO_REFRESH = new Date("2026-09-21T00:00:00.000Z");
+const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
 
 /** Per-path lastmod for static marketing pages (ISO date → Date). */
 const STATIC_PAGE_LASTMOD: Record<string, Date> = {
@@ -14,7 +14,7 @@ const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/prompts": HUB_SEO_REFRESH,
   "/install": HUB_SEO_REFRESH,
   "/use": new Date("2026-09-04T00:00:00.000Z"),
-  "/publish": new Date("2026-09-04T00:00:00.000Z"),
+  "/publish": new Date("2026-09-23T00:00:00.000Z"),
   "/publish/guide": new Date("2026-09-04T00:00:00.000Z"),
   "/publishers": new Date("2026-09-04T00:00:00.000Z"),
   "/commands": new Date("2026-09-04T00:00:00.000Z"),
@@ -33,7 +33,7 @@ const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/status": new Date("2026-09-04T00:00:00.000Z"),
   "/roadmap": new Date("2026-09-04T00:00:00.000Z"),
   "/changelog": new Date("2026-09-22T00:00:00.000Z"),
-  "/templates": new Date("2026-09-04T00:00:00.000Z"),
+  "/templates": new Date("2026-09-23T00:00:00.000Z"),
   "/research/state-of-agent-skills-2026": new Date("2026-09-04T00:00:00.000Z"),
   "/thanks": new Date("2026-09-04T00:00:00.000Z"),
   "/compatibility": new Date("2026-09-04T00:00:00.000Z"),
