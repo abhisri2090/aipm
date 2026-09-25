@@ -98,7 +98,7 @@ const examples: Example[] = [
         code: "aipm add {{your-team-name/sentry-issue-summary}}@1.0.0 --target claude --ci",
       },
     ],
-    notes: ["Good for incidents, support, and bug triage", "This will get installed into .claude/aipm/skills/<skill>/SKILL.md"],
+    notes: ["Good for incidents, support, and bug triage", "This will get installed into .claude/skills/<skill>/SKILL.md"],
   },
   {
     title: "Release notes skill for Cursor and Claude",

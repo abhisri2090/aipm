@@ -147,7 +147,7 @@ export default async function StateOfAgentSkillsPage() {
             <thead><tr><th>Workflow</th><th>Command</th><th>Expected project output</th></tr></thead>
             <tbody>
               <tr><td>Install for Cursor</td><td><code>aipm add @scope/name@version --target cursor --ci</code></td><td><code>.cursor/aipm/skills/&lt;skill&gt;.md</code></td></tr>
-              <tr><td>Install for Claude Code</td><td><code>aipm add @scope/name@version --target claude --ci</code></td><td><code>.claude/aipm/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
+              <tr><td>Install for Claude Code</td><td><code>aipm add @scope/name@version --target claude --ci</code></td><td><code>.claude/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
               <tr><td>Verify downloaded files</td><td><code>aipm install --frozen</code></td><td>The package integrity must match the lock data.</td></tr>
             </tbody>
           </table>

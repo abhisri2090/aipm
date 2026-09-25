@@ -18,7 +18,7 @@ const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/publish/guide": new Date("2026-09-04T00:00:00.000Z"),
   "/publishers": new Date("2026-09-04T00:00:00.000Z"),
   "/commands": new Date("2026-09-04T00:00:00.000Z"),
-  "/targets": new Date("2026-09-04T00:00:00.000Z"),
+  "/targets": new Date("2026-09-25T00:00:00.000Z"),
   "/popular-skills": new Date("2026-09-04T00:00:00.000Z"),
   "/about": new Date("2026-09-25T00:00:00.000Z"),
   "/faq": new Date("2026-09-25T00:00:00.000Z"),
