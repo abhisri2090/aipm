@@ -1,0 +1,392 @@
+{
+  "generatedAt": "2026-09-25",
+  "rule": "promptText word 5-gram Jaccard >= 0.9; keep one prompt per cluster; never noindex protected (GSC) URLs. See docs/SEO_THIN_PAGE_RULE.md.",
+  "promptsAnalyzed": 1000,
+  "clusters": 13,
+  "gscPaths": [
+    "/prompts/abhisri2090/vintage-travel-poster-from-photo",
+    "/prompts/aipm/biz-lean-canvas",
+    "/prompts/aipm/career-ats-keyword-gap-operations",
+    "/prompts/aipm/code-rate-limit-design-python",
+    "/prompts/aipm/code-rate-limit-design-swift",
+    "/prompts/aipm/create-30-60-90-day-plan",
+    "/prompts/aipm/data-sql-to-narrative",
+    "/prompts/aipm/linkedin-dp-flat-vector",
+    "/prompts/aipm/money-pulse-friday",
+    "/prompts/aipm/photo-airbnb-listing",
+    "/prompts/aipm/relationship-check-in-reminder-pack",
+    "/prompts/aipm/sales-renewal-risk-email",
+    "/prompts/topics/linkedin-headshots"
+  ],
+  "topicHubPaths": [
+    "/prompts/aipm/chatgpt-executive-headshot",
+    "/prompts/aipm/chatgpt-healthcare-headshot",
+    "/prompts/aipm/chatgpt-linkedin-headshot-from-selfie",
+    "/prompts/aipm/chatgpt-tech-founder-headshot",
+    "/prompts/aipm/flux-amazon-product-main-image",
+    "/prompts/aipm/flux-product-photography",
+    "/prompts/aipm/gemini-linkedin-headshot-nano-banana",
+    "/prompts/aipm/linkedin-headshot-classic-corporate",
+    "/prompts/aipm/linkedin-headshot-dark-studio-executive",
+    "/prompts/aipm/linkedin-headshot-founder-warm",
+    "/prompts/aipm/linkedin-headshot-from-selfie",
+    "/prompts/aipm/linkedin-headshot-modern-tech",
+    "/prompts/aipm/linkedin-headshot-outdoor-natural",
+    "/prompts/aipm/mj-amazon-product-main-image",
+    "/prompts/aipm/mj-jewelry-product-photo",
+    "/prompts/aipm/mj-product-on-white",
+    "/prompts/aipm/mj-product-photography",
+    "/prompts/aipm/mj-shopify-lifestyle-product-photo",
+    "/prompts/aipm/mj-skincare-product-hero",
+    "/prompts/aipm/photo-etsy-listing-natural-light",
+    "/prompts/aipm/photo-etsy-listing-overcast-soft",
+    "/prompts/aipm/sd-product-photography"
+  ],
+  "noindex": [
+    {
+      "path": "/prompts/aipm/career-ats-keyword-gap-design",
+      "keptPath": "/prompts/aipm/career-ats-keyword-gap-operations",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-ats-keyword-gap-marketing",
+      "keptPath": "/prompts/aipm/career-ats-keyword-gap-operations",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-ats-keyword-gap-tech",
+      "keptPath": "/prompts/aipm/career-ats-keyword-gap-operations",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-behavioral-story-bank-marketing",
+      "keptPath": "/prompts/aipm/career-behavioral-story-bank-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-behavioral-story-bank-operations",
+      "keptPath": "/prompts/aipm/career-behavioral-story-bank-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-behavioral-story-bank-tech",
+      "keptPath": "/prompts/aipm/career-behavioral-story-bank-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-cold-inbound-hiring-manager-design",
+      "keptPath": "/prompts/aipm/career-cold-inbound-hiring-manager-marketing",
+      "similarity": 0.907
+    },
+    {
+      "path": "/prompts/aipm/career-cold-inbound-hiring-manager-operations",
+      "keptPath": "/prompts/aipm/career-cold-inbound-hiring-manager-marketing",
+      "similarity": 0.907
+    },
+    {
+      "path": "/prompts/aipm/career-cold-inbound-hiring-manager-tech",
+      "keptPath": "/prompts/aipm/career-cold-inbound-hiring-manager-marketing",
+      "similarity": 0.907
+    },
+    {
+      "path": "/prompts/aipm/career-comment-visibility-strategy-marketing",
+      "keptPath": "/prompts/aipm/career-comment-visibility-strategy-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-comment-visibility-strategy-tech",
+      "keptPath": "/prompts/aipm/career-comment-visibility-strategy-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-contractor-to-fte-pitch-healthcare",
+      "keptPath": "/prompts/aipm/career-contractor-to-fte-pitch-design",
+      "similarity": 0.907
+    },
+    {
+      "path": "/prompts/aipm/career-contractor-to-fte-pitch-product",
+      "keptPath": "/prompts/aipm/career-contractor-to-fte-pitch-design",
+      "similarity": 0.907
+    },
+    {
+      "path": "/prompts/aipm/career-contractor-to-fte-pitch-sales",
+      "keptPath": "/prompts/aipm/career-contractor-to-fte-pitch-design",
+      "similarity": 0.907
+    },
+    {
+      "path": "/prompts/aipm/career-job-search-weekly-plan-design",
+      "keptPath": "/prompts/aipm/career-job-search-weekly-plan-operations",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-job-search-weekly-plan-sales",
+      "keptPath": "/prompts/aipm/career-job-search-weekly-plan-operations",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-job-search-weekly-plan-tech",
+      "keptPath": "/prompts/aipm/career-job-search-weekly-plan-operations",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-notice-period-negotiation-finance",
+      "keptPath": "/prompts/aipm/career-notice-period-negotiation-product",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-notice-period-negotiation-healthcare",
+      "keptPath": "/prompts/aipm/career-notice-period-negotiation-product",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-notice-period-negotiation-sales",
+      "keptPath": "/prompts/aipm/career-notice-period-negotiation-product",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-offer-comparison-matrix-finance",
+      "keptPath": "/prompts/aipm/career-offer-comparison-matrix-healthcare",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-offer-comparison-matrix-marketing",
+      "keptPath": "/prompts/aipm/career-offer-comparison-matrix-healthcare",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-offer-comparison-matrix-product",
+      "keptPath": "/prompts/aipm/career-offer-comparison-matrix-healthcare",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-salary-research-brief-healthcare",
+      "keptPath": "/prompts/aipm/career-salary-research-brief-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-salary-research-brief-marketing",
+      "keptPath": "/prompts/aipm/career-salary-research-brief-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/career-salary-research-brief-tech",
+      "keptPath": "/prompts/aipm/career-salary-research-brief-finance",
+      "similarity": 0.906
+    },
+    {
+      "path": "/prompts/aipm/mj-3d-render-product",
+      "keptPath": "/prompts/aipm/mj-product-photography",
+      "similarity": 0.942
+    },
+    {
+      "path": "/prompts/aipm/mj-amazon-main-image",
+      "keptPath": "/prompts/aipm/mj-product-photography",
+      "similarity": 0.938
+    },
+    {
+      "path": "/prompts/aipm/mj-cosmetic-flatlay",
+      "keptPath": "/prompts/aipm/mj-product-photography",
+      "similarity": 0.942
+    },
+    {
+      "path": "/prompts/aipm/mj-lifestyle-product",
+      "keptPath": "/prompts/aipm/mj-product-photography",
+      "similarity": 0.942
+    },
+    {
+      "path": "/prompts/aipm/mj-product-bluetooth-speaker",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-candles",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.958
+    },
+    {
+      "path": "/prompts/aipm/mj-product-ceramic-mug",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-coffee-beans-bag",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.951
+    },
+    {
+      "path": "/prompts/aipm/mj-product-desk-lamp",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-desk-mat",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-desk-organizer",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-diffuser",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.958
+    },
+    {
+      "path": "/prompts/aipm/mj-product-enamel-pin",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-face-cream-jar",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.951
+    },
+    {
+      "path": "/prompts/aipm/mj-product-gaming-mouse",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-hair-oil-bottle",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.951
+    },
+    {
+      "path": "/prompts/aipm/mj-product-hoodie",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.958
+    },
+    {
+      "path": "/prompts/aipm/mj-product-leather-wallet",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-mechanical-keyboard",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-monitor-stand",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-notebook",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.958
+    },
+    {
+      "path": "/prompts/aipm/mj-product-perfume-bottle",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-phone-case",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-plant-pot",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-protein-powder-tub",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.951
+    },
+    {
+      "path": "/prompts/aipm/mj-product-ring-box",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-running-shoes",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-skincare-bottle",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-smartwatch",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.958
+    },
+    {
+      "path": "/prompts/aipm/mj-product-soap-bar",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-sunglasses",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.958
+    },
+    {
+      "path": "/prompts/aipm/mj-product-supplement-bottle",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-tea-tin",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-tote-bag",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-water-bottle",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-wireless-charger",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-wireless-earbuds",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-product-yoga-mat",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.954
+    },
+    {
+      "path": "/prompts/aipm/mj-sneaker-hero",
+      "keptPath": "/prompts/aipm/mj-product-backpack",
+      "similarity": 0.942
+    },
+    {
+      "path": "/prompts/aipm/photo-flatlay-desk-bright-airy",
+      "keptPath": "/prompts/aipm/photo-etsy-listing-natural-light",
+      "similarity": 0.925
+    },
+    {
+      "path": "/prompts/aipm/photo-flatlay-desk-golden-hour",
+      "keptPath": "/prompts/aipm/photo-etsy-listing-overcast-soft",
+      "similarity": 0.93
+    },
+    {
+      "path": "/prompts/aipm/photo-product-scale-editorial-contrast",
+      "keptPath": "/prompts/aipm/photo-etsy-listing-overcast-soft",
+      "similarity": 0.93
+    },
+    {
+      "path": "/prompts/aipm/photo-product-scale-studio-softbox",
+      "keptPath": "/prompts/aipm/photo-etsy-listing-overcast-soft",
+      "similarity": 0.93
+    }
+  ]
+}

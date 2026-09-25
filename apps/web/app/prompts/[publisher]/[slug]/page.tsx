@@ -12,6 +12,7 @@ import {
   formatPromptDate,
   getPrompt,
 } from "../../../../lib/prompts";
+import { isNearDuplicatePrompt } from "../../../../lib/prompt-noindex";
 import { SITE_URL, scanBadgeLabel } from "../../../../lib/registry";
 import { cn, shell } from "../../../../lib/page-styles";
 import styles from "../../[slug]/prompt-detail.module.css";
@@ -33,6 +34,7 @@ export async function generateMetadata({ params }: PromptPageProps): Promise<Met
     title: prompt.title,
     description: prompt.summary,
     alternates: { canonical },
+    ...(isNearDuplicatePrompt(prompt.path) ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title: prompt.title,
       description: prompt.summary,
