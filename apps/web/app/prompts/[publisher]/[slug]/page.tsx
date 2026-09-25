@@ -17,6 +17,18 @@ import { SITE_URL, scanBadgeLabel } from "../../../../lib/registry";
 import { cn, shell } from "../../../../lib/page-styles";
 import styles from "../../[slug]/prompt-detail.module.css";
 
+// ISR: a failed revalidation (registry 429/5xx/timeout) keeps the stale page.
+// getPrompt throws on those errors instead of returning null, so we only call
+// notFound() when the registry really says the prompt does not exist.
+export const revalidate = 60;
+
+// No prompts are prerendered at build (that would hammer the rate-limited
+// API); an empty list with dynamicParams (default true) makes Next render each
+// prompt on first request and then cache it as ISR.
+export function generateStaticParams() {
+  return [];
+}
+
 type PromptPageProps = {
   params: Promise<{ publisher: string; slug: string }>;
 };

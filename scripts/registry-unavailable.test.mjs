@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { GET as promptSitemap } from "../apps/web/app/prompt-sitemap.xml/route";
-import { listPromptsPage } from "../apps/web/lib/prompts";
+import { RegistryUnavailableError, getPrompt, listPromptsPage } from "../apps/web/lib/prompts";
 import { listPackagesPage } from "../apps/web/lib/registry";
 
 afterEach(() => {
@@ -45,5 +45,31 @@ describe("directory pages degrade instead of 500 when the registry API fails", (
     expect(response.status).toBe(503);
     expect(response.headers.get("retry-after")).toBe("120");
     expect(await response.text()).not.toContain("<urlset");
+  });
+});
+
+describe("prompt detail fetches never turn a registry failure into a 404", () => {
+  it("returns null only when the registry says the prompt does not exist", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 404 })));
+    await expect(getPrompt("aipm", "missing")).resolves.toBeNull();
+  });
+
+  it("throws (so ISR keeps the stale page) on 429, 5xx and network errors", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(rateLimited()));
+    await expect(getPrompt("aipm", "x")).rejects.toBeInstanceOf(RegistryUnavailableError);
+    await expect(getPrompt("aipm", "x")).rejects.toThrow("Prompt fetch failed (429)");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
+    await expect(getPrompt("aipm", "x")).rejects.toThrow("Prompt fetch failed (503)");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
+    await expect(getPrompt("aipm", "x")).rejects.toThrow("Prompt fetch failed: fetch failed");
+  });
+
+  it("uses ISR revalidation instead of no-store", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ slug: "x" }));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(getPrompt("aipm", "x")).resolves.toEqual({ slug: "x" });
+    const init = fetchMock.mock.calls[0][1];
+    expect(init.cache).toBeUndefined();
+    expect(init.next).toEqual({ revalidate: 60 });
   });
 });
