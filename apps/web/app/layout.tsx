@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Footer } from "../components/footer";
 import { GoogleAnalytics } from "../components/google-analytics";
 import { Header } from "../components/header";
+import { MicrosoftClarity } from "../components/microsoft-clarity";
 import { ToastProvider } from "../components/toast-provider";
 import { SITE_URL } from "../lib/registry";
 import "./globals.css";
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body>
         <GoogleAnalytics />
+        <MicrosoftClarity />
         <ToastProvider />
         <Header />
         {children}
