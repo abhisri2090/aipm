@@ -71,6 +71,23 @@ const nextConfig: NextConfig = {
         destination: "/admin",
         permanent: true,
       },
+      // Retired package-manager guide duplicates (2026-09-25). 301 (not Next's default 308)
+      // to consolidate signals into the stronger, product-accurate pages.
+      {
+        source: "/guides/agent-package-manager",
+        destination: "/guides/ai-package-manager",
+        statusCode: 301,
+      },
+      {
+        source: "/guides/prompt-package-manager",
+        destination: "/guides/share-ai-prompts-team",
+        statusCode: 301,
+      },
+      {
+        source: "/guides/mcp-package-manager",
+        destination: "/guides/mcp-json-guide-cursor-claude",
+        statusCode: 301,
+      },
       {
         source: "/dashboard/packages",
         destination: "/dashboard/skills",

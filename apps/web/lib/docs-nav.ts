@@ -31,32 +31,17 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
       {
         href: "/guides/ai-package-manager",
         label: "What is an AI package manager?",
-        body: "A simple explanation of AI package managers, AI skills, and reusable setup.",
-      },
-      {
-        href: "/guides/agent-package-manager",
-        label: "Agent package manager",
-        body: "Learn how packages help AI agents reuse project workflows.",
-      },
-      {
-        href: "/guides/prompt-package-manager",
-        label: "Prompt package manager",
-        body: "See how teams can manage prompts with names, versions, and install steps.",
-      },
-      {
-        href: "/guides/mcp-package-manager",
-        label: "MCP package manager",
-        body: "Learn how MCP setup can be documented and shared safely.",
+        body: "What an AI package manager is, and what AIPM installs today: versioned skills and tracked prompts.",
       },
       {
         href: "/guides/version-ai-prompts",
         label: "Version AI prompts",
-        body: "Keep important prompts in Git and publish shared prompts as packages.",
+        body: "Keep important prompts in Git and turn repeatable ones into versioned skills.",
       },
       {
         href: "/guides/share-cursor-rules",
         label: "Share Cursor rules",
-        body: "Package reusable Cursor rules so teams can install them across projects.",
+        body: "Share Cursor rules through Git and turn task-style rules into installable skills.",
       },
       {
         href: "/guides/share-ai-prompts-team",

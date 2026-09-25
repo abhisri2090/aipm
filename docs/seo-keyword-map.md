@@ -25,7 +25,7 @@ Each priority query must have one main page. Supporting pages may link to it, bu
 | 1 | Learn Claude skills | Claude Code skills | `/guides/claude-code-skills-guide` | Published |
 | 1 | Configure MCP files | mcp.json Cursor Claude Code | `/guides/mcp-json-guide-cursor-claude` | Published |
 | 2 | Distribute reusable workflows | AI package manager | `/guides/ai-package-manager` | Published |
-| 2 | Distribute agent workflows | Agent package manager | `/guides/agent-package-manager` | Published |
+| 2 | Distribute agent workflows | Agent package manager | `/guides/agent-package-manager` | Retired 2026-09-25: 301 → `/guides/ai-package-manager` |
 
 ## Non-technical audience: next priority
 

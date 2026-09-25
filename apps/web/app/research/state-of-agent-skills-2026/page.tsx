@@ -119,7 +119,7 @@ export default async function StateOfAgentSkillsPage() {
           <table>
             <thead><tr><th>Signal</th><th>Packages</th><th>Coverage</th><th>What it means</th></tr></thead>
             <tbody>
-              <tr><td>SHA-256 integrity value</td><td>{snapshot.totals.integrityProtected}</td><td>{percentage(snapshot.totals.integrityProtected, snapshot.totals.packages)}</td><td>The downloaded files can be checked against a recorded hash.</td></tr>
+              <tr><td>SHA-256 integrity value</td><td>{snapshot.totals.integrityProtected}</td><td>{percentage(snapshot.totals.integrityProtected, snapshot.totals.packages)}</td><td>A hash of the package archive is recorded. The CLI writes it to aipm-lock.json but does not yet check downloads against it.</td></tr>
               <tr><td>Public source link</td><td>{snapshot.totals.sourceLinked}</td><td>{percentage(snapshot.totals.sourceLinked, snapshot.totals.packages)}</td><td>A reviewer can open the stated upstream source.</td></tr>
               <tr><td>Declared license</td><td>{snapshot.totals.licenseDeclared}</td><td>{percentage(snapshot.totals.licenseDeclared, snapshot.totals.packages)}</td><td>The package states how its content may be used.</td></tr>
               <tr><td>Verified publisher</td><td>{snapshot.totals.verifiedPublisher}</td><td>{percentage(snapshot.totals.verifiedPublisher, snapshot.totals.packages)}</td><td>AIPM has completed its current publisher verification process.</td></tr>
@@ -146,9 +146,10 @@ export default async function StateOfAgentSkillsPage() {
           <table>
             <thead><tr><th>Workflow</th><th>Command</th><th>Expected project output</th></tr></thead>
             <tbody>
-              <tr><td>Install for Cursor</td><td><code>aipm add @scope/name@version --target cursor --ci</code></td><td><code>.cursor/aipm/skills/&lt;skill&gt;.md</code></td></tr>
               <tr><td>Install for Claude Code</td><td><code>aipm add @scope/name@version --target claude --ci</code></td><td><code>.claude/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
-              <tr><td>Verify downloaded files</td><td><code>aipm install --frozen</code></td><td>The package integrity must match the lock data.</td></tr>
+              <tr><td>Install for Codex</td><td><code>aipm add @scope/name@version --target codex --ci</code></td><td><code>.agents/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
+              <tr><td>Install with the Cursor target</td><td><code>aipm add @scope/name@version --target cursor --ci</code></td><td><code>.cursor/aipm/skills/&lt;skill&gt;.md</code> (Cursor does not load this folder automatically; it does load <code>.claude/skills</code> and <code>.agents/skills</code>)</td></tr>
+              <tr><td>Restore pinned versions</td><td><code>aipm install --ci</code></td><td>Reinstalls the exact versions listed in <code>aipm.package.json</code></td></tr>
             </tbody>
           </table>
           <p>
