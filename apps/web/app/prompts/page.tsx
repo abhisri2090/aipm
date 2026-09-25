@@ -82,9 +82,11 @@ export default async function PromptsPage({
     category: params.category,
     output: params.output,
     sort: "newest",
-    throwOnError: true,
   });
-  if (currentPage > 1 && page.prompts.length === 0) notFound();
+  // A registry error (429/5xx, timeout) must not turn this page into a 500: render the static
+  // directory copy with a notice instead. Only a successful empty read beyond page 1 is a 404.
+  const unavailable = page.failed;
+  if (currentPage > 1 && !unavailable && page.prompts.length === 0) notFound();
   const pageCount = Math.ceil(page.total / PAGE_SIZE);
   const outputCount = new Set(page.prompts.flatMap((prompt) => prompt.outputTypes)).size;
   const categoryCount = new Set(page.prompts.map((prompt) => prompt.category)).size;
@@ -154,15 +156,15 @@ export default async function PromptsPage({
         <dl className={styles.heroStats} aria-label="Prompt directory overview">
           <div>
             <dt>Prompts</dt>
-            <dd>{page.total}</dd>
+            <dd>{unavailable ? "—" : page.total}</dd>
           </div>
           <div>
             <dt>Categories</dt>
-            <dd>{categoryCount}</dd>
+            <dd>{unavailable ? "—" : categoryCount}</dd>
           </div>
           <div>
             <dt>Output types</dt>
-            <dd>{outputCount}</dd>
+            <dd>{unavailable ? "—" : outputCount}</dd>
           </div>
         </dl>
       </section>
@@ -175,6 +177,14 @@ export default async function PromptsPage({
           </div>
         </div>
         <DirectoryListTile kind="prompt" />
+        {unavailable ? (
+          <p className={shell.muted} role="status">
+            Prompt listings are temporarily unavailable. Try again in a minute, or start with the{" "}
+            <Link href="/prompts/topics/gemini-prompts">Gemini</Link>,{" "}
+            <Link href="/prompts/topics/claude-prompts">Claude</Link>, or{" "}
+            <Link href="/prompts/topics/nano-banana-prompts">Nano Banana</Link> prompt hubs.
+          </p>
+        ) : null}
         <PromptDirectory
           key={`${currentPage}:${initialQuery}:${params.category ?? ""}:${params.output ?? ""}`}
           initialPrompts={page.prompts}

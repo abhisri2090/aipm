@@ -10,6 +10,10 @@ type PromptTopicRouteProps = {
   params: Promise<{ topic: string }>;
 };
 
+// ISR (matches getPrompt's fetch revalidate): hubs are prerendered and a
+// failed revalidation keeps the last good page.
+export const revalidate = 60;
+
 export function generateStaticParams() {
   return PROMPT_TOPIC_HUBS.map((hub) => ({ topic: hub.slug }));
 }
@@ -29,7 +33,23 @@ export async function generateMetadata({ params }: PromptTopicRouteProps) {
 }
 
 async function loadHubPrompts(hub: NonNullable<ReturnType<typeof getPromptTopicHub>>): Promise<PromptSummary[]> {
-  const results = await Promise.all(hub.promptSlugs.map((slug) => getPrompt(hub.publisher, slug)));
+  const failures: unknown[] = [];
+  const results = await Promise.all(
+    hub.promptSlugs.map((slug) =>
+      getPrompt(hub.publisher, slug).catch((error: unknown) => {
+        console.error(`[prompt-hub] ${hub.publisher}/${slug}:`, error);
+        failures.push(error);
+        return null;
+      }),
+    ),
+  );
+  // At runtime the hub was already prerendered, so throwing makes ISR keep the
+  // last good page instead of caching a hub with missing cards. During the
+  // build there is no previous page, so degrade (drop failed cards; the page
+  // renders a fallback when none load) rather than failing the deploy.
+  if (failures.length > 0 && process.env.NEXT_PHASE !== "phase-production-build") {
+    throw failures[0];
+  }
   return results.filter((prompt): prompt is NonNullable<typeof prompt> => Boolean(prompt));
 }
 

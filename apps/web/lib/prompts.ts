@@ -141,6 +141,8 @@ export async function listPromptsPage(options: {
   nextCursor: string | null;
   nextOffset: number | null;
   total: number;
+  /** True when the registry could not be read (network error, 429/5xx, bad JSON). */
+  failed: boolean;
 }> {
   const params = new URLSearchParams({ limit: String(options.limit ?? 40) });
   if (options.query) params.set("q", options.query);
@@ -171,6 +173,7 @@ export async function listPromptsPage(options: {
       nextCursor: data.nextCursor ?? null,
       nextOffset: data.nextOffset ?? null,
       total: data.total ?? data.prompts?.length ?? 0,
+      failed: false,
     };
   } catch (error) {
     const isNetworkFailure =
@@ -178,22 +181,55 @@ export async function listPromptsPage(options: {
       (error instanceof Error &&
         (error.name === "TimeoutError" || error.name === "AbortError" || /fetch failed/i.test(error.message)));
     if (options.throwOnError && !isNetworkFailure) throw error;
-    return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
+    return { prompts: [], nextCursor: null, nextOffset: null, total: 0, failed: true };
   }
 }
 
+/**
+ * Revalidation window for prompt detail fetches/pages. Using ISR instead of
+ * `no-store` means a registry outage or rate limit (429) during revalidation
+ * keeps serving the last good page instead of failing the request.
+ */
+export const PROMPT_DETAIL_REVALIDATE_SECONDS = 60;
+
+/** Thrown when the registry could not be read (network error, timeout, 429, 5xx). */
+export class RegistryUnavailableError extends Error {
+  readonly status?: number;
+  constructor(message: string, status?: number) {
+    super(message);
+    this.name = "RegistryUnavailableError";
+    this.status = status;
+  }
+}
+
+/**
+ * Fetch a single prompt.
+ *
+ * Returns `null` only when the registry says the prompt does not exist
+ * (404/410/400). Any other failure throws `RegistryUnavailableError`, so
+ * callers never turn a transient fetch error into a 404: the detail page
+ * throws (ISR keeps serving the stale page), and hubs can degrade per item.
+ */
 export async function getPrompt(
   publisher: string,
   slug: string,
 ): Promise<PromptDetail | null> {
+  const url = `${REGISTRY_API_BASE_URL}/v1/prompts/${encodeURIComponent(publisher)}/${encodeURIComponent(slug)}`;
+  let response: Response;
   try {
-    const response = await fetch(
-      `${REGISTRY_API_BASE_URL}/v1/prompts/${encodeURIComponent(publisher)}/${encodeURIComponent(slug)}`,
-      { cache: "no-store", signal: AbortSignal.timeout(3000) },
-    );
-    if (!response.ok) return null;
-    return (await response.json()) as PromptDetail;
-  } catch {
+    response = await fetch(url, {
+      next: { revalidate: PROMPT_DETAIL_REVALIDATE_SECONDS },
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new RegistryUnavailableError(`Prompt fetch failed: ${reason}`);
+  }
+  if (response.status === 404 || response.status === 410 || response.status === 400) {
     return null;
   }
+  if (!response.ok) {
+    throw new RegistryUnavailableError(`Prompt fetch failed (${response.status})`, response.status);
+  }
+  return (await response.json()) as PromptDetail;
 }

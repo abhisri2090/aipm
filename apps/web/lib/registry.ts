@@ -327,6 +327,8 @@ export async function listPackagesPage(options: {
   packages: PackageSummary[];
   nextCursor: string | null;
   nextOffset: number | null;
+  /** True when the registry could not be read (network error, 429/5xx, bad JSON). */
+  failed: boolean;
 }> {
   const params = new URLSearchParams({ limit: String(options.limit ?? 50) });
   if (options.query) params.set("q", options.query);
@@ -355,6 +357,7 @@ export async function listPackagesPage(options: {
       packages: skills,
       nextCursor: data.nextCursor ?? null,
       nextOffset: data.nextOffset ?? null,
+      failed: false,
     };
   } catch (error) {
     // Network/timeout failures should not crash directory pages in local/dev.
@@ -364,7 +367,7 @@ export async function listPackagesPage(options: {
       (error instanceof Error &&
         (error.name === "TimeoutError" || error.name === "AbortError" || /fetch failed/i.test(error.message)));
     if (options.throwOnError && !isNetworkFailure) throw error;
-    return { packages: [], nextCursor: null, nextOffset: null };
+    return { packages: [], nextCursor: null, nextOffset: null, failed: true };
   }
 }
 
