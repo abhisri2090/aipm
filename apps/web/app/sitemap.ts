@@ -11,7 +11,7 @@ const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
 const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/": new Date("2026-09-25T00:00:00.000Z"),
   "/skills": new Date("2026-09-25T00:00:00.000Z"),
-  "/prompts": HUB_SEO_REFRESH,
+  "/prompts": new Date("2026-09-25T00:00:00.000Z"),
   "/install": HUB_SEO_REFRESH,
   "/use": new Date("2026-09-04T00:00:00.000Z"),
   "/publish": new Date("2026-09-23T00:00:00.000Z"),
