@@ -106,7 +106,7 @@ const requiredPages = [
     title: "AIPM CLI Commands",
     h1: "Every AIPM command in one place.",
     jsonLd: false,
-    includes: ["Install the CLI", "aipm publish init", "aipm add @scope/name@1.0.0 --target cursor --ci"],
+    includes: ["Install the CLI", "aipm publish init", "aipm add @scope/name@1.0.0 --target claude --ci"],
   },
   {
     path: "/targets",
