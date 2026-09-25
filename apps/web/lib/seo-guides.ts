@@ -1,3 +1,5 @@
+import { CLAUDE_SKILLS_GUIDES } from "./seo-guides-claude-skills";
+
 export type SeoGuide = {
   slug: string;
   title: string;
@@ -20,9 +22,15 @@ export type SeoGuide = {
     label: string;
     href: string;
   }>;
+  /** Optional comparison table rendered after the explanation sections. */
+  comparison?: {
+    caption: string;
+    columns: string[];
+    rows: string[][];
+  };
 };
 
-export const SEO_GUIDES: SeoGuide[] = [
+const BASE_SEO_GUIDES: SeoGuide[] = [
   {
     slug: "components-of-an-ai-agent",
     title: "Components of an AI Agent",
@@ -1696,3 +1704,5 @@ export const SEO_GUIDES: SeoGuide[] = [
 export function getSeoGuide(slug: string): SeoGuide | null {
   return SEO_GUIDES.find((guide) => guide.slug === slug) ?? null;
 }
+
+export const SEO_GUIDES: SeoGuide[] = [...BASE_SEO_GUIDES, ...CLAUDE_SKILLS_GUIDES];

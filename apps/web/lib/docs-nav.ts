@@ -14,6 +14,21 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
     title: "Plain English Technical Guides",
     items: [
       {
+        href: "/guides/what-are-claude-skills",
+        label: "What are Claude skills?",
+        body: "How Claude skills work, what they contain, examples, and where they run.",
+      },
+      {
+        href: "/guides/claude-code-plugins-vs-skills",
+        label: "Claude Code plugins vs skills",
+        body: "When you need a single SKILL.md and when you need a plugin from a marketplace.",
+      },
+      {
+        href: "/guides/claude-skills-marketplaces",
+        label: "Claude skills marketplaces compared",
+        body: "Claude app, plugin marketplaces, GitHub, skills.sh, SkillsMP, and AIPM side by side.",
+      },
+      {
         href: "/guides/ai-package-manager",
         label: "What is an AI package manager?",
         body: "A simple explanation of AI package managers, AI skills, and reusable setup.",

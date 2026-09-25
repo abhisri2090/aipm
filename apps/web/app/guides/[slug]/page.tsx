@@ -5,6 +5,7 @@ import { SEO_GUIDES, getSeoGuide } from "../../../lib/seo-guides";
 import { SITE_URL } from "../../../lib/registry";
 import { pageMetadata } from "../../../lib/seo";
 import { shell, cards, docs, cn } from "../../../lib/page-styles";
+import tableStyles from "../../compatibility/compatibility.module.css";
 
 type GuideRouteProps = {
   params: Promise<{ slug: string }>;
@@ -199,6 +200,37 @@ export default async function GuidePage({ params }: GuideRouteProps) {
             </div>
           ))}
         </section>
+
+        {guide.comparison ? (
+          <section aria-labelledby="comparison-title">
+            <h2 id="comparison-title">Comparison table</h2>
+            <div className={tableStyles.tableWrap}>
+              <table className={tableStyles.matrix}>
+                <caption className={tableStyles.note}>{guide.comparison.caption}</caption>
+                <thead>
+                  <tr>
+                    {guide.comparison.columns.map((column) => (
+                      <th key={column} scope="col">{column}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {guide.comparison.rows.map((row) => (
+                    <tr key={row[0]}>
+                      {row.map((cell, index) =>
+                        index === 0 ? (
+                          <th className={tableStyles.formatName} key={`${row[0]}-${index}`} scope="row">{cell}</th>
+                        ) : (
+                          <td key={`${row[0]}-${index}`}>{cell}</td>
+                        ),
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
         <section>
           <h2>Simple steps</h2>
