@@ -141,6 +141,8 @@ export async function listPromptsPage(options: {
   nextCursor: string | null;
   nextOffset: number | null;
   total: number;
+  /** True when the registry could not be read (network error, 429/5xx, bad JSON). */
+  failed: boolean;
 }> {
   const params = new URLSearchParams({ limit: String(options.limit ?? 40) });
   if (options.query) params.set("q", options.query);
@@ -171,6 +173,7 @@ export async function listPromptsPage(options: {
       nextCursor: data.nextCursor ?? null,
       nextOffset: data.nextOffset ?? null,
       total: data.total ?? data.prompts?.length ?? 0,
+      failed: false,
     };
   } catch (error) {
     const isNetworkFailure =
@@ -178,7 +181,7 @@ export async function listPromptsPage(options: {
       (error instanceof Error &&
         (error.name === "TimeoutError" || error.name === "AbortError" || /fetch failed/i.test(error.message)));
     if (options.throwOnError && !isNetworkFailure) throw error;
-    return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
+    return { prompts: [], nextCursor: null, nextOffset: null, total: 0, failed: true };
   }
 }
 

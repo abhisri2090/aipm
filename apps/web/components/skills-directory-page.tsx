@@ -22,7 +22,7 @@ export async function SkillsDirectoryPage({
       ? params.sort
       : "newest";
   const filtered = Boolean(query || params.category || params.target || params.sort);
-  const listingOptions = { query, limit: 20, category: params.category, target: params.target, sort, throwOnError: true };
+  const listingOptions = { query, limit: 20, category: params.category, target: params.target, sort };
   const page = await listPackagesPage({
     ...listingOptions,
     offset: currentPage > 1 ? (currentPage - 1) * 20 : undefined,
@@ -30,7 +30,9 @@ export async function SkillsDirectoryPage({
   const initialPackages = page.packages;
   const initialNextCursor = page.nextCursor;
   const initialNextOffset = page.nextOffset;
-  if (currentPage > 1 && initialPackages.length === 0) notFound();
+  // A registry error (429/5xx, timeout) renders the directory with a notice instead of a 500.
+  const unavailable = page.failed;
+  if (currentPage > 1 && !unavailable && initialPackages.length === 0) notFound();
 
   return (
     <main>
@@ -111,6 +113,12 @@ export async function SkillsDirectoryPage({
           <h2 id="registry-search-title">Skills</h2>
         </div>
         <DirectoryListTile kind="skill" />
+        {unavailable ? (
+          <p className={shell.muted} role="status">
+            Skill listings are temporarily unavailable. Try again in a minute, or see the{" "}
+            <Link href="/best-claude-skills">best Claude skills</Link>.
+          </p>
+        ) : null}
         <RegistrySearch
           key={`${currentPage}:${query}:${params.category ?? ""}:${params.target ?? ""}:${sort}`}
           initialPackages={initialPackages}
