@@ -106,6 +106,27 @@ const requiredPages = [
     includes: ["Which file works where?", "AGENTS.md", "CLAUDE.md", "Last checked: 31 August 2026"],
   },
   {
+    path: "/guides/cursor-rules-vs-agent-skills",
+    title: "Cursor Rules vs Skills: Differences and When to Use",
+    h1: "Cursor rules vs skills: what is the difference?",
+    jsonLd: true,
+    includes: ["Short answer", "/migrate-to-skills", ".cursor/skills"],
+  },
+  {
+    path: "/guides/cursor-rules-vs-agents-md",
+    title: "Does Cursor Read AGENTS.md? Cursor Rules vs AGENTS.md",
+    h1: "Does Cursor read AGENTS.md, and should you use it or Cursor rules?",
+    jsonLd: true,
+    includes: ["Short answer", "Does Claude Code read AGENTS.md?", "v2.1.277"],
+  },
+  {
+    path: "/guides/agents-md-vs-skill-md",
+    title: "AGENTS.md vs SKILL.md: Which File Does What?",
+    h1: "AGENTS.md vs SKILL.md: what is the difference?",
+    jsonLd: true,
+    includes: ["Short answer", "Which tools read which file", ".agents/skills"],
+  },
+  {
     path: "/guides/components-of-an-ai-agent",
     title: "Components of an AI Agent",
     h1: "What are the main components of an AI agent?",
