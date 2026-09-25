@@ -60,6 +60,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Where are Claude skills stored?](${site}/guides/where-are-claude-skills-stored)
 - [Install Cursor skills](${site}/guides/how-to-install-cursor-skills)
 - [Create an Agent Skill](${site}/guides/how-to-create-agent-skill)
+- [SKILL.md frontmatter reference](${site}/guides/skill-md-frontmatter-reference)
 
 ## Plain-English Answers
 

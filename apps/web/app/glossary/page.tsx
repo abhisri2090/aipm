@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { shell, cards } from "../../lib/page-styles";
 import { pageMetadata } from "../../lib/seo";
 import { DocLayout } from "../../components/doc-layout";
 import { SITE_URL } from "../../lib/registry";
 
-const terms = [
+const terms: Array<{ term: string; definition: string; href?: string; linkLabel?: string }> = [
   {
     term: "AIPM package",
     definition: "A versioned package with a manifest, visibility setting, and the files needed to install an AI skill.",
@@ -55,6 +56,13 @@ const terms = [
   {
     term: "Template",
     definition: "Starter SKILL.md content for common tasks like code review, issue summaries, and release notes.",
+  },
+  {
+    term: "SKILL.md frontmatter",
+    definition:
+      "The YAML block between --- lines at the top of SKILL.md. name and description are required; other fields depend on the AI tool.",
+    href: "/guides/skill-md-frontmatter-reference",
+    linkLabel: "SKILL.md frontmatter reference",
   },
   {
     term: "Entry file",
@@ -119,6 +127,12 @@ export default function GlossaryPage() {
           <article className={cards.glossaryCard} key={item.term}>
             <p>
               <h2>• {item.term}</h2>{item.definition}
+              {item.href ? (
+                <>
+                  {" "}
+                  <Link href={item.href}>{item.linkLabel ?? item.term}</Link>
+                </>
+              ) : null}
             </p>
           </article>
         ))}

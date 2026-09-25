@@ -1551,7 +1551,7 @@ updatedAt: "2026-09-25",
       "Choose one repeated job, create a SKILL.md file that explains when and how to do it, add a small example, test it on real tasks, and publish it with a clear name, version, source, and license.",
     keywords: ["how to create Agent Skill", "create AI agent skill", "write SKILL.md", "build Claude skill"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-01",
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "Give the skill one job",
@@ -1561,7 +1561,7 @@ updatedAt: "2026-09-25",
       {
         title: "Write instructions that can be checked",
         body:
-          "Explain when to use the skill, the information it needs, the steps it follows, the output it should create, and the actions it must not take. Add one short example of useful input and output.",
+          "Explain when to use the skill, the information it needs, the steps it follows, the output it should create, and the actions it must not take. Add one short example of useful input and output. Start SKILL.md with YAML frontmatter: `name` (lowercase, hyphens, the same as the folder) and `description` (what it does and when to use it) are required. Every field and limit is in the [SKILL.md frontmatter reference](/guides/skill-md-frontmatter-reference).",
       },
       {
         title: "Package and improve it",
@@ -1572,6 +1572,7 @@ updatedAt: "2026-09-25",
     steps: [
       "Choose one repeated task with a clear result.",
       "Run aipm publish init --name @your-org/skill-name.",
+      "Add name and description frontmatter at the top of SKILL.md.",
       "Edit SKILL.md with purpose, steps, limits, and examples.",
       "Add description, targets, license, source URL, and tags to the manifest.",
       "Run aipm publish add . and aipm publish validate.",
@@ -1591,7 +1592,7 @@ updatedAt: "2026-09-25",
     ],
     sources: [
       { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
-      { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
+      { label: "OpenAI Codex: Build skills", href: "https://learn.chatgpt.com/docs/build-skills" },
       { label: "AIPM publishing guide", href: "https://www.aipm-registry.com/publish/guide" },
     ],
   },
@@ -1698,7 +1699,7 @@ updatedAt: "2026-09-25",
       {
         title: "SKILL.md describes a task",
         body:
-          "A SKILL.md file lives in its own folder, such as .claude/skills/code-review/SKILL.md. It starts with YAML frontmatter (name and description) and then gives the steps for one job. Agents show only the name and description until the task matches, so many skills cost little context.",
+          "A SKILL.md file lives in its own folder, such as .claude/skills/code-review/SKILL.md. It starts with YAML frontmatter (name and description) and then gives the steps for one job. Agents show only the name and description until the task matches, so many skills cost little context. Every field and limit is in the [SKILL.md frontmatter reference](/guides/skill-md-frontmatter-reference).",
       },
       {
         title: "Which tools read which file",
