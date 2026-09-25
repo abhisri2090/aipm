@@ -136,7 +136,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         title: "What a plugin marketplace is",
         body:
-          "A marketplace is a repository or folder with a .claude-plugin/marketplace.json file that lists plugins and where to fetch each one. It is a catalog, not a hosted store. Claude Code adds Anthropic's official marketplace (claude-plugins-official) the first time you start an interactive session; you add others with /plugin marketplace add owner/repo. Anthropic's official and community marketplace names are only accepted from github.com/anthropics repositories; every other marketplace is third-party.",
+          "A marketplace is a repository or folder with a .claude-plugin/marketplace.json file that lists plugins and where to fetch each one. It is a catalog, not a hosted store. Claude Code adds Anthropic's official marketplace (claude-plugins-official) the first time you start an interactive session; you add others with /plugin marketplace add owner/repo. Anthropic's official and community marketplace names are only accepted from github.com/anthropics repositories; every other marketplace is third-party. To share plugins with a team through repo settings, see [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
       {
         title: "How to install a Claude Code plugin",
