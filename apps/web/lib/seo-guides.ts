@@ -833,7 +833,7 @@ updatedAt: "2026-09-25",
       {
         title: "AIPM helps distribute skills",
         body:
-          "AIPM gives each skill a name and version number. This helps a team install the same skill in many projects.",
+          "AIPM gives each skill a name and version number. This helps a team install the same skill in many projects. For every folder Claude Code loads skills from, see [where are Claude skills stored?](/guides/where-are-claude-skills-stored).",
       },
     ],
     steps: [
@@ -1405,7 +1405,7 @@ updatedAt: "2026-09-25",
       {
         title: "Install a skill in Claude Code",
         body:
-          "Copy the skill folder into ~/.claude/skills/<skill-name>/ to use it in every project on your machine, or into .claude/skills/<skill-name>/ inside a repository to share it with everyone who works there (commit it). The folder name becomes the command, so ~/.claude/skills/summarize-changes/SKILL.md is invoked with /summarize-changes, and Claude can also load it automatically when your request matches its description. Claude Code picks up new or edited skills during a session; if you created the top-level skills folder for the first time, restart Claude Code.",
+          "Copy the skill folder into ~/.claude/skills/<skill-name>/ to use it in every project on your machine, or into .claude/skills/<skill-name>/ inside a repository to share it with everyone who works there (commit it). The folder name becomes the command, so ~/.claude/skills/summarize-changes/SKILL.md is invoked with /summarize-changes, and Claude can also load it automatically when your request matches its description. Claude Code picks up new or edited skills during a session; if you created the top-level skills folder for the first time, restart Claude Code. Every folder Claude Code reads, including plugin, enterprise and synced locations and Windows paths, is listed in [where are Claude skills stored?](/guides/where-are-claude-skills-stored).",
       },
       {
         title: "Install skills from a plugin marketplace in Claude Code",
@@ -1445,7 +1445,7 @@ updatedAt: "2026-09-25",
       {
         question: "Where are Claude skills stored?",
         answer:
-          "In Claude Code, personal skills are in ~/.claude/skills/ (on Windows, the .claude\\skills folder in your user profile) and project skills are in .claude/skills/ in the repository. Skills uploaded to the Claude app are stored in your Claude account, and Claude Code v2.1.273 or later syncs the skills enabled on your account into ~/.claude/skills/synced/ when you sign in with that account.",
+          "In Claude Code, personal skills are in ~/.claude/skills/ (on Windows, the .claude\\skills folder in your user profile) and project skills are in .claude/skills/ in the repository. Skills uploaded to the Claude app are stored in your Claude account, and Claude Code v2.1.273 or later syncs the skills enabled on your account into ~/.claude/skills/synced/ when you sign in with that account. The full list is in [where are Claude skills stored?](/guides/where-are-claude-skills-stored).",
       },
       {
         question: "Can I install Claude skills without Claude Code?",

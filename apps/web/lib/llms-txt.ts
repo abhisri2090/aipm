@@ -55,6 +55,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Claude Code skills vs Codex skills](${site}/guides/claude-code-skills-vs-codex-skills)
 - [Agent Skills vs MCP](${site}/guides/agent-skills-vs-mcp)
 - [How to install Claude skills (Claude app, Claude Code, GitHub, npx, AIPM)](${site}/guides/how-to-install-claude-code-skills)
+- [Where are Claude skills stored?](${site}/guides/where-are-claude-skills-stored)
 - [Install Cursor skills](${site}/guides/how-to-install-cursor-skills)
 - [Create an Agent Skill](${site}/guides/how-to-create-agent-skill)
 

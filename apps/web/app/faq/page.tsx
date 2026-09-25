@@ -37,8 +37,17 @@ const faqs: { question: string; answer: ReactNode; text?: string }[] = [
   },
   {
     question: "The skill installed but does not appear in my tool.",
-    answer:
-      "Check that you used the right --target: --target claude writes .claude/skills/<skill>/SKILL.md for Claude Code, and --target codex writes .agents/skills/<skill>/SKILL.md for Codex. For Cursor, use --target claude or --target codex, because Cursor loads skills from .claude/skills and .agents/skills but not from .cursor/aipm/skills, where --target cursor currently writes. Then restart or reload the AI tool if it caches project files.",
+    answer: (
+      <>
+        Check that you used the right --target: --target claude writes .claude/skills/&lt;skill&gt;/SKILL.md for
+        Claude Code, and --target codex writes .agents/skills/&lt;skill&gt;/SKILL.md for Codex. For Cursor, use
+        --target claude or --target codex, because Cursor loads skills from .claude/skills and .agents/skills but not
+        from .cursor/aipm/skills, where --target cursor currently writes. Then restart or reload the AI tool if it
+        caches project files. To see every folder each tool reads, go to{" "}
+        <Link href="/guides/where-are-claude-skills-stored">where are Claude skills stored?</Link>
+      </>
+    ),
+    text: "Check that you used the right --target: --target claude writes .claude/skills/<skill>/SKILL.md for Claude Code, and --target codex writes .agents/skills/<skill>/SKILL.md for Codex. For Cursor, use --target claude or --target codex, because Cursor loads skills from .claude/skills and .agents/skills but not from .cursor/aipm/skills, where --target cursor currently writes. Then restart or reload the AI tool if it caches project files. To see every folder each tool reads, go to where are Claude skills stored?",
   },
   {
     question: "How does my team keep the same skill versions?",
