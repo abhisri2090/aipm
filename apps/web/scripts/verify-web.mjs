@@ -135,10 +135,10 @@ const requiredPages = [
   },
   {
     path: "/guides/how-to-install-claude-code-skills",
-    title: "How to Install Claude Code Skills",
-    h1: "How do you install a Claude Code skill?",
+    title: "How to Install Claude Skills (App, Code, GitHub, npx)",
+    h1: "How do you install Claude skills?",
     jsonLd: true,
-    includes: ["Short answer", "aipm init --target claude", "Review the installed .claude skill files"],
+    includes: ["Short answer", "Customize &gt; Skills", "~/.claude/skills/", "npx skills add", "aipm init --target claude"],
   },
   {
     path: "/guides/how-to-install-cursor-skills",

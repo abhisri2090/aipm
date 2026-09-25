@@ -155,8 +155,8 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
       },
       {
         href: "/guides/how-to-install-claude-code-skills",
-        label: "Install Claude Code skills",
-        body: "Install and review a Claude Code skill in one project.",
+        label: "How to install Claude skills",
+        body: "Install skills in the Claude app, Claude Code, from GitHub, with npx, or with AIPM.",
       },
       {
         href: "/guides/how-to-install-cursor-skills",

@@ -362,8 +362,8 @@ export default async function HomePage() {
           <p>Honest comparison for anyone searching a skills.sh alternative or directory.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/how-to-install-claude-code-skills">
-          <h2>Install Claude Code skills</h2>
-          <p>Step-by-step install for Claude Code using the AIPM CLI and targets.</p>
+          <h2>How to install Claude skills</h2>
+          <p>Claude app upload, Claude Code folders, GitHub, npx skills add, or a pinned AIPM version.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/how-to-install-cursor-skills">
           <h2>Install Cursor skills</h2>

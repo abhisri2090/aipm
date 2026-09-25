@@ -53,7 +53,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [AIPM vs Skills.sh](${site}/guides/aipm-vs-skills-sh)
 - [Claude Code skills vs Codex skills](${site}/guides/claude-code-skills-vs-codex-skills)
 - [Agent Skills vs MCP](${site}/guides/agent-skills-vs-mcp)
-- [Install Claude Code skills](${site}/guides/how-to-install-claude-code-skills)
+- [How to install Claude skills (Claude app, Claude Code, GitHub, npx, AIPM)](${site}/guides/how-to-install-claude-code-skills)
 - [Install Cursor skills](${site}/guides/how-to-install-cursor-skills)
 - [Create an Agent Skill](${site}/guides/how-to-create-agent-skill)
 
@@ -73,7 +73,7 @@ An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI
 
 ### How do you install a Claude Code or Cursor skill?
 
-Install the AIPM CLI, initialize the project for the target, and run aipm add with the package name and target. Review the installed files before use. See [Install Claude Code skills](${site}/guides/how-to-install-claude-code-skills) and [Install Cursor skills](${site}/guides/how-to-install-cursor-skills).
+Install the AIPM CLI, initialize the project for the target, and run aipm add with the package name and target. Review the installed files before use. See [How to install Claude skills](${site}/guides/how-to-install-claude-code-skills) and [Install Cursor skills](${site}/guides/how-to-install-cursor-skills).
 
 ## Install
 
