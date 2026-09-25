@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import sitemap from "../apps/web/app/sitemap";
 import { buildPromptSitemapXml } from "../apps/web/lib/prompt-sitemap";
 import { listAllPrompts, listPromptsPage } from "../apps/web/lib/prompts";
+import { PROMPT_TOPIC_HUBS } from "../apps/web/lib/prompt-topics";
 
 afterEach(() => vi.unstubAllGlobals());
 const prompt = (i) => ({
@@ -51,6 +52,20 @@ describe("complete prompt sitemap", () => {
       entries.every((entry) => !/\/prompts\/(?!topics\/)[^/]+\/[^/]+/.test(entry.url)),
     ).toBe(true);
     expect(entries.some((entry) => /\/prompts\/topics\/[^/]+/.test(entry.url))).toBe(true);
+  });
+
+  it("lists every prompt topic hub in the static /sitemap.xml with its own lastmod", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(Response.json({ prompts: [prompt(0)], total: 1, nextCursor: null })),
+    );
+    const entries = await sitemap();
+    expect(PROMPT_TOPIC_HUBS.length).toBeGreaterThan(0);
+    for (const hub of PROMPT_TOPIC_HUBS) {
+      const entry = entries.find((item) => item.url.endsWith(`/prompts/topics/${hub.slug}`));
+      expect(entry, hub.slug).toBeDefined();
+      expect(entry.lastModified).toEqual(new Date(`${hub.updatedAt}T00:00:00.000Z`));
+    }
   });
 
   it("fails generation when a later API page fails instead of returning a partial sitemap", async () => {
