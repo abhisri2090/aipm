@@ -18,7 +18,7 @@ const targets = [
     name: "Claude",
     value: "claude",
     detect: ".claude/",
-    writes: ".claude/aipm/skills/<skill>/SKILL.md",
+    writes: ".claude/skills/<skill>/SKILL.md",
     command: "aipm add @scope/name@1.0.0 --target claude --ci",
     note: "Use this when you want the skill installed as a Claude project skill folder.",
   },

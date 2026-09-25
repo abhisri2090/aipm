@@ -113,7 +113,9 @@ const requiredPages = [
     title: "AIPM Supported Targets",
     h1: "Choose where AIPM should install a skill.",
     jsonLd: true,
-    includes: [".cursor/aipm/skills/&lt;skill&gt;.md", ".claude/aipm/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
+    includes: [".cursor/aipm/skills/&lt;skill&gt;.md", ".claude/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
+    // The Claude adapter (packages/adapter-claude) writes .claude/skills/<name>/, not .claude/aipm/skills.
+    excludes: [".claude/aipm/skills"],
   },
   {
     path: "/resources",
@@ -574,6 +576,9 @@ for (const page of requiredPages) {
 
   for (const expected of page.includes ?? []) {
     assertIncludes(page.path, text, expected);
+  }
+  for (const unexpected of page.excludes ?? []) {
+    if (text.includes(unexpected)) fail(`${page.path} still contains "${unexpected}"`);
   }
 }
 
