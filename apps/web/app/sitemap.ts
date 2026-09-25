@@ -37,6 +37,7 @@ const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/research/state-of-agent-skills-2026": new Date("2026-09-04T00:00:00.000Z"),
   "/thanks": new Date("2026-09-04T00:00:00.000Z"),
   "/compatibility": new Date("2026-09-04T00:00:00.000Z"),
+  "/best-claude-skills": new Date("2026-09-25T00:00:00.000Z"),
 };
 
 function dateFromIsoDay(day: string): Date {
@@ -73,6 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/research/state-of-agent-skills-2026",
     "/thanks",
     "/compatibility",
+    "/best-claude-skills",
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
     ...PROMPT_TOPIC_HUBS.map((hub) => `/prompts/topics/${hub.slug}`),

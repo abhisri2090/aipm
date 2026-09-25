@@ -20,6 +20,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 
 - [Website](${site})
 - [Agent skills registry](${site}/skills)
+- [Best Claude skills, ranked by installs and GitHub stars](${site}/best-claude-skills)
 - [Install guide](${site}/install)
 - [Use guide](${site}/use)
 - [CLI commands](${site}/commands)

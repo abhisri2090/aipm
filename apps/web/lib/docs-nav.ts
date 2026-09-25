@@ -299,6 +299,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Find public skills for Claude and Claude Code project workflows.",
       },
       {
+        href: "/best-claude-skills",
+        label: "Best Claude skills",
+        body: "Claude skills ranked by AIPM installs and source-repo GitHub stars.",
+      },
+      {
         href: "/skills/code-review",
         label: "Browse code review packages",
         body: "Browse skills for pull request reviews, regressions, missing tests, and security checks.",

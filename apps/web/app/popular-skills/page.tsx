@@ -267,6 +267,13 @@ export default function PopularSkillsPage() {
       <section className={cn(shell.pageHeader, shell.compactPageHeader, shell.pageHeaderNoBorder)}>
         <p className={shell.eyebrow}>Starter catalog</p>
         <h1>Popular AI skills worth publishing first.</h1>
+        <p className={shell.lede}>
+          Looking for skills you can install today? See the{" "}
+          <Link className={shell.textLink} href="/best-claude-skills">
+            best Claude skills, ranked by installs and GitHub stars
+          </Link>
+          .
+        </p>
       </section>
 
       <section className={shell.panelSection} aria-labelledby="publish-motivation-title">

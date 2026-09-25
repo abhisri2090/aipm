@@ -177,6 +177,13 @@ const requiredPages = [
     includes: ["Short answer", "Give the skill one job", "aipm publish validate"],
   },
   {
+    path: "/best-claude-skills",
+    title: "Best Claude Skills: Ranked by GitHub Stars and Installs",
+    h1: "Best Claude skills, ranked with real registry data",
+    jsonLd: true,
+    includes: ["How this list is ranked", "Top Claude skill collections by GitHub stars", "/guides/what-are-claude-skills"],
+  },
+  {
     path: "/publishers",
     title: "AI Skill Publishers",
     h1: "Meet the people and orgs behind public skills.",
@@ -612,6 +619,7 @@ for (const path of [
   "/skills",
   "/prompts",
   "/publishers",
+  "/best-claude-skills",
   "/publish",
   "/publish/guide",
   "/install",
