@@ -64,6 +64,7 @@ export interface PackageListOptions {
   offset?: number;
   category?: string;
   target?: string;
+  publisher?: string;
   sort?: PackageSortMode;
 }
 

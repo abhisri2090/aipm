@@ -587,6 +587,7 @@ export async function registerPromptRoutes(
       category?: string;
       output?: string;
       sort?: string;
+      publisher?: string;
     };
   }>("/v1/prompts", async (request, reply) => {
       if (!options.accountAuth) return { prompts: [], nextCursor: null, nextOffset: null, total: 0 };
@@ -594,6 +595,7 @@ export async function registerPromptRoutes(
       const query = request.query.q?.trim() ?? "";
       const category = request.query.category?.trim() ?? "";
       const output = request.query.output?.trim() ?? "";
+      const publisher = request.query.publisher?.trim().toLowerCase() ?? "";
       const sort = request.query.sort?.trim() || "newest";
       const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const cursorRaw = request.query.cursor?.trim();
@@ -626,6 +628,10 @@ export async function registerPromptRoutes(
           SELECT 1 FROM jsonb_array_elements_text(prompts.output_types) ot
           WHERE ot ILIKE $${values.length}
         )`);
+      }
+      if (publisher) {
+        values.push(publisher);
+        conditions.push(`LOWER(COALESCE(orgs.slug, users.username)) = $${values.length}`);
       }
 
       const whereSql = conditions.join(" AND ");

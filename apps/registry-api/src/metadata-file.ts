@@ -104,6 +104,8 @@ export class FileMetadataStore implements MetadataStore {
     const cursorTime = useCursor && options.cursor ? new Date(options.cursor).getTime() : null;
     const category = options.category?.trim().toLowerCase();
     const target = options.target?.trim().toLowerCase();
+    const publisher = options.publisher?.trim().toLowerCase();
+    const publisherPrefix = publisher ? `@${publisher}/` : "";
     const index = await this.readIndex();
     const rows: PackageVersionRow[] = [];
     const haystacks = new Map<string, string>();
@@ -150,6 +152,9 @@ export class FileMetadataStore implements MetadataStore {
         target !== "all" &&
         !row.manifest.targets.some((item) => item === target || item === "*")
       ) {
+        return false;
+      }
+      if (publisherPrefix && !row.name.toLowerCase().startsWith(publisherPrefix)) {
         return false;
       }
       return !cursorTime || row.created_at.getTime() < cursorTime;

@@ -2634,6 +2634,7 @@ export async function createApp(): Promise<FastifyInstance> {
       offset?: string;
       category?: string;
       target?: string;
+      publisher?: string;
       sort?: string;
       includeDemo?: string;
       includePrivate?: string;
@@ -2660,6 +2661,7 @@ export async function createApp(): Promise<FastifyInstance> {
       const query = request.query.q?.trim() ?? "";
       const category = request.query.category?.trim() ?? "";
       const target = request.query.target?.trim() ?? "";
+      const publisher = request.query.publisher?.trim() ?? "";
       const sortRaw = request.query.sort?.trim() || "newest";
       const sort: PackageSortMode =
         sortRaw === "popular" || sortRaw === "title" || sortRaw === "stars" ? sortRaw : "newest";
@@ -2672,6 +2674,7 @@ export async function createApp(): Promise<FastifyInstance> {
         offset: useCursor ? undefined : offset,
         category,
         target,
+        publisher,
         sort,
       });
       let visibleRows = includeDemo ? rows : rows.filter((row) => !isHiddenPublicPackage(row.name));

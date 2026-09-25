@@ -323,6 +323,19 @@ describe("registry API production behavior", () => {
       "@team/apex-skill",
     ]);
 
+    const byPublisher = await app!.inject({ method: "GET", url: "/v1/skills?publisher=team" });
+    expect(byPublisher.statusCode).toBe(200);
+    expect(
+      byPublisher.json().skills.map((pkg: { name: string }) => pkg.name).sort(),
+    ).toEqual(["@team/apex-skill", "@team/zebra-skill"]);
+
+    const byOtherPublisher = await app!.inject({
+      method: "GET",
+      url: "/v1/skills?publisher=other",
+    });
+    expect(byOtherPublisher.statusCode).toBe(200);
+    expect(byOtherPublisher.json().skills).toEqual([]);
+
     const byTitle = await app!.inject({
       method: "GET",
       url: `/v1/skills?sort=title&q=${encodeURIComponent("skill")}`,
