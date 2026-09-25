@@ -215,6 +215,7 @@ const requiredPages = [
   {
     path: "/examples",
     title: "Claude Code & Cursor Skill Examples",
+    renderedTitle: "Claude Code &amp; Cursor Skill Examples | AIPM",
     h1: "Skill publishing examples.",
     jsonLd: true,
     includes: [
@@ -301,6 +302,7 @@ const requiredPages = [
   {
     path: "/faq",
     title: "AIPM FAQ — Install Claude Code & Cursor Skills",
+    renderedTitle: "AIPM FAQ — Install Claude Code &amp; Cursor Skills | AIPM",
     h1: "Common questions and fixes.",
     jsonLd: false,
   },
