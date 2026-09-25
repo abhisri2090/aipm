@@ -24,11 +24,11 @@ baseUrl.hash = "";
 const requiredPages = [
   {
     path: "/",
-    title: "Claude Code & Cursor Skills Registry — Install with AIPM",
-    renderedTitle: "Claude Code &amp; Cursor Skills Registry — Install with AIPM",
-    h1: "Claude Code and Cursor skills you can install like packages.",
+    title: "Claude & Agent Skills Marketplace — Install with AIPM",
+    renderedTitle: "Claude &amp; Agent Skills Marketplace — Install with AIPM",
+    h1: "Claude and agent skills you can install like packages.",
     jsonLd: true,
-    includes: ["What is AIPM?", "AIPM is a Claude Code and Cursor skills registry", "Abhishek Srivastava", "aipm add @scope/name@version"],
+    includes: ["What is AIPM?", "AIPM is a Claude and agent skills marketplace", "/best-claude-skills", "/guides/what-are-claude-skills", "Abhishek Srivastava", "aipm add @scope/name@version"],
   },
   {
     path: "/registry",
@@ -39,7 +39,8 @@ const requiredPages = [
   },
   {
     path: "/skills",
-    title: "AI Agent Skills Registry and Marketplace",
+    title: "Agent Skills Marketplace for Claude, Cursor & Codex",
+    renderedTitle: "Agent Skills Marketplace for Claude, Cursor &amp; Codex | AIPM",
     h1: "AI agent skills registry for Claude Code, Cursor, and more",
     jsonLd: true,
     includes: ["Claude Code", "Cursor"],
@@ -199,8 +200,7 @@ const requiredPages = [
   },
   {
     path: "/skills/claude",
-    title: "Claude Code Skills Marketplace & Library",
-    renderedTitle: "Claude Code Skills Marketplace &amp; Library | AIPM",
+    title: "Claude Skills Marketplace: Claude Code Skills Library",
     h1: "Claude Code skills you can review, version, and install.",
     jsonLd: true,
     includes: ["Search registry", "Browse more skill categories"],

@@ -66,19 +66,19 @@ function TagStatusIcon({ status }: { status: "done" | "pending" }) {
 }
 
 export const metadata = pageMetadata({
-  title: "Claude Code & Cursor Skills Registry — Install with AIPM",
+  title: "Claude & Agent Skills Marketplace — Install with AIPM",
   description:
-    "Browse versioned Claude Code and Cursor skills, plus AI prompts. Review source, then install with the AIPM CLI — like packages for your AI tools.",
+    "A marketplace of Claude skills and agent skills for Claude Code, Cursor and Codex, plus AI prompts. Review the source, then install a pinned version with AIPM.",
   keywords: [
+    "Claude skills marketplace",
+    "Claude skills",
+    "agent skills marketplace",
     "Claude Code skills",
     "Cursor skills",
-    "agent skills registry",
-    "Claude Code skills marketplace",
-    "Cursor skills registry",
     "AI agent skills",
-    "install Claude Code skills",
-    "AI package manager",
-    "prompt packages",
+    "install Claude skills",
+    "Anthropic skills",
+    "AIPM",
   ],
 });
 
@@ -100,7 +100,7 @@ export default async function HomePage() {
                 alternateName: "AIPM",
                 url: SITE_URL,
                 description:
-                  "Claude Code and Cursor skills registry with versioned packages, prompts, and a CLI to install them like packages.",
+                  "Claude and agent skills marketplace with versioned skills, prompts, and a CLI to install them like packages.",
                 publisher: {
                   "@id": `${SITE_URL}/#organization`,
                 },
@@ -163,8 +163,8 @@ export default async function HomePage() {
         }}
       />
       <section className={home.hero} aria-labelledby="hero-title">
-        <p className={shell.eyebrow}>Claude Code · Cursor · Agent skills registry</p>
-        <h1 id="hero-title">Claude Code and Cursor skills you can install like packages.</h1>
+        <p className={shell.eyebrow}>Claude · Claude Code · Cursor · Codex skills marketplace</p>
+        <h1 id="hero-title">Claude and agent skills you can install like packages.</h1>
         <div className={home.heroManifestoRow}>
           <ul className={home.heroManifesto} aria-label="Why AIPM exists">
             <li>Software got npm.</li>
@@ -218,16 +218,17 @@ export default async function HomePage() {
           </aside>
         </div>
         <p className={shell.lede}>
-          Browse a registry of Claude Code skills, Cursor skills, and AI prompts—then install a
-          pinned version with the AIPM CLI. Review source and files first; keep package-manager
-          versioning as the way you share skills across repos and teammates.
+          Browse a marketplace of Claude skills, agent skills for Claude Code, Cursor, and Codex, and
+          AI prompts, then install a pinned version with the AIPM CLI. Review source and files first;
+          keep package-manager versioning as the way you share skills across repos and teammates.
         </p>
         <dl className={home.answerGrid} aria-label="AIPM direct answers">
           <div>
             <dt>What is AIPM?</dt>
             <dd>
-              AIPM is a Claude Code and Cursor skills registry plus CLI: browse versioned agent
-              skills and prompts, then install them into supported tools like packages.
+              AIPM is a Claude and agent skills marketplace plus CLI: browse versioned agent
+              skills and prompts, then install them into Claude Code, Cursor, and other tools like
+              packages.
             </dd>
           </div>
           <div>
@@ -267,7 +268,7 @@ export default async function HomePage() {
         </div>
         <div className={shell.actions}>
           <Link className={shell.button} href="/skills/claude">
-            Claude Code skills
+            Claude skills
           </Link>
           <Link className={shell.button} href="/skills/cursor">
             Cursor skills
@@ -349,9 +350,25 @@ export default async function HomePage() {
       </section>
 
       <section className={cards.guideGrid} aria-label="AIPM basics">
+        <Link className={cards.guideCard} href="/best-claude-skills">
+          <h2>Best Claude skills</h2>
+          <p>Claude skills ranked by real AIPM installs and source-repo GitHub stars.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/what-are-claude-skills">
+          <h2>What are Claude skills?</h2>
+          <p>How SKILL.md skills work in the Claude app and Claude Code, with examples.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/claude-code-plugins-vs-skills">
+          <h2>Claude Code plugins vs skills</h2>
+          <p>When a single skill is enough and when to package skills, hooks, and MCP as a plugin.</p>
+        </Link>
+        <Link className={cards.guideCard} href="/guides/claude-skills-marketplaces">
+          <h2>Claude skills marketplaces</h2>
+          <p>Compare the official Anthropic marketplace, GitHub, skills.sh, SkillsMP, and AIPM.</p>
+        </Link>
         <Link className={cards.guideCard} href="/skills/claude">
-          <h2>Claude Code skills marketplace</h2>
-          <p>Browse versioned Claude Code skills, review source, and install with AIPM.</p>
+          <h2>Claude skills marketplace</h2>
+          <p>Browse versioned Claude and Claude Code skills, review source, and install with AIPM.</p>
         </Link>
         <Link className={cards.guideCard} href="/skills/cursor">
           <h2>Cursor skills registry</h2>

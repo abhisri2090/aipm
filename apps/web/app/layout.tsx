@@ -15,14 +15,15 @@ export const metadata: Metadata = {
     default: "AIPM Registry",
     template: "%s | AIPM",
   },
-  description: "AIPM helps teams install and manage AI skills, prompts, and tool files.",
+  description:
+    "AIPM is a Claude and agent skills marketplace: browse, review, and install versioned skills, prompts, and tool files.",
   keywords: [
-    "AI package manager",
-    "AI skill registry",
-    "prompt packages",
-    "Cursor skills",
+    "Claude skills marketplace",
+    "agent skills marketplace",
     "Claude skills",
-    "AI tools",
+    "Claude Code skills",
+    "Cursor skills",
+    "AI prompts",
   ],
   authors: [{ name: "AIPM" }],
   creator: "AIPM",
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
     siteName: "AIPM",
     url: SITE_URL,
     title: "AIPM Registry",
-    description: "Install and manage AI skills, prompts, and tool files.",
+    description: "Claude and agent skills marketplace: browse and install versioned skills and prompts.",
     images: [
       {
         url: "/og.svg",
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "AIPM Registry",
-    description: "Install and manage AI skills, prompts, and tool files.",
+    description: "Claude and agent skills marketplace: browse and install versioned skills and prompts.",
     images: ["/og.svg"],
   },
 };
