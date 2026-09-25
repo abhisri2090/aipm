@@ -54,6 +54,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Manage AI agent instructions in Git](${site}/guides/ai-agent-instructions-git)
 - [AIPM vs Skills.sh](${site}/guides/aipm-vs-skills-sh)
 - [Claude Code skills vs Codex skills](${site}/guides/claude-code-skills-vs-codex-skills)
+- [Claude Code skills vs MCP vs subagents vs hooks](${site}/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks)
 - [Agent Skills vs MCP](${site}/guides/agent-skills-vs-mcp)
 - [How to install Claude skills (Claude app, Claude Code, GitHub, npx, AIPM)](${site}/guides/how-to-install-claude-code-skills)
 - [Install Cursor skills](${site}/guides/how-to-install-cursor-skills)

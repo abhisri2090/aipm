@@ -48,7 +48,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         title: "Skills vs prompts, projects, CLAUDE.md, and MCP",
         body:
-          "A prompt is text you paste each time; a skill is saved and loaded automatically when relevant. CLAUDE.md (in Claude Code) is always loaded project context, while a skill loads only for its task. MCP connects Claude to outside tools and data, while a skill teaches Claude how to do a task, and a skill can tell Claude to use an MCP tool. Use a skill whenever you keep repeating the same instructions.",
+          "A prompt is text you paste each time; a skill is saved and loaded automatically when relevant. CLAUDE.md (in Claude Code) is always loaded project context, while a skill loads only for its task. MCP connects Claude to outside tools and data, while a skill teaches Claude how to do a task, and a skill can tell Claude to use an MCP tool. Use a skill whenever you keep repeating the same instructions. In Claude Code, see [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks) for when to use each.",
       },
       {
         title: "Where Claude skills work",
@@ -146,7 +146,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         title: "When to use which",
         body:
-          "Write a standalone skill when the workflow is yours, small, or specific to one repository; commit it to .claude/skills/ to share it with the team. Use a plugin when you need several skills together, need a hook or MCP server alongside the skill, or want other people to install and update your setup with one command. Subagents are different again: they run a task in a separate context window and can be shipped inside a plugin.",
+          "Write a standalone skill when the workflow is yours, small, or specific to one repository; commit it to .claude/skills/ to share it with the team. Use a plugin when you need several skills together, need a hook or MCP server alongside the skill, or want other people to install and update your setup with one command. Subagents are different again: they run a task in a separate context window and can be shipped inside a plugin. For where CLAUDE.md, subagents, hooks and MCP fit alongside skills and plugins, see [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks).",
       },
       {
         title: "What an enabled plugin costs",
