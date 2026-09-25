@@ -6,10 +6,17 @@ import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "AIPM FAQ - Troubleshooting and Common Questions",
-  description: "Troubleshooting and frequently asked questions for AIPM users and publishers.",
+  title: "AIPM FAQ — Install Claude Code & Cursor Skills",
+  description:
+    "Answers for installing Claude Code and Cursor skills with AIPM, publishing to the registry, and common troubleshooting.",
   path: "/faq",
-  keywords: ["AIPM FAQ", "AIPM troubleshooting", "AI package manager help", "AIPM support"],
+  keywords: [
+    "AIPM FAQ",
+    "install Claude Code skills",
+    "install Cursor skills",
+    "AIPM troubleshooting",
+    "AI agent skills help",
+  ],
 });
 
 const faqs: { question: string; answer: ReactNode }[] = [

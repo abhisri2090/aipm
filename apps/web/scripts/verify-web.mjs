@@ -214,7 +214,8 @@ const requiredPages = [
   },
   {
     path: "/examples",
-    title: "AIPM Skill Examples",
+    title: "Claude Code & Cursor Skill Examples",
+    renderedTitle: "Claude Code &amp; Cursor Skill Examples | AIPM",
     h1: "Skill publishing examples.",
     jsonLd: true,
     includes: [
@@ -225,7 +226,7 @@ const requiredPages = [
   },
   {
     path: "/glossary",
-    title: "AIPM Glossary",
+    title: "AIPM Glossary — Agent Skills Terms",
     h1: "Simple definitions for AIPM terms.",
     jsonLd: true,
     includes: ["Publish token", "Org namespace", ".aipmignore"],
@@ -300,7 +301,8 @@ const requiredPages = [
   },
   {
     path: "/faq",
-    title: "AIPM FAQ - Troubleshooting and Common Questions",
+    title: "AIPM FAQ — Install Claude Code & Cursor Skills",
+    renderedTitle: "AIPM FAQ — Install Claude Code &amp; Cursor Skills | AIPM",
     h1: "Common questions and fixes.",
     jsonLd: false,
   },

@@ -71,16 +71,17 @@ const terms = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Glossary",
+  title: "AIPM Glossary — Agent Skills Terms",
   description:
-    "Simple definitions for common AIPM words.",
+    "Plain definitions for agent skills, SKILL.md, manifests, targets, and AIPM registry terms.",
   path: "/glossary",
   keywords: [
     "AIPM glossary",
-    "AI package manager terms",
+    "agent skills terms",
+    "SKILL.md",
     "AI skill manifest",
-    "publish token",
-    "AI tool target",
+    "Claude Code skills",
+    "Cursor skills",
   ],
 });
 

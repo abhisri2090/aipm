@@ -202,14 +202,14 @@ function ExampleSteps({ steps }: { steps: ExampleStep[] }) {
 }
 
 export const metadata = pageMetadata({
-  title: "AIPM Skill Examples",
-  description: "Copy simple AIPM examples for publishing and installing skills.",
+  title: "Claude Code & Cursor Skill Examples",
+  description:
+    "Copy-ready examples for publishing and installing Claude Code and Cursor agent skills with AIPM.",
   path: "/examples",
   keywords: [
-    "AIPM examples",
-    "AI skill examples",
-    "Cursor skill example",
-    "Claude skill example",
+    "Claude Code skill examples",
+    "Cursor skill examples",
+    "AI agent skill examples",
     "publish AI skill",
     "AIPM install example",
   ],
