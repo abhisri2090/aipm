@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DocLayout } from "../../../components/doc-layout";
-import { SEO_GUIDES, getSeoGuide } from "../../../lib/seo-guides";
+import { CodeBlock } from "../../../components/code-block";
+import { GuideInline } from "../../../components/guide-inline";
+import { SEO_GUIDES, getSeoGuide, type GuideTable } from "../../../lib/seo-guides";
+import { guideSectionId, stripGuideInline } from "../../../lib/guide-inline";
 import { SITE_URL } from "../../../lib/registry";
 import { pageMetadata } from "../../../lib/seo";
 import { shell, cards, docs, cn } from "../../../lib/page-styles";
@@ -33,6 +36,48 @@ const PLAIN_ENGLISH_TERMS = [
 const RELATED_STOP_WORDS = new Set([
   "aipm", "and", "best", "code", "for", "guide", "how", "install", "manage", "share", "the", "to", "vs", "what",
 ]);
+
+function formatGuideDate(day: string) {
+  return new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(day));
+}
+
+function GuideTableView({ table, id }: { table: GuideTable; id?: string }) {
+  return (
+    <div className={tableStyles.tableWrap}>
+      <table className={tableStyles.matrix} id={id}>
+        <caption className={tableStyles.note}>
+          <GuideInline text={table.caption} />
+        </caption>
+        <thead>
+          <tr>
+            {table.columns.map((column) => (
+              <th key={column} scope="col">
+                <GuideInline text={column} />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, rowIndex) => (
+            <tr key={`${rowIndex}-${row[0]}`}>
+              {row.map((cell, index) =>
+                index === 0 ? (
+                  <th className={tableStyles.formatName} key={index} scope="row">
+                    <GuideInline text={cell} />
+                  </th>
+                ) : (
+                  <td key={index}>
+                    <GuideInline text={cell} />
+                  </td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function guideTerms(guide: (typeof SEO_GUIDES)[number]): Set<string> {
   return new Set(
@@ -88,7 +133,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
     name: faq.question,
     acceptedAnswer: {
       "@type": "Answer",
-      text: faq.answer,
+      text: stripGuideInline(faq.answer),
     },
   })) : null;
 
@@ -159,12 +204,13 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         <h1>{guide.h1}</h1>
         <p className={shell.lede}>{guide.description}</p>
         <p className={shell.muted}>
-          Published {new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(publishedAt))}.
-          {" "}Last reviewed {new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(updatedAt))}.
+          Published {formatGuideDate(publishedAt)}.
+          {" "}Last reviewed {formatGuideDate(updatedAt)}.
+          {guide.lastChecked ? <>{" "}Facts checked against official docs on {formatGuideDate(guide.lastChecked)}.</> : null}
         </p>
         <div className={shell.actions}>
-          <Link className={shell.button} href="/install">
-            Install AIPM
+          <Link className={shell.button} href="/use">
+            Get started with AIPM
           </Link>
           <Link className={cn(shell.button, shell.secondary)} href="/skills">
             Browse skills
@@ -175,7 +221,10 @@ export default async function GuidePage({ params }: GuideRouteProps) {
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Short answer</h2>
-          <p>{guide.answer}</p>
+          <p>
+            <GuideInline text={guide.answer} />
+          </p>
+          {guide.answerTable ? <GuideTableView table={guide.answerTable} /> : null}
         </section>
 
         {terms.length > 0 ? (
@@ -195,8 +244,35 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           <h2>What this means</h2>
           {guide.sections.map((section) => (
             <div key={section.title}>
-              <h2>{section.title}</h2>
-              <p>{section.body}</p>
+              <h2 id={guideSectionId(section.title)}>{section.title}</h2>
+              <p>
+                <GuideInline text={section.body} />
+              </p>
+              {section.paragraphs?.map((paragraph) => (
+                <p key={paragraph}>
+                  <GuideInline text={paragraph} />
+                </p>
+              ))}
+              {section.bullets ? (
+                <ul>
+                  {section.bullets.map((bullet) => (
+                    <li key={bullet}>
+                      <GuideInline text={bullet} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {section.table ? <GuideTableView table={section.table} /> : null}
+              {section.code?.map((block) => (
+                <div key={block.code}>
+                  {block.label ? (
+                    <p className={shell.muted}>
+                      <GuideInline text={block.label} />
+                    </p>
+                  ) : null}
+                  <CodeBlock code={block.code} />
+                </div>
+              ))}
             </div>
           ))}
         </section>
@@ -204,31 +280,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         {guide.comparison ? (
           <section aria-labelledby="comparison-title">
             <h2 id="comparison-title">Comparison table</h2>
-            <div className={tableStyles.tableWrap}>
-              <table className={tableStyles.matrix}>
-                <caption className={tableStyles.note}>{guide.comparison.caption}</caption>
-                <thead>
-                  <tr>
-                    {guide.comparison.columns.map((column) => (
-                      <th key={column} scope="col">{column}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {guide.comparison.rows.map((row) => (
-                    <tr key={row[0]}>
-                      {row.map((cell, index) =>
-                        index === 0 ? (
-                          <th className={tableStyles.formatName} key={`${row[0]}-${index}`} scope="row">{cell}</th>
-                        ) : (
-                          <td key={`${row[0]}-${index}`}>{cell}</td>
-                        ),
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <GuideTableView table={guide.comparison} />
           </section>
         ) : null}
 
@@ -236,7 +288,9 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           <h2>Simple steps</h2>
           <ol className={docs.flowList}>
             {guide.steps.map((step) => (
-              <li key={step}>{step}</li>
+              <li key={step}>
+                <GuideInline text={step} />
+              </li>
             ))}
           </ol>
         </section>
@@ -244,9 +298,9 @@ export default async function GuidePage({ params }: GuideRouteProps) {
         <section>
           <h2>Where to go next</h2>
           <p>
-            If you want to try this in a real project, start with the{" "}
-            <Link href="/install">install guide</Link>, then read{" "}
-            <Link href="/use">how to use AIPM</Link>. If you want to share your own workflow, read
+            If you want to try this in a real project, start with{" "}
+            <Link href="/use">how to use AIPM</Link> and the{" "}
+            <Link href="/commands">command reference</Link>. If you want to share your own workflow, read
             the <Link href="/publish">publishing guide</Link>.
           </p>
         </section>
@@ -256,7 +310,9 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           {guide.faqs.map((faq) => (
             <div key={faq.question}>
               <h2>{faq.question}</h2>
-              <p>{faq.answer}</p>
+              <p>
+                <GuideInline text={faq.answer} />
+              </p>
             </div>
           ))}
         </section>

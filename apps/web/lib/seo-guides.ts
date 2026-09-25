@@ -1,4 +1,9 @@
 import { CLAUDE_SKILLS_GUIDES } from "./seo-guides-claude-skills";
+import { AGENTS_MD_CLAUDE_CODE_GUIDES } from "./seo-guides-agents-md-claude-code";
+import { CLAUDE_CODE_FEATURE_COMPARISON_GUIDES } from "./seo-guides-claude-code-features";
+import { CLAUDE_SKILLS_LOCATION_GUIDES } from "./seo-guides-claude-skills-location";
+import { SKILL_MD_FRONTMATTER_GUIDES } from "./seo-guides-skill-md-frontmatter";
+import { SHARE_CLAUDE_SKILLS_TEAM_GUIDES } from "./seo-guides-share-claude-skills-team";
 
 export type SeoGuide = {
   slug: string;
@@ -9,9 +14,21 @@ export type SeoGuide = {
   keywords: string[];
   publishedAt?: string;
   updatedAt?: string;
+  /** Optional date the third-party facts were last checked against official docs (YYYY-MM-DD). */
+  lastChecked?: string;
+  /** Optional compact table shown directly under the short answer. */
+  answerTable?: GuideTable;
+  /**
+   * Section copy supports `code` and [label](href) inline markup (see lib/guide-inline.ts).
+   * `body` is the first paragraph; `paragraphs`, `bullets`, `table` and `code` render after it, in that order.
+   */
   sections: Array<{
     title: string;
     body: string;
+    paragraphs?: string[];
+    bullets?: string[];
+    table?: GuideTable;
+    code?: Array<{ label?: string; code: string }>;
   }>;
   steps: string[];
   faqs: Array<{
@@ -23,11 +40,13 @@ export type SeoGuide = {
     href: string;
   }>;
   /** Optional comparison table rendered after the explanation sections. */
-  comparison?: {
-    caption: string;
-    columns: string[];
-    rows: string[][];
-  };
+  comparison?: GuideTable;
+};
+
+export type GuideTable = {
+  caption: string;
+  columns: string[];
+  rows: string[][];
 };
 
 const BASE_SEO_GUIDES: SeoGuide[] = [
@@ -663,7 +682,7 @@ updatedAt: "2026-09-25",
       {
         title: "The files have different jobs",
         body:
-          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. Each file type has its own home, so keep them reviewed in Git.",
+          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. Each file type has its own home, so keep them reviewed in Git. One shared AGENTS.md now covers Codex, Cursor and Claude Code (v2.1.277 and later); see [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md) for when Claude Code reads it.",
       },
       {
         title: "Why AIPM helps",
@@ -715,7 +734,7 @@ updatedAt: "2026-09-25",
       {
         title: "CLAUDE.md is for Claude Code",
         body:
-          "CLAUDE.md is useful when a repo has Claude Code-specific setup. It can include commands, project notes, and expectations that matter for Claude workflows.",
+          "CLAUDE.md is useful when a repo has Claude Code-specific setup. It can include commands, project notes, and expectations that matter for Claude workflows. Since v2.1.277, Claude Code also reads AGENTS.md when a project has no CLAUDE.md, so a repo that only has AGENTS.md no longer needs one. See [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md) for the exact rule and how to load both.",
       },
       {
         title: "Cursor rules are for Cursor",
@@ -799,7 +818,7 @@ updatedAt: "2026-09-25",
     answer:
       "Claude Code skills are reusable instruction packages for Claude workflows. They help Claude do a specific job, such as review code, write tests, or update docs.",
     keywords: ["Claude Code skills", "Claude skills", "Claude Code skill package", "AIPM Claude Code"],
-    updatedAt: "2026-09-23",
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "Skills are for repeatable work",
@@ -940,7 +959,7 @@ updatedAt: "2026-09-25",
       {
         question: "Does Claude Code read AGENTS.md?",
         answer:
-          "Yes, from Claude Code v2.1.277. By default it reads AGENTS.md only when there is no CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md in the working directory or above it. If you keep a CLAUDE.md, import the shared file with @AGENTS.md.",
+          "Yes, from Claude Code v2.1.277. By default it reads AGENTS.md only when there is no CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md in the working directory or above it. If you keep a CLAUDE.md, import the shared file with @AGENTS.md. Full rules and fixes: [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md)",
       },
       {
         question: "Should I use AGENTS.md or Cursor rules?",
@@ -1714,7 +1733,7 @@ updatedAt: "2026-09-25",
       {
         question: "Does Claude Code read AGENTS.md?",
         answer:
-          "Yes, from v2.1.277, when there is no CLAUDE.md or CLAUDE.local.md in the working directory or above it. Otherwise, import it from CLAUDE.md with @AGENTS.md.",
+          "Yes, from v2.1.277, when there is no CLAUDE.md or CLAUDE.local.md in the working directory or above it. Otherwise, import it from CLAUDE.md with @AGENTS.md. See [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md) for the checklist when it doesn't load.",
       },
       {
         question: "Can one skill work in several repositories?",
@@ -1736,4 +1755,12 @@ export function getSeoGuide(slug: string): SeoGuide | null {
   return SEO_GUIDES.find((guide) => guide.slug === slug) ?? null;
 }
 
-export const SEO_GUIDES: SeoGuide[] = [...BASE_SEO_GUIDES, ...CLAUDE_SKILLS_GUIDES];
+export const SEO_GUIDES: SeoGuide[] = [
+  ...BASE_SEO_GUIDES,
+  ...CLAUDE_SKILLS_GUIDES,
+  ...AGENTS_MD_CLAUDE_CODE_GUIDES,
+  ...CLAUDE_CODE_FEATURE_COMPARISON_GUIDES,
+  ...CLAUDE_SKILLS_LOCATION_GUIDES,
+  ...SKILL_MD_FRONTMATTER_GUIDES,
+  ...SHARE_CLAUDE_SKILLS_TEAM_GUIDES,
+];

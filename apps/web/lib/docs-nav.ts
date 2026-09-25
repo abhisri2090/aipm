@@ -89,6 +89,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Compare the main instruction files used by AI coding agents.",
       },
       {
+        href: "/guides/does-claude-code-read-agents-md",
+        label: "Does Claude Code read AGENTS.md?",
+        body: "Yes, since v2.1.277, when there is no CLAUDE.md. How to load both files and fix AGENTS.md not loading.",
+      },
+      {
         href: "/guides/cursor-rules-best-practices",
         label: "Cursor rules best practices",
         body: "Write Cursor rules that are short, reviewable, and reusable.",
