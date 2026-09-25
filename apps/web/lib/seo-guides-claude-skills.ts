@@ -53,7 +53,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         title: "Where Claude skills work",
         body:
-          "In the Claude app (claude.ai and Claude Desktop) on Free, Pro, Max, Team, and Enterprise plans, with code execution enabled; you manage them in Customize > Skills. In Claude Code, skills live in ~/.claude/skills/ or a project's .claude/skills/, and can also arrive through plugins. In the Claude API, skills are available with the code execution tool. Skills you enable in the Claude app also sync into Claude Code when you sign in with the same account.",
+          "In the Claude app (claude.ai and Claude Desktop) on Free, Pro, Max, Team, and Enterprise plans, with code execution enabled; you manage them in Customize > Skills. In Claude Code, skills live in ~/.claude/skills/ or a project's .claude/skills/, and can also arrive through plugins. In the Claude API, skills are available with the code execution tool. Skills you enable in the Claude app also sync into Claude Code when you sign in with the same account. For the exact folders on disk, see [where are Claude skills stored?](/guides/where-are-claude-skills-stored).",
       },
       {
         title: "Only install skills you trust",
@@ -176,7 +176,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         question: "Where are Claude Code plugins stored?",
         answer:
-          "Your settings list the marketplaces you added and the plugins you enabled, and Claude Code keeps fetched plugin files under ~/.claude/plugins/.",
+          "Your settings list the marketplaces you added and the plugins you enabled, and Claude Code keeps fetched plugin files under ~/.claude/plugins/. For every skills and plugin folder, see [where are Claude skills stored?](/guides/where-are-claude-skills-stored).",
       },
       {
         question: "Are slash commands, skills, and plugins the same?",

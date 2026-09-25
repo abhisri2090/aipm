@@ -19,6 +19,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "How Claude skills work, what they contain, examples, and where they run.",
       },
       {
+        href: "/guides/where-are-claude-skills-stored",
+        label: "Where are Claude skills stored?",
+        body: "Every skills folder for Claude Code, plugins, managed settings, the Claude app, Cursor and Codex.",
+      },
+      {
         href: "/guides/claude-code-plugins-vs-skills",
         label: "Claude Code plugins vs skills",
         body: "When you need a single SKILL.md and when you need a plugin from a marketplace.",
