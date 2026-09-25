@@ -1,4 +1,5 @@
 import { SITE_URL } from "./registry";
+import { isNearDuplicatePrompt } from "./prompt-noindex";
 import { listAllPrompts } from "./prompts";
 
 function escapeXml(value: string): string {
@@ -14,6 +15,7 @@ function escapeXml(value: string): string {
 export async function buildPromptSitemapXml(): Promise<string> {
   const prompts = await listAllPrompts();
   const urls = prompts
+    .filter((prompt) => !isNearDuplicatePrompt(prompt.path))
     .map((prompt) => {
       const loc = `${SITE_URL}${prompt.path}`;
       const lastmod = new Date(prompt.updatedAt).toISOString();

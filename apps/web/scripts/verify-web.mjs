@@ -730,11 +730,27 @@ if (/<loc>[^<]*\/prompts\/(?!topics\/)[^/<]+\/[^/<]+<\/loc>/.test(sitemap.text))
   fail("/sitemap.xml contains individual prompt URLs; those belong in /prompt-sitemap.xml.");
 }
 
+// Near-duplicate prompt variants (lib/prompt-noindex.json) are noindex and not in the prompt sitemap.
+const promptNoindex = JSON.parse(await readFile(resolve(repoRoot, "apps/web/lib/prompt-noindex.json"), "utf8"));
+const noindexPromptPaths = new Set(promptNoindex.noindex.map((entry) => entry.path));
+for (const path of noindexPromptPaths) {
+  if (promptSitemap.text.includes(`<loc>${expectedCanonicalUrl}${path}</loc>`)) {
+    fail(`/prompt-sitemap.xml contains near-duplicate noindex prompt ${path}`);
+  }
+}
+const sampleNoindexPrompt = promptNoindex.noindex[0]?.path;
+if (sampleNoindexPrompt) {
+  const page = await fetchText(sampleNoindexPrompt);
+  if (page.response.ok && !/<meta name="robots" content="noindex, ?follow"/.test(page.text)) {
+    fail(`${sampleNoindexPrompt} should render <meta name="robots" content="noindex, follow">`);
+  }
+}
+
 const promptList = await fetchText("/v1/prompts?limit=1");
 if (promptList.response.ok) {
   const data = JSON.parse(promptList.text);
   const prompt = data.prompts?.[0];
-  if (prompt?.path) {
+  if (prompt?.path && !noindexPromptPaths.has(prompt.path)) {
     assertIncludes("/prompt-sitemap.xml", promptSitemap.text, `<loc>${expectedCanonicalUrl}${prompt.path}</loc>`);
     if (sitemap.text.includes(`<loc>${expectedCanonicalUrl}${prompt.path}</loc>`)) {
       fail(`/sitemap.xml contains prompt URL ${prompt.path}; use /prompt-sitemap.xml.`);
