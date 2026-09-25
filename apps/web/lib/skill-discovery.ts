@@ -126,7 +126,7 @@ export const SKILL_DISCOVERY_PAGES = [
     ],
     relatedLinks: [
       { label: "Full install guide", href: "/install" },
-      { label: "How to install Claude Code skills", href: "/guides/how-to-install-claude-code-skills" },
+      { label: "How to install Claude skills", href: "/guides/how-to-install-claude-code-skills" },
       { label: "Cursor skills hub", href: "/skills/cursor" },
       { label: "All agent skills", href: "/skills" },
       { label: "AIPM vs skills.sh", href: "/guides/aipm-vs-skills-sh" },

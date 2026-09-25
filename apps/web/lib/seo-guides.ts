@@ -1442,54 +1442,112 @@ export const SEO_GUIDES: SeoGuide[] = [
   },
   {
     slug: "how-to-install-claude-code-skills",
-    title: "How to Install Claude Code Skills",
-    h1: "How do you install a Claude Code skill?",
+    title: "How to Install Claude Skills (App, Code, GitHub, npx)",
+    h1: "How do you install Claude skills?",
     description:
-      "Install a reusable Claude Code skill with AIPM, check the created files, and test the skill in a project.",
+      "Install Claude skills in the Claude app (upload a ZIP in Customize > Skills), in Claude Code (~/.claude/skills), from GitHub, with npx skills add, or with AIPM.",
     answer:
-      "Install the AIPM CLI, run aipm init --target claude in your project, then run aipm add with the skill package name and --target claude. Review the installed SKILL.md before using it.",
-    keywords: ["install Claude Code skills", "Claude Code skill install", "add Claude skill", ".claude skills"],
+      "It depends on where you use Claude. In the Claude app (claude.ai or Claude Desktop), turn on Code execution and file creation, then go to Customize > Skills and upload the skill folder as a ZIP. In Claude Code, put the skill folder (the one that contains SKILL.md) in ~/.claude/skills/ for all projects or .claude/skills/ for one project. You can also install from a plugin marketplace with /plugin, from GitHub with npx skills add owner/repo, or as a pinned version with aipm add --target claude.",
+    keywords: [
+      "how to install Claude skills",
+      "install Claude skills",
+      "how to add skills to Claude",
+      "install Claude Code skills",
+      "install Claude skills from GitHub",
+      "npx skills add",
+      "upload skill to Claude",
+      "where are Claude skills stored",
+    ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-23",
+    updatedAt: "2026-09-25",
     sections: [
       {
-        title: "Choose a skill you can trust",
+        title: "First, which Claude are you using?",
         body:
-          "Read the package description, source, publisher, license, target list, and bundled files. Do not install a public skill only because its name looks familiar.",
+          "Skills install differently in each place. The Claude app (claude.ai in a browser or the Claude Desktop app) takes a ZIP upload in settings. Claude Code (the terminal tool and its IDE extensions) reads skill folders from disk. A skill itself is the same thing everywhere: a folder with a SKILL.md file that has name and description frontmatter, plus optional scripts and reference files.",
       },
       {
-        title: "Install it into one project",
+        title: "Install a skill in the Claude app (claude.ai or Claude Desktop)",
         body:
-          "Run the commands from the project root. AIPM writes the Claude-ready skill files into the project so the files can be reviewed with the rest of the code.",
+          "Skills are available on Free, Pro, Max, Team, and Enterprise plans and need code execution. On Free, Pro, or Max, open Settings > Capabilities and turn on Code execution and file creation. On Team or Enterprise, an owner enables Skills and code execution in Organization settings > Plugins & skills. Then open Customize > Skills, click +, choose Create skill > Upload a skill, and upload a ZIP of the skill folder. The skill appears in your list and can be toggled on or off. Uploads fail when the ZIP is too large, the folder name does not match the skill name, or SKILL.md is missing.",
       },
       {
-        title: "Test the installed skill",
+        title: "Install a skill in Claude Code",
         body:
-          "Open Claude Code in the project and ask for the task described by the skill. Check the result on a small example before relying on it for important work.",
+          "Copy the skill folder into ~/.claude/skills/<skill-name>/ to use it in every project on your machine, or into .claude/skills/<skill-name>/ inside a repository to share it with everyone who works there (commit it). The folder name becomes the command, so ~/.claude/skills/summarize-changes/SKILL.md is invoked with /summarize-changes, and Claude can also load it automatically when your request matches its description. Claude Code picks up new or edited skills during a session; if you created the top-level skills folder for the first time, restart Claude Code.",
+      },
+      {
+        title: "Install skills from a plugin marketplace in Claude Code",
+        body:
+          "Many skill collections ship as Claude Code plugins. Run /plugin to browse Anthropic's official marketplace, or add another marketplace first. For example, Anthropic's own example skills install with /plugin marketplace add anthropics/skills and then /plugin install document-skills@anthropic-agent-skills. Plugin skills are namespaced, so they run as /plugin-name:skill-name.",
+      },
+      {
+        title: "Install Claude skills from GitHub by hand",
+        body:
+          "Download or clone the repository, find the folder that directly contains SKILL.md, and copy that folder, not the whole repository, into ~/.claude/skills/ or .claude/skills/. A common mistake is an extra wrapper folder, such as ~/.claude/skills/repo-main/skills/pdf/SKILL.md, which Claude Code will not find. For the Claude app, ZIP that same skill folder and upload it.",
+      },
+      {
+        title: "Install with npx skills add",
+        body:
+          "The open-source skills CLI from Vercel Labs installs skills from GitHub and other Git hosts into many agents, including Claude Code. Run npx skills add owner/repo from your project, add --skill <name> to pick one skill, -a claude-code to target Claude Code only, and -g to install globally instead of into the project. npx downloads and runs the package from npm, so read the source repository before installing a skill you do not know.",
+      },
+      {
+        title: "Install a pinned version with AIPM",
+        body:
+          "AIPM installs a named, versioned skill package and records it in aipm.package.json so a team gets the same revision. Install the CLI with npm install -g @aipm-registry/cli, run aipm init --target claude in the project, then aipm add @scope/name@version --target claude. AIPM writes the skill to .claude/skills/<name>/ in the project; add -g to install under your home directory instead. Review the package source and files on its registry page first.",
+      },
+      {
+        title: "If the skill does not show up or trigger",
+        body:
+          "In Claude Code, ask What skills are available? or run /skills. Check that SKILL.md is directly inside the skill folder, that the frontmatter starts on the first line, and that the description names the situations the skill is for. In the Claude app, check that the skill is toggled on in Customize > Skills and that code execution is enabled. You can always invoke a Claude Code skill directly with /skill-name.",
       },
     ],
     steps: [
-      "Run npm install -g @aipm-registry/cli.",
-      "Open the project folder in a terminal.",
-      "Run aipm init --target claude.",
-      "Run aipm add @scope/name@version --target claude --ci.",
-      "Review the installed .claude skill files.",
-      "Open Claude Code and test the skill on a small task.",
+      "Decide where you use Claude: the Claude app, Claude Code, or both.",
+      "Get the skill folder (the folder that contains SKILL.md) from a trusted source and read its files.",
+      "Claude app: enable code execution, then upload the folder as a ZIP in Customize > Skills.",
+      "Claude Code: copy the folder to ~/.claude/skills/ (all projects) or .claude/skills/ (one project), or install it with /plugin, npx skills add, or aipm add --target claude.",
+      "Ask Claude for the task the skill describes, or invoke it with /skill-name in Claude Code.",
+      "Test on a small example before relying on the skill for important work.",
     ],
     faqs: [
       {
-        question: "Where does AIPM put a Claude skill?",
+        question: "Where are Claude skills stored?",
         answer:
-          "AIPM's Claude adapter installs the skill under .claude/aipm/skills in the project. Check the package page and installed files for the exact skill folder.",
+          "In Claude Code, personal skills are in ~/.claude/skills/ (on Windows, the .claude\\skills folder in your user profile) and project skills are in .claude/skills/ in the repository. Skills uploaded to the Claude app are stored in your Claude account, and Claude Code v2.1.273 or later syncs the skills enabled on your account into ~/.claude/skills/synced/ when you sign in with that account.",
       },
       {
-        question: "Should installed skill files be committed to Git?",
+        question: "Can I install Claude skills without Claude Code?",
         answer:
-          "Commit them when the team should use and review the same project skill. Keep credentials and private values out of the skill files.",
+          "Yes. In the Claude app, upload the skill folder as a ZIP in Customize > Skills. You need code execution turned on in Settings > Capabilities (or enabled by your organization owner on Team and Enterprise).",
+      },
+      {
+        question: "How do I install a Claude skill from GitHub?",
+        answer:
+          "Copy the folder that contains SKILL.md into ~/.claude/skills/ or .claude/skills/, or run npx skills add owner/repo. If the repository is a Claude Code plugin marketplace, add it with /plugin marketplace add owner/repo and install from /plugin.",
+      },
+      {
+        question: "Do Claude skills work in Cursor or Codex?",
+        answer:
+          "Usually, because skills follow the open Agent Skills standard. Cursor also loads skills from .claude/skills and ~/.claude/skills. Codex loads skills from .agents/skills, so copy or install the folder there.",
+      },
+      {
+        question: "Where does AIPM put a Claude skill?",
+        answer:
+          "aipm add @scope/name@version --target claude writes the skill to .claude/skills/<name>/ in the project, or under your home directory with -g, and records the version in aipm.package.json.",
+      },
+      {
+        question: "Como instalar skills no Claude Code? / ¿Cómo instalar skills en Claude?",
+        answer:
+          "Copie a pasta da skill (com o SKILL.md) para ~/.claude/skills/ ou .claude/skills/ no projeto. / En la app de Claude, activa la ejecución de código y sube la carpeta de la skill en un ZIP desde Customize > Skills; en Claude Code, cópiala en ~/.claude/skills/.",
       },
     ],
     sources: [
-      { label: "Anthropic: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+      { label: "Claude Help Center: Use skills in Claude", href: "https://support.claude.com/en/articles/12512180-using-skills-in-claude" },
+      { label: "Claude Code documentation: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },
+      { label: "Claude Code documentation: Plugins", href: "https://code.claude.com/docs/en/plugins" },
+      { label: "anthropics/skills on GitHub", href: "https://github.com/anthropics/skills" },
+      { label: "vercel-labs/skills (npx skills)", href: "https://github.com/vercel-labs/skills" },
       { label: "AIPM install guide", href: "https://www.aipm-registry.com/install" },
     ],
   },
