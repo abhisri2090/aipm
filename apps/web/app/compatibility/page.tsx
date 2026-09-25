@@ -157,7 +157,11 @@ export default function CompatibilityPage() {
       <article className={cn(docs.doc, docs.wideDoc)}>
         <section>
           <h2>Simple choice</h2>
-          <p>Use AGENTS.md when several coding agents need the same basic project instructions.</p>
+          <p>
+            Use AGENTS.md when several coding agents need the same basic project instructions. Claude Code
+            reads it too (v2.1.277 and later) when there is no CLAUDE.md; see{" "}
+            <Link href="/guides/does-claude-code-read-agents-md">does Claude Code read AGENTS.md?</Link>
+          </p>
           <p>Use CLAUDE.md for instructions that only Claude Code needs.</p>
           <p>Use Cursor project rules when Cursor needs rules for certain files or tasks.</p>
           <p>Use a skill when you want the AI to repeat a useful task.</p>
@@ -184,7 +188,7 @@ export default function CompatibilityPage() {
             <li><a href="https://code.claude.com/docs/en/memory" rel="noreferrer" target="_blank">Claude Code documentation: CLAUDE.md and AGENTS.md</a></li>
             <li><a href="https://code.claude.com/docs/en/features-overview" rel="noreferrer" target="_blank">Claude Code documentation: Extension features</a></li>
             <li><a href="https://code.claude.com/docs/en/slash-commands" rel="noreferrer" target="_blank">Claude Code documentation: Skills</a></li>
-            <li><a href="https://openai.com/index/introducing-codex/" rel="noreferrer" target="_blank">OpenAI: Codex and AGENTS.md</a></li>
+            <li><a href="https://learn.chatgpt.com/docs/agent-configuration/agents-md" rel="noreferrer" target="_blank">OpenAI Codex documentation: AGENTS.md</a></li>
             <li><a href="https://openai.com/index/introducing-the-codex-app/" rel="noreferrer" target="_blank">OpenAI: Codex skills</a></li>
             <li><a href="https://developers.openai.com/codex/skills/" rel="noreferrer" target="_blank">OpenAI Codex documentation: Agent Skills</a></li>
             <li><a href="https://modelcontextprotocol.io/docs/develop/connect-local-servers" rel="noreferrer" target="_blank">Model Context Protocol documentation</a></li>

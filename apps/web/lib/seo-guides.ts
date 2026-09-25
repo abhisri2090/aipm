@@ -682,7 +682,7 @@ updatedAt: "2026-09-25",
       {
         title: "The files have different jobs",
         body:
-          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. Each file type has its own home, so keep them reviewed in Git.",
+          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. Each file type has its own home, so keep them reviewed in Git. One shared AGENTS.md now covers Codex, Cursor and Claude Code (v2.1.277 and later); see [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md) for when Claude Code reads it.",
       },
       {
         title: "Why AIPM helps",
@@ -734,7 +734,7 @@ updatedAt: "2026-09-25",
       {
         title: "CLAUDE.md is for Claude Code",
         body:
-          "CLAUDE.md is useful when a repo has Claude Code-specific setup. It can include commands, project notes, and expectations that matter for Claude workflows.",
+          "CLAUDE.md is useful when a repo has Claude Code-specific setup. It can include commands, project notes, and expectations that matter for Claude workflows. Since v2.1.277, Claude Code also reads AGENTS.md when a project has no CLAUDE.md, so a repo that only has AGENTS.md no longer needs one. See [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md) for the exact rule and how to load both.",
       },
       {
         title: "Cursor rules are for Cursor",
@@ -959,7 +959,7 @@ updatedAt: "2026-09-25",
       {
         question: "Does Claude Code read AGENTS.md?",
         answer:
-          "Yes, from Claude Code v2.1.277. By default it reads AGENTS.md only when there is no CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md in the working directory or above it. If you keep a CLAUDE.md, import the shared file with @AGENTS.md.",
+          "Yes, from Claude Code v2.1.277. By default it reads AGENTS.md only when there is no CLAUDE.md, .claude/CLAUDE.md, or CLAUDE.local.md in the working directory or above it. If you keep a CLAUDE.md, import the shared file with @AGENTS.md. Full rules and fixes: [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md)",
       },
       {
         question: "Should I use AGENTS.md or Cursor rules?",
@@ -1733,7 +1733,7 @@ updatedAt: "2026-09-25",
       {
         question: "Does Claude Code read AGENTS.md?",
         answer:
-          "Yes, from v2.1.277, when there is no CLAUDE.md or CLAUDE.local.md in the working directory or above it. Otherwise, import it from CLAUDE.md with @AGENTS.md.",
+          "Yes, from v2.1.277, when there is no CLAUDE.md or CLAUDE.local.md in the working directory or above it. Otherwise, import it from CLAUDE.md with @AGENTS.md. See [does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md) for the checklist when it doesn't load.",
       },
       {
         question: "Can one skill work in several repositories?",

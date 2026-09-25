@@ -49,6 +49,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Share Cursor rules](${site}/guides/share-cursor-rules)
 - [Cursor rules vs Agent Skills](${site}/guides/cursor-rules-vs-agent-skills)
 - [AGENTS.md vs SKILL.md](${site}/guides/agents-md-vs-skill-md)
+- [Does Claude Code read AGENTS.md?](${site}/guides/does-claude-code-read-agents-md)
 - [Publish reusable Claude skills](${site}/guides/reusable-claude-skills)
 - [Manage AI agent instructions in Git](${site}/guides/ai-agent-instructions-git)
 - [AIPM vs Skills.sh](${site}/guides/aipm-vs-skills-sh)
