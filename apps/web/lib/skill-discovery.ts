@@ -29,7 +29,7 @@ export const SKILL_DISCOVERY_PAGES = [
     query: "cursor",
     registryQuery: "cursor",
     target: "cursor",
-    updatedAt: "2026-09-23",
+    updatedAt: "2026-09-25",
     keywords: [
       "Cursor skills",
       "Cursor agent skills",
@@ -39,14 +39,14 @@ export const SKILL_DISCOVERY_PAGES = [
       "AIPM Cursor",
     ],
     useCases: [
-      "Project rules for code review, testing, and refactoring",
+      "Skills for code review, testing, and refactoring",
       "Reusable prompts that live with the repository",
       "Team-approved Cursor workflows that can be installed with one command",
     ],
     installCommands: [
       { label: "Install the CLI", code: "npm install -g @aipm-registry/cli" },
-      { label: "Initialize for Cursor", code: "aipm init --target cursor" },
-      { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target cursor --ci" },
+      { label: "Initialize (Cursor loads .claude/skills)", code: "aipm init --target claude" },
+      { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target claude --ci" },
     ],
     faqs: [
       {
@@ -57,7 +57,7 @@ export const SKILL_DISCOVERY_PAGES = [
       {
         question: "How do I install a Cursor skill with AIPM?",
         answer:
-          "Install the AIPM CLI, run aipm init --target cursor, then aipm add @scope/name@version --target cursor. Review the package source on its registry page before you install.",
+          "Install the AIPM CLI, then run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). Cursor loads skills from both folders. --target cursor currently writes .cursor/aipm/skills/<skill>.md, which Cursor does not load automatically. Review the package source on its registry page before you install.",
       },
       {
         question: "How is AIPM different from copying skills by hand?",
@@ -66,13 +66,14 @@ export const SKILL_DISCOVERY_PAGES = [
       },
     ],
     relatedLinks: [
-      { label: "Full install guide", href: "/install" },
+      { label: "Use skills guide", href: "/use" },
       { label: "How to install Cursor skills", href: "/guides/how-to-install-cursor-skills" },
       { label: "Claude Code skills hub", href: "/skills/claude" },
       { label: "All agent skills", href: "/skills" },
       { label: "AIPM vs skills.sh", href: "/guides/aipm-vs-skills-sh" },
     ],
     sources: [
+      { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
       { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
     ],
   },
@@ -125,7 +126,7 @@ export const SKILL_DISCOVERY_PAGES = [
       },
     ],
     relatedLinks: [
-      { label: "Full install guide", href: "/install" },
+      { label: "Use skills guide", href: "/use" },
       { label: "How to install Claude skills", href: "/guides/how-to-install-claude-code-skills" },
       { label: "Cursor skills hub", href: "/skills/cursor" },
       { label: "All agent skills", href: "/skills" },

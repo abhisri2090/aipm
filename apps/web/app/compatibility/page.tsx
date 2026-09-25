@@ -20,16 +20,17 @@ export const metadata = pageMetadata({
   ],
 });
 
-const VERIFIED_ON = "2026-08-31";
+const VERIFIED_ON = "2026-09-25";
 
 const rows = [
   {
     format: "AGENTS.md",
     purpose: "Project instructions written as a normal text file.",
-    cursor: "Supported for simple project-wide instructions.",
-    claude: "Use CLAUDE.md instead for Claude Code.",
+    cursor: "Supported in the project root and in subfolders (nested AGENTS.md files).",
+    claude:
+      "Read by Claude Code v2.1.277 and later when the project has no CLAUDE.md or CLAUDE.local.md. If you keep a CLAUDE.md, import it with @AGENTS.md.",
     codex: "Supported. Instructions can apply to a folder and its subfolders.",
-    share: "Yes. Keep it in Git with the project.",
+    share: "Yes. Keep it in Git with the project. AIPM does not install AGENTS.md.",
   },
   {
     format: "CLAUDE.md",
@@ -37,7 +38,7 @@ const rows = [
     cursor: "Not the main Cursor rules format.",
     claude: "Supported. Best for facts and rules that should always be available.",
     codex: "Use AGENTS.md instead for Codex.",
-    share: "Yes. Keep the project file in Git.",
+    share: "Yes. Keep the project file in Git. AIPM does not install CLAUDE.md.",
   },
   {
     format: "Cursor project rules",
@@ -45,15 +46,18 @@ const rows = [
     cursor: "Supported in the .cursor/rules folder.",
     claude: "Not a Claude Code format.",
     codex: "Not a Codex format.",
-    share: "Yes. Keep the .cursor/rules folder in Git.",
+    share: "Yes. Keep the .cursor/rules folder in Git. AIPM does not install Cursor rules.",
   },
   {
     format: "Agent Skill",
     purpose: "A reusable task, guide, or set of steps stored with a SKILL.md file.",
-    cursor: "AIPM can install Cursor-ready skill files. Check how your Cursor version loads them.",
-    claude: "Supported. Claude can choose a skill or you can start it with a slash command.",
-    codex: "Supported. Codex can choose a skill or use one named by the user.",
-    share: "Yes. AIPM can package and install the same skill in several projects.",
+    cursor:
+      "Supported. Cursor loads skills from .cursor/skills and .agents/skills, and also reads .claude/skills and .codex/skills. AIPM's --target cursor writes .cursor/aipm/skills/<skill>.md, which Cursor does not load, so install with --target claude or --target codex for Cursor.",
+    claude:
+      "Supported in .claude/skills. Claude can choose a skill or you can start it with a slash command. AIPM --target claude writes .claude/skills/<skill>/SKILL.md.",
+    codex:
+      "Supported in .agents/skills. Codex can choose a skill or use one named by the user. AIPM --target codex writes .agents/skills/<skill>/SKILL.md.",
+    share: "Yes. AIPM installs the same pinned skill version in several projects.",
   },
   {
     format: "MCP setup",
@@ -61,7 +65,8 @@ const rows = [
     cursor: "Supported through Cursor MCP settings.",
     claude: "Supported through Claude Code MCP settings.",
     codex: "Support depends on the Codex product and current setup.",
-    share: "Share safe settings and instructions. Never share passwords or private tokens.",
+    share:
+      "Share safe settings and instructions in Git. Never share passwords or private tokens. AIPM does not install MCP config today.",
   },
 ] as const;
 
@@ -83,7 +88,7 @@ export default function CompatibilityPage() {
                   "A plain-English comparison of instruction and skill files used by Cursor, Claude Code, and Codex.",
                 url: canonical,
                 mainEntityOfPage: canonical,
-                datePublished: VERIFIED_ON,
+                datePublished: "2026-08-31",
                 dateModified: VERIFIED_ON,
                 inLanguage: "en",
                 author: { "@type": "Person", name: "Abhishek Srivastava" },
@@ -108,7 +113,7 @@ export default function CompatibilityPage() {
           Use AGENTS.md for shared project instructions, CLAUDE.md for Claude Code, Cursor project
           rules for Cursor, Agent Skills for reusable tasks, and MCP setup for tool connections.
         </p>
-        <p className={styles.note}>Last checked: 31 August 2026.</p>
+        <p className={styles.note}>Last checked: 25 September 2026.</p>
       </section>
 
       <section aria-labelledby="matrix-title" className={shell.panelSection}>
@@ -162,8 +167,11 @@ export default function CompatibilityPage() {
         <section>
           <h2>How AIPM helps</h2>
           <p>
-            AIPM does not replace these files. It helps a team package, install, and update reusable
-            AI instructions. Start with the <Link href="/install">install guide</Link> or read how to{" "}
+            AIPM does not replace these files and does not install AGENTS.md, CLAUDE.md, Cursor rules,
+            or MCP config. It installs and updates versioned Agent Skills: <code>--target claude</code>{" "}
+            writes <code>.claude/skills/&lt;skill&gt;/SKILL.md</code> and <code>--target codex</code>{" "}
+            writes <code>.agents/skills/&lt;skill&gt;/SKILL.md</code>, and Cursor loads both. Start with
+            the <Link href="/use">use guide</Link> or read how to{" "}
             <Link href="/guides/share-ai-coding-agent-instructions">share instructions across projects</Link>.
           </p>
         </section>
@@ -172,10 +180,13 @@ export default function CompatibilityPage() {
           <h2>Primary sources</h2>
           <ul>
             <li><a href="https://docs.cursor.com/context/rules-for-ai" rel="noreferrer" target="_blank">Cursor documentation: Rules</a></li>
+            <li><a href="https://cursor.com/docs/skills" rel="noreferrer" target="_blank">Cursor documentation: Agent Skills</a></li>
+            <li><a href="https://code.claude.com/docs/en/memory" rel="noreferrer" target="_blank">Claude Code documentation: CLAUDE.md and AGENTS.md</a></li>
             <li><a href="https://code.claude.com/docs/en/features-overview" rel="noreferrer" target="_blank">Claude Code documentation: Extension features</a></li>
             <li><a href="https://code.claude.com/docs/en/slash-commands" rel="noreferrer" target="_blank">Claude Code documentation: Skills</a></li>
             <li><a href="https://openai.com/index/introducing-codex/" rel="noreferrer" target="_blank">OpenAI: Codex and AGENTS.md</a></li>
             <li><a href="https://openai.com/index/introducing-the-codex-app/" rel="noreferrer" target="_blank">OpenAI: Codex skills</a></li>
+            <li><a href="https://developers.openai.com/codex/skills/" rel="noreferrer" target="_blank">OpenAI Codex documentation: Agent Skills</a></li>
             <li><a href="https://modelcontextprotocol.io/docs/develop/connect-local-servers" rel="noreferrer" target="_blank">Model Context Protocol documentation</a></li>
           </ul>
         </section>

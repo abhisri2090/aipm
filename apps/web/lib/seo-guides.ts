@@ -146,16 +146,16 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     title: "What Is an AI Package Manager?",
     h1: "What is an AI package manager?",
     description:
-      "Learn what an AI package manager does, why teams need one, and how AIPM installs reusable AI skills.",
+      "Learn what an AI package manager does, why teams need one, and how AIPM installs versioned AI agent skills into Claude Code and Codex (which Cursor also reads).",
     answer:
-      "An AI package manager helps teams install, update, and share AI setup files. These files can include prompts, skills, rules, MCP setup, and tool instructions.",
-    keywords: ["AI package manager", "AIPM", "AI skills", "prompt packages", "agent package manager"],
-    updatedAt: "2026-09-23",
+      "An AI package manager helps teams install, update, and share reusable AI setup the way npm does for code. AIPM installs versioned agent skills (SKILL.md folders) into Claude Code and Codex, which Cursor also reads, and tracks AI prompts as Markdown snapshots. Rules, MCP servers, and hooks are planned, not installable today.",
+    keywords: ["AI package manager", "AIPM", "AI skills", "agent package manager", "AI skills package manager"],
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "The simple idea",
         body:
-          "Normal software teams use package managers to install code. AI teams also need reusable files, but the files are different. They are prompts, rules, skill files, examples, and setup notes. An AI package manager gives those files a clear install flow.",
+          "Normal software teams use package managers to install code. AI teams also need reusable files, but the files are different: skill folders with a SKILL.md, examples, scripts, and prompts. An AI package manager gives those files a name, a version, and a clear install flow.",
       },
       {
         title: "Why it matters",
@@ -165,165 +165,47 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "How AIPM fits",
         body:
-          "AIPM gives you a registry and a CLI. You find a skill, run an install command, and AIPM writes the right files into the project.",
+          "AIPM gives you a registry and a CLI. You find a skill, run aipm add with an exact version, and AIPM writes the skill folder into the project: .claude/skills/<skill>/ for Claude Code (--target claude) or .agents/skills/<skill>/ for Codex (--target codex). Cursor also loads skills from both folders, so either target works in Cursor. The version is recorded in aipm.package.json and aipm-lock.json.",
+      },
+      {
+        title: "What AIPM installs today",
+        body:
+          "Skills are the only installable package type. Prompts from the AIPM prompt library can be tracked with aipm add <prompt URL>, which saves a Markdown snapshot in .aipm/prompts/; prompts do not have version numbers. Rules, MCP server config, hooks, and other tool config files are planned but are not installable package types yet, so keep them in Git for now.",
+      },
+      {
+        title: "Team workflow",
+        body:
+          "Commit aipm.package.json and aipm-lock.json. Teammates run aipm install to get the same pinned versions, aipm update moves a skill to its latest version, and aipm remove cleans it up. Private org packages work after aipm login, and CI can use an org install token. Pin exact versions: version ranges are not supported.",
       },
     ],
     steps: [
       "Find a skill in the AIPM registry.",
       "Install the AIPM CLI.",
       "Run aipm init in your project.",
-      "Run aipm add @scope/name@version.",
-      "Open your AI tool and use the installed skill.",
+      "Run aipm add @scope/name@version --target claude (or --target codex).",
+      "Open Claude Code, Codex, or Cursor and use the installed skill.",
     ],
     faqs: [
       {
         question: "Is an AI package manager the same as npm?",
         answer:
-          "No. npm installs code packages. AIPM installs AI skill files, prompts, rules, and tool setup files.",
+          "No. npm installs code packages. AIPM installs versioned AI agent skills and tracks AI prompts. It does not install rules, MCP config, or hooks today.",
       },
       {
         question: "Who should use an AI package manager?",
         answer:
           "Developers and teams who use AI tools in more than one project should use one. It helps keep setup repeatable.",
       },
-    ],
-  },
-  {
-    slug: "agent-package-manager",
-    title: "Agent Package Manager for AI Workflows",
-    h1: "What is an agent package manager?",
-    description:
-      "Understand agent package managers in plain English and see how they help AI agents reuse project workflows.",
-    answer:
-      "An agent package manager stores reusable instructions for AI agents. It helps an agent find the right workflow, install it, and use it inside a project.",
-    keywords: ["agent package manager", "AI agents", "AIPM", "agent skills", "AI workflows"],
-    sections: [
       {
-        title: "Agents need instructions",
-        body:
-          "An AI agent can write code, read files, and call tools. But it still needs clear instructions. A package can tell the agent how your team reviews code, writes tests, or handles releases.",
-      },
-      {
-        title: "Packages make workflows repeatable",
-        body:
-          "If every project has a different hidden prompt, the agent behaves differently each time. A package gives the workflow a name and a version.",
-      },
-      {
-        title: "AIPM keeps it project-local",
-        body:
-          "AIPM installs files into the project. That means the workflow can live near the code and can be reviewed like other project changes.",
-      },
-    ],
-    steps: [
-      "Write one clear agent workflow.",
-      "Put the workflow in a skill file.",
-      "Publish it as an AIPM package.",
-      "Install it into each project that needs it.",
-      "Update the package when the workflow changes.",
-    ],
-    faqs: [
-      {
-        question: "Does an agent package manager run the agent?",
+        question: "Which AI tools does AIPM install skills into?",
         answer:
-          "No. It manages the files and instructions that the agent uses. Your AI tool still runs the agent.",
-      },
-      {
-        question: "Can one package work for many agents?",
-        answer:
-          "Yes. The package can include a different file for each AI tool that it supports. AIPM installs the right file for each tool.",
+          "Claude Code (--target claude writes .claude/skills/<skill>/SKILL.md) and Codex (--target codex writes .agents/skills/<skill>/SKILL.md). Cursor loads skills from .claude/skills and .agents/skills too, so use either target for Cursor.",
       },
     ],
-  },
-  {
-    slug: "prompt-package-manager",
-    title: "Prompt Package Manager for Teams",
-    h1: "How do teams manage prompts like packages?",
-    description:
-      "Learn how to stop copying prompts by hand and manage reusable prompts with names, versions, and install commands.",
-    answer:
-      "A prompt package manager lets a team save useful prompts as packages. Each package has a name, a version, and clear install steps.",
-    keywords: ["prompt package manager", "prompt packages", "AI prompt versioning", "AIPM prompts"],
-    sections: [
-      {
-        title: "Copy-paste does not scale",
-        body:
-          "A prompt in a chat window is easy to lose. A prompt in a package can be found, reviewed, installed, and updated.",
-      },
-      {
-        title: "Good prompt packages explain the task",
-        body:
-          "A useful prompt package should answer four questions. When should I use it? What information does it need? What should it create? Which AI tools can use it?",
-      },
-      {
-        title: "Versions prevent confusion",
-        body:
-          "When a prompt changes, publish a new version. That way users can see what changed and choose when to update.",
-      },
-    ],
-    steps: [
-      "Choose one repeated prompt your team uses often.",
-      "Write a short README or SKILL.md for it.",
-      "Add examples of good input and output.",
-      "Publish it as an AIPM package.",
-      "Install it in projects that need the prompt.",
-    ],
-    faqs: [
-      {
-        question: "Should every prompt become a package?",
-        answer:
-          "No. Package prompts that are reused, important, or shared across a team.",
-      },
-      {
-        question: "Can a prompt package include examples?",
-        answer:
-          "Yes. Examples are useful because they show the assistant what good output looks like.",
-      },
-    ],
-  },
-  {
-    slug: "mcp-package-manager",
-    title: "MCP Package Manager for AI Tool Setup",
-    h1: "How can teams package MCP setup?",
-    description:
-      "Learn how MCP setup can be documented, shared, and installed as part of reusable AI tool packages.",
-    answer:
-      "MCP setup often needs instructions, config, and examples. A package manager can keep that setup together so teams do not rebuild it by hand.",
-    keywords: ["MCP package manager", "MCP setup", "AI tool setup", "AIPM MCP"],
-    sections: [
-      {
-        title: "MCP setup has many small parts",
-        body:
-          "A team may need server names, settings, private values, use instructions, and safety notes. People can easily miss these details when copying them by hand.",
-      },
-      {
-        title: "A package gives the setup a home",
-        body:
-          "A package can explain what the MCP server does and when to use it. It can also list the private values and files that users need.",
-      },
-      {
-        title: "AIPM can grow with target support",
-        body:
-          "AIPM can install the right files for each AI tool. MCP setup also needs clear steps that people can use again.",
-      },
-    ],
-    steps: [
-      "Write down what the MCP server is for.",
-      "List the safe config files and private values separately.",
-      "Add usage examples for the assistant.",
-      "Package the public setup notes.",
-      "Keep secrets out of the package.",
-    ],
-    faqs: [
-      {
-        question: "Should MCP secrets go into a package?",
-        answer:
-          "No. A package can explain which secrets are needed, but the secret values should stay private.",
-      },
-      {
-        question: "Why package MCP setup?",
-        answer:
-          "It helps every project use the same setup rules instead of rebuilding them from memory.",
-      },
+    sources: [
+      { label: "How to install Claude skills", href: "https://www.aipm-registry.com/guides/how-to-install-claude-code-skills" },
+      { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
+      { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
     ],
   },
   {
@@ -333,9 +215,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "A simple guide for keeping AI prompts, rules, and skills in Git so teams can review changes.",
     answer:
-      "Save important prompts in project files and record their changes with Git. Put shared prompts in packages with clear version numbers.",
+      "Save important prompts in project files and record their changes with Git. Git history is the version record for a prompt; turn a prompt that has become a repeatable task into a versioned skill.",
     keywords: ["version AI prompts", "prompts in Git", "AI prompt versioning", "AIPM"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Move prompts out of chat",
         body:
@@ -349,7 +232,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Use packages for shared prompts",
         body:
-          "If many projects need the same prompt, publish it as an AIPM package. Then each project can install a clear version.",
+          "If many projects need the same repeatable workflow, turn it into a skill and publish it with AIPM so each project can pin an exact version. For prompts from the AIPM prompt library, aipm add <prompt URL> saves a Markdown snapshot in the project; prompt snapshots have no version numbers, and aipm update pulls the newest content.",
       },
     ],
     steps: [
@@ -357,7 +240,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Add the prompt, its purpose, and examples.",
       "Commit the file to Git.",
       "Review changes before merging.",
-      "Publish shared prompts as AIPM packages.",
+      "Turn shared, repeatable workflows into versioned AIPM skills.",
     ],
     faqs: [
       {
@@ -366,9 +249,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
           "A shared document is easy to read, but it may not match the project. Git keeps the prompt near the code that uses it.",
       },
       {
-        question: "When should I publish a prompt package?",
+        question: "When should a prompt become a skill?",
         answer:
-          "Publish it when the prompt is useful in more than one project or for more than one teammate.",
+          "When it is a repeatable task that is useful in more than one project or for more than one teammate. A skill gets a name, an exact version, and an install command.",
       },
     ],
   },
@@ -379,9 +262,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "Learn a simple way to package Cursor rules so every project can install the same AI workflow.",
     answer:
-      "Save Cursor rules as project files, package the reusable ones, and install them with AIPM when another project needs the same workflow.",
+      "Save Cursor rules as .mdc files in .cursor/rules and share them through Git. AIPM does not install Cursor rules today; if a rule is really a repeatable task, turn it into a skill and install that with AIPM.",
     keywords: ["share Cursor rules", "Cursor rules", "Cursor skills", "AIPM Cursor"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Cursor rules should be visible",
         body:
@@ -393,17 +277,17 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
           "A rule for code review, test writing, or release notes can become a package. A name makes it easier to find and install.",
       },
       {
-        title: "AIPM installs into the project",
+        title: "Where AIPM fits",
         body:
-          "AIPM can install skill files into Cursor-friendly project folders. The rule then travels with the project.",
+          "AIPM installs skills, not rules (rules packaging is planned). Cursor loads skills from .claude/skills and .agents/skills, so a skill installed with aipm add --target claude or --target codex works in Cursor and travels with the project.",
       },
     ],
     steps: [
       "Pick a Cursor rule the team uses often.",
       "Write what the rule does in simple words.",
       "Add a small example.",
-      "Publish the rule as a skill package.",
-      "Install it in other projects with AIPM.",
+      "Share always-on rules through Git; turn task-style rules into a skill.",
+      "Install the skill in other projects with AIPM (--target claude or --target codex).",
     ],
     faqs: [
       {
@@ -414,7 +298,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         question: "Does AIPM replace Cursor?",
         answer:
-          "No. AIPM helps install the files that Cursor can use.",
+          "No. AIPM installs versioned skills that Cursor, Claude Code, and Codex can load. It does not install Cursor rules.",
       },
     ],
   },
@@ -517,9 +401,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "A simple guide for sharing useful AI prompts with teammates without losing context or copying old versions.",
     answer:
-      "Put important prompts in shared project files, explain when to use them, and publish reusable prompts as AIPM packages.",
-    keywords: ["share AI prompts", "team prompts", "prompt management", "AIPM prompts"],
-    sections: [
+      "Put important prompts in shared project files and explain when to use them. To share a prompt from the AIPM prompt library, run aipm add <prompt URL>: it saves a Markdown snapshot in .aipm/prompts/ and records the URL in aipm.package.json, so teammates restore it with aipm install.",
+    keywords: ["share AI prompts", "team prompts", "prompt management", "AIPM prompts", "prompt package manager"],
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "A shared prompt needs context",
         body:
@@ -531,28 +416,38 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
           "A prompt is hard to reuse when it is hidden in an old chat. A shared file gives the team one clear place to find it.",
       },
       {
-        title: "Packages help across projects",
+        title: "Track library prompts with AIPM",
         body:
-          "If the same prompt helps more than one project, make it an AIPM package. Then each project can install the same version.",
+          "aipm add https://www.aipm-registry.com/prompts/<publisher>/<slug> saves the prompt as .aipm/prompts/<publisher>--<slug>.md and tracks its URL in aipm.package.json. Commit both, and teammates run aipm install to restore the same snapshots. aipm update rewrites a snapshot only when the published prompt changed, and aipm remove deletes it. Prompts do not have version numbers, so you cannot pin an older revision.",
+      },
+      {
+        title: "Use a skill when you need a pinned version",
+        body:
+          "If a prompt has become a repeatable task that several projects rely on, turn it into a skill. Skills are published with exact versions, and each project pins the version it uses.",
       },
     ],
     steps: [
       "Pick one prompt the team uses often.",
-      "Write the prompt in a project file.",
+      "Write the prompt in a project file, or find it in the AIPM prompt library.",
       "Add a short note that explains when to use it.",
       "Add one example input and output.",
-      "Publish it as an AIPM package if more projects need it.",
+      "For a library prompt, run aipm add <prompt URL> and commit aipm.package.json and .aipm/prompts/.",
     ],
     faqs: [
       {
         question: "Should team prompts be public?",
         answer:
-          "Only publish prompts that are safe to share. Keep private business details, customer data, and secrets out of public packages.",
+          "Only publish prompts that are safe to share. Keep private business details, customer data, and secrets out of public prompts and packages.",
       },
       {
         question: "Why not paste prompts in Slack?",
         answer:
-          "Slack is useful for discussion, but a project file is easier to review, update, and install.",
+          "Slack is useful for discussion, but a project file is easier to review, update, and restore.",
+      },
+      {
+        question: "Can I pin a prompt to a version?",
+        answer:
+          "No. Prompt snapshots are tracked by content, not version numbers, and aipm update pulls the newest content. Use a skill when you need an exact, pinned version.",
       },
     ],
   },
@@ -563,9 +458,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "Learn how to keep Cursor rules in Git so a team can review, update, and reuse them safely.",
     answer:
-      "Save Cursor rules as project files, commit them to Git, and package reusable rules with AIPM when other projects need them.",
+      "Save Cursor rules as .mdc files in .cursor/rules, commit them to Git, and review changes in pull requests. For task-style instructions that many repos need, use a skill that AIPM can install.",
     keywords: ["Cursor rules Git", "manage Cursor rules", "Cursor AI rules", "AIPM Cursor"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Rules should be reviewable",
         body:
@@ -579,7 +475,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Reusable rules can become packages",
         body:
-          "Some rules are useful in many projects. A team can publish one rule with AIPM and then install it in each project.",
+          "Some instructions are useful in many projects. AIPM does not package Cursor rules today, but a task-style instruction can become a skill that AIPM installs into each project at a pinned version.",
       },
     ],
     steps: [
@@ -587,7 +483,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Use names that explain the task.",
       "Commit the rules to Git.",
       "Review rule changes in pull requests.",
-      "Package rules that are useful in many projects.",
+      "Turn task-style rules that many projects need into a skill.",
     ],
     faqs: [
       {
@@ -598,7 +494,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         question: "Can AIPM install Cursor rules?",
         answer:
-          "AIPM can install files made for Cursor. The package shows which files it contains.",
+          "Not today. AIPM installs skills (SKILL.md folders); Cursor rules packaging is planned. Cursor loads skills installed with --target claude or --target codex.",
       },
     ],
   },
@@ -701,9 +597,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "Compare AIPM with manual prompt copying and learn when a package manager is worth using.",
     answer:
-      "Manual copying is fine for one quick prompt. AIPM is better when prompts, skills, rules, or setup files need to be reused, reviewed, and updated.",
+      "Manual copying is fine for one quick prompt. AIPM is better when a skill needs to be reused, pinned to a version, reviewed, and updated across projects, or when you want to track prompts from the AIPM prompt library.",
     keywords: ["AIPM vs prompts", "copy prompts manually", "AI prompt management", "AI package manager"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Manual copying is fast at first",
         body:
@@ -756,7 +653,8 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Cursor rules",
       "MCP config",
     ],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "The problem developers hit",
         body:
@@ -765,12 +663,12 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "The files have different jobs",
         body:
-          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. A package manager helps install the right files in the right places.",
+          "Context files explain the repo. Rules guide behavior. Skills package repeatable workflows. MCP config connects the agent to tools. Each file type has its own home, so keep them reviewed in Git.",
       },
       {
         title: "Why AIPM helps",
         body:
-          "AIPM lets teams package these files with a name and version. That makes AI agent setup easier to review, reuse, and update across repos.",
+          "AIPM handles the skills part: it installs versioned skills into Claude Code and Codex (which Cursor also reads) and records the version for the team. It does not install AGENTS.md, CLAUDE.md, Cursor rules, or MCP config today; those stay in Git.",
       },
     ],
     steps: [
@@ -778,7 +676,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Find the config files each tool reads.",
       "Move shared instructions into one reviewed source.",
       "Keep tool-specific files small and clear.",
-      "Package reusable setup with AIPM.",
+      "Install reusable skills with AIPM.",
     ],
     faqs: [
       {
@@ -807,7 +705,8 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "AGENTS.md Cursor",
       "AI coding agent instructions",
     ],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "AGENTS.md is the shared layer",
         body:
@@ -829,7 +728,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Add CLAUDE.md only for Claude-specific behavior.",
       "Add Cursor rules only for Cursor-specific behavior.",
       "Keep duplicated text short.",
-      "Package reusable rules with AIPM when several repos need them.",
+      "Turn repeatable tasks into skills and install them with AIPM when several repos need them.",
     ],
     faqs: [
       {
@@ -840,7 +739,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         question: "Can AIPM install these files?",
         answer:
-          "Yes. An AIPM package can include a different file for each AI tool. AIPM puts each file in the right project folder.",
+          "No. AIPM does not install AGENTS.md, CLAUDE.md, or Cursor rules; keep those in Git. AIPM installs skills: --target claude writes .claude/skills/<skill>/SKILL.md and --target codex writes .agents/skills/<skill>/SKILL.md, and Cursor loads skills from both folders.",
       },
     ],
   },
@@ -853,7 +752,8 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     answer:
       "Good Cursor rules are short and clear. Keep them in Git so the team can review them. Package a rule when several projects need it.",
     keywords: ["Cursor rules best practices", "Cursor rules", ".cursor rules", "Cursor AI rules", "AIPM Cursor"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Keep rules small",
         body:
@@ -867,7 +767,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Package rules that repeat",
         body:
-          "A rule may be useful in many projects. Package it with AIPM so people do not need to copy it by hand.",
+          "A rule may be useful in many projects. Share always-on rules through Git. If the rule is really a repeatable task, turn it into a skill that AIPM can install at a pinned version (AIPM does not install Cursor rules today).",
       },
     ],
     steps: [
@@ -875,7 +775,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Name files by task or code area.",
       "Avoid secrets and private customer data.",
       "Review changes in pull requests.",
-      "Publish shared rules as AIPM packages.",
+      "Turn shared task-style rules into skills.",
     ],
     faqs: [
       {
@@ -944,9 +844,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "A practical guide to managing MCP config files safely across Cursor, Claude Code, and team repos.",
     answer:
-      "Teams should keep safe MCP config and setup notes in Git, keep secret values local, and package reusable MCP instructions with AIPM.",
+      "Teams should keep safe MCP config and setup notes in Git and keep secret values local. Cursor reads .cursor/mcp.json and Claude Code reads .mcp.json at the project root. AIPM does not install MCP config today; MCP packaging is planned.",
     keywords: ["mcp.json", "MCP config", "Cursor MCP", "Claude Code MCP", "MCP server setup"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "MCP config connects agents to tools",
         body:
@@ -955,12 +856,12 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Do not commit secrets",
         body:
-          "A safe package can explain which server to use and which environment variables are needed. It should not include real tokens, passwords, or private values.",
+          "A shared config can say which server to use and which environment variables are needed. It should not include real tokens, passwords, or private values.",
       },
       {
-        title: "Use packages for repeated setup",
+        title: "Reuse the same setup across repos",
         body:
-          "Several projects may need the same MCP setup. Put the safe settings and notes in an AIPM package. Each project can add its own private values.",
+          "Several projects may need the same MCP setup. Keep one reviewed copy of the safe settings and setup notes in Git and copy it into each repo; each project adds its own private values. AIPM installs skills today, not MCP config.",
       },
     ],
     steps: [
@@ -968,7 +869,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "List the safe config files.",
       "List required environment variables without values.",
       "Add a test step so users can confirm setup.",
-      "Package reusable setup with AIPM.",
+      "Review the shared config in Git before other repos copy it.",
     ],
     faqs: [
       {
@@ -977,9 +878,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
           "Yes, if it does not include secrets. Keep private values in local environment variables or ignored files.",
       },
       {
-        question: "Why use AIPM for MCP setup?",
+        question: "Can AIPM install MCP servers?",
         answer:
-          "AIPM helps teams install the same safe setup notes and instructions across many repos without copying them by hand.",
+          "Not today. AIPM installs versioned skills into Claude Code and Codex (Cursor reads both folders) and tracks prompts. MCP server packaging is planned; until then, keep MCP config in Git.",
       },
     ],
   },
@@ -1019,7 +920,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Use both with one clear owner",
         body:
-          "Keep shared repo facts in AGENTS.md. Put only Cursor-specific or file-scoped behavior in Cursor rules. If the same setup is used in many repos, package the files with AIPM so each repo gets the same reviewed version.",
+          "Keep shared repo facts in AGENTS.md. Put only Cursor-specific or file-scoped behavior in Cursor rules. AIPM does not install AGENTS.md or Cursor rules; if a repeatable task is used in many repos, make it a skill and install the same reviewed version with AIPM.",
       },
     ],
     steps: [
@@ -1028,7 +929,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Add nested AGENTS.md files only where a folder needs different instructions.",
       "Add Cursor project rules (.mdc) only for Cursor-only or file-scoped behavior.",
       "If the project also has a CLAUDE.md, add @AGENTS.md to it so Claude Code reads the shared file.",
-      "Review both files in Git, remove repeated text, and package the reusable setup with AIPM.",
+      "Review both files in Git and remove repeated text.",
     ],
     faqs: [
       {
@@ -1122,14 +1023,15 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "Learn how to share AI instructions across projects without keeping many different copies.",
     answer:
-      "Put shared instructions in one AIPM package. Install that package in each project. Keep details that belong to only one project in that project. This gives every project the same basic rules without manual copying.",
+      "Keep one reviewed source for shared instructions and keep repo-specific details in each repo. AIPM does not install AGENTS.md, CLAUDE.md, or Cursor rules, but shared task workflows can become skills that AIPM installs into every repo at the same pinned version.",
     keywords: [
       "share AI coding agent instructions",
       "share AGENTS.md across repos",
       "reuse CLAUDE.md",
       "sync Cursor rules",
     ],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Copied files soon become different",
         body:
@@ -1143,14 +1045,14 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Install a reviewed version",
         body:
-          "An AIPM package can include files for Cursor and Claude targets. Each repo installs a named version, so updates are visible and can be reviewed before they spread.",
+          "Turn shared task workflows into a skill. AIPM installs the same SKILL.md into .claude/skills (Claude Code) or .agents/skills (Codex), and Cursor loads both. Each repo pins a named version in aipm.package.json, so updates are visible and can be reviewed before they spread.",
       },
     ],
     steps: [
       "List the instructions repeated in several repos.",
       "Remove private and repo-specific details.",
-      "Create target files for the AI tools your team uses.",
-      "Publish the shared files as an AIPM package.",
+      "Move shared task workflows into a SKILL.md.",
+      "Publish the skill with AIPM.",
       "Install and update the package through normal Git review.",
     ],
     faqs: [
@@ -1162,7 +1064,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         question: "How do teams keep instructions the same?",
         answer:
-          "Keep the shared instructions in one package with a version number. Update each project from that package instead of copying files by hand.",
+          "Keep shared task workflows in one skill with a version number and update each project with aipm update instead of copying files by hand. Keep always-on instruction files (AGENTS.md, CLAUDE.md, Cursor rules) in Git.",
       },
     ],
     sources: [
@@ -1180,9 +1082,10 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     description:
       "Learn how to save, check, test, and share important AI prompts in a project folder.",
     answer:
-      "Store important prompts as named files, explain their input and output, review changes in pull requests, and give shared prompts a version. Package prompts that are used in several repos instead of copying them.",
+      "Store important prompts as named files, explain their input and output, and review changes in pull requests so Git keeps the history. When a prompt becomes a repeatable task used in several repos, turn it into a versioned skill.",
     keywords: ["manage AI prompts in Git", "prompt version control", "AI prompts GitHub", "version prompts"],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Treat important prompts like project settings",
         body:
@@ -1196,7 +1099,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Use packages across repositories",
         body:
-          "Git handles history inside one repo. AIPM adds a package name, version, and install command when the same prompt workflow is needed in several repos.",
+          "Git handles history inside one repo. When the same workflow is needed in several repos, a skill gets a package name, an exact version, and an install command with AIPM. Prompts from the AIPM prompt library can be tracked as Markdown snapshots (no version numbers).",
       },
     ],
     steps: [
@@ -1204,7 +1107,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Give each prompt one clear job and file name.",
       "Add expected input, output, and a small example.",
       "Review prompt changes in pull requests.",
-      "Package prompts that need to stay aligned across repos.",
+      "Turn workflows that must stay aligned across repos into a skill.",
     ],
     faqs: [
       {
@@ -1213,9 +1116,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
           "Yes. Git records prompt changes, authors, review comments, and earlier versions just like other text files.",
       },
       {
-        question: "When is a prompt package useful?",
+        question: "When should a prompt become a skill?",
         answer:
-          "Use a package when a prompt is important, reused by a team, or installed in more than one repo.",
+          "When it is an important, repeatable task that a team reuses in more than one repo. Skills get versions; prompt snapshots do not.",
       },
     ],
   },
@@ -1233,7 +1136,8 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "mcp.json best practices",
       "MCP server setup",
     ],
-    sections: [
+updatedAt: "2026-09-25",
+        sections: [
       {
         title: "Keep secret values local",
         body:
@@ -1247,7 +1151,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Make setup repeatable",
         body:
-          "Store safe config and test steps in Git. If many repos need the same server, package the public setup with AIPM while each user supplies private values locally.",
+          "Store safe config and test steps in Git. If many repos need the same server, reuse one reviewed copy while each user supplies private values locally. AIPM does not install MCP config today.",
       },
     ],
     steps: [
@@ -1282,9 +1186,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     title: "AIPM vs Skills.sh — Skills.sh Alternative for Versioned Agent Skills",
     h1: "Looking for a skills.sh alternative? Here is how AIPM compares.",
     description:
-      "Honest AIPM vs skills.sh comparison: discovery vs versioned packages, install targets for Claude Code and Cursor, and when a package-manager workflow fits better than a directory.",
+      "Honest AIPM vs skills.sh comparison: discovery vs versioned packages, install targets for Claude Code and Codex, and when a package-manager workflow fits better than a directory.",
     answer:
-      "Both help people find and install Agent Skills. Skills.sh is a popular Agent Skills directory with its own install command. AIPM is a skills registry plus package-manager workflow for named, versioned packages and target-specific installs (Claude Code, Cursor, and more). Use whichever has the skill you trust; AIPM is a strong skills.sh alternative when you need pinned versions and project-local installs.",
+      "Both help people find and install Agent Skills. Skills.sh is a popular Agent Skills directory with its own install command. AIPM is a skills registry plus package-manager workflow for named, versioned packages and target-specific installs (Claude Code and Codex, which Cursor also reads). Use whichever has the skill you trust; AIPM is a strong skills.sh alternative when you need pinned versions and project-local installs.",
     keywords: [
       "skills.sh alternative",
       "AIPM vs Skills.sh",
@@ -1294,7 +1198,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "AI skill package manager",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-23",
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "Where they overlap",
@@ -1309,7 +1213,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "How to choose",
         body:
-          "Use the directory that contains the skill you trust. AIPM is useful when your team wants package names, explicit versions, publisher ownership, project-local installation for Claude Code or Cursor, and a workflow for publishing updates. Other catalogs (including Skills.sh and SkillMD) may list overlapping or different skills—always check the source and license before installing.",
+          "Use the directory that contains the skill you trust. AIPM is useful when your team wants package names, explicit versions, publisher ownership, project-local installation for Claude Code or Codex (Cursor loads both skill folders), and a workflow for publishing updates. Other catalogs (including Skills.sh and SkillMD) may list overlapping or different skills—always check the source and license before installing.",
       },
       {
         title: "What AIPM is not claiming",
@@ -1328,7 +1232,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         question: "Is AIPM a skills.sh alternative?",
         answer:
-          "Yes, for teams that want a registry plus CLI with pinned versions and Claude Code or Cursor install targets. If you only need to browse and run a directory install command, Skills.sh may already fit. Choose based on the skill source you trust and the install workflow you need.",
+          "Yes, for teams that want a registry plus CLI with pinned versions and Claude Code or Codex install targets (Cursor loads skills from both folders). If you only need to browse and run a directory install command, Skills.sh may already fit. Choose based on the skill source you trust and the install workflow you need.",
       },
       {
         question: "Is AIPM connected to Skills.sh?",
@@ -1355,7 +1259,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       "Claude Code and Codex can both use reusable skills built around a SKILL.md file. The main differences are where each tool stores and discovers skills, how users start them, and which product-specific features surround the shared instructions.",
     keywords: ["Claude Code skills vs Codex skills", "Codex SKILL.md", "Claude SKILL.md", "Agent Skills comparison"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-01",
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "The shared idea",
@@ -1387,9 +1291,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
           "Often yes, when it contains plain task instructions and uses files both tools can read. Product-specific tools, paths, or commands may need separate guidance.",
       },
       {
-        question: "Does AIPM currently install directly into Codex?",
+        question: "Does AIPM install directly into Codex?",
         answer:
-          "AIPM currently lists Cursor and Claude as supported install targets. Codex-oriented skills can be packaged and documented, but direct Codex installation should not be claimed until that target is supported and tested.",
+          "Yes. aipm add @scope/name@version --target codex writes the skill to .agents/skills/<skill>/SKILL.md with its supporting files, the folder Codex loads project skills from. --target claude writes .claude/skills/<skill>/ for Claude Code.",
       },
     ],
     sources: [
@@ -1556,7 +1460,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       { label: "Claude Code documentation: Plugins", href: "https://code.claude.com/docs/en/plugins" },
       { label: "anthropics/skills on GitHub", href: "https://github.com/anthropics/skills" },
       { label: "vercel-labs/skills (npx skills)", href: "https://github.com/vercel-labs/skills" },
-      { label: "AIPM install guide", href: "https://www.aipm-registry.com/install" },
+      { label: "AIPM: Use skills", href: "https://www.aipm-registry.com/use" },
     ],
   },
   {
@@ -1564,12 +1468,12 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     title: "How to Install Cursor AI Skills",
     h1: "How do you install an AI skill for Cursor?",
     description:
-      "Install a reusable AI skill for Cursor with AIPM, review the project files, and test the workflow safely.",
+      "Install a reusable AI skill for Cursor with AIPM: use --target claude or --target codex so the skill lands in a folder Cursor loads, then review and test it.",
     answer:
-      "Install the AIPM CLI, run aipm init --target cursor in your project, then run aipm add with the package name and --target cursor. Review the installed instructions before using them.",
+      "Cursor loads skills from .cursor/skills and .agents/skills, and also reads .claude/skills and .codex/skills. Install the AIPM CLI, then run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). Cursor picks the skill up from either folder. Review the installed files before using them.",
     keywords: ["install Cursor skills", "Cursor AI skills", "add Cursor skill", "Cursor project skill"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-23",
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "Start from the public package page",
@@ -1579,7 +1483,12 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       {
         title: "Install into the project",
         body:
-          "Run the target-specific command from the project root. AIPM places the Cursor-ready file under the project instead of hiding the shared instructions in one person's chat history.",
+          "Run the command from the project root. AIPM writes the skill folder into the project and records the pinned version in aipm.package.json, instead of hiding the shared instructions in one person's chat history.",
+      },
+      {
+        title: "Why not --target cursor?",
+        body:
+          "Today aipm add --target cursor saves the skill as a single file, .cursor/aipm/skills/<skill>.md, without supporting files. Cursor does not load skills from that folder automatically; it expects a folder with a SKILL.md. Until the Cursor target changes, install with --target claude or --target codex.",
       },
       {
         title: "Review before team use",
@@ -1590,16 +1499,16 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     steps: [
       "Run npm install -g @aipm-registry/cli.",
       "Open the project folder in a terminal.",
-      "Run aipm init --target cursor.",
-      "Run aipm add @scope/name@version --target cursor --ci.",
-      "Review the installed .cursor/aipm skill file.",
+      "Run aipm init --target claude (or --target codex).",
+      "Run aipm add @scope/name@version --target claude --ci.",
+      "Review the installed .claude/skills/<skill>/SKILL.md folder.",
       "Open Cursor and test the skill on a small task.",
     ],
     faqs: [
       {
-        question: "Where does AIPM put a Cursor skill?",
+        question: "Where should AIPM put a skill for Cursor?",
         answer:
-          "AIPM installs a Cursor skill under .cursor/aipm/skills in the project. The package name determines the installed file name.",
+          "Use --target claude (.claude/skills/<skill>/SKILL.md) or --target codex (.agents/skills/<skill>/SKILL.md); Cursor loads skills from both. --target cursor currently writes .cursor/aipm/skills/<skill>.md, which Cursor does not load automatically.",
       },
       {
         question: "Is a Cursor skill the same as a Cursor project rule?",
@@ -1608,8 +1517,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
       },
     ],
     sources: [
+      { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
       { label: "Cursor documentation: Rules", href: "https://docs.cursor.com/context/rules-for-ai" },
-      { label: "AIPM install guide", href: "https://www.aipm-registry.com/install" },
+      { label: "AIPM: Use skills", href: "https://www.aipm-registry.com/use" },
     ],
   },
   {

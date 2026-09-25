@@ -19,7 +19,8 @@ export const metadata = pageMetadata({
   ],
 });
 
-const faqs: { question: string; answer: ReactNode }[] = [
+/** `text` is the plain-text answer used in FAQPage JSON-LD when `answer` contains markup. */
+const faqs: { question: string; answer: ReactNode; text?: string }[] = [
   {
     question: "The registry is not reachable.",
     answer:
@@ -37,7 +38,12 @@ const faqs: { question: string; answer: ReactNode }[] = [
   {
     question: "The skill installed but does not appear in my tool.",
     answer:
-      "Check that you used the right --target. Then restart or reload the AI tool if it caches project files.",
+      "Check that you used the right --target: --target claude writes .claude/skills/<skill>/SKILL.md for Claude Code, and --target codex writes .agents/skills/<skill>/SKILL.md for Codex. For Cursor, use --target claude or --target codex, because Cursor loads skills from .claude/skills and .agents/skills but not from .cursor/aipm/skills, where --target cursor currently writes. Then restart or reload the AI tool if it caches project files.",
+  },
+  {
+    question: "How does my team keep the same skill versions?",
+    answer:
+      "Commit aipm.package.json and aipm-lock.json. Teammates run aipm install to get the same pinned versions, aipm update moves a skill to its latest version, and aipm remove uninstalls it. In CI, run aipm install --ci --target <tool> with an org install token. Pin exact versions (@scope/name@1.2.0); version ranges are not supported.",
   },
   {
     question: "Can I publish a public skill?",
@@ -57,6 +63,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
         and incident steps.
       </>
     ),
+    text: "See the security guide for preview checks, .aipmignore, and incident steps.",
   },
   {
     question: "What account data does AIPM use?",
@@ -81,10 +88,11 @@ const faqs: { question: string; answer: ReactNode }[] = [
     question: "How do I install the CLI?",
     answer: (
       <>
-        See the <Link href="/install">install guide</Link> for npm, Homebrew, standalone, Windows, and Scoop
-        options. Then run <code>aipm --version</code> and <code>aipm doctor</code>.
+        Run <code>npm install -g @aipm-registry/cli</code> (Node.js 20 or later). Then run{" "}
+        <code>aipm --version</code> and <code>aipm doctor</code>.
       </>
     ),
+    text: "Run npm install -g @aipm-registry/cli (Node.js 20 or later). Then run aipm --version and aipm doctor.",
   },
   {
     question: "Where are package files stored?",
@@ -109,12 +117,12 @@ export default function FaqPage() {
             name: "AIPM FAQ",
             description: "Troubleshooting and frequently asked questions for AIPM users and publishers.",
             url: `${SITE_URL}/faq`,
-            mainEntity: faqs.map(({ question, answer }) => ({
+            mainEntity: faqs.map(({ question, answer, text }) => ({
               "@type": "Question",
               name: question,
               acceptedAnswer: {
                 "@type": "Answer",
-                text: faqAnswerToText(answer),
+                text: text ?? faqAnswerToText(answer),
               },
             })),
           }),

@@ -11,12 +11,17 @@ type PackageTag = {
   status: "done" | "pending";
 };
 
+/**
+ * `aipm add` installs skills (and tracks AIPM prompts as Markdown snapshots) today.
+ * Everything marked "pending" is planned and must not be presented as installable.
+ */
 const PACKAGE_TAGS: readonly PackageTag[] = [
-  { href: "/skills/claude", label: "Claude Code", status: "done" },
-  { href: "/skills/cursor", label: "Cursor", status: "done" },
   { href: "/skills", label: "Skills", status: "done" },
-  { label: "Rules", status: "pending" },
+  { href: "/skills/claude", label: "Claude Code", status: "done" },
+  { label: "Codex", status: "done" },
+  { href: "/skills/cursor", label: "Cursor", status: "done" },
   { href: "/prompts", label: "Prompts", status: "done" },
+  { label: "Rules", status: "pending" },
   { label: "MCP servers", status: "pending" },
   { label: "Hooks", status: "pending" },
   { label: "Context packs", status: "pending" },
@@ -100,7 +105,7 @@ export default async function HomePage() {
                 alternateName: "AIPM",
                 url: SITE_URL,
                 description:
-                  "Claude and agent skills marketplace with versioned skills, prompts, and a CLI to install them like packages.",
+                  "Claude and agent skills marketplace with versioned skills, AI prompts, and a CLI that installs skills like packages.",
                 publisher: {
                   "@id": `${SITE_URL}/#organization`,
                 },
@@ -143,9 +148,9 @@ export default async function HomePage() {
                 applicationCategory: "DeveloperApplication",
                 operatingSystem: "macOS, Linux, Windows",
                 description:
-                  "Command line tool for installing and publishing project-ready AI skills and tool files.",
-                url: `${SITE_URL}/install`,
-                installUrl: `${SITE_URL}/install`,
+                  "Command line tool that installs, updates, and publishes versioned AI agent skills for Claude Code and Codex (Cursor loads both skill folders) and tracks AI prompts in your project.",
+                url: `${SITE_URL}/commands`,
+                installUrl: "https://www.npmjs.com/package/@aipm-registry/cli",
                 softwareHelp: `${SITE_URL}/commands`,
                 codeRepository: "https://github.com/abhisri2090/aipm",
                 offers: {
@@ -227,8 +232,8 @@ export default async function HomePage() {
             <dt>What is AIPM?</dt>
             <dd>
               AIPM is a Claude and agent skills marketplace plus CLI: browse versioned agent
-              skills and prompts, then install them into Claude Code, Cursor, and other tools like
-              packages.
+              skills and install them into Claude Code or Codex like packages (Cursor loads both
+              folders). Prompts can be tracked in your project too.
             </dd>
           </div>
           <div>
@@ -241,31 +246,41 @@ export default async function HomePage() {
           <div>
             <dt>How do you start?</dt>
             <dd>
-              Install the CLI, run <code>aipm init</code>, then add a package with{" "}
-              <code>aipm add @scope/name@version</code>.
+              Install the CLI, run <code>aipm init</code>, then add a skill with{" "}
+              <code>aipm add @scope/name@version --target claude</code> (or{" "}
+              <code>--target codex</code>).
             </dd>
           </div>
         </dl>
-        <div className={home.heroTagRow} aria-label="Package types AIPM manages">
-          {PACKAGE_TAGS.map((tag) => {
-            const content = (
-              <>
-                <TagStatusIcon status={tag.status} />
-                {tag.label}
-              </>
-            );
+        {(
+          [
+            { status: "done", label: "Installs today", aria: "What AIPM installs today" },
+            { status: "pending", label: "Planned", aria: "Planned package types, not installable yet" },
+          ] as const
+        ).map((group) => (
+          <div className={home.heroTagRow} aria-label={group.aria} key={group.status}>
+            <span className={home.heroTagGroupLabel}>{group.label}:</span>
+            {PACKAGE_TAGS.filter((tag) => tag.status === group.status).map((tag) => {
+              const content = (
+                <>
+                  <TagStatusIcon status={tag.status} />
+                  {tag.label}
+                  {tag.status === "pending" ? <span className={home.srOnly}> (planned)</span> : null}
+                </>
+              );
 
-            return tag.href ? (
-              <Link className={home.heroTag} href={tag.href} key={tag.label}>
-                {content}
-              </Link>
-            ) : (
-              <span className={home.heroTag} key={tag.label}>
-                {content}
-              </span>
-            );
-          })}
-        </div>
+              return tag.href ? (
+                <Link className={home.heroTag} href={tag.href} key={tag.label}>
+                  {content}
+                </Link>
+              ) : (
+                <span className={home.heroTag} key={tag.label}>
+                  {content}
+                </span>
+              );
+            })}
+          </div>
+        ))}
         <div className={shell.actions}>
           <Link className={shell.button} href="/skills/claude">
             Claude skills
@@ -279,7 +294,7 @@ export default async function HomePage() {
           <Link className={shell.button} href="/prompts">
             Browse prompts
           </Link>
-          <Link className={cn(shell.button, shell.secondary)} href="/install">
+          <Link className={cn(shell.button, shell.secondary)} href="#get-started">
             Install AIPM
           </Link>
         </div>
@@ -308,10 +323,7 @@ export default async function HomePage() {
               trackingProperties={{ method: "homepage-npm" }}
             />
             <p className={cards.stepInstallMethods}>
-              {"Other install methods ->"}{" "}
-              <Link className={shell.textLink} href="/install">
-                Full install guide
-              </Link>
+              Then check it with <code>aipm --version</code> and <code>aipm doctor</code>.
             </p>
           </article>
           <article className={cards.stepCard}>
@@ -319,17 +331,20 @@ export default async function HomePage() {
               <span className={cards.stepNumber}>2</span>
               <h3>Initialize your project</h3>
             </div>
-            <p>Create an AIPM config file in the current project.</p>
-            <CodeBlock code="aipm init --target cursor" trackingEvent="CLI Init Command Copied" />
+            <p>
+              Create an AIPM config file in the current project. Use <code>--target codex</code> for
+              Codex; Cursor loads skills from either folder.
+            </p>
+            <CodeBlock code="aipm init --target claude" trackingEvent="CLI Init Command Copied" />
           </article>
           <article className={cards.stepCard}>
             <div className={cards.stepHeading}>
               <span className={cards.stepNumber}>3</span>
               <h3>Add a skill</h3>
             </div>
-            <p>Install one package version into the selected AI tool target.</p>
+            <p>Install one exact skill version into .claude/skills (or .agents/skills for Codex).</p>
             <CodeBlock
-              code="aipm add @scope/name@1.0.0 --target cursor --ci"
+              code="aipm add @scope/name@1.0.0 --target claude --ci"
               trackingEvent="Example Package Install Command Copied"
             />
           </article>
@@ -400,15 +415,11 @@ export default async function HomePage() {
         </Link>
         <Link className={cards.guideCard} href="/guides/ai-package-manager">
           <h2>What is an AI package manager?</h2>
-          <p>Understand AIPM, AI skills, prompt packages, and reusable assistant setup.</p>
-        </Link>
-        <Link className={cards.guideCard} href="/guides/agent-package-manager">
-          <h2>Agent package manager guide</h2>
-          <p>Learn how packages help AI agents reuse project workflows safely.</p>
+          <p>Understand AIPM: versioned agent skills, tracked prompts, and what is planned next.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/version-ai-prompts">
           <h2>Version AI prompts</h2>
-          <p>Keep prompts, rules, and instructions in Git instead of losing them in chat.</p>
+          <p>Keep prompts and instructions in Git instead of losing them in chat.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/ai-agent-configuration-files">
           <h2>Agent config files</h2>
@@ -420,7 +431,7 @@ export default async function HomePage() {
         </Link>
         <Link className={cards.guideCard} href="/guides/mcp-json-guide-cursor-claude">
           <h2>mcp.json guide</h2>
-          <p>Manage MCP server setup safely across Cursor, Claude Code, and team repos.</p>
+          <p>Keep MCP server config safe and reviewable across Cursor, Claude Code, and team repos.</p>
         </Link>
         <Link className={cards.guideCard} href="/compatibility">
           <h2>AI agent file support</h2>
@@ -452,10 +463,10 @@ export default async function HomePage() {
         </Link>
         <Link className={cards.guideCard} href="/guides/share-ai-prompts-team">
           <h2>Share team prompts</h2>
-          <p>Give teammates one clear prompt source instead of scattered chat copies.</p>
+          <p>Give teammates one prompt source and track library prompts with aipm add.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/package-mcp-server-setup">
-          <h2>Package MCP setup</h2>
+          <h2>Share MCP setup</h2>
           <p>Share MCP setup notes safely without publishing tokens or private values.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/aipm-vs-copying-prompts">

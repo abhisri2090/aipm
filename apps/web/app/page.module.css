@@ -188,3 +188,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+.heroTagGroupLabel {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted, inherit);
+}
+
+.heroTagRow + .heroTagRow {
+  margin-top: 8px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

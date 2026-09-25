@@ -4,16 +4,16 @@ Each search intent has one preferred landing page. Closely related wording belon
 
 | Search intent | Primary page | Supporting pages |
 | --- | --- | --- |
-| AI package manager and AI skills package manager | `/` | `/guides/ai-package-manager`, `/guides/agent-package-manager` |
+| AI package manager and AI skills package manager | `/` | `/guides/ai-package-manager` (`/guides/agent-package-manager` 301s here since 2026-09-25) |
 | Agent skills marketplace, registry, library, and repository | `/skills` | Skill category and package pages |
 | Claude Code skills marketplace, library, and installation | `/skills/claude` | `/guides/claude-code-skills-guide`, `/guides/how-to-install-claude-code-skills` |
 | Cursor skills | `/skills/cursor` | `/guides/how-to-install-cursor-skills` |
 | Cursor rules vs Agent Skills | `/guides/cursor-rules-vs-agent-skills` | `/skills/cursor`, `/guides/cursor-rules-best-practices` |
 | AGENTS.md vs SKILL.md | `/guides/agents-md-vs-skill-md` | `/guides/ai-agent-configuration-files` |
 | SKILL.md templates, examples, and format | `/templates` | `/guides/how-to-create-agent-skill`, `/publish/guide` |
-| MCP package and configuration management | `/guides/mcp-package-manager` | `/guides/mcp-json-guide-cursor-claude`, `/guides/package-mcp-server-setup` |
+| MCP configuration management (AIPM does not install MCP config yet) | `/guides/mcp-json-guide-cursor-claude` (`/guides/mcp-package-manager` 301s here since 2026-09-25) | `/guides/package-mcp-server-setup`, `/guides/mcp-server-config-best-practices` |
 | Publish an AI skill | `/publish` | `/publish/guide`, `/examples` |
-| AIPM installation | `/install` | `/commands`, `/use` |
+| AIPM installation | `/install` (one-line installers 404 until product fixes the CLI version; link `/use` meanwhile) | `/commands`, `/use` |
 | Agent Skills research, compatibility, and security | `/research/state-of-agent-skills-2026` | `/compatibility`, `/security` |
 
 ## Supporting Routes

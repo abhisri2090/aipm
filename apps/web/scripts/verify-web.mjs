@@ -128,7 +128,7 @@ const requiredPages = [
     title: "AI Agent File Support for Cursor, Claude and Codex",
     h1: "Which AI agent files work with Cursor, Claude Code, and Codex?",
     jsonLd: true,
-    includes: ["Which file works where?", "AGENTS.md", "CLAUDE.md", "Last checked: 31 August 2026"],
+    includes: ["Which file works where?", "AGENTS.md", "CLAUDE.md", "Last checked: 25 September 2026", "AIPM does not install AGENTS.md"],
   },
   {
     path: "/guides/cursor-rules-vs-agent-skills",
@@ -191,7 +191,7 @@ const requiredPages = [
     title: "How to Install Cursor AI Skills",
     h1: "How do you install an AI skill for Cursor?",
     jsonLd: true,
-    includes: ["Short answer", "aipm init --target cursor", "Review the installed .cursor/aipm skill file"],
+    includes: ["Short answer", "aipm init --target claude", "Why not --target cursor?", ".agents/skills"],
   },
   {
     path: "/guides/how-to-create-agent-skill",
@@ -363,28 +363,7 @@ const requiredPages = [
     title: "What Is an AI Package Manager?",
     h1: "What is an AI package manager?",
     jsonLd: true,
-    includes: ["Short answer", "AIPM gives you a registry and a CLI", "Is an AI package manager the same as npm?"],
-  },
-  {
-    path: "/guides/agent-package-manager",
-    title: "Agent Package Manager for AI Workflows",
-    h1: "What is an agent package manager?",
-    jsonLd: true,
-    includes: ["Short answer", "Agents need instructions", "Does an agent package manager run the agent?"],
-  },
-  {
-    path: "/guides/prompt-package-manager",
-    title: "Prompt Package Manager for Teams",
-    h1: "How do teams manage prompts like packages?",
-    jsonLd: true,
-    includes: ["Short answer", "Copy-paste does not scale", "Should every prompt become a package?"],
-  },
-  {
-    path: "/guides/mcp-package-manager",
-    title: "MCP Package Manager for AI Tool Setup",
-    h1: "How can teams package MCP setup?",
-    jsonLd: true,
-    includes: ["Short answer", "MCP setup has many small parts", "Should MCP secrets go into a package?"],
+    includes: ["Short answer", "AIPM gives you a registry and a CLI", "What AIPM installs today", "Is an AI package manager the same as npm?"],
   },
   {
     path: "/guides/version-ai-prompts",
@@ -595,7 +574,11 @@ assertIncludes("/", homePage.text, 'href="/targets"');
 assertIncludes("/", homePage.text, 'href="/examples"');
 assertIncludes("/", homePage.text, 'href="/glossary"');
 assertIncludes("/", homePage.text, 'href="/guides/ai-package-manager"');
-assertIncludes("/", homePage.text, 'href="/guides/agent-package-manager"');
+assertIncludes("/", homePage.text, "Installs today");
+assertIncludes("/", homePage.text, "Planned");
+if (homePage.text.includes('href="/guides/agent-package-manager"')) {
+  fail("/ still links the retired /guides/agent-package-manager guide");
+}
 assertIncludes("/", homePage.text, 'href="/guides/version-ai-prompts"');
 assertIncludes("/", homePage.text, 'href="/guides/cursor-rules-vs-agent-skills"');
 assertIncludes("/", homePage.text, 'href="/guides/agents-md-vs-skill-md"');
@@ -624,6 +607,26 @@ for (const path of privatePages) {
     }
   } catch (error) {
     fail(`/dashboard/packages redirect check failed: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+for (const [from, to] of [
+  ["/guides/agent-package-manager", "/guides/ai-package-manager"],
+  ["/guides/prompt-package-manager", "/guides/share-ai-prompts-team"],
+  ["/guides/mcp-package-manager", "/guides/mcp-json-guide-cursor-claude"],
+]) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(urlFor(from), { redirect: "manual", signal: controller.signal });
+    const location = response.headers.get("location") ?? "";
+    if (response.status !== 301 || !location.endsWith(to)) {
+      fail(`${from} did not 301 to ${to} (status ${response.status}, location ${location})`);
+    }
+  } catch (error) {
+    fail(`${from} redirect check failed: ${error instanceof Error ? error.message : String(error)}`);
   } finally {
     clearTimeout(timeout);
   }
@@ -662,9 +665,6 @@ for (const path of [
   "/skills/testing",
   "/skills/documentation",
   "/guides/ai-package-manager",
-  "/guides/agent-package-manager",
-  "/guides/prompt-package-manager",
-  "/guides/mcp-package-manager",
   "/guides/version-ai-prompts",
   "/guides/share-cursor-rules",
   "/guides/reusable-claude-skills",
@@ -692,6 +692,11 @@ for (const path of [
 assertIncludes("/sitemap.xml", sitemap.text, "<lastmod>");
 if (sitemap.text.includes(`<loc>${expectedCanonicalUrl}/registry</loc>`)) {
   fail("/sitemap.xml contains the duplicate /registry landing page.");
+}
+for (const retired of ["agent-package-manager", "prompt-package-manager", "mcp-package-manager"]) {
+  if (sitemap.text.includes(`/guides/${retired}</loc>`)) {
+    fail(`/sitemap.xml still lists the redirected /guides/${retired} guide.`);
+  }
 }
 
 const research = await fetchText("/research/state-of-agent-skills-2026");
@@ -863,7 +868,7 @@ if (!/\[.+\]\(.+\)/.test(llms.text)) {
 if (llms.text.length < 50) {
   fail("/llms.txt is suspiciously short.");
 }
-assertIncludes("/llms.txt", llms.text, "AIPM is a registry and command line workflow");
+assertIncludes("/llms.txt", llms.text, "AIPM is a Claude and agent skills marketplace plus a command line tool");
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/security`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/privacy`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/terms`);
@@ -875,9 +880,6 @@ assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/targets`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/examples`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/glossary`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/ai-package-manager`);
-assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/agent-package-manager`);
-assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/prompt-package-manager`);
-assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/mcp-package-manager`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/version-ai-prompts`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/share-cursor-rules`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/reusable-claude-skills`);
