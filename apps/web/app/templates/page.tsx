@@ -86,7 +86,10 @@ export default function TemplatesPage() {
         <p>
           <strong>Short answer:</strong> a SKILL.md file gives an AI agent a name, a clear purpose,
           and step-by-step instructions for one reusable task. Start small, test the steps, and add
-          only the files the task needs.
+          only the files the task needs. Every SKILL.md should start with YAML frontmatter, and{" "}
+          <code>name</code> and <code>description</code> are required. See the{" "}
+          <Link href="/guides/skill-md-frontmatter-reference">SKILL.md frontmatter reference</Link> for
+          every field and limit.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/publish/guide">
@@ -123,9 +126,34 @@ export default function TemplatesPage() {
             code={`---\nname: code-review\ndescription: Review code changes for bugs, security risks, and missing tests.\n---\n\n# Code review\n\n1. Read the changed files and nearby tests.\n2. Find problems that can change real behavior.\n3. Explain each problem with a file and line number.\n4. Put serious problems first.\n5. Say clearly when no problem is found.`}
           />
           <p>
-            The exact supported fields can differ by AI tool. Check the{" "}
-            <Link href="/compatibility">AI agent file support table</Link> before sharing the skill.
+            This example uses only the two required fields. For optional fields (such as{" "}
+            <code>license</code>, <code>metadata</code>, and Claude Code&apos;s <code>when_to_use</code>,{" "}
+            <code>disable-model-invocation</code> or <code>paths</code>) and which tools accept them, see
+            the{" "}
+            <Link href="/guides/skill-md-frontmatter-reference#one-table-which-fields-work-where">
+              frontmatter reference
+            </Link>
+            . Check the <Link href="/compatibility">AI agent file support table</Link> before sharing the
+            skill.
           </p>
+        </section>
+        <section>
+          <h2 id="frontmatter-checklist-before-you-publish">
+            <Link href="/guides/skill-md-frontmatter-reference#frontmatter-errors-and-how-to-fix-them">
+              Frontmatter checklist before you publish
+            </Link>
+          </h2>
+          <p>Add frontmatter to the generated SKILL.md if it isn&apos;t there, then check:</p>
+          <ul className={docs.checkList}>
+            <li>
+              <code>name</code> is lowercase with hyphens and matches the folder name.
+            </li>
+            <li>
+              <code>description</code> says what the skill does and when to use it (up to 1,024
+              characters).
+            </li>
+            <li>There are no Claude Code-only fields if the skill will be uploaded to claude.ai.</li>
+          </ul>
         </section>
         <section>
           <h2>After you choose a template</h2>

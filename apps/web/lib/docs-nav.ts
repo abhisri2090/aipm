@@ -59,6 +59,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Turn repeated Claude workflows into simple skill packages.",
       },
       {
+        href: "/guides/skill-md-frontmatter-reference",
+        label: "SKILL.md frontmatter reference",
+        body: "Every SKILL.md field and limit for the Agent Skills spec, Claude Code, claude.ai, Cursor and Codex.",
+      },
+      {
         href: "/guides/reuse-claude-code-workflows",
         label: "Reuse Claude Code workflows",
         body: "Turn repeated Claude Code tasks into reusable skill packages.",

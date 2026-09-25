@@ -57,6 +57,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [How to install Claude skills (Claude app, Claude Code, GitHub, npx, AIPM)](${site}/guides/how-to-install-claude-code-skills)
 - [Install Cursor skills](${site}/guides/how-to-install-cursor-skills)
 - [Create an Agent Skill](${site}/guides/how-to-create-agent-skill)
+- [SKILL.md frontmatter reference](${site}/guides/skill-md-frontmatter-reference)
 
 ## Plain-English Answers
 

@@ -28,7 +28,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         title: "How a Claude skill works",
         body:
-          "A skill is a folder such as brand-guidelines/ containing SKILL.md. The top of SKILL.md is YAML frontmatter with a name and a description; the rest is Markdown instructions. At the start of a conversation Claude sees each enabled skill's name and description. When your request matches a description, Claude reads the full SKILL.md and any files it points to. Because the full text loads only when needed, you can have many skills without filling the context window.",
+          "A skill is a folder such as brand-guidelines/ containing SKILL.md. The top of SKILL.md is YAML frontmatter with a name and a description; the rest is Markdown instructions. At the start of a conversation Claude sees each enabled skill's name and description. When your request matches a description, Claude reads the full SKILL.md and any files it points to. Because the full text loads only when needed, you can have many skills without filling the context window. For every frontmatter field and limit, see the [SKILL.md frontmatter reference](/guides/skill-md-frontmatter-reference).",
       },
       {
         title: "What a skill can contain",

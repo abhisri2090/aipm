@@ -198,7 +198,23 @@ const requiredPages = [
     title: "How to Create an Agent Skill",
     h1: "How do you create a reusable Agent Skill?",
     jsonLd: true,
-    includes: ["Short answer", "Give the skill one job", "aipm publish validate"],
+    includes: ["Short answer", "Give the skill one job", "aipm publish validate", "/guides/skill-md-frontmatter-reference"],
+  },
+  {
+    path: "/guides/skill-md-frontmatter-reference",
+    title: "SKILL.md Frontmatter Reference: Every Field &amp; Limit",
+    h1: "SKILL.md frontmatter reference: every field, limit and error",
+    jsonLd: true,
+    includes: [
+      "Short answer",
+      'id="one-table-which-fields-work-where"',
+      'id="frontmatter-errors-and-how-to-fix-them"',
+      "Unexpected key(s) in SKILL.md frontmatter",
+      "allow_implicit_invocation",
+      "skills-ref validate ./my-skill",
+      "aipm publish validate",
+      '"@type":"FAQPage"',
+    ],
   },
   {
     path: "/best-claude-skills",
@@ -342,7 +358,13 @@ const requiredPages = [
     title: "SKILL.md Template and Examples for AI Agent Skills",
     h1: "SKILL.md template and examples",
     jsonLd: true,
-    includes: ["--template code-review", "--template issue-summary", "--template release-notes"],
+    includes: [
+      "--template code-review",
+      "--template issue-summary",
+      "--template release-notes",
+      "/guides/skill-md-frontmatter-reference#one-table-which-fields-work-where",
+      'id="frontmatter-checklist-before-you-publish"',
+    ],
   },
   {
     path: "/thanks",
@@ -685,6 +707,7 @@ for (const path of [
   "/roadmap",
   "/changelog",
   "/templates",
+  "/guides/skill-md-frontmatter-reference",
   "/thanks",
 ]) {
   assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);

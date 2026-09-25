@@ -157,7 +157,11 @@ AIPM_TOKEN=<5-minute-token> aipm publish push --yes`}
         <p>
           Templates only create starter SKILL.md content. Pick the closest one, then edit the
           generated files before you stage and publish. See the{" "}
-          <a href="/templates">skill templates guide</a> for when to use each starter.
+          <a href="/templates">skill templates guide</a> for when to use each starter. Make sure
+          SKILL.md starts with YAML frontmatter that has <code>name</code> and{" "}
+          <code>description</code>; the{" "}
+          <a href="/guides/skill-md-frontmatter-reference">SKILL.md frontmatter reference</a> lists
+          every field and limit.
         </p>
 
         <h2>Publish an existing AI-tool skill</h2>
