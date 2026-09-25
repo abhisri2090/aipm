@@ -44,8 +44,11 @@ export default function UsePage() {
             Project setup
           </p>
           <h2>Initialize a project</h2>
-          <p>This creates aipm.package.json and points it at the public registry.</p>
-          <CodeBlock code="aipm init --target cursor" trackingEvent="CLI Init Command Copied" />
+          <p>
+            This creates aipm.package.json and points it at the public registry. Use{" "}
+            <code>--target cursor</code>, <code>--target claude</code>, or <code>--target codex</code>.
+          </p>
+          <CodeBlock code="aipm init --target claude" trackingEvent="CLI Init Command Copied" />
         </section>
 
         <section aria-labelledby="use-private-packages">
@@ -72,12 +75,12 @@ export default function UsePage() {
           <h2>Install a skill</h2>
           <p>Choose a package from the registry and install it for the AI tool you use.</p>
           <p>
-            To install for one tool, choose a target like Cursor or Claude. Private org packages
-            work the same way after <code>aipm login</code>. See{" "}
+            To install for one tool, choose a target like <code>claude</code>, <code>codex</code>, or{" "}
+            <code>cursor</code>. Private org packages work the same way after <code>aipm login</code>. See{" "}
             <Link href="/targets">supported targets</Link> for the folders AIPM writes to.
           </p>
           <CodeBlock
-            code="aipm add @scope/name@1.0.0 --target cursor --ci"
+            code="aipm add @scope/name@1.0.0 --target claude --ci"
             trackingEvent="Example Package Install Command Copied"
           />
 
@@ -107,7 +110,7 @@ export default function UsePage() {
             packages.
           </p>
           <CodeBlock
-            code="AIPM_TOKEN=<install-token> aipm add @scope/private-skill@1.0.0 --target cursor --ci"
+            code="AIPM_TOKEN=<install-token> aipm add @scope/private-skill@1.0.0 --target claude --ci"
             trackingEvent="Private Package Install Command Copied"
           />
         </section>
@@ -118,8 +121,10 @@ export default function UsePage() {
           </p>
           <h2>Where files go</h2>
           <p>
-            AIPM writes files into the folder your AI tool expects. For Cursor, skill files go into
-            the project Cursor skill area. For Claude, AIPM writes a project skill folder.
+            AIPM writes files into the folder your AI tool expects. Claude Code gets{" "}
+            <code>.claude/skills/&lt;skill&gt;/SKILL.md</code>, Codex gets{" "}
+            <code>.agents/skills/&lt;skill&gt;/SKILL.md</code>, and the Cursor target writes{" "}
+            <code>.cursor/aipm/skills/&lt;skill&gt;.md</code>.
           </p>
           <p>
             See the <Link href="/targets">targets guide</Link> for exact folders and supported tools.

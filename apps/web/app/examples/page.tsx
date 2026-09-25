@@ -58,7 +58,10 @@ const examples: Example[] = [
         code: "aipm add {{your-team-name/review-helper}}@1.0.0 --target cursor --ci",
       },
     ],
-    notes: ["This will get installed into .cursor/aipm/skills/<skill>.md"],
+    notes: [
+      "This will get installed into .cursor/aipm/skills/<skill>.md",
+      "Valid install targets also include claude and codex",
+    ],
   },
   {
     title: "Sentry issue summariser AI skill for Claude",
@@ -107,8 +110,8 @@ const examples: Example[] = [
     publishSteps: [
       {
         title: "1. Create the skill folder",
-        body: "Creates one package that supports both Cursor and Claude.",
-        code: "aipm publish init --name @team/release-notes --template release-notes --targets cursor,claude",
+        body: "Creates one package that supports Cursor, Claude, and Codex.",
+        code: "aipm publish init --name @team/release-notes --template release-notes --targets cursor,claude,codex",
       },
       {
         title: "2. Open the folder",
@@ -142,8 +145,16 @@ const examples: Example[] = [
         body: "Installs the Claude version into the same or another project.",
         code: "aipm add @team/release-notes@1.0.0 --target claude --ci",
       },
+      {
+        title: "Install for Codex",
+        body: "Installs the Codex version under .agents/skills.",
+        code: "aipm add @team/release-notes@1.0.0 --target codex --ci",
+      },
     ],
-    notes: ["Good for teams using more than one AI tool", "The manifest should include both cursor and claude targets"],
+    notes: [
+      "Good for teams using more than one AI tool",
+      "The manifest should include cursor, claude, and/or codex targets",
+    ],
   },
   {
     title: "Import an existing Codex AI skill folder",

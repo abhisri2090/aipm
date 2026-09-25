@@ -7,7 +7,7 @@
 
 ## What is this?
 
-AI coding tools like Cursor and Claude can follow **skills**: small instruction files that teach the assistant how to do a job (code review, release notes, issue summaries, and more).
+AI coding tools like Cursor, Claude Code, and Codex can follow **skills**: small instruction files that teach the assistant how to do a job (code review, release notes, issue summaries, and more).
 
 AIPM makes skills and reusable prompts easy to **find, install, track, and share**.
 
@@ -20,7 +20,7 @@ This package gives you the `aipm` command. With it you can:
 
 No other AIPM packages are required — everything is bundled in one install.
 
-**Supported tools today:** Cursor and Claude (more targets at [aipm-registry.com/targets](https://www.aipm-registry.com/targets)).
+**Supported tools today:** Cursor, Claude Code, and Codex (details at [aipm-registry.com/targets](https://www.aipm-registry.com/targets)).
 
 ## Install
 
@@ -37,13 +37,15 @@ aipm doctor
 Start in any project folder:
 
 ```bash
-aipm init --target cursor
+aipm init --target claude
 ```
+
+Valid `--target` values are `cursor`, `claude`, `codex`, or `*`. Prefer `claude` or `codex` when you want Cursor to load the skill (it reads `.claude/skills` and `.agents/skills`).
 
 Or install once **without** creating project files:
 
 ```bash
-aipm add @scope/name@1.0.0 --target cursor --no-init
+aipm add @scope/name@1.0.0 --target claude --no-init
 ```
 
 `--no-init` writes skills into your AI tool folders only (no `aipm.package.json` / lockfile). The same flag works on `update` and `remove`.
@@ -68,7 +70,9 @@ After login, `aipm add`, `aipm install`, `aipm update`, and `aipm search` automa
 Install a skill:
 
 ```bash
-aipm add @scope/name@1.0.0 --target cursor
+aipm add @scope/name@1.0.0 --target claude
+# or: --target codex  → .agents/skills/<skill>/SKILL.md
+# or: --target cursor → .cursor/aipm/skills/<skill>.md
 ```
 
 Some packages include temporary helper files and a manual AI setup prompt. After install, AIPM
