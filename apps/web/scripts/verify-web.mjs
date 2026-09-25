@@ -214,7 +214,7 @@ const requiredPages = [
   },
   {
     path: "/examples",
-    title: "AIPM Skill Examples",
+    title: "Claude Code & Cursor Skill Examples",
     h1: "Skill publishing examples.",
     jsonLd: true,
     includes: [
@@ -225,7 +225,7 @@ const requiredPages = [
   },
   {
     path: "/glossary",
-    title: "AIPM Glossary",
+    title: "AIPM Glossary — Agent Skills Terms",
     h1: "Simple definitions for AIPM terms.",
     jsonLd: true,
     includes: ["Publish token", "Org namespace", ".aipmignore"],
