@@ -49,6 +49,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Share useful AI prompts with teammates without losing context or versions.",
       },
       {
+        href: "/guides/share-claude-skills-with-team",
+        label: "Share Claude skills with a team",
+        body: "Repo, plugin marketplace, Claude app or registry, and how to pin and update versions.",
+      },
+      {
         href: "/guides/manage-cursor-rules-git",
         label: "Cursor rules in Git",
         body: "Keep Cursor rules in Git so teams can review, update, and reuse them.",

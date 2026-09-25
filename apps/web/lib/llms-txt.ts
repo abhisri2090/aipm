@@ -47,6 +47,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [What is an AI package manager?](${site}/guides/ai-package-manager)
 - [Version AI prompts in Git](${site}/guides/version-ai-prompts)
 - [Share Cursor rules](${site}/guides/share-cursor-rules)
+- [Share Claude skills with your team](${site}/guides/share-claude-skills-with-team)
 - [Cursor rules vs Agent Skills](${site}/guides/cursor-rules-vs-agent-skills)
 - [AGENTS.md vs SKILL.md](${site}/guides/agents-md-vs-skill-md)
 - [Publish reusable Claude skills](${site}/guides/reusable-claude-skills)

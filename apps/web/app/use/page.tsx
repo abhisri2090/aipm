@@ -94,6 +94,12 @@ export default function UsePage() {
             Install the newer version with the same add command. The version is written down, so
             your team can review what changed.
           </p>
+          <p>
+            Setting this up for a team? Commit <code>aipm.package.json</code> and{" "}
+            <code>aipm-lock.json</code>, and teammates run <code>aipm install</code>. The{" "}
+            <Link href="/guides/share-claude-skills-with-team">team sharing guide</Link> compares this with committed skills,
+            plugin marketplaces and Claude app sharing.
+          </p>
         </section>
 
         <section aria-labelledby="use-ci">

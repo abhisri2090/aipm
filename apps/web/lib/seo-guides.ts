@@ -251,7 +251,7 @@ updatedAt: "2026-09-25",
       {
         title: "Use packages for shared prompts",
         body:
-          "If many projects need the same repeatable workflow, turn it into a skill and publish it with AIPM so each project can pin an exact version. For prompts from the AIPM prompt library, aipm add <prompt URL> saves a Markdown snapshot in the project; prompt snapshots have no version numbers, and aipm update pulls the newest content.",
+          "If many projects need the same repeatable workflow, turn it into a skill and publish it with AIPM so each project can pin an exact version. For prompts from the AIPM prompt library, aipm add <prompt URL> saves a Markdown snapshot in the project; prompt snapshots have no version numbers, and aipm update pulls the newest content. For versioning skills across a team, see [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
     ],
     steps: [
@@ -298,7 +298,7 @@ updatedAt: "2026-09-25",
       {
         title: "Where AIPM fits",
         body:
-          "AIPM installs skills, not rules (rules packaging is planned). Cursor loads skills from .claude/skills and .agents/skills, so a skill installed with aipm add --target claude or --target codex works in Cursor and travels with the project.",
+          "AIPM installs skills, not rules (rules packaging is planned). Cursor loads skills from .claude/skills and .agents/skills, so a skill installed with aipm add --target claude or --target codex works in Cursor and travels with the project. For sharing Claude skills across a team, see [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
     ],
     steps: [
@@ -330,6 +330,7 @@ updatedAt: "2026-09-25",
     answer:
       "Save the steps in a skill file and add an example. Publish the skill with AIPM. Then install it in each project that needs it.",
     keywords: ["Claude skills", "Claude Code skills", "publish Claude skills", "AIPM Claude"],
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "Start with one repeated job",
@@ -344,7 +345,7 @@ updatedAt: "2026-09-25",
       {
         title: "Publish only safe files",
         body:
-          "Do not include private prompts, customer data, logs, or secrets. Run a preview before publishing.",
+          "Do not include private prompts, customer data, logs, or secrets. Run a preview before publishing. To roll the skill out to teammates at a pinned version, see [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
     ],
     steps: [
@@ -427,7 +428,7 @@ updatedAt: "2026-09-25",
       {
         title: "A shared prompt needs context",
         body:
-          "A prompt is not just text. It should also explain when to use it, what input it needs, and what good output looks like.",
+          "A prompt is not just text. It should also explain when to use it, what input it needs, and what good output looks like. Sharing skills rather than prompts? See [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
       {
         title: "Files are better than chat history",
@@ -1064,7 +1065,7 @@ updatedAt: "2026-09-25",
       {
         title: "Install a reviewed version",
         body:
-          "Turn shared task workflows into a skill. AIPM installs the same SKILL.md into .claude/skills (Claude Code) or .agents/skills (Codex), and Cursor loads both. Each repo pins a named version in aipm.package.json, so updates are visible and can be reviewed before they spread.",
+          "Turn shared task workflows into a skill. AIPM installs the same SKILL.md into .claude/skills (Claude Code) or .agents/skills (Codex), and Cursor loads both. Each repo pins a named version in aipm.package.json, so updates are visible and can be reviewed before they spread. Every way to share skills (repo, plugin marketplace, Claude app, registry) is compared in [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
     ],
     steps: [
@@ -1227,7 +1228,7 @@ updatedAt: "2026-09-25",
       {
         title: "How AIPM is different",
         body:
-          "AIPM treats a skill as a named package with a publisher, version, manifest, install command, integrity value, source details, and target list. It can install files for supported tools and keep the selected package version clear.",
+          "AIPM treats a skill as a named package with a publisher, version, manifest, install command, integrity value, source details, and target list. It can install files for supported tools and keep the selected package version clear. How pinning and updates compare across Git, Claude Code plugins, the Claude app and AIPM: [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
       {
         title: "How to choose",

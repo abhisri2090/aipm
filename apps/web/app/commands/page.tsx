@@ -235,6 +235,15 @@ export default function CommandsPage() {
           <p>Use these with most commands when you need help, quieter output, or extra diagnostics.</p>
           <CodeBlock code={`aipm --help\naipm <command> --help\naipm --verbose <command>\naipm --quiet <command>`} />
         </section>
+        <section>
+          <h2>Team setup</h2>
+          <p>
+            Pin exact versions with <code>aipm add @scope/name@1.2.0</code>, commit{" "}
+            <code>aipm.package.json</code> and <code>aipm-lock.json</code>, and teammates run{" "}
+            <code>aipm install</code>. Version ranges aren&apos;t supported. See{" "}
+            <Link href="/guides/share-claude-skills-with-team">how to share Claude skills with your team</Link>.
+          </p>
+        </section>
       </article>
 
       <CommandSection title="Use Packages" commands={useCommands} />
