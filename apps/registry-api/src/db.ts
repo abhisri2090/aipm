@@ -690,6 +690,7 @@ export async function listPackageVersions(
     offset?: number;
     category?: string;
     target?: string;
+    publisher?: string;
     sort?: PackageSortMode;
   } = {},
 ): Promise<PackageVersionRow[]> {
@@ -732,6 +733,12 @@ export async function listPackageVersions(
       SELECT 1 FROM jsonb_array_elements_text(COALESCE(latest.manifest->'targets', '[]'::jsonb)) tgt
       WHERE tgt = $${values.length} OR tgt = '*'
     )`);
+  }
+
+  const publisher = options.publisher?.trim().toLowerCase();
+  if (publisher) {
+    values.push(`@${publisher}/`);
+    filters.push(`starts_with(lower(latest.name), $${values.length})`);
   }
 
   if (useCursor && options.cursor) {
@@ -2050,7 +2057,7 @@ export async function listPublicPublishers(
             orgs.website_url,
             COALESCE(orgs.avatar_url, owners.avatar_url) AS avatar_url,
             orgs.created_at,
-            COUNT(DISTINCT package_reservations.name)::int AS package_count,
+            COUNT(DISTINCT package_versions.name)::int AS package_count,
             owners.github_login AS publisher_login,
             owners.name AS publisher_name,
             owners.avatar_url AS publisher_avatar_url,
@@ -2058,9 +2065,11 @@ export async function listPublicPublishers(
      FROM orgs
      JOIN users owners ON owners.id = orgs.owner_user_id
      JOIN package_reservations ON package_reservations.org_id = orgs.id
+     JOIN package_versions ON package_versions.name = package_reservations.name
+       AND package_versions.yanked_at IS NULL
      WHERE ${conditions.join(" AND ")}
      GROUP BY orgs.id, owners.id
-     HAVING COUNT(DISTINCT package_reservations.name) > 0
+     HAVING COUNT(DISTINCT package_versions.name) > 0
      ORDER BY orgs.created_at DESC, orgs.slug ASC
      LIMIT $${limitParam}${offsetSql}`,
     values,

@@ -46,14 +46,14 @@ const useCommands: CommandItem[] = [
   {
     title: "Initialize a project",
     description: "Creates aipm.package.json in the current project and records the registry URL.",
-    code: "aipm init --target cursor",
-    options: ["--target <tool>: set cursor, claude, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
+    code: "aipm init --target claude",
+    options: ["--target <tool>: set cursor, claude, codex, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
   },
   {
     title: "Install one package",
     description: "Adds a package to aipm.package.json and writes target-specific files into the project.",
-    code: "aipm add @scope/name@1.0.0 --target cursor --ci",
-    options: ["--target <tool>: cursor, claude, or *", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
+    code: "aipm add @scope/name@1.0.0 --target claude --ci",
+    options: ["--target <tool>: cursor, claude, codex, or *", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
   },
   {
     title: "Search packages",

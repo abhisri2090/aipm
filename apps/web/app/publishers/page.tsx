@@ -57,8 +57,8 @@ export default async function PublishersPage({
     listPublishedPublisherSlugs(),
   ]);
   if (currentPage > 1 && page.publishers.length === 0) notFound();
-  // /v1/publishers also counts orgs that only hold a name reservation (no published skill).
-  // Their /publishers/{slug} page 404s, so keep them out of the cards and the JSON-LD list.
+  // /v1/publishers only lists orgs with at least one published package version.
+  // Keep the client-side filter as a safety net so cards stay consistent with /publishers/{slug}.
   const publishers = filterPublishedPublishers(page.publishers, publishedSlugs);
   const publishedSlugList = publishedSlugs ? [...publishedSlugs].sort() : null;
 

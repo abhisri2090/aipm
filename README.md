@@ -11,7 +11,7 @@
 [![license](https://img.shields.io/github/license/abhisri2090/aipm)](LICENSE)
 [![website](https://img.shields.io/badge/registry-aipm--registry.com-0969da)](https://www.aipm-registry.com)
 
-Open-source **AI package manager** — publish and install AI skills into Cursor and Claude project folders.
+Open-source **AI package manager** — publish and install AI skills into Cursor, Claude Code, and Codex project folders.
 
 ```bash
 npm install -g @aipm-registry/cli
@@ -46,6 +46,7 @@ packages/
   engine/           → install engine + tool detection
   adapter-cursor/   → Cursor skill adapter
   adapter-claude/   → Claude skill adapter
+  adapter-codex/    → Codex skill adapter (.agents/skills)
   adapter-sdk/      → adapter interface
 ```
 

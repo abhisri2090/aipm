@@ -64,7 +64,10 @@ describe("CLI publish commands", () => {
     const root = await tempWorkspace();
     const skillRoot = join(root, "url-check");
     await mkdir(skillRoot);
-    await writeFile(join(skillRoot, "SKILL.md"), "# URL check\n");
+    await writeFile(
+      join(skillRoot, "SKILL.md"),
+      "---\nname: url-check\ndescription: \"URL check skill\"\n---\n\n# URL check\n",
+    );
     await writeFile(
       join(skillRoot, "aipm.manifest.json"),
       JSON.stringify({
@@ -110,7 +113,10 @@ describe("CLI publish commands", () => {
 
   it("accepts verbose on publish push", async () => {
     const root = await tempWorkspace();
-    await writeFile(join(root, "SKILL.md"), "# Verbose publish\n");
+    await writeFile(
+      join(root, "SKILL.md"),
+      "---\nname: verbose-publish\ndescription: \"Verbose publish skill\"\n---\n\n# Verbose publish\n",
+    );
     await writeFile(
       join(root, "aipm.manifest.json"),
       JSON.stringify({
@@ -158,7 +164,10 @@ describe("CLI publish commands", () => {
 
   it("explains invalid scoped publish tokens with package-specific recovery steps", async () => {
     const root = await tempWorkspace();
-    await writeFile(join(root, "SKILL.md"), "# Token hint\n");
+    await writeFile(
+      join(root, "SKILL.md"),
+      "---\nname: token-hint\ndescription: \"Token hint skill\"\n---\n\n# Token hint\n",
+    );
     await writeFile(
       join(root, "aipm.manifest.json"),
       JSON.stringify({
@@ -256,6 +265,7 @@ describe("CLI publish commands", () => {
     ]);
 
     const skill = await readFile(join(root, "pr-reviewer", "SKILL.md"), "utf8");
+    expect(skill).toMatch(/^---\nname: pr-reviewer\ndescription: "AIPM skill"\n---\n/);
     expect(skill).toContain("Use this skill to review code changes");
     expect(skill).toContain("Return findings first, ordered by severity");
   });

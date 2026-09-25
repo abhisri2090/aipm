@@ -120,7 +120,9 @@ export const CLI_INSTALL_COMMAND = "npm install -g @aipm-registry/cli";
 export const CLI_VERSION = cliPackage.version;
 export const CLI_RELEASE_TAG = `cli-v${CLI_VERSION}`;
 export const CLI_RELEASE_URL = `https://github.com/abhisri2090/aipm/releases/tag/${CLI_RELEASE_TAG}`;
-export const CLI_RELEASE_DOWNLOAD_URL = `https://github.com/abhisri2090/aipm/releases/download/${CLI_RELEASE_TAG}`;
+/** Installer assets always resolve via GitHub's latest release so /install and llms.txt stay valid if package.json is bumped before a release job succeeds. */
+export const CLI_RELEASE_DOWNLOAD_URL =
+  "https://github.com/abhisri2090/aipm/releases/latest/download";
 export const CLI_INSTALL_SCRIPT_COMMAND = `curl -fsSL ${CLI_RELEASE_DOWNLOAD_URL}/install.sh | sh`;
 export const CLI_WINDOWS_INSTALL_COMMAND = `irm ${CLI_RELEASE_DOWNLOAD_URL}/install.ps1 | iex`;
 export const CLI_HOMEBREW_COMMAND = `brew install ${CLI_RELEASE_DOWNLOAD_URL}/aipm.rb`;

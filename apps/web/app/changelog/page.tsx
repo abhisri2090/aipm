@@ -7,9 +7,10 @@ import { SITE_URL } from "../../lib/registry";
 const entries = [
   {
     date: "September 22, 2026",
-    title: "CLI 0.4.6 — interactive UX and --no-init",
+    title: "CLI 0.4.8 — interactive UX, --no-init, and release plumbing",
     items: [
-      "Published @aipm-registry/cli@0.4.6 to npm with mint-branded interactive menus (arrow keys, highlight bar) for recoverable errors.",
+      "Published @aipm-registry/cli@0.4.8 to npm and GitHub Releases (cli-v0.4.8). Tags cli-v0.4.4 through cli-v0.4.7 were cut in git, but their release jobs failed, so 0.4.8 is the first published release after 0.4.3.",
+      "Added mint-branded interactive menus (arrow keys, highlight bar) for recoverable errors.",
       "Added --no-init on add/update/remove for one-shot installs without aipm.package.json.",
       "When a project is not initialized, the CLI can offer init now or continue without tracking.",
       "Fixed aipm login hanging after credentials were saved (callback server keep-alive sockets).",

@@ -30,6 +30,37 @@ const SECRET_PATTERNS = [
   /<publishData/i,
 ];
 
+export function parseSkillFrontmatter(content: string): Record<string, string> {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (!match) return {};
+  const fields: Record<string, string> = {};
+  for (const line of match[1]!.split("\n")) {
+    const separator = line.indexOf(":");
+    if (separator === -1) continue;
+    const key = line.slice(0, separator).trim();
+    let value = line.slice(separator + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    fields[key] = value;
+  }
+  return fields;
+}
+
+export function assertSkillEntryFrontmatter(content: string, entryPath: string): void {
+  const fields = parseSkillFrontmatter(content);
+  const missing: string[] = [];
+  if (!fields.name?.trim()) missing.push("name");
+  if (!fields.description?.trim()) missing.push("description");
+  if (missing.length === 0) return;
+  throw new Error(
+    `${entryPath} is missing required YAML frontmatter field${missing.length === 1 ? "" : "s"}: ${missing.join(", ")}. Add a --- block with name and description.`,
+  );
+}
+
 export function publishStatePath(root: string): string {
   return join(root, STATE_PATH);
 }
@@ -226,6 +257,10 @@ export async function validatePublishState(root: string): Promise<{ manifest: Pa
     size += hashed.size;
   }
   if (size > MAX_PACKAGE_BYTES) throw new Error("Package exceeds 50 MB limit.");
+
+  const entryContent = await readFile(join(root, manifest.entry), "utf8");
+  assertSkillEntryFrontmatter(entryContent, manifest.entry);
+
   return { manifest, size };
 }
 

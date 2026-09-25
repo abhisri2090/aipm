@@ -12,7 +12,7 @@ const targets = [
     detect: ".cursor/",
     writes: ".cursor/aipm/skills/<skill>.md",
     command: "aipm add @scope/name@1.0.0 --target cursor --ci",
-    note: "Use this when you want the skill installed as a Cursor file in this project.",
+    note: "Writes a single Cursor skill file. Cursor does not load that folder automatically; for skills Cursor will pick up, prefer --target claude or --target codex.",
   },
   {
     name: "Claude",
@@ -20,20 +20,29 @@ const targets = [
     detect: ".claude/",
     writes: ".claude/skills/<skill>/SKILL.md",
     command: "aipm add @scope/name@1.0.0 --target claude --ci",
-    note: "Use this when you want the skill installed as a Claude project skill folder.",
+    note: "Installs a Claude Code project skill folder. Cursor also loads skills from .claude/skills.",
+  },
+  {
+    name: "Codex",
+    value: "codex",
+    detect: ".codex/",
+    writes: ".agents/skills/<skill>/SKILL.md",
+    command: "aipm add @scope/name@1.0.0 --target codex --ci",
+    note: "Installs an OpenAI Codex project skill folder under .agents/skills. Cursor also loads skills from that folder.",
   },
 ];
 
 export const metadata = pageMetadata({
   title: "AIPM Supported Targets",
   description:
-    "Learn where AIPM installs skills for Cursor and Claude.",
+    "Learn where AIPM installs skills for Cursor, Claude Code, and Codex.",
   path: "/targets",
   keywords: [
     "AIPM targets",
     "AIPM adapters",
     "Cursor skill install",
     "Claude skill install",
+    "Codex skill install",
     "AI tool targets",
   ],
 });
@@ -49,7 +58,7 @@ export default function TargetsPage() {
             "@type": "CollectionPage",
             name: "AIPM Supported Targets",
             description:
-              "Learn where AIPM installs skills for Cursor and Claude.",
+              "Learn where AIPM installs skills for Cursor, Claude Code, and Codex.",
             url: `${SITE_URL}/targets`,
             hasPart: targets.map((target) => ({
               "@type": "SoftwareApplication",
@@ -64,8 +73,8 @@ export default function TargetsPage() {
         <p className={shell.eyebrow}>Targets</p>
         <h1>Choose where AIPM should install a skill.</h1>
         <p className={shell.lede}>
-          A target is the AI tool you want to install into, such as Cursor or Claude. Packages list
-          the targets they support, and you choose one with the CLI.
+          A target is the AI tool you want to install into, such as Cursor, Claude, or Codex. Packages
+          list the targets they support, and you choose one with the CLI.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/registry">
@@ -83,12 +92,12 @@ export default function TargetsPage() {
           AIPM automatically detects the AI tool in your project and installs the skill in the matching
           location. Detection looks for tool-specific directories in your project root. If AIPM finds
           a <code>.cursor/</code> folder, it knows your project uses Cursor. If it finds <code>.claude/</code>,
-          it targets Claude Code.
+          it targets Claude Code. If it finds <code>.codex/</code>, it targets Codex.
         </p>
         <p>
           When your project uses multiple AI tools, or when you want to override automatic detection,
-          use <code>--target cursor</code> or <code>--target claude</code> with <code>aipm add</code>.
-          The target flag tells AIPM exactly where to write the skill files.
+          use <code>--target cursor</code>, <code>--target claude</code>, or <code>--target codex</code> with{" "}
+          <code>aipm add</code>. The target flag tells AIPM exactly where to write the skill files.
         </p>
         <p>
           Some packages support only one target, while others include files for multiple AI tools. The package
@@ -143,8 +152,13 @@ export default function TargetsPage() {
               <p>Installs only Claude project skill folders.</p>
             </article>
             <article className={cards.exampleCard}>
+              <h3>Codex-only</h3>
+              <CodeBlock code={`"targets": ["codex"]`} />
+              <p>Installs only Codex project skill folders under .agents/skills.</p>
+            </article>
+            <article className={cards.exampleCard}>
               <h3>Multi-tool</h3>
-              <CodeBlock code={`"targets": ["cursor", "claude"]`} />
+              <CodeBlock code={`"targets": ["cursor", "claude", "codex"]`} />
               <p>Installs the same package into multiple AI tools.</p>
             </article>
           </div>

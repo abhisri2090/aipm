@@ -47,6 +47,7 @@ import {
   resetPublishState,
   statusPublishState,
   validatePublishState,
+  assertSkillEntryFrontmatter,
 } from "./publish-state.js";
 import {
   parseTargetFlag,
@@ -589,12 +590,25 @@ async function printPublishPreview(root: string, json?: boolean): Promise<void> 
 }
 
 
+function yamlDoubleQuoted(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+}
+
+function skillEntryFrontmatter(packageName: string, description: string): string {
+  return `---
+name: ${skillFolderName(packageName)}
+description: ${yamlDoubleQuoted(description)}
+---
+
+`;
+}
+
 const SKILL_TEMPLATES = {
-  blank: (name: string) => `# ${name}
+  blank: (name: string, description: string) => `${skillEntryFrontmatter(name, description)}# ${name}
 
 Describe what this skill does and how an AI assistant should use it.
 `,
-  "code-review": (name: string) => `# ${name}
+  "code-review": (name: string, description: string) => `${skillEntryFrontmatter(name, description)}# ${name}
 
 Use this skill to review code changes in this project.
 
@@ -612,7 +626,7 @@ Use this skill to review code changes in this project.
 ## Output
 Return findings first, ordered by severity. If there are no findings, say that clearly and mention any remaining test gaps.
 `,
-  "issue-summary": (name: string) => `# ${name}
+  "issue-summary": (name: string, description: string) => `${skillEntryFrontmatter(name, description)}# ${name}
 
 Use this skill to summarize product, support, or error-tracking issues for triage.
 
@@ -628,7 +642,7 @@ Use this skill to summarize product, support, or error-tracking issues for triag
 ## Output
 Include summary, impact, likely cause, evidence, open questions, and recommended next action.
 `,
-  "release-notes": (name: string) => `# ${name}
+  "release-notes": (name: string, description: string) => `${skillEntryFrontmatter(name, description)}# ${name}
 
 Use this skill to draft release notes from project changes.
 
@@ -746,7 +760,7 @@ async function initSkill(opts: {
   if (!opts.from) {
     await writeStarterFile(
       join(root, entry),
-      SKILL_TEMPLATES[template](opts.name),
+      SKILL_TEMPLATES[template](opts.name, opts.description),
     );
   }
   await writeStarterFile(
@@ -1285,6 +1299,8 @@ const publish = program
     const abs = resolve(dir);
     const manifestRaw = await readFile(join(abs, "aipm.manifest.json"), "utf8");
     const manifest = PackageManifestSchema.parse(JSON.parse(manifestRaw));
+    const entryContent = await readFile(join(abs, manifest.entry), "utf8");
+    assertSkillEntryFrontmatter(entryContent, manifest.entry);
     const tarball = await packDirectory(abs);
     const registry = registryFromEnvOrDefault(opts.registry);
     const result = await publishPackage(registry, manifest.name, tarball, opts.token ?? env.AIPM_TOKEN);
