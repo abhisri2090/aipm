@@ -24,6 +24,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "When you need a single SKILL.md and when you need a plugin from a marketplace.",
       },
       {
+        href: "/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks",
+        label: "Skills vs MCP vs subagents vs hooks",
+        body: "Where CLAUDE.md, skills, subagents, hooks, MCP and plugins fit, with Cursor and Codex equivalents.",
+      },
+      {
         href: "/guides/claude-skills-marketplaces",
         label: "Claude skills marketplaces compared",
         body: "Claude app, plugin marketplaces, GitHub, skills.sh, SkillsMP, and AIPM side by side.",

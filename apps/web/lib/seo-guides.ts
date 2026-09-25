@@ -677,7 +677,7 @@ updatedAt: "2026-09-25",
       {
         title: "The problem developers hit",
         body:
-          "AI coding tools use many setup files. A project may use AGENTS.md, CLAUDE.md, Cursor rules, MCP files, skill folders, and special commands. Without one clear system, the files may stop matching each other.",
+          "AI coding tools use many setup files. A project may use AGENTS.md, CLAUDE.md, Cursor rules, MCP files, skill folders, and special commands. Without one clear system, the files may stop matching each other. For which Claude Code feature to use when, see [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks).",
       },
       {
         title: "The files have different jobs",
@@ -823,7 +823,7 @@ updatedAt: "2026-09-25",
       {
         title: "Skills are for repeatable work",
         body:
-          "Use a skill when the same task happens often. Good examples are code review, issue triage, release notes, test writing, and migration steps.",
+          "Use a skill when the same task happens often. Good examples are code review, issue triage, release notes, test writing, and migration steps. Not sure a skill is the right tool? Compare [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks).",
       },
       {
         title: "A skill should be focused",
@@ -996,7 +996,7 @@ updatedAt: "2026-09-25",
       {
         title: "The old formats now work together",
         body:
-          "A command file and a skill can both create a slash command. You do not need to change old command files now. Use the skill format for new tasks.",
+          "A command file and a skill can both create a slash command. You do not need to change old command files now. Use the skill format for new tasks. To choose between skills, subagents, hooks and MCP, see [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks).",
       },
       {
         title: "Skills can hold more than one file",
@@ -1330,7 +1330,7 @@ updatedAt: "2026-09-25",
       "An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI application to tools and information. A skill explains the workflow; MCP provides capabilities the workflow may use.",
     keywords: ["Agent Skills vs MCP", "MCP vs skills", "AI agent skills", "Model Context Protocol tools"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-01",
+    updatedAt: "2026-09-25",
     sections: [
       {
         title: "Use a skill for repeatable instructions",
@@ -1345,7 +1345,7 @@ updatedAt: "2026-09-25",
       {
         title: "Use both for a complete workflow",
         body:
-          "A support-triage skill can explain how to investigate an issue, while an MCP connection can provide the ticket and monitoring data. Keep instructions in the skill and private credentials outside shared files.",
+          "A support-triage skill can explain how to investigate an issue, while an MCP connection can provide the ticket and monitoring data. Keep instructions in the skill and private credentials outside shared files. Deciding between skills, MCP, subagents, hooks and plugins in Claude Code? See [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks).",
       },
     ],
     steps: [
@@ -1627,7 +1627,7 @@ updatedAt: "2026-09-25",
       {
         title: "Quick way to decide",
         body:
-          "Ask: should this instruction be in context for every chat, or only for one kind of task? Every chat or every matching file means a rule. One task, such as reviewing a pull request or writing a migration, means a skill. Skills also follow the open Agent Skills standard, so the same SKILL.md can work in Claude Code and Codex.",
+          "Ask: should this instruction be in context for every chat, or only for one kind of task? Every chat or every matching file means a rule. One task, such as reviewing a pull request or writing a migration, means a skill. Skills also follow the open Agent Skills standard, so the same SKILL.md can work in Claude Code and Codex. Using Claude Code too? Compare [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks), with the Cursor and Codex equivalent of each.",
       },
       {
         title: "Moving from rules to skills",
@@ -1708,7 +1708,7 @@ updatedAt: "2026-09-25",
       {
         title: "A project can use both",
         body:
-          "AGENTS.md tells the agent how the repository works. A skill then provides detailed steps for a task such as code review or release preparation. Do not repeat the same project facts in every skill.",
+          "AGENTS.md tells the agent how the repository works. A skill then provides detailed steps for a task such as code review or release preparation. Do not repeat the same project facts in every skill. For the full decision in Claude Code, including subagents, hooks and MCP, see [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks).",
       },
     ],
     steps: [
