@@ -30,7 +30,10 @@ async function createSkillFixture(): Promise<string> {
       2,
     ),
   );
-  await writeFile(join(root, "SKILL.md"), "# Test skill\n");
+  await writeFile(
+    join(root, "SKILL.md"),
+    "---\nname: test-skill\ndescription: \"Test skill\"\n---\n\n# Test skill\n",
+  );
   await writeFile(join(root, ".env"), "SECRET=value\n");
   return root;
 }
@@ -52,7 +55,10 @@ describe("publish state", () => {
   it("tracks changed staged files", async () => {
     const root = await createSkillFixture();
     await addPublishFiles(root, ["."]);
-    await writeFile(join(root, "SKILL.md"), "# Changed\n");
+    await writeFile(
+      join(root, "SKILL.md"),
+      "---\nname: test-skill\ndescription: \"Changed\"\n---\n\n# Changed\n",
+    );
 
     const rows = await statusPublishState(root);
     expect(rows.find((row) => row.path === "SKILL.md")?.changed).toBe(true);
@@ -74,10 +80,33 @@ describe("publish state", () => {
 
   it("rejects files that look like secrets", async () => {
     const root = await createSkillFixture();
-    await writeFile(join(root, "SKILL.md"), "DefaultEndpointsProtocol=https;AccountKey=abc\n");
+    await writeFile(
+      join(root, "SKILL.md"),
+      "---\nname: test-skill\ndescription: \"Test skill\"\n---\n\nDefaultEndpointsProtocol=https;AccountKey=abc\n",
+    );
     await addPublishFiles(root, ["."]);
 
     await expect(validatePublishState(root)).rejects.toThrow(/looks like it contains a secret/);
+  });
+
+  it("rejects SKILL.md missing required YAML frontmatter fields", async () => {
+    const root = await createSkillFixture();
+    await writeFile(join(root, "SKILL.md"), "# Test skill\n");
+    await addPublishFiles(root, ["."]);
+
+    await expect(validatePublishState(root)).rejects.toThrow(
+      /SKILL\.md is missing required YAML frontmatter fields: name, description/,
+    );
+  });
+
+  it("names only the missing frontmatter field when one is absent", async () => {
+    const root = await createSkillFixture();
+    await writeFile(join(root, "SKILL.md"), "---\nname: test-skill\n---\n\n# Test skill\n");
+    await addPublishFiles(root, ["."]);
+
+    await expect(validatePublishState(root)).rejects.toThrow(
+      /SKILL\.md is missing required YAML frontmatter field: description/,
+    );
   });
 
   it("requires manifest install files to be staged", async () => {
