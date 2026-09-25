@@ -2,7 +2,13 @@ import { PublishersDirectory } from "../../components/publishers-directory";
 import { DirectoryPageLinks } from "../../components/directory-page-links";
 import { directoryPageNumber, directoryPagePath } from "../../lib/directory-pagination";
 import { notFound } from "next/navigation";
-import { listPublishersPage, publisherPath, SITE_URL } from "../../lib/registry";
+import {
+  filterPublishedPublishers,
+  listPublishedPublisherSlugs,
+  listPublishersPage,
+  publisherPath,
+  SITE_URL,
+} from "../../lib/registry";
 import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
 
@@ -40,15 +46,21 @@ export default async function PublishersPage({
   const params = await searchParams;
   const currentPage = directoryPageNumber(params.page);
   const query = params.q ?? "";
-  const page = await listPublishersPage(
-    query,
-    24,
-    undefined,
-    true,
-    currentPage > 1 ? (currentPage - 1) * 24 : undefined,
-  );
-  const publishers = page.publishers;
-  if (currentPage > 1 && publishers.length === 0) notFound();
+  const [page, publishedSlugs] = await Promise.all([
+    listPublishersPage(
+      query,
+      24,
+      undefined,
+      true,
+      currentPage > 1 ? (currentPage - 1) * 24 : undefined,
+    ),
+    listPublishedPublisherSlugs(),
+  ]);
+  if (currentPage > 1 && page.publishers.length === 0) notFound();
+  // /v1/publishers also counts orgs that only hold a name reservation (no published skill).
+  // Their /publishers/{slug} page 404s, so keep them out of the cards and the JSON-LD list.
+  const publishers = filterPublishedPublishers(page.publishers, publishedSlugs);
+  const publishedSlugList = publishedSlugs ? [...publishedSlugs].sort() : null;
 
   return (
     <main>
@@ -89,6 +101,7 @@ export default async function PublishersPage({
           initialNextCursor={page.nextCursor}
           initialNextOffset={page.nextOffset}
           initialQuery={query}
+          publishedSlugs={publishedSlugList}
         />
         {!query ? (
           <DirectoryPageLinks

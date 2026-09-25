@@ -427,6 +427,64 @@ export async function listPublishersPage(
   }
 }
 
+/**
+ * Org slugs that own at least one public, published skill in `/v1/skills`.
+ *
+ * `/v1/publishers` counts public name reservations, so an org with a reservation but no
+ * published version (for example `aipm`) appears there even though its
+ * `/publishers/{slug}` page 404s (that page is built from `/v1/skills`). Use this set to
+ * keep such publishers out of links, JSON-LD, and sitemaps.
+ *
+ * Returns `null` when the listing cannot be read completely (network error, 429/5xx,
+ * malformed JSON, or an empty result), so callers can fall back to not filtering instead
+ * of hiding every publisher.
+ */
+export async function listPublishedPublisherSlugs(maxPages = 10): Promise<Set<string> | null> {
+  const slugs = new Set<string>();
+  let cursor: string | null = null;
+  const seenCursors = new Set<string>();
+  try {
+    for (let page = 0; page < maxPages; page += 1) {
+      const params = new URLSearchParams({ limit: "100" });
+      if (cursor) params.set("cursor", cursor);
+      const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/skills?${params}`, {
+        next: { revalidate: 300 },
+        signal: AbortSignal.timeout(3000),
+      });
+      if (!response.ok) return null;
+      const data = (await response.json()) as {
+        skills?: PackageSummary[];
+        packages?: PackageSummary[];
+        nextCursor?: string | null;
+      };
+      const skills = data.skills ?? data.packages;
+      if (!Array.isArray(skills)) return null;
+      for (const pkg of skills) {
+        const slug = pkg.publisher?.org.slug;
+        if (slug) slugs.add(slug);
+      }
+      cursor = data.nextCursor ?? null;
+      if (!cursor) return slugs.size > 0 ? slugs : null;
+      if (seenCursors.has(cursor)) return null;
+      seenCursors.add(cursor);
+    }
+    // Ran out of pages before the listing ended: the set may be incomplete.
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Keep publishers whose profile page would resolve (unfiltered when `published` is unknown). */
+export function filterPublishedPublishers<T extends { slug: string }>(
+  publishers: T[],
+  published: ReadonlySet<string> | readonly string[] | null | undefined,
+): T[] {
+  if (!published) return publishers;
+  const set = published instanceof Set ? published : new Set(published as readonly string[]);
+  return publishers.filter((publisher) => set.has(publisher.slug));
+}
+
 export async function getPackage(name: string, version: string): Promise<PackageDetail | null> {
   try {
     const response = await fetch(

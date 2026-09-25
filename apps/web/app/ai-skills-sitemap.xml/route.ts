@@ -65,8 +65,12 @@ export async function GET(): Promise<Response> {
     })
     .join("");
 
+  // Every publisher with at least one published skill has a live, self-canonical
+  // /publishers/{slug} page, even when all of its skill pages are noindexed as thin.
+  // Derive the list from published skills (not /v1/publishers, which also counts orgs that
+  // only hold a name reservation and whose publisher page 404s).
   const publisherDates = new Map<string, string>();
-  for (const pkg of indexablePackages) {
+  for (const pkg of packages) {
     const slug = pkg.publisher?.org.slug;
     if (!slug) continue;
     const current = publisherDates.get(slug);
