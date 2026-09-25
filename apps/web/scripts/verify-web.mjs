@@ -300,7 +300,7 @@ const requiredPages = [
   },
   {
     path: "/faq",
-    title: "AIPM FAQ - Troubleshooting and Common Questions",
+    title: "AIPM FAQ — Install Claude Code & Cursor Skills",
     h1: "Common questions and fixes.",
     jsonLd: false,
   },

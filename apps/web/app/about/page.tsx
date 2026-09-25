@@ -5,10 +5,17 @@ import { DocLayout } from "../../components/doc-layout";
 import { SITE_URL } from "../../lib/registry";
 
 export const metadata = pageMetadata({
-  title: "About AIPM - AI Package Manager for Skills and Prompts",
-  description: "AIPM helps teams install and publish AI skills, prompts, and tool files.",
+  title: "About AIPM — Claude Code & Cursor Skills Registry",
+  description:
+    "AIPM is a Claude Code and Cursor skills registry with versioned installs. Browse agent skills, publish packages, and install them into your projects.",
   path: "/about",
-  keywords: ["about AIPM", "AI package manager", "AI skill registry", "AIPM mission"],
+  keywords: [
+    "about AIPM",
+    "Claude Code skills registry",
+    "Cursor skills registry",
+    "AI agent skills marketplace",
+    "AI skill registry",
+  ],
 });
 
 export default function AboutPage() {
@@ -21,7 +28,7 @@ export default function AboutPage() {
             "@context": "https://schema.org",
             "@type": "AboutPage",
             name: "About AIPM",
-            description: "AIPM helps teams install and publish AI skills, prompts, and tool files.",
+            description: "AIPM is a Claude Code and Cursor skills registry for versioned agent skills, prompts, and tool files.",
             url: `${SITE_URL}/about`,
             mainEntity: {
               "@type": "Organization",
