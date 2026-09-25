@@ -9,15 +9,17 @@ import { cn, shell } from "../../lib/page-styles";
 import styles from "./prompts.module.css";
 
 const directoryMetadata = {
-  title: "AI Prompt Directory",
+  title: "AI Prompt Directory: Gemini, Claude & ChatGPT Prompts",
   description:
-    "Browse useful AI prompts by category, output type, input, and compatible model. See variables and example outputs before you copy",
+    "A free AI prompt library of tested Gemini, Claude, and ChatGPT prompts for work, code, research, and photos. See variables and example outputs before you copy.",
   keywords: [
     "AI prompt directory",
+    "prompt library",
+    "Gemini prompts",
+    "Claude prompts",
+    "Nano Banana prompts",
+    "ChatGPT prompts",
     "best AI prompts",
-    "image prompts",
-    "work prompts",
-    "productivity prompts",
   ],
 };
 
@@ -114,11 +116,10 @@ export default async function PromptsPage({
       <section className={cn(shell.pageHeader, styles.hero)}>
         <div>
           <p className={shell.eyebrow}>Prompt directory</p>
-          <h1>Start with a prompt that already works.</h1>
+          <h1>Gemini, Claude, and ChatGPT prompts that already work.</h1>
           <p className={shell.lede}>
-            Find practical prompts for work, creativity, photos, travel, and more. Every
-            prompt shows what you need to provide, what it produces, and which AI tools it
-            works with.
+            A prompt library for work, code, research, photos, and more. Every prompt shows
+            what you need to provide, what it produces, and which AI models it was tested with.
           </p>
           <p>
             Need reusable instructions with versions and install commands? Browse{" "}
@@ -128,7 +129,10 @@ export default async function PromptsPage({
             <Link href="/guides/ai-package-manager">AI package manager</Link> differs from copy-paste.
           </p>
           <p>
-            Looking for a specific photo use case? Start with{" "}
+            Browse by model: <Link href="/prompts/topics/gemini-prompts">Gemini prompts</Link>,{" "}
+            <Link href="/prompts/topics/claude-prompts">Claude prompts</Link>, and{" "}
+            <Link href="/prompts/topics/nano-banana-prompts">Nano Banana photo prompts</Link>. Or
+            start with a use case:{" "}
             <Link href="/prompts/topics/linkedin-headshots">LinkedIn headshot prompts</Link> or{" "}
             <Link href="/prompts/topics/product-photography">product photography prompts</Link>.
           </p>
@@ -136,11 +140,14 @@ export default async function PromptsPage({
             <Link className={shell.button} href="/prompts/new">
               List a prompt
             </Link>
-            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/linkedin-headshots">
-              LinkedIn headshots
+            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/gemini-prompts">
+              Gemini prompts
             </Link>
-            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/product-photography">
-              Product photography
+            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/claude-prompts">
+              Claude prompts
+            </Link>
+            <Link className={cn(shell.button, shell.secondary)} href="/prompts/topics/nano-banana-prompts">
+              Nano Banana
             </Link>
           </div>
         </div>
