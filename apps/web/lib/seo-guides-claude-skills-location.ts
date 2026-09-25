@@ -52,7 +52,7 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
           ],
         },
         paragraphs: [
-          "Because Cursor also reads `.claude/skills/`, and Cursor and Codex both read `.agents/skills/`, one committed folder can serve more than one tool. Claude Code does not read `.agents/skills/`, and the Codex docs don't list `.codex/skills/`.",
+          "Because Cursor also reads `.claude/skills/`, and Cursor and Codex both read `.agents/skills/`, one committed folder can serve more than one tool. Claude Code does not read `.agents/skills/`, and the Codex docs don't list `.codex/skills/`. Subagents, hooks and MCP servers live in other files; see [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks) for when to use each.",
         ],
       },
       {
@@ -76,7 +76,7 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
       {
         title: "What a skill folder looks like",
         body:
-          "A skill is a folder that contains `SKILL.md` and, optionally, `scripts/`, `references/` and `assets/`. The folder can be a symlink to a folder elsewhere; Claude Code reads `SKILL.md` from the target and loads it once even if several locations point at it. Don't name a skill folder `synced`: Claude Code reserves `~/.claude/skills/synced/` for claude.ai skills and skips an authored skill with that name. For the frontmatter, see [how to create an Agent Skill](/guides/how-to-create-agent-skill).",
+          "A skill is a folder that contains `SKILL.md` and, optionally, `scripts/`, `references/` and `assets/`. The folder can be a symlink to a folder elsewhere; Claude Code reads `SKILL.md` from the target and loads it once even if several locations point at it. Don't name a skill folder `synced`: Claude Code reserves `~/.claude/skills/synced/` for claude.ai skills and skips an authored skill with that name. For the frontmatter fields, see the [SKILL.md frontmatter reference](/guides/skill-md-frontmatter-reference); for a walkthrough, see [how to create an Agent Skill](/guides/how-to-create-agent-skill).",
         code: [
           {
             code: `~/.claude/skills/
@@ -137,7 +137,7 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
           "Just for you, in every project: `~/.claude/skills/`.",
           "For everyone who works in this repo: `.claude/skills/`, committed.",
           "In Cowork, the Claude app or cloud sessions: enable it on your claude.ai account.",
-          "Across several repos or for a team: a plugin marketplace, or a versioned package from a registry.",
+          "Across several repos or for a team: a plugin marketplace, or a versioned package from a registry ([compare the team options](/guides/share-claude-skills-with-team)).",
           "For the whole organization: managed settings, or skills provisioned by an owner of your Claude organization.",
         ],
         paragraphs: [

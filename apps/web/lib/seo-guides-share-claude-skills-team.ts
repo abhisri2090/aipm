@@ -47,7 +47,7 @@ export const SHARE_CLAUDE_SKILLS_TEAM_GUIDES: SeoGuide[] = [
       {
         title: "Option 1: Commit skills to the repo (.claude/skills/)",
         body:
-          "Save each skill as `.claude/skills/<name>/SKILL.md` in the repository and commit it. Everyone who clones the repo gets the skill, and Claude Code cloud sessions load the committed `.claude/skills/` too. Cursor also reads `.claude/skills/`, so the same folder serves teammates who use Cursor.",
+          "Save each skill as `.claude/skills/<name>/SKILL.md` in the repository and commit it. Everyone who clones the repo gets the skill, and Claude Code cloud sessions load the committed `.claude/skills/` too. Cursor also reads `.claude/skills/`, so the same folder serves teammates who use Cursor. Every folder Claude reads skills from, and which sessions load each one, is in [where Claude skills are stored](/guides/where-are-claude-skills-stored).",
         code: [
           {
             code: `mkdir -p .claude/skills/code-review
@@ -57,6 +57,7 @@ git commit -m "Add code-review skill"`,
           },
         ],
         bullets: [
+          "Before you share, check the frontmatter: `name` and `description` are required by the Agent Skills spec, Cursor and Codex. See the [SKILL.md frontmatter reference](/guides/skill-md-frontmatter-reference).",
           "Updates arrive with `git pull`, and Git history is your version record: review skill changes in pull requests like code.",
           "The catch is one copy per repo. Ten repos means ten copies that drift apart unless someone syncs them.",
           "Personal skills in `~/.claude/skills/` are not shared: they stay on your machine and don't load in Cowork or cloud sessions.",
@@ -65,7 +66,7 @@ git commit -m "Add code-review skill"`,
       {
         title: "Option 2: A Claude Code plugin in a team marketplace",
         body:
-          "Put the skills in a plugin's `skills/` folder, list the plugin in a `.claude-plugin/marketplace.json` catalog, and host it in a Git repository. Teammates add the marketplace once with `/plugin marketplace add your-org/your-marketplace` and install from it. Plugin skills are namespaced, so they run as `/plugin-name:skill-name`. Background: [Claude Code plugins vs skills](/guides/claude-code-plugins-vs-skills) and [Claude skills marketplaces](/guides/claude-skills-marketplaces).",
+          "Put the skills in a plugin's `skills/` folder, list the plugin in a `.claude-plugin/marketplace.json` catalog, and host it in a Git repository. Teammates add the marketplace once with `/plugin marketplace add your-org/your-marketplace` and install from it. Plugin skills are namespaced, so they run as `/plugin-name:skill-name`. A plugin can also bundle hooks, subagents and MCP servers; [skills vs MCP vs subagents vs hooks](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks) explains when each is the right tool. Background: [Claude Code plugins vs skills](/guides/claude-code-plugins-vs-skills) and [Claude skills marketplaces](/guides/claude-skills-marketplaces).",
         paragraphs: [
           "To have a repository ask its contributors for the plugin, commit `extraKnownMarketplaces` and `enabledPlugins` in the repo's `.claude/settings.json`:",
         ],
@@ -126,7 +127,7 @@ git commit -m "Add code-review skill"`,
       {
         title: "How Claude app skills reach Claude Code",
         body:
-          "Skills enabled for your claude.ai account, including ones your organization provisions, load in Claude Code when you sign in with that account. Claude Code v2.1.273 or later downloads them to `~/.claude/skills/synced/` at session start and checks for changes about every 10 minutes.",
+          "Skills enabled for your claude.ai account, including ones your organization provisions, load in Claude Code when you sign in with that account. Claude Code v2.1.273 or later downloads them to `~/.claude/skills/synced/` at session start and checks for changes about every 10 minutes. See [where Claude skills are stored](/guides/where-are-claude-skills-stored#skills-in-the-claude-app-cowork-and-claude-ai) for how the synced folder fits with your other skills.",
         bullets: [
           "No sync in sessions that use an API key (or `ANTHROPIC_AUTH_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN`, `apiKeyHelper`), on Amazon Bedrock, or with `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` set.",
           "Sync is download-only. Editing a file in `~/.claude/skills/synced/` doesn't change the skill on claude.ai, and the next sync can overwrite it.",
