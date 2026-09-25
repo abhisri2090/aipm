@@ -130,6 +130,9 @@ export const SKILL_DISCOVERY_PAGES = [
       { label: "Cursor skills hub", href: "/skills/cursor" },
       { label: "All agent skills", href: "/skills" },
       { label: "AIPM vs skills.sh", href: "/guides/aipm-vs-skills-sh" },
+      { label: "What are Claude skills?", href: "/guides/what-are-claude-skills" },
+      { label: "Claude Code plugins vs skills", href: "/guides/claude-code-plugins-vs-skills" },
+      { label: "Claude skills marketplaces compared", href: "/guides/claude-skills-marketplaces" },
     ],
     sources: [
       { label: "Anthropic documentation: Extend Claude with skills", href: "https://code.claude.com/docs/en/skills" },

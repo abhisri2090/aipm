@@ -382,7 +382,28 @@ const requiredPages = [
     h1: "How do you manage AI agent instructions in Git?",
     jsonLd: true,
     includes: ["Short answer", "Instructions are part of the project", "Why put AI instructions in Git?"],
+  },  {
+    path: "/guides/what-are-claude-skills",
+    title: "What Are Claude Skills? How They Work, With Examples",
+    h1: "What are Claude skills?",
+    jsonLd: true,
+    includes: ["Short answer", "How a Claude skill works", "Customize &gt; Skills"],
   },
+  {
+    path: "/guides/claude-code-plugins-vs-skills",
+    title: "Claude Code Plugins vs Skills: Differences Explained",
+    h1: "Claude Code plugins vs skills: which do you need?",
+    jsonLd: true,
+    includes: ["Short answer", ".claude-plugin/plugin.json", "/plugin marketplace add"],
+  },
+  {
+    path: "/guides/claude-skills-marketplaces",
+    title: "Claude Skills Marketplaces Compared: Where to Get Skills",
+    h1: "Where can you find Claude skills? Marketplaces compared",
+    jsonLd: true,
+    includes: ["Comparison table", "SkillsMP", "skills.sh", "claude-plugins-official"],
+  },
+
 ];
 
 const privatePages = ["/login", "/cli/login", "/dashboard", "/dashboard/skills", "/dashboard/profile", "/dashboard/orgs/new"];
@@ -614,6 +635,9 @@ for (const path of [
   "/guides/ai-agent-instructions-git",
   "/guides/cursor-rules-vs-agent-skills",
   "/guides/agents-md-vs-skill-md",
+  "/guides/what-are-claude-skills",
+  "/guides/claude-code-plugins-vs-skills",
+  "/guides/claude-skills-marketplaces",
   "/research/state-of-agent-skills-2026",
   "/examples",
   "/glossary",
