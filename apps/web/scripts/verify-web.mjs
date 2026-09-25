@@ -649,6 +649,7 @@ for (const path of [
   "/best-claude-skills",
   "/publish",
   "/publish/guide",
+  "/publish/github",
   "/install",
   "/use",
   "/commands",

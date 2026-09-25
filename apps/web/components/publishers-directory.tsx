@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { api } from "../lib/api-client";
 import { publicApiError } from "../lib/public-api-error";
-import { publisherPath, type PublisherSummary } from "../lib/registry";
+import { filterPublishedPublishers, publisherPath, type PublisherSummary } from "../lib/registry";
 import { cn } from "../lib/class-names";
 import { LoadMoreSentinel } from "./load-more-sentinel";
 import cards from "../app/cards.module.css";
@@ -25,11 +25,14 @@ export function PublishersDirectory({
   initialNextCursor = null,
   initialNextOffset = null,
   initialQuery = "",
+  publishedSlugs = null,
 }: {
   initialPublishers: PublisherSummary[];
   initialNextCursor?: string | null;
   initialNextOffset?: number | null;
   initialQuery?: string;
+  /** Slugs with at least one published skill; `null` means unknown (show everything). */
+  publishedSlugs?: string[] | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -51,7 +54,7 @@ export function PublishersDirectory({
     if (nextQuery) params.set("q", nextQuery);
     try {
       const data = await api<PublishersPage>(`/v1/publishers?${params}`);
-      const next = data.publishers ?? [];
+      const next = filterPublishedPublishers(data.publishers ?? [], publishedSlugs);
       const cursor = data.nextCursor ?? null;
       const offset = data.nextOffset ?? null;
       setPublishers(next);
@@ -70,7 +73,7 @@ export function PublishersDirectory({
       setNextOffset(null);
       setStatus(publicApiError(error));
     }
-  }, []);
+  }, [publishedSlugs]);
 
   const loadMore = useCallback(async () => {
     if ((!nextCursor && nextOffset === null) || loadingMoreRef.current) return;
@@ -82,7 +85,7 @@ export function PublishersDirectory({
     if (query.trim()) params.set("q", query.trim());
     try {
       const data = await api<PublishersPage>(`/v1/publishers?${params}`);
-      const next = data.publishers ?? [];
+      const next = filterPublishedPublishers(data.publishers ?? [], publishedSlugs);
       const cursor = data.nextCursor ?? null;
       const offset = data.nextOffset ?? null;
       setPublishers((current) => {
@@ -105,7 +108,7 @@ export function PublishersDirectory({
       loadingMoreRef.current = false;
       setLoadingMore(false);
     }
-  }, [nextCursor, nextOffset, query]);
+  }, [nextCursor, nextOffset, query, publishedSlugs]);
 
   return (
     <>
