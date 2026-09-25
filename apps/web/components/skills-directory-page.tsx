@@ -40,7 +40,7 @@ export async function SkillsDirectoryPage({
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "AI Agent Skills Registry and Marketplace",
+            name: "Agent Skills Marketplace for Claude, Cursor & Codex",
             description: "Browse versioned Claude Code, Cursor, and agent skills. Search by name, tool, or description.",
             url: `${SITE_URL}${filtered ? canonicalPath : directoryPagePath(canonicalPath, currentPage)}`,
             about: ["AI skills", "prompt packages", "Cursor skills", "Claude skills", "AI tool files"],

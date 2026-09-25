@@ -9,8 +9,8 @@ const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
 
 /** Per-path lastmod for static marketing pages (ISO date → Date). */
 const STATIC_PAGE_LASTMOD: Record<string, Date> = {
-  "/": HUB_SEO_REFRESH,
-  "/skills": HUB_SEO_REFRESH,
+  "/": new Date("2026-09-25T00:00:00.000Z"),
+  "/skills": new Date("2026-09-25T00:00:00.000Z"),
   "/prompts": HUB_SEO_REFRESH,
   "/install": HUB_SEO_REFRESH,
   "/use": new Date("2026-09-04T00:00:00.000Z"),

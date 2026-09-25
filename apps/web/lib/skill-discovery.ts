@@ -78,16 +78,16 @@ export const SKILL_DISCOVERY_PAGES = [
   },
   {
     slug: "claude",
-    title: "Claude Code Skills Marketplace & Library",
+    title: "Claude Skills Marketplace: Claude Code Skills Library",
     h1: "Claude Code skills you can review, version, and install.",
     description:
-      "Browse a Claude Code skills marketplace of versioned packages. Review source and files, then install into Claude Code projects with the AIPM CLI.",
+      "Browse a Claude skills marketplace of versioned SKILL.md packages for the Claude app and Claude Code. Review source and files, then install with the AIPM CLI.",
     answer:
       "Claude Code skills are reusable instruction packages for repeated tasks. AIPM is a Claude Code skills marketplace plus package workflow: find a skill, review its source, and install the same version into one or more projects.",
     query: "claude",
     registryQuery: "claude",
     target: "claude",
-    updatedAt: "2026-09-23",
+    updatedAt: "2026-09-25",
     keywords: [
       "Claude Code skills marketplace",
       "Claude Code skills library",

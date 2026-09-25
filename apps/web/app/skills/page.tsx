@@ -3,11 +3,12 @@ import { directoryPageNumber, directoryPagePath } from "../../lib/directory-pagi
 import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 
 const skillsMetadata = {
-  title: "AI Agent Skills Registry and Marketplace",
+  title: "Agent Skills Marketplace for Claude, Cursor & Codex",
   description:
-    "Browse versioned AI agent skills for Claude Code, Cursor, code review, testing, documentation, and more. Inspect the source before installing",
+    "Browse versioned agent skills for Claude, Claude Code, Cursor, and Codex: code review, testing, docs, marketing, and more. Inspect the source, then install.",
   keywords: [
     "agent skills marketplace",
+    "Claude skills marketplace",
     "agent skills registry",
     "AI skills library",
     "Cursor skills",
