@@ -54,7 +54,7 @@ export const SKILL_MD_FRONTMATTER_GUIDES: SeoGuide[] = [
       {
         title: "A minimal SKILL.md that works everywhere",
         body:
-          "Put `---` on the very first line, then `key: value` pairs, then a closing `---`. The Markdown instructions go after it. This file uses only the two required fields, so the Agent Skills spec, Claude Code, claude.ai uploads, Cursor and Codex all accept it. More starting files: [SKILL.md templates and examples](/templates).",
+          "Put `---` on the very first line, then `key: value` pairs, then a closing `---`. The Markdown instructions go after it. This file uses only the two required fields, so the Agent Skills spec, Claude Code, claude.ai uploads, Cursor and Codex all accept it. More starting files: [SKILL.md templates and examples](/templates). Not sure where to save the file? See [where Claude skills are stored](/guides/where-are-claude-skills-stored).",
         code: [{ label: ".claude/skills/code-review/SKILL.md", code: PORTABLE_EXAMPLE }],
       },
       {
@@ -113,7 +113,7 @@ export const SKILL_MD_FRONTMATTER_GUIDES: SeoGuide[] = [
             ["`disallowed-tools`", "Tools removed while the skill is active, until your next message"],
             ["`model`", "Model for the rest of the current turn, or `inherit`"],
             ["`effort`", "`low`, `medium`, `high`, `xhigh` or `max`; levels depend on the model"],
-            ["`context`", "`fork` runs the skill in a forked subagent context"],
+            ["`context`", "`fork` runs the skill in a forked subagent context ([skills vs subagents](/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks#skills-vs-subagents-when-to-use-each-and-how-they-combine))"],
             ["`agent`", "Subagent type to use with `context: fork`, such as `Explore`"],
             ["`background`", "With `context: fork` only: `false` waits for the result in the same turn. Default `true`. v2.1.218+"],
             ["`hooks`", "Hooks registered when the skill is invoked"],
@@ -315,7 +315,7 @@ aipm publish validate`,
           },
         ],
         paragraphs: [
-          "Check the frontmatter yourself before you run `aipm publish validate`. Next steps are in the [publishing guide](/publish/guide); starting files are on the [templates page](/templates); a full walkthrough is in [how to create an Agent Skill](/guides/how-to-create-agent-skill).",
+          "Check the frontmatter yourself before you run `aipm publish validate`. Next steps are in the [publishing guide](/publish/guide); starting files are on the [templates page](/templates); a full walkthrough is in [how to create an Agent Skill](/guides/how-to-create-agent-skill); to get the skill to teammates, see [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
         ],
       },
     ],

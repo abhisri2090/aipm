@@ -87,7 +87,7 @@ export const CLAUDE_CODE_FEATURE_COMPARISON_GUIDES: SeoGuide[] = [
       {
         title: "CLAUDE.md vs skills",
         body:
-          "CLAUDE.md is for facts Claude should always know; a skill is for a procedure or reference it needs only sometimes. A 30-line deployment procedure in CLAUDE.md costs context on every request, while the same text as a skill costs only its description until you run it. Path-scoped rules in `.claude/rules/` sit in between: they load when Claude works with matching files. The same split applies to AGENTS.md; see [AGENTS.md vs SKILL.md](/guides/agents-md-vs-skill-md) and [AGENTS.md vs CLAUDE.md vs Cursor rules](/guides/agents-md-vs-claude-md-vs-cursor-rules). Custom commands in `.claude/commands/` still work, but [commands are now skills](/guides/claude-code-skills-vs-slash-commands).",
+          "CLAUDE.md is for facts Claude should always know; a skill is for a procedure or reference it needs only sometimes. A 30-line deployment procedure in CLAUDE.md costs context on every request, while the same text as a skill costs only its description until you run it. Path-scoped rules in `.claude/rules/` sit in between: they load when Claude works with matching files. The same split applies to AGENTS.md, which Claude Code now reads on its own only when no CLAUDE.md is present ([does Claude Code read AGENTS.md?](/guides/does-claude-code-read-agents-md)); see [AGENTS.md vs SKILL.md](/guides/agents-md-vs-skill-md) and [AGENTS.md vs CLAUDE.md vs Cursor rules](/guides/agents-md-vs-claude-md-vs-cursor-rules). Custom commands in `.claude/commands/` still work, but [commands are now skills](/guides/claude-code-skills-vs-slash-commands).",
       },
       {
         title: "Skills vs subagents: when to use each, and how they combine",
@@ -104,7 +104,7 @@ export const CLAUDE_CODE_FEATURE_COMPARISON_GUIDES: SeoGuide[] = [
           ],
         },
         paragraphs: [
-          "They combine in two ways. First, a subagent's `skills:` frontmatter preloads the full content of the listed skills at startup; without it, the subagent can still invoke project, user and plugin skills through the Skill tool. Skills with `disable-model-invocation: true` can't be preloaded. Second, a skill with `context: fork` and an `agent:` field runs itself in a new subagent of that type. Despite the name, that subagent does not see your conversation history, so the skill must stand on its own.",
+          "They combine in two ways. First, a subagent's `skills:` frontmatter preloads the full content of the listed skills at startup; without it, the subagent can still invoke project, user and plugin skills through the Skill tool. Skills with `disable-model-invocation: true` can't be preloaded. Second, a skill with `context: fork` and an `agent:` field runs itself in a new subagent of that type. Despite the name, that subagent does not see your conversation history, so the skill must stand on its own. Every field involved (`context`, `agent`, `disable-model-invocation` and the rest) is in the [SKILL.md frontmatter reference](/guides/skill-md-frontmatter-reference).",
           "Cursor keeps subagents in `.cursor/agents/` (and also reads `.claude/agents/` and `.codex/agents/`). Codex custom agents are TOML files in `.codex/agents/` or `~/.codex/agents/`. Both tools also support skills.",
         ],
         code: [
@@ -181,7 +181,7 @@ exit 0`,
       {
         title: "Share skills across repos",
         body:
-          "AIPM installs skills today; MCP and hooks packaging is on the roadmap. When a skill needs to reach more repos, install it as a versioned package instead of copying folders. `--target claude` writes `.claude/skills/<name>/SKILL.md` and `--target codex` writes `.agents/skills/<name>/SKILL.md`; Cursor reads both folders. [Browse Claude skills](/skills/claude) or see the [CLI commands](/commands).",
+          "AIPM installs skills today; MCP and hooks packaging is on the roadmap. When a skill needs to reach more repos, install it as a versioned package instead of copying folders. `--target claude` writes `.claude/skills/<name>/SKILL.md` and `--target codex` writes `.agents/skills/<name>/SKILL.md`; Cursor reads both folders. For every team option (a committed folder, a plugin marketplace, the Claude app, managed settings, a registry), see [how to share Claude skills with your team](/guides/share-claude-skills-with-team). [Browse Claude skills](/skills/claude) or see the [CLI commands](/commands).",
         code: [
           {
             code: `npm install -g @aipm-registry/cli
