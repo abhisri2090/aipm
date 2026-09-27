@@ -3,6 +3,7 @@ import { SITE_URL } from "../lib/registry";
 import { SEO_GUIDES } from "../lib/seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
 import { PROMPT_TOPIC_HUBS } from "../lib/prompt-topics";
+import { PROMPT_LINK_SNAPSHOT_DATE, listGeneratedSeriesHubs } from "../lib/prompt-links";
 
 /** Fallback when a path has no content-specific date (hub SEO refresh). */
 const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
@@ -11,7 +12,7 @@ const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
 const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/": new Date("2026-09-25T00:00:00.000Z"),
   "/skills": new Date("2026-09-25T00:00:00.000Z"),
-  "/prompts": new Date("2026-09-25T00:00:00.000Z"),
+  "/prompts": new Date("2026-09-28T00:00:00.000Z"),
   "/install": HUB_SEO_REFRESH,
   "/use": new Date("2026-09-25T00:00:00.000Z"),
   "/publish": new Date("2026-09-23T00:00:00.000Z"),
@@ -80,6 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
     ...PROMPT_TOPIC_HUBS.map((hub) => `/prompts/topics/${hub.slug}`),
+    ...listGeneratedSeriesHubs().map((series) => `/prompts/topics/${series.slug}`),
   ];
 
   const guideUpdatedAt = new Map(
@@ -96,9 +98,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]),
   );
 
-  const topicUpdatedAt = new Map(
-    PROMPT_TOPIC_HUBS.map((hub) => [`/prompts/topics/${hub.slug}`, dateFromIsoDay(hub.updatedAt)]),
-  );
+  const topicUpdatedAt = new Map<string, Date>([
+    ...PROMPT_TOPIC_HUBS.map((hub) => [`/prompts/topics/${hub.slug}`, dateFromIsoDay(hub.updatedAt)] as const),
+    // Generated series hubs change when the prompt snapshot is regenerated.
+    ...listGeneratedSeriesHubs().map(
+      (series) => [`/prompts/topics/${series.slug}`, dateFromIsoDay(PROMPT_LINK_SNAPSHOT_DATE)] as const,
+    ),
+  ]);
 
   return staticPaths.map((path) => {
     const lastModified =

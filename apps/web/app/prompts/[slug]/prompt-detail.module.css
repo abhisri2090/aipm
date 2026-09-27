@@ -369,6 +369,50 @@
   line-height: 1.55;
 }
 
+.internalLinks {
+  display: grid;
+  gap: 18px;
+  margin: 28px 0 8px;
+}
+
+.linkPanel h2 {
+  margin-bottom: 14px;
+}
+
+.seeAllLink {
+  flex-shrink: 0;
+  color: var(--accent-strong);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.seeAllLink:hover,
+.linkList a:hover {
+  text-decoration: underline;
+}
+
+.linkList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linkList a {
+  color: var(--accent-strong);
+  font-size: 15px;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.linkPanel .panelHeading {
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
 @media (max-width: 760px) {
   .detailHeader,
   .detailLayout {

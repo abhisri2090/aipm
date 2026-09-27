@@ -2,7 +2,8 @@ import { PromptDirectory } from "../../components/prompt-directory";
 import { DirectoryListTile } from "../../components/directory-list-tile";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { listPromptsPage } from "../../lib/prompts";
+import { PROMPT_CATEGORIES, listPromptsPage } from "../../lib/prompts";
+import { listSeriesWithHubs } from "../../lib/prompt-links";
 import { SITE_URL } from "../../lib/registry";
 import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 import { cn, shell } from "../../lib/page-styles";
@@ -90,6 +91,13 @@ export default async function PromptsPage({
   const pageCount = Math.ceil(page.total / PAGE_SIZE);
   const outputCount = new Set(page.prompts.flatMap((prompt) => prompt.outputTypes)).size;
   const categoryCount = new Set(page.prompts.map((prompt) => prompt.category)).size;
+  // Series hubs come from the committed prompt snapshot, so this section renders even when the
+  // registry is unavailable and gives crawlers a two-click path to every indexable prompt.
+  const seriesHubs = listSeriesWithHubs();
+  const seriesCategories = [
+    ...PROMPT_CATEGORIES.filter((category) => category !== "All"),
+    ...new Set(seriesHubs.map((series) => series.category)),
+  ].filter((category, index, list) => list.indexOf(category) === index);
 
   return (
     <main>
@@ -167,6 +175,36 @@ export default async function PromptsPage({
             <dd>{unavailable ? "—" : outputCount}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className={shell.panelSection} aria-labelledby="prompt-series-title">
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>Browse by series</p>
+            <h2 id="prompt-series-title">Prompt series</h2>
+          </div>
+        </div>
+        <div className={styles.seriesGroups}>
+          {seriesCategories.map((category) => {
+            const hubs = seriesHubs.filter((series) => series.category === category);
+            if (!hubs.length) return null;
+            return (
+              <div className={styles.seriesGroup} key={category}>
+                <h3>{category}</h3>
+                <ul>
+                  {hubs.map((series) => (
+                    <li key={series.id}>
+                      <a href={series.hubPath ?? "/prompts"}>
+                        {series.label.charAt(0).toUpperCase() + series.label.slice(1)}
+                      </a>{" "}
+                      <span>({series.members.length})</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section className={shell.panelSection} aria-labelledby="browse-prompts-title">
