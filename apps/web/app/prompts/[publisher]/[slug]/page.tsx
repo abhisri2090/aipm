@@ -4,6 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PromptCopyButton } from "../../../../components/prompt-copy-button";
 import { CommentsSection } from "../../../../components/comments-section";
 import { PromptEditLink } from "../../../../components/prompt-edit-link";
+import { PromptInternalLinks } from "../../../../components/prompt-internal-links";
 import { PromptRunner } from "../../../../components/prompt-runner";
 import { ScanBadge } from "../../../../components/scan-badge";
 import {
@@ -13,6 +14,7 @@ import {
   getPrompt,
 } from "../../../../lib/prompts";
 import { isNearDuplicatePrompt } from "../../../../lib/prompt-noindex";
+import { getPromptInternalLinks } from "../../../../lib/prompt-links";
 import { SITE_URL, scanBadgeLabel } from "../../../../lib/registry";
 import { cn, shell } from "../../../../lib/page-styles";
 import styles from "../../[slug]/prompt-detail.module.css";
@@ -102,6 +104,13 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
     prompt.publisher.user.name ??
     prompt.publisher.user.username;
   const trackingPath = `/v1/prompts/${encodeURIComponent(prompt.publisher.scope)}/${encodeURIComponent(prompt.slug)}`;
+  // Series + related links come from the committed prompt snapshot: no extra registry API calls.
+  const internalLinks = getPromptInternalLinks({
+    path: prompt.path,
+    slug: prompt.slug,
+    category: prompt.category,
+  });
+  const seriesHub = internalLinks.series?.hubPath ? internalLinks.series : null;
 
   return (
     <main>
@@ -137,6 +146,12 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
       <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
         <Link href="/prompts">Prompts</Link>
         <span aria-hidden="true">/</span>
+        {seriesHub?.hubPath ? (
+          <>
+            <a href={seriesHub.hubPath}>{seriesHub.label}</a>
+            <span aria-hidden="true">/</span>
+          </>
+        ) : null}
         <span>@{prompt.publisher.scope}</span>
       </nav>
 
@@ -359,6 +374,8 @@ export default async function PromptDetailPage({ params }: PromptPageProps) {
           </section>
         </aside>
       </div>
+
+      <PromptInternalLinks links={internalLinks} />
 
       <CommentsSection targetType="prompt" targetKey={prompt.id} />
     </main>

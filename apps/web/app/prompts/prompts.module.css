@@ -66,3 +66,36 @@
     gap: 26px;
   }
 }
+
+.seriesGroups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 22px 28px;
+}
+
+.seriesGroup h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+
+.seriesGroup ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.seriesGroup a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+.seriesGroup a:hover {
+  text-decoration: underline;
+}
+
+.seriesGroup span {
+  color: var(--muted);
+}

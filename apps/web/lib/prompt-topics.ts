@@ -138,7 +138,7 @@ export const PROMPT_TOPIC_HUBS: readonly PromptTopicHub[] = [
       "chatgpt-executive-headshot",
       "chatgpt-healthcare-headshot",
     ],
-    updatedAt: "2026-09-21",
+    updatedAt: "2026-09-28",
   },
   {
     slug: "product-photography",
@@ -169,7 +169,7 @@ export const PROMPT_TOPIC_HUBS: readonly PromptTopicHub[] = [
       "photo-etsy-listing-natural-light",
       "photo-etsy-listing-overcast-soft",
     ],
-    updatedAt: "2026-09-21",
+    updatedAt: "2026-09-28",
   },
 ] as const;
 
