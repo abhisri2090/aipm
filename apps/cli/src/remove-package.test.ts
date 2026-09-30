@@ -1,17 +1,26 @@
-import { mkdtemp, mkdir, readFile, stat, symlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { lstat, mkdtemp, mkdir, readFile, stat, symlink, writeFile } from "node:fs/promises";
+import { dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { removeInstalledPackageFiles } from "./remove-package.js";
 
-const entry = (installed: string[], main: string[] = [], helper: string[] = []) => ({
-  version: "1.0.0",
-  integrity: "sha256-test",
-  registry: "https://api.aipm-registry.com",
-  resolvedTools: ["claude" as const],
-  installed: { claude: installed },
-  installedAssets: { main, helper },
-});
+const entry = (
+  installed: string[],
+  main: string[] = [],
+  helper: string[] | { shared?: { root: string; files: string[] } } = [],
+) => {
+  const helperFiles = Array.isArray(helper) ? helper : [];
+  const shared = Array.isArray(helper) ? undefined : helper.shared;
+  return {
+    version: "1.0.0",
+    integrity: "sha256-test",
+    registry: "https://api.aipm-registry.com",
+    resolvedTools: ["claude" as const],
+    installed: { claude: installed },
+    installedAssets: { main, helper: helperFiles },
+    ...(shared ? { shared } : {}),
+  };
+};
 
 describe("removeInstalledPackageFiles", () => {
   it("deletes tracked adapter and package files and prunes their empty directories", async () => {
@@ -79,5 +88,26 @@ describe("removeInstalledPackageFiles", () => {
       }),
     ).rejects.toThrow("resolves outside");
     await expect(readFile(outside, "utf8")).resolves.toBe("keep\n");
+  });
+
+  it("unlinks a tool shortcut and deletes the canonical .ai files", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-rm-shared-"));
+    const canonical = join(root, ".ai", "skills", "review-helper");
+    const skill = join(canonical, "SKILL.md");
+    const link = join(root, ".cursor", "skills", "review-helper");
+    await mkdir(canonical, { recursive: true });
+    await mkdir(dirname(link), { recursive: true });
+    await writeFile(skill, "# hello\n");
+    await symlink(relative(dirname(link), canonical), link, "dir");
+
+    const result = await removeInstalledPackageFiles({
+      configRoot: root,
+      installRoot: root,
+      entry: entry([link], [], { shared: { root: canonical, files: [skill] } }),
+    });
+
+    expect(result.removed).toBe(2);
+    await expect(lstat(link)).rejects.toThrow();
+    await expect(stat(skill)).rejects.toThrow();
   });
 });

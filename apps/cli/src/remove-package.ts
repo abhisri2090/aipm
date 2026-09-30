@@ -1,4 +1,4 @@
-import { lstat, realpath, rm, rmdir } from "node:fs/promises";
+import { lstat, realpath, rm, rmdir, unlink } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import type { LockfilePackageEntry } from "@aipm-registry/schemas";
 
@@ -10,6 +10,7 @@ function within(root: string, path: string): boolean {
 export function trackedInstalledPackagePaths(entry: LockfilePackageEntry): string[] {
   return [
     ...Object.values(entry.installed).flat(),
+    ...(entry.shared?.files ?? []),
     ...(entry.installedAssets?.main ?? []),
     ...(entry.installedAssets?.helper ?? []),
   ];
@@ -43,9 +44,16 @@ export async function removeInstalledPackageFiles(input: {
   const unsafe = paths.find((path) => !roots.some((root) => within(root, path)));
   if (unsafe) throw new Error(`Refusing to remove an untrusted path from the lockfile: ${unsafe}`);
 
+  const symlinkPaths: string[] = [];
+  const realPaths: string[] = [];
   for (const path of paths) {
     const stat = await lstat(path).catch(() => null);
-    if (!stat || stat.isSymbolicLink()) continue;
+    if (!stat) continue;
+    if (stat.isSymbolicLink()) symlinkPaths.push(path);
+    else realPaths.push(path);
+  }
+
+  for (const path of realPaths) {
     const canonicalPath = await realpath(path);
     if (!realRoots.some((root) => within(root, canonicalPath))) {
       throw new Error(`Refusing to remove a path that resolves outside the install roots: ${path}`);
@@ -53,11 +61,15 @@ export async function removeInstalledPackageFiles(input: {
   }
 
   let removed = 0;
-  for (const path of paths) {
-    if (await lstat(path).catch(() => null)) removed += 1;
-    await rm(path, { force: true });
+  for (const path of symlinkPaths) {
+    await unlink(path);
+    removed += 1;
   }
-  for (const path of paths.sort((a, b) => b.length - a.length)) {
+  for (const path of realPaths) {
+    await rm(path, { force: true });
+    removed += 1;
+  }
+  for (const path of [...symlinkPaths, ...realPaths].sort((a, b) => b.length - a.length)) {
     await pruneEmptyParents(path, roots);
   }
   return { removed, retainedShared: requestedPaths.length - paths.length };
