@@ -48,6 +48,20 @@ async function linkSkillDir(linkPath: string, canonicalDir: string): Promise<voi
   }
 }
 
+/** Remove tool shortcuts so a later full copy does not write through them into `.ai`. */
+export async function detachSkillShortcuts(
+  projectRoot: string,
+  packageName: string,
+  tools: readonly ConcreteAiTool[],
+): Promise<void> {
+  const short = shortNameFromScopeName(packageName);
+  for (const tool of tools) {
+    const dir = toolSkillDir(projectRoot, tool, short);
+    const info = await lstat(dir).catch(() => null);
+    if (info?.isSymbolicLink()) await unlink(dir);
+  }
+}
+
 export async function installSharedSkill(input: InstallSharedSkillInput): Promise<InstallSharedSkillResult> {
   if (input.tools.length === 0) {
     throw new Error("No AI tool folder found to link. Add .cursor, .claude, or .codex, or pass --target.");

@@ -1,4 +1,4 @@
-import { installSharedSkill, installSkillPackage } from "@aipm-registry/engine";
+import { detachSkillShortcuts, installSharedSkill, installSkillPackage } from "@aipm-registry/engine";
 import type {
   AiTool,
   Lockfile,
@@ -410,6 +410,9 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
       const skillMarkdown = await readFile(safeJoin(packageRoot, manifest.entry), "utf8");
       const supportingFiles = await collectSkillSupportingFiles(packageRoot, manifest);
 
+      if (layout.mode !== "shared") {
+        await detachSkillShortcuts(installRoot, options.name, tools);
+      }
       const copied = layout.mode === "shared"
         ? null
         : await installSkillPackage({

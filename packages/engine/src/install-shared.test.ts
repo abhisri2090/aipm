@@ -2,7 +2,7 @@ import { lstat, mkdtemp, readFile, readlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { installSharedSkill } from "./install-shared.js";
+import { detachSkillShortcuts, installSharedSkill } from "./install-shared.js";
 
 describe("installSharedSkill", () => {
   it("writes .ai/skills/<skill>/SKILL.md and relative dir links for each tool", async () => {
@@ -31,5 +31,19 @@ describe("installSharedSkill", () => {
       expect(await readlink(link)).toBe("../../.ai/skills/review-helper");
       expect(Object.values(result.links)).toContain(link);
     }
+  });
+
+  it("detaches a tool shortcut without deleting the .ai skill", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-shared-"));
+    await installSharedSkill({
+      projectRoot: root,
+      packageName: "@team/review-helper",
+      tools: ["cursor"],
+      skillMarkdown: "# hello\n",
+    });
+    await detachSkillShortcuts(root, "@team/review-helper", ["cursor"]);
+    const canonical = join(root, ".ai", "skills", "review-helper", "SKILL.md");
+    await expect(lstat(join(root, ".cursor", "skills", "review-helper"))).rejects.toThrow();
+    expect(await readFile(canonical, "utf8")).toBe("# hello\n");
   });
 });
