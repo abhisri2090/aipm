@@ -30,6 +30,14 @@ const targets = [
     command: "aipm add @scope/name@1.0.0 --target codex --ci",
     note: "Installs an OpenAI Codex project skill folder under .agents/skills. Cursor also loads skills from that folder.",
   },
+  {
+    name: "Shared",
+    value: "shared",
+    detect: "two or more of .cursor/, .claude/, .codex/",
+    writes: ".ai/skills/<skill>/SKILL.md",
+    command: "aipm add @scope/name@1.0.0 --shared --ci",
+    note: "Keeps the skill in one folder and adds a shortcut in every detected tool. Shown in the install menu when the project has more than one tool folder.",
+  },
 ];
 
 export const metadata = pageMetadata({

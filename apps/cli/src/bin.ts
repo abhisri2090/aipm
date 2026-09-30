@@ -379,6 +379,7 @@ async function addUntrackedPackage(options: {
   registry: string;
   pkgArg: string;
   target?: string;
+  shared?: boolean;
   token?: string;
   ci?: boolean;
 }): Promise<void> {
@@ -402,6 +403,7 @@ async function addUntrackedPackage(options: {
     version: version.replace(/^\^/, ""),
     project: syntheticProject,
     explicitTarget: parseTargetFlag(options.target),
+    shared: options.shared,
     ci: options.ci,
     token,
     track: false,
@@ -930,10 +932,11 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, codex, or *")
+  .option("--shared", "Install the skill in .ai/skills and shortcut every detected tool")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive; fail if prompt needed")
   .option("--no-init", "Install without creating or updating aipm.package.json / aipm-lock.json")
-  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean; init?: boolean }) => {
+  .action(async (pkgArg: string, opts: { global?: boolean; registry?: string; target?: string; shared?: boolean; token?: string; ci?: boolean; init?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
@@ -978,6 +981,7 @@ program
           registry,
           pkgArg,
           target: opts.target,
+          shared: opts.shared,
           token: opts.token,
           ci: opts.ci,
         });
@@ -1025,6 +1029,7 @@ program
       version: version.replace(/^\^/, ""),
       project,
       explicitTarget: parseTargetFlag(opts.target),
+      shared: opts.shared,
       ci: opts.ci,
       token,
     });
@@ -1081,9 +1086,10 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, codex, or *")
+  .option("--shared", "Install the skill in .ai/skills and shortcut every detected tool")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
-  .action(async (opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean }) => {
+  .action(async (opts: { global?: boolean; registry?: string; target?: string; shared?: boolean; token?: string; ci?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
@@ -1120,6 +1126,7 @@ program
         version: version.replace(/^\^/, ""),
         project,
         explicitTarget: target,
+        shared: opts.shared,
         ci: opts.ci,
         token,
       });
@@ -1660,10 +1667,11 @@ program
   .option(GLOBAL_OPTION, GLOBAL_OPTION_DESC)
   .option("--registry <url>", "Registry base URL")
   .option("--target <tool>", "cursor, claude, codex, or *")
+  .option("--shared", "Install the skill in .ai/skills and shortcut every detected tool")
   .option("--token <token>", "Install token for private packages")
   .option("--ci", "Non-interactive")
   .option("--no-init", "Update without reading or writing aipm.package.json / aipm-lock.json (requires a package arg; always latest)")
-  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; token?: string; ci?: boolean; init?: boolean }) => {
+  .action(async (pkgArg: string | undefined, opts: { global?: boolean; registry?: string; target?: string; shared?: boolean; token?: string; ci?: boolean; init?: boolean }) => {
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
@@ -1723,6 +1731,7 @@ program
           version,
           project: syntheticProject,
           explicitTarget: parseTargetFlag(opts.target),
+          shared: opts.shared,
           ci: opts.ci,
           token,
           track: false,
@@ -1769,6 +1778,7 @@ program
         version,
         project,
         explicitTarget: parseTargetFlag(opts.target),
+        shared: opts.shared,
         ci: opts.ci,
         token,
       });

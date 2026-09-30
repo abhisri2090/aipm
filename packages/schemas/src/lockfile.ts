@@ -23,6 +23,12 @@ export const LockfilePackageEntrySchema = z.object({
   registry: z.string().url(),
   resolvedTools: z.array(AiToolSchema),
   installed: InstalledPathsSchema,
+  shared: z
+    .object({
+      root: z.string().min(1),
+      files: z.array(z.string()),
+    })
+    .optional(),
   installedAssets: z
     .object({
       main: z.array(z.string()),

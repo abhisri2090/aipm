@@ -133,6 +133,12 @@ export default function UsePage() {
             <code>.cursor/skills/&lt;skill&gt;/SKILL.md</code>.
           </p>
           <p>
+            If the project has more than one of <code>.cursor</code>, <code>.claude</code>, and <code>.codex</code>,
+            aipm asks where to install. Choose one tool for a normal copy, or <code>.ai</code> to keep the skill in{" "}
+            <code>.ai/skills/&lt;skill&gt;/</code> and shortcut every detected tool. In CI, pass <code>--shared</code> for
+            that layout, or <code>--target</code> for one tool.
+          </p>
+          <p>
             See the <Link href="/targets">targets guide</Link> for exact folders and supported tools.
           </p>
         </section>
