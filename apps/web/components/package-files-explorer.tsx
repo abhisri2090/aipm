@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Markdown from "react-markdown";
 import { api } from "../lib/api-client";
 import { publicApiError } from "../lib/public-api-error";
 import { shell, cards, cn } from "../lib/page-styles";
 import { CodeBlock } from "./code-block";
+import { MarkdownView } from "./markdown-view";
 import styles from "./package-files-explorer.module.css";
 
 type PackageFileEntry = {
@@ -157,9 +157,7 @@ export function PackageFilesExplorer({
             ) : null}
             {!contentLoading && !contentError && content && !content.binary && content.content != null ? (
               isMarkdownPath(content.path) ? (
-                <div className={styles.markdown}>
-                  <Markdown>{content.content}</Markdown>
-                </div>
+                <MarkdownView source={content.content} />
               ) : (
                 <CodeBlock code={content.content} />
               )

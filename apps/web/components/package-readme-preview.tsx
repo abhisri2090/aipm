@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Markdown from "react-markdown";
 import { api } from "../lib/api-client";
 import { shell, cards, cn } from "../lib/page-styles";
+import { MarkdownView } from "./markdown-view";
 import styles from "./readme-preview.module.css";
 
 type PackageFileEntry = {
@@ -76,9 +76,7 @@ export function PackageReadmePreview({ packageName, version }: PackageReadmePrev
       <p className={shell.eyebrow}>Overview</p>
       <h2>Readme</h2>
       <div className={styles.preview}>
-        <div className={styles.markdown}>
-          <Markdown>{readmeContent}</Markdown>
-        </div>
+        <MarkdownView source={readmeContent} />
       </div>
     </article>
   );

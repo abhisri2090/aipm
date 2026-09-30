@@ -1,0 +1,349 @@
+.markdown {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-wrap: break-word;
+  container-type: inline-size;
+}
+
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  max-width: none;
+  margin: 1.45em 0 0.55em;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.markdown h1 {
+  font-size: 1.5rem;
+}
+
+.markdown h2 {
+  font-size: 1.2rem;
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid var(--line);
+}
+
+.markdown h3 {
+  font-size: 1.05rem;
+}
+
+.markdown h4 {
+  font-size: 1rem;
+}
+
+.frontmatter + h1,
+.frontmatter + h2,
+.frontmatter + h3 {
+  margin-top: 0;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote {
+  margin: 0 0 1em;
+  color: var(--muted);
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.3em;
+}
+
+.markdown li + li {
+  margin-top: 0.4em;
+}
+
+.markdown li > p {
+  margin: 0 0 0.45em;
+}
+
+.markdown li > p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown a:hover {
+  color: var(--accent-strong);
+}
+
+.markdown blockquote {
+  margin-left: 0;
+  padding: 0.15em 0 0.15em 0.9em;
+  border-left: 3px solid var(--accent);
+}
+
+.markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 1.5em 0;
+}
+
+.markdown :not(pre) > code {
+  padding: 0.12em 0.38em;
+  border-radius: 5px;
+  background: var(--panel-soft);
+  color: var(--text);
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.markdown input[type="checkbox"] {
+  margin-right: 0.4em;
+  accent-color: var(--accent);
+}
+
+.markdown li:has(> input[type="checkbox"]) {
+  list-style: none;
+}
+
+.markdown del {
+  color: var(--muted);
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin: 0 0 1em;
+}
+
+.markdown table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.markdown th,
+.markdown td {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown th {
+  background: var(--panel-soft);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.frontmatter {
+  margin: 0 0 1.35em;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-soft);
+}
+
+.frontmatterLabel {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.frontmatterList,
+.nestedList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.frontmatterRow {
+  display: grid;
+  grid-template-columns: minmax(96px, 148px) minmax(0, 1fr);
+  gap: 10px 14px;
+  align-items: baseline;
+}
+
+.frontmatter dt {
+  margin: 0;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.frontmatter dd {
+  margin: 0;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  margin: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+}
+
+.empty {
+  color: var(--muted);
+}
+
+.fence {
+  margin: 0.7em 0 1em;
+  border: 1px solid color-mix(in srgb, var(--code-text) 14%, transparent);
+  border-radius: 10px;
+  background: var(--code);
+  overflow: hidden;
+}
+
+.fenceBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+  padding: 4px 6px 4px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--code-text) 12%, transparent);
+}
+
+.fenceLang {
+  color: color-mix(in srgb, var(--code-text) 68%, transparent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in srgb, var(--code-text) 72%, transparent);
+  cursor: pointer;
+}
+
+.copy:hover,
+.copy:focus-visible {
+  background: color-mix(in srgb, var(--code-text) 12%, transparent);
+  color: var(--code-text);
+  outline: none;
+}
+
+.copy[data-copied] {
+  color: var(--accent-strong);
+}
+
+.markdown pre {
+  overflow: auto;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--code-text);
+}
+
+.markdown pre code {
+  padding: 0;
+  background: transparent;
+  color: var(--code-text);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.markdown pre :global(.hljs-comment),
+.markdown pre :global(.hljs-quote) {
+  color: #8aa399;
+}
+
+.markdown pre :global(.hljs-keyword),
+.markdown pre :global(.hljs-selector-tag),
+.markdown pre :global(.hljs-literal),
+.markdown pre :global(.hljs-section),
+.markdown pre :global(.hljs-link),
+.markdown pre :global(.hljs-meta) {
+  color: #7bd9ad;
+}
+
+.markdown pre :global(.hljs-string),
+.markdown pre :global(.hljs-addition),
+.markdown pre :global(.hljs-doctag) {
+  color: #f0d59a;
+}
+
+.markdown pre :global(.hljs-number),
+.markdown pre :global(.hljs-attr),
+.markdown pre :global(.hljs-attribute) {
+  color: #f3b6a0;
+}
+
+.markdown pre :global(.hljs-title),
+.markdown pre :global(.hljs-title.function_),
+.markdown pre :global(.hljs-function),
+.markdown pre :global(.hljs-name) {
+  color: #9fd4ff;
+}
+
+.markdown pre :global(.hljs-built_in),
+.markdown pre :global(.hljs-type),
+.markdown pre :global(.hljs-class) {
+  color: #c9b6ff;
+}
+
+.markdown pre :global(.hljs-variable),
+.markdown pre :global(.hljs-template-variable),
+.markdown pre :global(.hljs-params) {
+  color: #e7f2ec;
+}
+
+.markdown pre :global(.hljs-deletion) {
+  color: #f0a8a8;
+}
+
+@container (max-width: 340px) {
+  .frontmatterRow {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

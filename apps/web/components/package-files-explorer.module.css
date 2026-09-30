@@ -69,59 +69,6 @@
   word-break: break-all;
 }
 
-.markdown {
-  color: var(--text);
-  line-height: 1.6;
-}
-
-.markdown > :first-child {
-  margin-top: 0;
-}
-
-.markdown > :last-child {
-  margin-bottom: 0;
-}
-
-.markdown h1,
-.markdown h2,
-.markdown h3 {
-  margin: 1.4em 0 0.6em;
-  line-height: 1.25;
-}
-
-.markdown h1:first-child,
-.markdown h2:first-child,
-.markdown h3:first-child {
-  margin-top: 0;
-}
-
-.markdown p,
-.markdown ul,
-.markdown ol {
-  margin: 0 0 1em;
-  color: var(--muted);
-}
-
-.markdown code {
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
-  background: var(--panel-soft);
-  font-size: 0.92em;
-}
-
-.markdown pre {
-  overflow: auto;
-  margin: 0 0 1em;
-  padding: 14px;
-  border-radius: 8px;
-  background: var(--panel-soft);
-}
-
-.markdown pre code {
-  padding: 0;
-  background: transparent;
-}
-
 .status {
   padding: 20px;
   color: var(--muted);
