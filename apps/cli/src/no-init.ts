@@ -1,4 +1,4 @@
-import { access, rm, stat } from "node:fs/promises";
+import { access, lstat, rm, unlink } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { shortNameFromScopeName } from "@aipm-registry/schemas";
 import { promptForNoInitConflict } from "./prompt.js";
@@ -55,6 +55,7 @@ export function discoverUntrackedPackagePaths(input: {
   const short = shortNameFromScopeName(input.packageName);
   const slug = packageHelperSlug(input.packageName);
   return [
+    join(input.installRoot, ".ai", "skills", short),
     join(input.installRoot, ".cursor", "skills", short),
     join(input.installRoot, ".cursor", "aipm", "skills", `${short}.md`),
     join(input.installRoot, ".claude", "skills", short),
@@ -72,8 +73,14 @@ export async function removeUntrackedPackage(input: {
   const removed: string[] = [];
 
   for (const path of candidates) {
-    const info = await stat(path).catch(() => null);
-    if (!info) continue;
+    const info = await lstat(path).catch(() => null);
+    if (!info?.isSymbolicLink()) continue;
+    await unlink(path);
+    removed.push(path);
+  }
+  for (const path of candidates) {
+    const info = await lstat(path).catch(() => null);
+    if (!info || info.isSymbolicLink()) continue;
     await rm(path, { recursive: true, force: true });
     removed.push(path);
   }

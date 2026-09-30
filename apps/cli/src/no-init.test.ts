@@ -1,6 +1,6 @@
-import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, stat, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
   discoverUntrackedPackagePaths,
@@ -59,6 +59,7 @@ describe("discover and remove untracked packages", () => {
       packageName: "@team/sample-skill",
     });
     expect(paths).toEqual([
+      join(root, ".ai", "skills", "sample-skill"),
       join(root, ".cursor", "skills", "sample-skill"),
       join(root, ".cursor", "aipm", "skills", "sample-skill.md"),
       join(root, ".claude", "skills", "sample-skill"),
@@ -97,5 +98,28 @@ describe("discover and remove untracked packages", () => {
         packageName: "@team/sample-skill",
       }),
     ).rejects.toThrow(/No untracked install found/);
+  });
+
+  it("unlinks tool shortcuts before deleting the canonical .ai skill", async () => {
+    const root = await tempRoot();
+    const canonical = join(root, ".ai", "skills", "sample-skill");
+    const other = join(root, ".ai", "skills", "other");
+    const link = join(root, ".cursor", "skills", "sample-skill");
+    await mkdir(canonical, { recursive: true });
+    await mkdir(other, { recursive: true });
+    await mkdir(dirname(link), { recursive: true });
+    await writeFile(join(canonical, "SKILL.md"), "# skill\n");
+    await writeFile(join(other, "SKILL.md"), "# other\n");
+    await symlink(relative(dirname(link), canonical), link, "dir");
+
+    const result = await removeUntrackedPackage({
+      installRoot: root,
+      configRoot: root,
+      packageName: "@team/sample-skill",
+    });
+    expect(result.removed).toEqual([link, canonical]);
+    await expect(lstat(link)).rejects.toThrow();
+    await expect(stat(join(canonical, "SKILL.md"))).rejects.toThrow();
+    await expect(stat(join(other, "SKILL.md"))).resolves.toBeTruthy();
   });
 });
