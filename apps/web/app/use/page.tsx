@@ -130,7 +130,7 @@ export default function UsePage() {
             AIPM writes files into the folder your AI tool expects. Claude Code gets{" "}
             <code>.claude/skills/&lt;skill&gt;/SKILL.md</code>, Codex gets{" "}
             <code>.agents/skills/&lt;skill&gt;/SKILL.md</code>, and the Cursor target writes{" "}
-            <code>.cursor/aipm/skills/&lt;skill&gt;.md</code>.
+            <code>.cursor/skills/&lt;skill&gt;/SKILL.md</code>.
           </p>
           <p>
             See the <Link href="/targets">targets guide</Link> for exact folders and supported tools.

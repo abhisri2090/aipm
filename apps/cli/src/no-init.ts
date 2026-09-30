@@ -55,6 +55,7 @@ export function discoverUntrackedPackagePaths(input: {
   const short = shortNameFromScopeName(input.packageName);
   const slug = packageHelperSlug(input.packageName);
   return [
+    join(input.installRoot, ".cursor", "skills", short),
     join(input.installRoot, ".cursor", "aipm", "skills", `${short}.md`),
     join(input.installRoot, ".claude", "skills", short),
     join(input.installRoot, ".agents", "skills", short),

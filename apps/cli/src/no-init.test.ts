@@ -59,6 +59,7 @@ describe("discover and remove untracked packages", () => {
       packageName: "@team/sample-skill",
     });
     expect(paths).toEqual([
+      join(root, ".cursor", "skills", "sample-skill"),
       join(root, ".cursor", "aipm", "skills", "sample-skill.md"),
       join(root, ".claude", "skills", "sample-skill"),
       join(root, ".agents", "skills", "sample-skill"),
@@ -76,9 +77,9 @@ describe("discover and remove untracked packages", () => {
       }),
     ).rejects.toThrow(/No untracked install found/);
 
-    const skillFile = join(root, ".cursor", "aipm", "skills", "sample-skill.md");
+    const skillFile = join(root, ".cursor", "skills", "sample-skill", "SKILL.md");
     const helperDir = join(root, ".aipm", "helpers", "team__sample-skill", "1.0.0");
-    await mkdir(join(root, ".cursor", "aipm", "skills"), { recursive: true });
+    await mkdir(join(root, ".cursor", "skills", "sample-skill"), { recursive: true });
     await mkdir(helperDir, { recursive: true });
     await writeFile(skillFile, "# skill\n");
     await writeFile(join(helperDir, "SETUP.md"), "setup\n");

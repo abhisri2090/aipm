@@ -148,7 +148,7 @@ export default async function StateOfAgentSkillsPage() {
             <tbody>
               <tr><td>Install for Claude Code</td><td><code>aipm add @scope/name@version --target claude --ci</code></td><td><code>.claude/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
               <tr><td>Install for Codex</td><td><code>aipm add @scope/name@version --target codex --ci</code></td><td><code>.agents/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
-              <tr><td>Install with the Cursor target</td><td><code>aipm add @scope/name@version --target cursor --ci</code></td><td><code>.cursor/aipm/skills/&lt;skill&gt;.md</code> (Cursor does not load this folder automatically; it does load <code>.claude/skills</code> and <code>.agents/skills</code>)</td></tr>
+              <tr><td>Install with the Cursor target</td><td><code>aipm add @scope/name@version --target cursor --ci</code></td><td><code>.cursor/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
               <tr><td>Restore pinned versions</td><td><code>aipm install --ci</code></td><td>Reinstalls the exact versions listed in <code>aipm.package.json</code></td></tr>
             </tbody>
           </table>

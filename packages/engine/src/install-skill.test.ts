@@ -38,17 +38,20 @@ describe("installSkillPackage", () => {
     expect(await readFile(licensePath, "utf8")).toBe("Apache License\n");
   });
 
-  it("keeps cursor path shape", async () => {
+  it("installs Cursor skills where Cursor loads them", async () => {
     const root = await mkdtemp(join(tmpdir(), "aipm-install-"));
     const cursorManifest: PackageManifest = { ...manifest, targets: ["cursor"] };
     const result = await installSkillPackage({
       projectRoot: root,
       manifest: cursorManifest,
       skillMarkdown: "# c\n",
+      supportingFiles: [{ path: "references/guide.md", content: Buffer.from("# Guide\n") }],
       explicitTarget: "cursor",
     });
-    const path = join(root, ".cursor", "aipm", "skills", "review-helper.md");
-    expect(result.installed.cursor).toEqual([path]);
+    const path = join(root, ".cursor", "skills", "review-helper", "SKILL.md");
+    const guidePath = join(root, ".cursor", "skills", "review-helper", "references", "guide.md");
+    expect(result.installed.cursor).toEqual([path, guidePath]);
+    expect(await readFile(path, "utf8")).toBe("# c\n");
   });
 
   it("installs Claude skills in Claude Code's native project directory", async () => {

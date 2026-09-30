@@ -113,7 +113,7 @@ const requiredPages = [
     title: "AIPM Supported Targets",
     h1: "Choose where AIPM should install a skill.",
     jsonLd: true,
-    includes: [".cursor/aipm/skills/&lt;skill&gt;.md", ".claude/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
+    includes: [".cursor/skills/&lt;skill&gt;/SKILL.md", ".claude/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
     // The Claude adapter (packages/adapter-claude) writes .claude/skills/<name>/, not .claude/aipm/skills.
     excludes: [".claude/aipm/skills"],
   },
@@ -237,7 +237,7 @@ const requiredPages = [
     title: "How to Install Cursor AI Skills",
     h1: "How do you install an AI skill for Cursor?",
     jsonLd: true,
-    includes: ["Short answer", "aipm init --target claude", "Why not --target cursor?", ".agents/skills"],
+    includes: ["Short answer", "aipm init --target cursor", "Where Cursor finds the skill", ".cursor/skills/"],
   },
   {
     path: "/guides/how-to-create-agent-skill",

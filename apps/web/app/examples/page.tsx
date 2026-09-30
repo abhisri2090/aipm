@@ -59,7 +59,7 @@ const examples: Example[] = [
       },
     ],
     notes: [
-      "This will get installed into .cursor/aipm/skills/<skill>.md",
+      "This will get installed into .cursor/skills/<skill>/SKILL.md",
       "Valid install targets also include claude and codex",
     ],
   },
@@ -194,7 +194,7 @@ const examples: Example[] = [
         code: "aipm add {{your-team-name/review-helper}}@1.0.0 --target cursor --ci",
       },
     ],
-    notes: ["Good when an AI tool created the first draft", "Review .aipmignore before staging imported files", "This will get installed into .cursor/aipm/skills/<skill>.md"],
+    notes: ["Good when an AI tool created the first draft", "Review .aipmignore before staging imported files", "This will get installed into .cursor/skills/<skill>/SKILL.md"],
   },
 ];
 

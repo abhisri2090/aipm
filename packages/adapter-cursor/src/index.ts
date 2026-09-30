@@ -1,6 +1,10 @@
-import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { SkillAdapter, SkillInstallInput, SkillInstallResult } from "@aipm-registry/adapter-sdk";
+import {
+  writeSkillDirectory,
+  type SkillAdapter,
+  type SkillInstallInput,
+  type SkillInstallResult,
+} from "@aipm-registry/adapter-sdk";
 import { shortNameFromScopeName } from "@aipm-registry/schemas";
 
 export class CursorSkillAdapter implements SkillAdapter {
@@ -8,11 +12,8 @@ export class CursorSkillAdapter implements SkillAdapter {
 
   async installSkill(input: SkillInstallInput): Promise<SkillInstallResult> {
     const short = shortNameFromScopeName(input.packageName);
-    const skillsDir = join(input.projectRoot, ".cursor", "aipm", "skills");
-    await mkdir(skillsDir, { recursive: true });
-    const filePath = join(skillsDir, `${short}.md`);
-    await writeFile(filePath, input.skillMarkdown, "utf8");
-    return { writtenPaths: [filePath] };
+    const skillDir = join(input.projectRoot, ".cursor", "skills", short);
+    return writeSkillDirectory(skillDir, input);
   }
 }
 

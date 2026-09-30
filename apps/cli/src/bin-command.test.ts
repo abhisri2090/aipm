@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -770,11 +770,114 @@ describe("CLI publish commands", () => {
         "--ci",
       ]);
       expect(result.stdout).toContain("Installed @team/free-skill@1.0.0");
-      await expect(readFile(join(root, ".cursor", "aipm", "skills", "free-skill.md"), "utf8")).resolves.toContain(
+      await expect(readFile(join(root, ".cursor", "skills", "free-skill", "SKILL.md"), "utf8")).resolves.toContain(
         "Free skill v1",
       );
       await expect(stat(join(root, "aipm.package.json"))).rejects.toThrow();
       await expect(stat(join(root, "aipm-lock.json"))).rejects.toThrow();
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("tracks the new Cursor path and removes the previous lockfile path", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    const packageRoot = await tempWorkspace();
+    const manifest = {
+      schemaVersion: "0.1",
+      name: "@team/free-skill",
+      version: "1.0.0",
+      type: "skill",
+      description: "Tracked skill",
+      entry: "SKILL.md",
+      targets: ["cursor"],
+    };
+    await writeFile(join(packageRoot, "aipm.manifest.json"), JSON.stringify(manifest, null, 2));
+    await writeFile(join(packageRoot, "SKILL.md"), "# Free skill v1\n");
+    const tarball = await packDirectory(packageRoot);
+    const encoded = encodeURIComponent("@team/free-skill");
+
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest, integrity: "sha256-test" }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarball);
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/installs`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ installCount: 1 }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    const realRoot = await realpath(root);
+    const oldPath = join(realRoot, ".cursor", "aipm", "skills", "free-skill.md");
+    const newPath = join(realRoot, ".cursor", "skills", "free-skill", "SKILL.md");
+
+    try {
+      await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      await mkdir(join(root, ".cursor", "aipm", "skills"), { recursive: true });
+      await writeFile(oldPath, "# old cursor skill\n");
+      await writeFile(
+        join(root, "aipm-lock.json"),
+        JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            packages: {
+              "@team/free-skill": {
+                version: "1.0.0",
+                integrity: "sha256-old",
+                registry,
+                resolvedTools: ["cursor"],
+                installed: { cursor: [oldPath] },
+              },
+            },
+            prompts: {},
+          },
+          null,
+          2,
+        ),
+      );
+
+      await runCli(root, ["add", "@team/free-skill@1.0.0", "--target", "cursor", "--ci"]);
+      await expect(readFile(newPath, "utf8")).resolves.toContain("Free skill v1");
+      await expect(stat(oldPath)).rejects.toThrow();
+      const lock = await readJson(join(root, "aipm-lock.json"));
+      expect(lock).toMatchObject({
+        packages: {
+          "@team/free-skill": {
+            version: "1.0.0",
+            installed: { cursor: [newPath] },
+          },
+        },
+      });
+      expect(await readJson(join(root, "aipm.package.json"))).toMatchObject({
+        packages: { "@team/free-skill": "1.0.0" },
+      });
+
+      const remove = await runCli(root, ["remove", "@team/free-skill", "--ci"]);
+      expect(remove.stdout).toContain("Deleted 1 tracked installed file.");
+      await expect(stat(newPath)).rejects.toThrow();
+      expect(await readJson(join(root, "aipm-lock.json"))).toMatchObject({ packages: {} });
     } finally {
       await new Promise<void>((resolveClose, rejectClose) =>
         server.close((error) => (error ? rejectClose(error) : resolveClose())),
@@ -876,7 +979,7 @@ describe("CLI publish commands", () => {
         "--ci",
       ]);
       expect(update.stdout).toContain("Installed @team/free-skill@2.0.0");
-      await expect(readFile(join(root, ".cursor", "aipm", "skills", "free-skill.md"), "utf8")).resolves.toContain(
+      await expect(readFile(join(root, ".cursor", "skills", "free-skill", "SKILL.md"), "utf8")).resolves.toContain(
         "Free skill v2",
       );
       await expect(stat(join(root, "aipm.package.json"))).rejects.toThrow();
@@ -890,12 +993,12 @@ describe("CLI publish commands", () => {
 
   it("remove --no-init deletes discovered skill paths", async () => {
     const root = await tempWorkspace();
-    await mkdir(join(root, ".cursor", "aipm", "skills"), { recursive: true });
-    await writeFile(join(root, ".cursor", "aipm", "skills", "free-skill.md"), "# Free skill\n");
+    await mkdir(join(root, ".cursor", "skills", "free-skill"), { recursive: true });
+    await writeFile(join(root, ".cursor", "skills", "free-skill", "SKILL.md"), "# Free skill\n");
 
     const result = await runCli(root, ["remove", "@team/free-skill", "--no-init", "--ci"]);
     expect(result.stdout).toContain("Removed 1 untracked path for @team/free-skill");
-    await expect(stat(join(root, ".cursor", "aipm", "skills", "free-skill.md"))).rejects.toThrow();
+    await expect(stat(join(root, ".cursor", "skills", "free-skill", "SKILL.md"))).rejects.toThrow();
   });
 
   it("fails when --ci --no-init is used on an initialized project", async () => {

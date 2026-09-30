@@ -6,6 +6,14 @@ import { SITE_URL } from "../../lib/registry";
 
 const entries = [
   {
+    date: "September 30, 2026",
+    title: "CLI 0.4.9 — Cursor skills install where Cursor loads them",
+    items: [
+      "aipm add --target cursor now writes .cursor/skills/<skill>/SKILL.md, including supporting files.",
+      "A later add or update removes the old .cursor/aipm/skills/<skill>.md file and records the new path in aipm-lock.json.",
+    ],
+  },
+  {
     date: "September 22, 2026",
     title: "CLI 0.4.8 — interactive UX, --no-init, and release plumbing",
     items: [
