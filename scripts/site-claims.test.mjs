@@ -61,13 +61,13 @@ describe("SEO copy matches CLI behaviour", () => {
     expect(llms).not.toMatch(/skills, prompts, rules, and tool files/);
   });
 
-  it("does not tell Cursor users to rely on --target cursor", () => {
+  it("tells Cursor users to install with --target cursor", () => {
     const cursorGuide = SEO_GUIDES.find((guide) => guide.slug === "how-to-install-cursor-skills");
-    expect(cursorGuide.answer).toContain("--target claude");
-    expect(cursorGuide.answer).toContain("--target codex");
-    expect(cursorGuide.steps.join(" ")).not.toContain("--target cursor");
+    expect(cursorGuide.answer).toContain("--target cursor");
+    expect(cursorGuide.answer).toContain(".cursor/skills/<skill>/SKILL.md");
+    expect(cursorGuide.steps.join(" ")).toContain("--target cursor");
     const cursorHub = SKILL_DISCOVERY_PAGES.find((page) => page.slug === "cursor");
-    expect(cursorHub.installCommands.map((command) => command.code).join(" ")).not.toContain("--target cursor");
+    expect(cursorHub.installCommands.map((command) => command.code).join(" ")).toContain("--target cursor");
   });
 
   it("lists Codex as a supported target", () => {

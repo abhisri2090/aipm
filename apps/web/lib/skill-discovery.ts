@@ -45,8 +45,8 @@ export const SKILL_DISCOVERY_PAGES = [
     ],
     installCommands: [
       { label: "Install the CLI", code: "npm install -g @aipm-registry/cli" },
-      { label: "Initialize (Cursor loads .claude/skills)", code: "aipm init --target claude" },
-      { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target claude --ci" },
+      { label: "Initialize", code: "aipm init --target cursor" },
+      { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target cursor --ci" },
     ],
     faqs: [
       {
