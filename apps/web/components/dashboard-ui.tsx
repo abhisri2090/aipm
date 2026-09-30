@@ -2478,6 +2478,20 @@ export function PackageDashboard({ scope, name }: { scope: string; name: string 
                 </div>
               </div>
               <p className={shell.muted}>Copy this flow when preparing and publishing this skill from your terminal.</p>
+              <div className={dash.publishSkillCallout}>
+                <h3>Let a skill publish it for you</h3>
+                <p className={shell.muted}>
+                  Install{" "}
+                  <Link href={packagePath("@abhisri2090/aipm-package-prep", "1.0.0")}>
+                    @abhisri2090/aipm-package-prep
+                  </Link>{" "}
+                  in Cursor or Claude. It turns an existing skill folder into an AIPM package and walks you through the publish, so you do not have to run each command yourself.
+                </p>
+                <CodeBlock code="aipm add @abhisri2090/aipm-package-prep@1.0.0" />
+                <Link className={shell.textLink} href={packagePath("@abhisri2090/aipm-package-prep", "1.0.0")}>
+                  Open skill
+                </Link>
+              </div>
               <DashboardCommandSteps steps={publishCommandSteps} />
             </article>
           ) : null}
