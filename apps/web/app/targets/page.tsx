@@ -10,9 +10,9 @@ const targets = [
     name: "Cursor",
     value: "cursor",
     detect: ".cursor/",
-    writes: ".cursor/aipm/skills/<skill>.md",
+    writes: ".cursor/skills/<skill>/SKILL.md",
     command: "aipm add @scope/name@1.0.0 --target cursor --ci",
-    note: "Writes a single Cursor skill file. Cursor does not load that folder automatically; for skills Cursor will pick up, prefer --target claude or --target codex.",
+    note: "Installs a Cursor project skill folder. Cursor loads skills from .cursor/skills.",
   },
   {
     name: "Claude",

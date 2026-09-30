@@ -153,7 +153,7 @@ async function installPackage(packageName, version, token) {
   const addArgs = ["add", packageSpec, "--target", "cursor", "--ci"];
   if (token) addArgs.push("--token", token);
   await runCli(addArgs, { cwd: projectDir });
-  const installed = await listMarkdownFiles(join(projectDir, ".cursor", "aipm", "skills"));
+  const installed = await listMarkdownFiles(join(projectDir, ".cursor", "skills"));
   assert(installed.length > 0, "No Cursor skill markdown file was installed");
   return { projectDir, installed };
 }

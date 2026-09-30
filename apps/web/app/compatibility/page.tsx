@@ -52,7 +52,7 @@ const rows = [
     format: "Agent Skill",
     purpose: "A reusable task, guide, or set of steps stored with a SKILL.md file.",
     cursor:
-      "Supported. Cursor loads skills from .cursor/skills and .agents/skills, and also reads .claude/skills and .codex/skills. AIPM's --target cursor writes .cursor/aipm/skills/<skill>.md, which Cursor does not load, so install with --target claude or --target codex for Cursor.",
+      "Supported. Cursor loads skills from .cursor/skills and .agents/skills, and also reads .claude/skills and .codex/skills. AIPM's --target cursor writes .cursor/skills/<skill>/SKILL.md.",
     claude:
       "Supported in .claude/skills. Claude can choose a skill or you can start it with a slash command. AIPM --target claude writes .claude/skills/<skill>/SKILL.md.",
     codex:

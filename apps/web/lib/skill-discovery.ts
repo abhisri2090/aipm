@@ -45,8 +45,8 @@ export const SKILL_DISCOVERY_PAGES = [
     ],
     installCommands: [
       { label: "Install the CLI", code: "npm install -g @aipm-registry/cli" },
-      { label: "Initialize (Cursor loads .claude/skills)", code: "aipm init --target claude" },
-      { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target claude --ci" },
+      { label: "Initialize", code: "aipm init --target cursor" },
+      { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target cursor --ci" },
     ],
     faqs: [
       {
@@ -57,7 +57,7 @@ export const SKILL_DISCOVERY_PAGES = [
       {
         question: "How do I install a Cursor skill with AIPM?",
         answer:
-          "Install the AIPM CLI, then run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). Cursor loads skills from both folders. --target cursor currently writes .cursor/aipm/skills/<skill>.md, which Cursor does not load automatically. Review the package source on its registry page before you install.",
+          "Install the AIPM CLI, then run aipm add @scope/name@version --target cursor (writes .cursor/skills/<skill>/SKILL.md), --target claude (writes .claude/skills/<skill>/SKILL.md), or --target codex (writes .agents/skills/<skill>/SKILL.md). Review the package source on its registry page before you install.",
       },
       {
         question: "How is AIPM different from copying skills by hand?",

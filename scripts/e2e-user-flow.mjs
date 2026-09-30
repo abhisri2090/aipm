@@ -308,7 +308,7 @@ async function publishAndInstall(token) {
   await runAipm(["add", `${packageName}@${packageVersion}`, "--target", "cursor", "--ci"], {
     cwd: projectDir,
   });
-  const installed = await listMarkdownFiles(join(projectDir, ".cursor", "aipm", "skills"));
+  const installed = await listMarkdownFiles(join(projectDir, ".cursor", "skills"));
   assert(installed.length > 0, "No Cursor skill markdown file was installed");
 }
 

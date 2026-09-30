@@ -1488,9 +1488,9 @@ updatedAt: "2026-09-25",
     title: "How to Install Cursor AI Skills",
     h1: "How do you install an AI skill for Cursor?",
     description:
-      "Install a reusable AI skill for Cursor with AIPM: use --target claude or --target codex so the skill lands in a folder Cursor loads, then review and test it.",
+      "Install a reusable AI skill for Cursor with AIPM: use --target cursor so the skill lands in .cursor/skills, then review and test it.",
     answer:
-      "Cursor loads skills from .cursor/skills and .agents/skills, and also reads .claude/skills and .codex/skills. Install the AIPM CLI, then run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). Cursor picks the skill up from either folder. Review the installed files before using them.",
+      "Cursor loads skills from .cursor/skills/<skill>/SKILL.md, and also reads .agents/skills, .claude/skills, and .codex/skills. Install the AIPM CLI, then run aipm add @scope/name@version --target cursor. Review the installed files before using them.",
     keywords: ["install Cursor skills", "Cursor AI skills", "add Cursor skill", "Cursor project skill"],
     publishedAt: "2026-09-01",
     updatedAt: "2026-09-25",
@@ -1506,9 +1506,9 @@ updatedAt: "2026-09-25",
           "Run the command from the project root. AIPM writes the skill folder into the project and records the pinned version in aipm.package.json, instead of hiding the shared instructions in one person's chat history.",
       },
       {
-        title: "Why not --target cursor?",
+        title: "Where Cursor finds the skill",
         body:
-          "Today aipm add --target cursor saves the skill as a single file, .cursor/aipm/skills/<skill>.md, without supporting files. Cursor does not load skills from that folder automatically; it expects a folder with a SKILL.md. Until the Cursor target changes, install with --target claude or --target codex.",
+          "aipm add --target cursor writes .cursor/skills/<skill>/SKILL.md, plus any supporting files next to it. That is the project skill folder Cursor loads.",
       },
       {
         title: "Review before team use",
@@ -1519,16 +1519,16 @@ updatedAt: "2026-09-25",
     steps: [
       "Run npm install -g @aipm-registry/cli.",
       "Open the project folder in a terminal.",
-      "Run aipm init --target claude (or --target codex).",
-      "Run aipm add @scope/name@version --target claude --ci.",
-      "Review the installed .claude/skills/<skill>/SKILL.md folder.",
+      "Run aipm init --target cursor.",
+      "Run aipm add @scope/name@version --target cursor --ci.",
+      "Review the installed .cursor/skills/<skill>/SKILL.md folder.",
       "Open Cursor and test the skill on a small task.",
     ],
     faqs: [
       {
         question: "Where should AIPM put a skill for Cursor?",
         answer:
-          "Use --target claude (.claude/skills/<skill>/SKILL.md) or --target codex (.agents/skills/<skill>/SKILL.md); Cursor loads skills from both. --target cursor currently writes .cursor/aipm/skills/<skill>.md, which Cursor does not load automatically.",
+          "Use --target cursor. AIPM writes .cursor/skills/<skill>/SKILL.md, which is the folder Cursor loads.",
       },
       {
         question: "Is a Cursor skill the same as a Cursor project rule?",

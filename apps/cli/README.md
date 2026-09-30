@@ -72,7 +72,7 @@ Install a skill:
 ```bash
 aipm add @scope/name@1.0.0 --target claude
 # or: --target codex  → .agents/skills/<skill>/SKILL.md
-# or: --target cursor → .cursor/aipm/skills/<skill>.md
+# or: --target cursor → .cursor/skills/<skill>/SKILL.md
 ```
 
 Some packages include temporary helper files and a manual AI setup prompt. After install, AIPM

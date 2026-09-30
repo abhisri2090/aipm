@@ -19,6 +19,7 @@ import {
   writeLockfile,
   type ProjectPackageJson,
 } from "./project-files.js";
+import { removeInstalledPackageFiles, trackedInstalledPackagePaths } from "./remove-package.js";
 import { promptForTool } from "./prompt.js";
 import { offerChoices } from "./ui/recover.js";
 import { createSpinner } from "./ui/spinner.js";
@@ -248,6 +249,51 @@ async function installPackageAssets(options: {
   };
 }
 
+function pathsMissingFrom(previous: string[] | undefined, kept: Set<string>): string[] {
+  return (previous ?? []).filter((path) => !kept.has(resolve(path)));
+}
+
+/** Drop lockfile paths that this install no longer writes, so a moved skill stays tracked. */
+async function removeReplacedInstallPaths(input: {
+  configRoot: string;
+  installRoot: string;
+  lock: Lockfile;
+  packageName: string;
+  next: LockfilePackageEntry;
+}): Promise<void> {
+  const previous = input.lock.packages[input.packageName];
+  if (!previous) return;
+
+  const kept = new Set(trackedInstalledPackagePaths(input.next).map((path) => resolve(path)));
+  const installed: LockfilePackageEntry["installed"] = {};
+  for (const [tool, paths] of Object.entries(previous.installed) as Array<[AiTool, string[]]>) {
+    const stale = pathsMissingFrom(paths, kept);
+    if (stale.length > 0) installed[tool] = stale;
+  }
+  const staleAssets = previous.installedAssets
+    ? {
+        main: pathsMissingFrom(previous.installedAssets.main, kept),
+        helper: pathsMissingFrom(previous.installedAssets.helper, kept),
+      }
+    : undefined;
+  const hasStaleAssets = Boolean(staleAssets && (staleAssets.main.length > 0 || staleAssets.helper.length > 0));
+  if (Object.keys(installed).length === 0 && !hasStaleAssets) return;
+
+  const otherEntries = Object.entries(input.lock.packages)
+    .filter(([name]) => name !== input.packageName)
+    .map(([, entry]) => entry);
+  await removeInstalledPackageFiles({
+    configRoot: input.configRoot,
+    installRoot: input.installRoot,
+    entry: {
+      ...previous,
+      installed,
+      ...(hasStaleAssets ? { installedAssets: staleAssets } : { installedAssets: undefined }),
+    },
+    otherEntries,
+  });
+}
+
 function printPostInstallNotice(name: string, postInstall?: LockfilePackageEntry["postInstall"]): void {
   if (!postInstall || postInstall.mode !== "manual_prompt") return;
   console.log("");
@@ -378,17 +424,26 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
           if (paths) installed[tool] = paths;
         }
 
+        const nextEntry: LockfilePackageEntry = {
+          version: options.version,
+          integrity: remoteIntegrity,
+          registry: options.registry,
+          resolvedTools: result.resolvedTools,
+          installed,
+          ...(assets.main.length || assets.helper.length ? { installedAssets: assets } : {}),
+          ...(postInstall ? { postInstall } : {}),
+        };
+        await removeReplacedInstallPaths({
+          configRoot,
+          installRoot,
+          lock,
+          packageName: options.name,
+          next: nextEntry,
+        });
+
         await writeLockfile(
           configRoot,
-          upsertLockEntry(lock, options.name, {
-            version: options.version,
-            integrity: remoteIntegrity,
-            registry: options.registry,
-            resolvedTools: result.resolvedTools,
-            installed,
-            ...(assets.main.length || assets.helper.length ? { installedAssets: assets } : {}),
-            ...(postInstall ? { postInstall } : {}),
-          }),
+          upsertLockEntry(lock, options.name, nextEntry),
         );
       }
 

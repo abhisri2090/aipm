@@ -130,7 +130,7 @@ ${input.cliScoopCommand}
 - Starter templates are blank, code-review, issue-summary, and release-notes.
 - Examples combine templates, targets, publish tokens, and install commands for real scenarios.
 - The glossary defines AIPM package, skill, manifest, target, adapter, org namespace, private package, CLI login, install token, publish token, template, and .aipmignore.
-- CLI install targets are claude (.claude/skills/<skill>/SKILL.md), codex (.agents/skills/<skill>/SKILL.md), and cursor (.cursor/aipm/skills/<skill>.md). Cursor does not load the cursor target's folder automatically, but it does load .claude/skills and .agents/skills, so --target claude or --target codex works in Cursor.
+- CLI install targets are cursor (.cursor/skills/<skill>/SKILL.md), claude (.claude/skills/<skill>/SKILL.md), and codex (.agents/skills/<skill>/SKILL.md).
 - Skills are the only installable package type. Prompts are tracked as unversioned Markdown snapshots in .aipm/prompts/. AIPM does not install AGENTS.md, CLAUDE.md, Cursor rules, MCP config, or hooks.
 - Team workflow: commit aipm.package.json and aipm-lock.json; aipm install restores the pinned versions, aipm update moves to the latest version, aipm remove uninstalls. Pin exact versions; version ranges are not supported.
 - Plain English technical guides explain AI package managers, prompt sharing, MCP setup, Cursor rules, Claude skills, and Git-based AI instructions for beginner/technical/non-technical readers.
