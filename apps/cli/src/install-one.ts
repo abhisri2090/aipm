@@ -1,4 +1,4 @@
-import { installSkillPackage } from "@aipm-registry/engine";
+import { installSharedSkill, installSkillPackage } from "@aipm-registry/engine";
 import type {
   AiTool,
   Lockfile,
@@ -20,6 +20,7 @@ import {
   type ProjectPackageJson,
 } from "./project-files.js";
 import { removeInstalledPackageFiles, trackedInstalledPackagePaths } from "./remove-package.js";
+import { resolveInstallLayout } from "./install-layout.js";
 import { promptForTool } from "./prompt.js";
 import { offerChoices } from "./ui/recover.js";
 import { createSpinner } from "./ui/spinner.js";
@@ -35,6 +36,8 @@ export interface InstallOneOptions {
   version: string;
   project: ProjectPackageJson;
   explicitTarget?: AiTool;
+  /** Install into .ai/skills and shortcut every detected tool. */
+  shared?: boolean;
   ci?: boolean;
   token?: string;
   /**
@@ -333,15 +336,31 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
     let explicitTarget = options.explicitTarget;
     let preferredTools = options.project.preferredTools;
 
-    const { resolveInstallTools } = await import("@aipm-registry/engine");
-    let tools = await resolveInstallTools({
+    spinner.stop();
+    const layout = await resolveInstallLayout({
       projectRoot: installRoot,
       manifest,
-      preferredTools,
       explicitTarget,
+      shared: options.shared,
+      ci: options.ci,
     });
+    if (layout.mode === "copy") {
+      explicitTarget = layout.tool;
+      preferredTools = [layout.tool];
+    }
+    spinner.start(`Installing ${options.name}@${options.version}`);
 
-    if (tools.length === 0) {
+    const { resolveInstallTools } = await import("@aipm-registry/engine");
+    let tools = layout.mode === "shared"
+      ? layout.tools
+      : await resolveInstallTools({
+          projectRoot: installRoot,
+          manifest,
+          preferredTools,
+          explicitTarget,
+        });
+
+    if (layout.mode === "default" && tools.length === 0) {
       spinner.stop();
       if (options.ci) {
         throw new Error(
@@ -363,7 +382,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
         explicitTarget,
       });
       spinner.start(`Installing ${options.name}@${options.version}`);
-    } else if (tools.length > 1 && !explicitTarget && !options.ci) {
+    } else if (layout.mode === "default" && tools.length > 1 && !explicitTarget && !options.ci) {
       // Multiple matches — ask instead of installing into every tool silently.
       spinner.stop();
       printNote({
@@ -391,14 +410,38 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
       const skillMarkdown = await readFile(safeJoin(packageRoot, manifest.entry), "utf8");
       const supportingFiles = await collectSkillSupportingFiles(packageRoot, manifest);
 
-      const result = await installSkillPackage({
-        projectRoot: installRoot,
-        manifest,
-        skillMarkdown,
-        supportingFiles,
-        preferredTools,
-        explicitTarget,
-      });
+      const copied = layout.mode === "shared"
+        ? null
+        : await installSkillPackage({
+            projectRoot: installRoot,
+            manifest,
+            skillMarkdown,
+            supportingFiles,
+            preferredTools,
+            explicitTarget,
+          });
+      const sharedResult = layout.mode === "shared"
+        ? await installSharedSkill({
+            projectRoot: installRoot,
+            packageName: options.name,
+            tools: layout.tools,
+            skillMarkdown,
+            supportingFiles,
+          })
+        : null;
+      const result = sharedResult
+        ? {
+            resolvedTools: layout.mode === "shared" ? layout.tools : copied!.resolvedTools,
+            installed: Object.fromEntries(
+              Object.entries(sharedResult.links).flatMap(([tool, link]) => (link ? [[tool, [link]]] : [])),
+            ) as LockfilePackageEntry["installed"],
+            shared: { root: sharedResult.root, files: sharedResult.files },
+          }
+        : {
+            resolvedTools: copied!.resolvedTools,
+            installed: copied!.installed,
+            shared: undefined,
+          };
 
       const { assets, postInstall } = await installPackageAssets({
         configRoot,
@@ -430,6 +473,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
           registry: options.registry,
           resolvedTools: result.resolvedTools,
           installed,
+          ...(result.shared ? { shared: result.shared } : {}),
           ...(assets.main.length || assets.helper.length ? { installedAssets: assets } : {}),
           ...(postInstall ? { postInstall } : {}),
         };

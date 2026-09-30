@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readFile, realpath, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readFile, readlink, realpath, stat, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
@@ -878,6 +878,94 @@ describe("CLI publish commands", () => {
       expect(remove.stdout).toContain("Deleted 1 tracked installed file.");
       await expect(stat(newPath)).rejects.toThrow();
       expect(await readJson(join(root, "aipm-lock.json"))).toMatchObject({ packages: {} });
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("shared install writes .ai and shortcuts, then remove deletes them", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    await mkdir(join(root, ".claude"));
+    const packageRoot = await tempWorkspace();
+    const manifest = {
+      schemaVersion: "0.1",
+      name: "@team/free-skill",
+      version: "1.0.0",
+      type: "skill",
+      description: "Shared skill",
+      entry: "SKILL.md",
+      targets: ["cursor", "claude"],
+    };
+    await writeFile(join(packageRoot, "aipm.manifest.json"), JSON.stringify(manifest, null, 2));
+    await writeFile(join(packageRoot, "SKILL.md"), "# Free skill v1\n");
+    const tarball = await packDirectory(packageRoot);
+    const encoded = encodeURIComponent("@team/free-skill");
+
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest, integrity: "sha256-test" }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarball);
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/installs`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ installCount: 1 }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+    const realRoot = await realpath(root);
+    const skillPath = join(realRoot, ".ai", "skills", "free-skill", "SKILL.md");
+    const cursorLink = join(realRoot, ".cursor", "skills", "free-skill");
+    const claudeLink = join(realRoot, ".claude", "skills", "free-skill");
+
+    try {
+      await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      await expect(runCli(root, ["add", "@team/free-skill@1.0.0", "--ci"])).rejects.toMatchObject({
+        stderr: expect.stringContaining("Pass --target"),
+      });
+
+      const add = await runCli(root, ["add", "@team/free-skill@1.0.0", "--shared", "--ci"]);
+      expect(add.stdout).toContain("Installed @team/free-skill@1.0.0");
+      await expect(readFile(skillPath, "utf8")).resolves.toContain("Free skill v1");
+      expect((await lstat(cursorLink)).isSymbolicLink()).toBe(true);
+      expect((await lstat(claudeLink)).isSymbolicLink()).toBe(true);
+      expect(await readlink(cursorLink)).toBe("../../.ai/skills/free-skill");
+      expect(await readlink(claudeLink)).toBe("../../.ai/skills/free-skill");
+      const lock = await readJson(join(root, "aipm-lock.json"));
+      expect(lock).toMatchObject({
+        packages: {
+          "@team/free-skill": {
+            shared: { files: [skillPath] },
+            installed: { cursor: [cursorLink], claude: [claudeLink] },
+          },
+        },
+      });
+
+      const remove = await runCli(root, ["remove", "@team/free-skill", "--ci"]);
+      expect(remove.stdout).toContain("Deleted");
+      await expect(stat(skillPath)).rejects.toThrow();
+      await expect(lstat(cursorLink)).rejects.toThrow();
+      await expect(lstat(claudeLink)).rejects.toThrow();
     } finally {
       await new Promise<void>((resolveClose, rejectClose) =>
         server.close((error) => (error ? rejectClose(error) : resolveClose())),
