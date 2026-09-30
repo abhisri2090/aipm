@@ -7,7 +7,7 @@ import { SITE_URL } from "../../lib/registry";
 const entries = [
   {
     date: "September 30, 2026",
-    title: "Shared .ai skill install",
+    title: "CLI 0.4.10 — shared .ai skill install",
     items: [
       "When a project has more than one AI tool folder, aipm add asks whether to copy into one tool or keep the skill in .ai/skills and shortcut the others.",
       "aipm add --shared writes .ai/skills/<skill>/SKILL.md and links .cursor/skills, .claude/skills, and .agents/skills.",
