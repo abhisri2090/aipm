@@ -21,6 +21,33 @@ export async function promptForTool(
   });
 }
 
+export async function promptForInstallLayout(
+  tools: readonly ConcreteAiTool[],
+): Promise<{ mode: "copy"; tool: ConcreteAiTool } | { mode: "shared" }> {
+  const choice = await selectPrompt<ConcreteAiTool | "shared">({
+    message: "Where should this skill be installed?",
+    options: [
+      ...tools.map((tool) => ({
+        value: tool,
+        label: tool,
+        hint:
+          tool === "cursor"
+            ? ".cursor/skills/<skill>/"
+            : tool === "claude"
+              ? ".claude/skills/<skill>/"
+              : ".agents/skills/<skill>/",
+      })),
+      {
+        value: "shared" as const,
+        label: ".ai",
+        hint: "scalable install: keep the skill in one place and let every tool use it",
+      },
+    ],
+  });
+  if (choice === "shared") return { mode: "shared" };
+  return { mode: "copy", tool: choice };
+}
+
 export async function promptForConfirmation(question: string): Promise<boolean> {
   return confirmPrompt({ message: question, initialConfirm: false });
 }
