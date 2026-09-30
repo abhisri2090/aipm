@@ -113,7 +113,7 @@ const requiredPages = [
     title: "AIPM Supported Targets",
     h1: "Choose where AIPM should install a skill.",
     jsonLd: true,
-    includes: [".cursor/skills/&lt;skill&gt;/SKILL.md", ".claude/skills/&lt;skill&gt;/SKILL.md", "--target claude"],
+    includes: [".cursor/skills/&lt;skill&gt;/SKILL.md", ".claude/skills/&lt;skill&gt;/SKILL.md", "--target claude", "--shared"],
     // The Claude adapter (packages/adapter-claude) writes .claude/skills/<name>/, not .claude/aipm/skills.
     excludes: [".claude/aipm/skills"],
   },

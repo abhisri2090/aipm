@@ -73,6 +73,7 @@ Install a skill:
 aipm add @scope/name@1.0.0 --target claude
 # or: --target codex  → .agents/skills/<skill>/SKILL.md
 # or: --target cursor → .cursor/skills/<skill>/SKILL.md
+# or: --shared        → .ai/skills/<skill>/SKILL.md plus a shortcut in every detected tool
 ```
 
 Some packages include temporary helper files and a manual AI setup prompt. After install, AIPM
