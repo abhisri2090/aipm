@@ -254,6 +254,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
     title: "Guides",
     items: [
       {
+        href: "/guides",
+        label: "Guides",
+        body: "Every guide on this site, with the title and description from that guide.",
+      },
+      {
         href: "/guides/components-of-an-ai-agent",
         label: "Components of an AI agent",
         body: "Understand the model, instructions, memory, tools, actions, and safety controls inside an AI agent.",

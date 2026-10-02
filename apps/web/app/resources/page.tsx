@@ -2,6 +2,7 @@ import Link from "next/link";
 import { shell, cards } from "../../lib/page-styles";
 import { DocLayout } from "../../components/doc-layout";
 import { DOC_NAV_SECTIONS } from "../../lib/docs-nav";
+import { listDocSectionIndexes } from "../../lib/doc-section-index";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
@@ -13,6 +14,7 @@ export const metadata = pageMetadata({
 });
 
 export default function ResourcesPage() {
+  const sectionPath = new Map(listDocSectionIndexes().map((section) => [section.title, section.path]));
   return (
     <DocLayout>
       <section className={shell.pageHeader}>
@@ -26,7 +28,9 @@ export default function ResourcesPage() {
 
       {DOC_NAV_SECTIONS.map((section) => (
         <section key={section.title}>
-          <h2 className={shell.eyebrow}>{section.title}</h2>
+          <h2 className={shell.eyebrow}>
+            <Link href={sectionPath.get(section.title) ?? "/resources"}>{section.title}</Link>
+          </h2>
           <div className={cards.guideGrid}>
             {section.items
               .filter((item) => item.href !== "/resources")
