@@ -58,6 +58,13 @@ const terms: Array<{ term: string; definition: string; href?: string; linkLabel?
     definition: "Starter SKILL.md content for common tasks like code review, issue summaries, and release notes.",
   },
   {
+    term: "--no-init",
+    definition:
+      "A flag on aipm add, update, and remove. It installs or manages a skill without creating or updating aipm.package.json and aipm-lock.json.",
+    href: "/use#use-no-init",
+    linkLabel: "Install without project tracking",
+  },
+  {
     term: "SKILL.md frontmatter",
     definition:
       "The YAML block between --- lines at the top of SKILL.md. name and description are required; other fields depend on the AI tool.",

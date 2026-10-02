@@ -41,7 +41,7 @@ const useCommands: CommandItem[] = [
     title: "Update packages",
     description: "Finds newer registry versions and reinstalls one package or all configured packages.",
     code: "aipm update",
-    options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--token <token>: override stored login for CI", "--ci: do not prompt interactively"],
+    options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--no-init: update one package to latest without reading or writing aipm.package.json or aipm-lock.json", "--token <token>: override stored login for CI", "--ci: do not prompt interactively"],
   },
   {
     title: "Initialize a project",
@@ -53,7 +53,7 @@ const useCommands: CommandItem[] = [
     title: "Install one package",
     description: "Adds a package to aipm.package.json and writes target-specific files into the project.",
     code: "aipm add @scope/name@1.0.0 --target claude --ci",
-    options: ["--target <tool>: cursor, claude, codex, or *", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
+    options: ["--target <tool>: cursor, claude, codex, or *", "--no-init: install without creating or updating aipm.package.json or aipm-lock.json", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
   },
   {
     title: "Search packages",
@@ -83,7 +83,7 @@ const useCommands: CommandItem[] = [
     title: "Remove a package",
     description: "Removes a package from AIPM config and lock files; review tool-written files before committing.",
     code: "aipm remove @scope/name",
-    options: ["Alias: aipm rm @scope/name", "--global: remove from global config"],
+    options: ["Alias: aipm rm @scope/name", "--no-init: delete discovered skill files without reading or writing aipm.package.json or aipm-lock.json", "--global: remove from global config"],
   },
   {
     title: "Show CLI version",
@@ -240,7 +240,9 @@ export default function CommandsPage() {
           <p>
             Pin exact versions with <code>aipm add @scope/name@1.2.0</code>, commit{" "}
             <code>aipm.package.json</code> and <code>aipm-lock.json</code>, and teammates run{" "}
-            <code>aipm install</code>. Version ranges aren&apos;t supported. See{" "}
+            <code>aipm install</code>. Version ranges aren&apos;t supported. For a one-shot install that
+            skips those files, add <code>--no-init</code>. See{" "}
+            <Link href="/use#use-no-init">install without project tracking</Link> and{" "}
             <Link href="/guides/share-claude-skills-with-team">how to share Claude skills with your team</Link>.
           </p>
         </section>

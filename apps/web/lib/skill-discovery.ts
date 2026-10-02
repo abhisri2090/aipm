@@ -47,6 +47,7 @@ export const SKILL_DISCOVERY_PAGES = [
       { label: "Install the CLI", code: "npm install -g @aipm-registry/cli" },
       { label: "Initialize", code: "aipm init --target cursor" },
       { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target cursor --ci" },
+      { label: "Or install once, no project files", code: "aipm add @scope/name@1.0.0 --target cursor --no-init" },
     ],
     faqs: [
       {
@@ -57,7 +58,7 @@ export const SKILL_DISCOVERY_PAGES = [
       {
         question: "How do I install a Cursor skill with AIPM?",
         answer:
-          "Install the AIPM CLI, then run aipm add @scope/name@version --target cursor (writes .cursor/skills/<skill>/SKILL.md), --target claude (writes .claude/skills/<skill>/SKILL.md), or --target codex (writes .agents/skills/<skill>/SKILL.md). Review the package source on its registry page before you install.",
+          "Install the AIPM CLI, then run aipm add @scope/name@version --target cursor (writes .cursor/skills/<skill>/SKILL.md), --target claude (writes .claude/skills/<skill>/SKILL.md), or --target codex (writes .agents/skills/<skill>/SKILL.md). Add --no-init to skip aipm.package.json and the lockfile. Review the package source on its registry page before you install.",
       },
       {
         question: "How is AIPM different from copying skills by hand?",
@@ -107,6 +108,7 @@ export const SKILL_DISCOVERY_PAGES = [
       { label: "Install the CLI", code: "npm install -g @aipm-registry/cli" },
       { label: "Initialize for Claude Code", code: "aipm init --target claude" },
       { label: "Add a skill", code: "aipm add @scope/name@1.0.0 --target claude --ci" },
+      { label: "Or install once, no project files", code: "aipm add @scope/name@1.0.0 --target claude --no-init" },
     ],
     faqs: [
       {
@@ -117,7 +119,7 @@ export const SKILL_DISCOVERY_PAGES = [
       {
         question: "How do I install Claude Code skills with AIPM?",
         answer:
-          "Install the AIPM CLI, run aipm init --target claude, then aipm add @scope/name@version --target claude. Open the skill page first to review publisher, version, and files.",
+          "Install the AIPM CLI, run aipm init --target claude, then aipm add @scope/name@version --target claude. Add --no-init to install once without aipm.package.json. Open the skill page first to review publisher, version, and files.",
       },
       {
         question: "Is this a Claude Code skills marketplace or a package manager?",

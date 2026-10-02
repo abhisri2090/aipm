@@ -51,6 +51,29 @@ export default function UsePage() {
           <CodeBlock code="aipm init --target claude" trackingEvent="CLI Init Command Copied" />
         </section>
 
+        <section aria-labelledby="use-no-init">
+          <p className={shell.eyebrow} id="use-no-init">
+            One-shot install
+          </p>
+          <h2>Install without project tracking</h2>
+          <p>
+            <code>--no-init</code> writes the skill into your AI tool folder and leaves{" "}
+            <code>aipm.package.json</code> and <code>aipm-lock.json</code> untouched. Use it when you
+            want the files once and do not need teammates to restore the same pin with{" "}
+            <code>aipm install</code>.
+          </p>
+          <CodeBlock
+            code="aipm add @scope/name@1.0.0 --target claude --no-init"
+            trackingEvent="Example Package Install Command Copied"
+          />
+          <p>
+            The same flag works on <code>aipm update @scope/name --no-init</code> (latest version, and a
+            package name is required) and <code>aipm remove @scope/name --no-init</code>. Prompt URLs
+            still need project tracking. If the project is already initialized, the CLI asks whether to
+            keep one-shot mode. <code>--ci --no-init</code> fails in that case.
+          </p>
+        </section>
+
         <section aria-labelledby="use-private-packages">
           <p className={shell.eyebrow} id="use-private-packages">
             Private packages

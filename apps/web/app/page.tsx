@@ -246,9 +246,10 @@ export default async function HomePage() {
           <div>
             <dt>How do you start?</dt>
             <dd>
-              Install the CLI, run <code>aipm init</code>, then add a skill with{" "}
+              Install the CLI, then add a skill with{" "}
               <code>aipm add @scope/name@version --target claude</code> (or{" "}
-              <code>--target codex</code>).
+              <code>--target codex</code>). Run <code>aipm init</code> first to pin versions in the
+              project, or pass <code>--no-init</code> to install once without project files.
             </dd>
           </div>
         </dl>
@@ -333,7 +334,8 @@ export default async function HomePage() {
             </div>
             <p>
               Create an AIPM config file in the current project. Use <code>--target codex</code> for
-              Codex; Cursor loads skills from either folder.
+              Codex; Cursor loads skills from either folder. Skip this step and add{" "}
+              <code>--no-init</code> on the next command for a one-shot install.
             </p>
             <CodeBlock code="aipm init --target claude" trackingEvent="CLI Init Command Copied" />
           </article>
