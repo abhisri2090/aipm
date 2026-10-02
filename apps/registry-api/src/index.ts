@@ -2668,27 +2668,27 @@ export async function createApp(): Promise<FastifyInstance> {
       const useCursor = sort === "newest" && request.query.offset === undefined;
       const offset = Math.max(0, Number(request.query.offset ?? 0) || 0);
       const readAccess = await resolveReadAccess(accountAuth, request);
-      const rows = await metadata.list(query, {
-        limit: includeDemo ? limit + 1 : MAX_LIST_LIMIT + 1,
-        cursor: parsedCursor.value,
-        offset: useCursor ? undefined : offset,
-        category,
-        target,
-        publisher,
-        sort,
-      });
-      let visibleRows = includeDemo ? rows : rows.filter((row) => !isHiddenPublicPackage(row.name));
-      visibleRows = visibleRows.filter((row) => !row.yanked_at);
+      // The list query is capped at 101 rows, and hidden, yanked, private, and
+      // deprecated skills are removed only after that fetch. Asking for limit+1
+      // therefore clears nextCursor when one filtered row occupies the lookahead
+      // slot, even though older public skills still exist. Scan forward until a
+      // visible lookahead row is in hand or the underlying list is exhausted.
+      const batchLimit = includeDemo ? limit + 1 : MAX_LIST_LIMIT + 1;
+      type ListedSkillRow = Awaited<ReturnType<typeof metadata.list>>[number];
 
-      if (accountAuth) {
-        const names = [...new Set(visibleRows.map((row) => row.name))];
+      async function visibleSkillRows(rows: ListedSkillRow[]): Promise<ListedSkillRow[]> {
+        let visible = includeDemo ? rows : rows.filter((row) => !isHiddenPublicPackage(row.name));
+        visible = visible.filter((row) => !row.yanked_at);
+        if (!accountAuth) return visible;
+
+        const names = [...new Set(visible.map((row) => row.name))];
         const visibilityMap = await getPackageVisibilityMap(accountAuth.pool, names);
         const accessiblePrivate = readAccess.userId
           ? await listAccessiblePrivatePackageNames(accountAuth.pool, readAccess.userId, names)
           : new Set<string>();
         const deprecatedMap = await getDeprecatedPackageNames(accountAuth.pool, names);
         const exactNameQuery = query.startsWith("@") ? query.toLowerCase() : null;
-        visibleRows = visibleRows.filter((row) => {
+        return visible.filter((row) => {
           const visibility = visibilityMap.get(row.name) ?? "public";
           if (visibility === "private") {
             if (!includePrivate) return false;
@@ -2699,9 +2699,60 @@ export async function createApp(): Promise<FastifyInstance> {
         });
       }
 
+      let visibleRows: ListedSkillRow[] = [];
+      let cursorExhausted = false;
+      let scanCursor = parsedCursor.value;
+      if (useCursor) {
+        const seenNames = new Set<string>();
+        for (let batch = 0; batch < 25; batch += 1) {
+          const rows = await metadata.list(query, {
+            limit: batchLimit,
+            cursor: scanCursor,
+            offset: undefined,
+            category,
+            target,
+            publisher,
+            sort,
+          });
+          for (const row of await visibleSkillRows(rows)) {
+            if (seenNames.has(row.name)) continue;
+            seenNames.add(row.name);
+            visibleRows.push(row);
+          }
+          if (visibleRows.length > limit) break;
+          if (rows.length < batchLimit) {
+            cursorExhausted = true;
+            break;
+          }
+          const advanced = rows[rows.length - 1]?.created_at.toISOString() ?? null;
+          if (!advanced || advanced === scanCursor) {
+            cursorExhausted = true;
+            break;
+          }
+          scanCursor = advanced;
+        }
+      } else {
+        visibleRows = await visibleSkillRows(
+          await metadata.list(query, {
+            limit: batchLimit,
+            cursor: parsedCursor.value,
+            offset,
+            category,
+            target,
+            publisher,
+            sort,
+          }),
+        );
+      }
+
       const page = visibleRows.slice(0, limit);
-      const hasMore = visibleRows.length > limit;
-      const nextCursor = useCursor && hasMore ? page[page.length - 1]?.created_at.toISOString() : null;
+      const hasMore = useCursor ? visibleRows.length > limit || !cursorExhausted : visibleRows.length > limit;
+      const nextCursor =
+        useCursor && hasMore
+          ? visibleRows.length > limit
+            ? (page[page.length - 1]?.created_at.toISOString() ?? null)
+            : (scanCursor ?? null)
+          : null;
       const nextOffset = !useCursor && hasMore ? offset + page.length : null;
       const publishers = accountAuth
         ? await listPublicPackagePublishers(accountAuth.pool, [...new Set(page.map((row) => row.name))])
