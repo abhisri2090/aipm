@@ -19,6 +19,7 @@ const groups = [
     title: "Resources",
     links: [
       { href: "/resources", label: "Resource hub" },
+      { href: "/guides", label: "Guides" },
       { href: "/examples", label: "Examples" },
       { href: "/templates", label: "Templates" },
       { href: "/glossary", label: "Glossary" },
