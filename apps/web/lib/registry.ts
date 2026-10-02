@@ -230,6 +230,11 @@ export function installCommand(pkg: Pick<PackageSummary, "name" | "version">): s
   return `aipm add ${pkg.name}@${pkg.version}`;
 }
 
+/** One-shot install: skill files only, no aipm.package.json or lockfile. */
+export function installCommandNoInit(pkg: Pick<PackageSummary, "name" | "version">): string {
+  return `${installCommand(pkg)} --no-init`;
+}
+
 export function displayTargets(targets: string[]): string[] {
   return targets.includes("*") ? ["All tools"] : targets;
 }

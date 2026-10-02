@@ -150,6 +150,7 @@ export default async function StateOfAgentSkillsPage() {
               <tr><td>Install for Codex</td><td><code>aipm add @scope/name@version --target codex --ci</code></td><td><code>.agents/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
               <tr><td>Install with the Cursor target</td><td><code>aipm add @scope/name@version --target cursor --ci</code></td><td><code>.cursor/skills/&lt;skill&gt;/SKILL.md</code></td></tr>
               <tr><td>Restore pinned versions</td><td><code>aipm install --ci</code></td><td>Reinstalls the exact versions listed in <code>aipm.package.json</code></td></tr>
+              <tr><td>Install without project tracking</td><td><code>aipm add @scope/name@version --target claude --no-init</code></td><td>Skill files only. No <code>aipm.package.json</code> or <code>aipm-lock.json</code></td></tr>
             </tbody>
           </table>
           <p>

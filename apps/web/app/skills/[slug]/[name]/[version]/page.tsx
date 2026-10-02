@@ -10,6 +10,7 @@ import {
   getPackage,
   installCommand,
   installCommandForTarget,
+  installCommandNoInit,
   isIndexablePackage,
   listPackages,
   packagePath,
@@ -166,6 +167,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
     title: pkg.manifest.title,
   });
   const command = installCommand(summary);
+  const noInitCommand = installCommandNoInit(summary);
   const invokeCommand = resolveSkillInvokeCommand(summary.name);
   const canonicalUrl = `${SITE_URL}${packagePath(summary.name, summary.version)}`;
   const targetLabel = displayTargets(summary.targets).join(", ");
@@ -183,6 +185,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
     examples: pkg.manifest.examples ?? [],
     releaseNotes: pkg.manifest.releaseNotes ?? null,
     installCommand: command,
+    noInitInstallCommand: noInitCommand,
     targetInstallCommands: commandTargets(summary.targets).map((target) => ({
       target,
       command: installCommandForTarget(summary, target),
@@ -277,7 +280,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                 "@type": "HowTo",
                 "@id": `${canonicalUrl}#install`,
                 name: `Install ${summary.name}@${summary.version}`,
-                description: `Install ${summary.name}@${summary.version} into a supported AI tool with AIPM.`,
+                description: `Install ${summary.name}@${summary.version} into a supported AI tool with AIPM. Pass --no-init to skip aipm.package.json and the lockfile.`,
                 tool: [{ "@type": "HowToTool", name: "AIPM CLI" }],
                 step: [
                   {
@@ -288,7 +291,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
                   {
                     "@type": "HowToStep",
                     name: "Initialize the project",
-                    text: "aipm init --target cursor",
+                    text: "aipm init --target cursor, or skip this and add --no-init to the install command",
                   },
                   {
                     "@type": "HowToStep",

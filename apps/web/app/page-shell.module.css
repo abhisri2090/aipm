@@ -158,8 +158,20 @@
 }
 
 .installPanel h2,
+.installPanel h3,
+.installPanel p,
 .howToUsePanel h2 {
   margin: 0;
+}
+
+.installPanel h3 {
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+.installPanel p {
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .howToUsePanel {

@@ -15,6 +15,7 @@ import {
   GITHUB_LOGIN_URL,
   installCommand,
   installCommandForTarget,
+  installCommandNoInit,
   isUnverifiedImportedPackage,
   packagePath,
   packageFilesPath,
@@ -68,6 +69,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
     title: pkg.manifest.title,
   });
   const command = installCommand(summary);
+  const noInitCommand = installCommandNoInit(summary);
   const about = resolveSkillAbout({
     usage: pkg.manifest.usage,
     agentDescription: pkg.manifest.agentDescription,
@@ -121,10 +123,21 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
         <div className={shell.detailMain}>
           <article className={cn(shell.panel, cards.stepCard, shell.installPanel)}>
             <h2>Install Skill</h2>
+            <p>Pins this version in aipm.package.json and aipm-lock.json.</p>
             <CodeBlock
               code={command}
               trackingEvent="Package Install Command Copied"
               trackingProperties={{ package: summary.name, target: "default", version: summary.version }}
+            />
+            <h3>Without project tracking</h3>
+            <p>
+              Writes the skill files only. Add <code>--no-init</code> to skip aipm.package.json and the
+              lockfile.
+            </p>
+            <CodeBlock
+              code={noInitCommand}
+              trackingEvent="Package Install Command Copied"
+              trackingProperties={{ package: summary.name, target: "no-init", version: summary.version }}
             />
           </article>
 
@@ -446,6 +459,10 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             <h2 id="target-install-title">Install command by target</h2>
           </div>
         </div>
+        <p>
+          Add <code>--no-init</code> to any of these when you want the skill files without{" "}
+          <code>aipm.package.json</code> or <code>aipm-lock.json</code>.
+        </p>
         <div className={cards.exampleGrid}>
           {allTargetCommands.map((targetCommand) => (
             <article className={cn(shell.panel, cards.stepCard)} key={targetCommand.target}>

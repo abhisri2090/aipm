@@ -105,7 +105,9 @@ export default function TargetsPage() {
         <p>
           When your project uses multiple AI tools, or when you want to override automatic detection,
           use <code>--target cursor</code>, <code>--target claude</code>, or <code>--target codex</code> with{" "}
-          <code>aipm add</code>. The target flag tells AIPM exactly where to write the skill files.
+          <code>aipm add</code>. The target flag tells AIPM exactly where to write the skill files. Add{" "}
+          <code>--no-init</code> on that command to write the skill files without{" "}
+          <code>aipm.package.json</code> or <code>aipm-lock.json</code>.
         </p>
         <p>
           Some packages support only one target, while others include files for multiple AI tools. The package

@@ -49,6 +49,18 @@ const faqs: { question: string; answer: ReactNode; text?: string }[] = [
     text: "Check that you used the right --target: --target cursor writes .cursor/skills/<skill>/SKILL.md, --target claude writes .claude/skills/<skill>/SKILL.md for Claude Code, and --target codex writes .agents/skills/<skill>/SKILL.md for Codex. Then restart or reload the AI tool if it caches project files. To see every folder each tool reads, go to where are Claude skills stored?",
   },
   {
+    question: "Can I install a skill without aipm.package.json?",
+    answer: (
+      <>
+        Yes. Add <code>--no-init</code> to <code>aipm add</code>, <code>aipm update</code>, or{" "}
+        <code>aipm remove</code>. AIPM writes or removes the skill files and does not create or update{" "}
+        <code>aipm.package.json</code> or <code>aipm-lock.json</code>. Prompt URLs still need project
+        tracking. See the <Link href="/use#use-no-init">use guide</Link>.
+      </>
+    ),
+    text: "Yes. Add --no-init to aipm add, aipm update, or aipm remove. AIPM writes or removes the skill files and does not create or update aipm.package.json or aipm-lock.json. Prompt URLs still need project tracking. See the use guide.",
+  },
+  {
     question: "How does my team keep the same skill versions?",
     answer:
       "Commit aipm.package.json and aipm-lock.json. Teammates run aipm install to get the same pinned versions, aipm update moves a skill to its latest version, and aipm remove uninstalls it. In CI, run aipm install --ci --target <tool> with an org install token. Pin exact versions (@scope/name@1.2.0); version ranges are not supported.",

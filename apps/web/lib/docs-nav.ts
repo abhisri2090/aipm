@@ -211,7 +211,7 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
       {
         href: "/use",
         label: "Use AIPM",
-        body: "Install skills into a project and keep them with your code.",
+        body: "Install skills into a project, or once with --no-init and no project files.",
       },
       {
         href: "/commands",
