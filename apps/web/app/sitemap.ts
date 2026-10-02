@@ -4,9 +4,13 @@ import { SEO_GUIDES } from "../lib/seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
 import { PROMPT_TOPIC_HUBS } from "../lib/prompt-topics";
 import { PROMPT_LINK_SNAPSHOT_DATE, listGeneratedSeriesHubs } from "../lib/prompt-links";
+import { listDocSectionIndexes } from "../lib/doc-section-index";
 
 /** Fallback when a path has no content-specific date (hub SEO refresh). */
 const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
+
+/** Docs section indexes added with /guides. */
+const DOC_SECTION_INDEX_LASTMOD = new Date("2026-10-02T00:00:00.000Z");
 
 /** Per-path lastmod for static marketing pages (ISO date → Date). */
 const STATIC_PAGE_LASTMOD: Record<string, Date> = {
@@ -80,6 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/thanks",
     "/compatibility",
     "/best-claude-skills",
+    ...listDocSectionIndexes().map((section) => section.path),
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
     ...PROMPT_TOPIC_HUBS.map((hub) => `/prompts/topics/${hub.slug}`),
@@ -108,8 +113,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
   ]);
 
+  const docSectionUpdatedAt = new Map(
+    listDocSectionIndexes().map((section) => [section.path, DOC_SECTION_INDEX_LASTMOD]),
+  );
+
   return staticPaths.map((path) => {
     const lastModified =
+      docSectionUpdatedAt.get(path) ??
       guideUpdatedAt.get(path) ??
       discoveryUpdatedAt.get(path) ??
       topicUpdatedAt.get(path) ??

@@ -38,7 +38,7 @@ export function Header() {
 
   function isActive(href: string): boolean {
     if (href === "/resources") {
-      return DOC_PATHS.includes(pathname);
+      return DOC_PATHS.includes(pathname) || pathname.startsWith("/resources/");
     }
 
     if (href === "/skills") {
