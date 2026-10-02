@@ -79,7 +79,7 @@ An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI
 
 ### How do you install a Claude Code or Cursor skill?
 
-Install the AIPM CLI and run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). Cursor loads skills from both folders, so use one of these targets for Cursor. Review the installed files before use. See [How to install Claude skills](${site}/guides/how-to-install-claude-code-skills) and [Install Cursor skills](${site}/guides/how-to-install-cursor-skills).
+Install the AIPM CLI and run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). For Cursor, use --target cursor (writes .cursor/skills/<skill>/SKILL.md). Review the installed files before use. See [How to install Claude skills](${site}/guides/how-to-install-claude-code-skills) and [Install Cursor skills](${site}/guides/how-to-install-cursor-skills).
 
 ## Install
 

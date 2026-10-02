@@ -401,6 +401,70 @@ describe("registry API production behavior", () => {
     expect(second.json().nextCursor).toBeNull();
   });
 
+  it("keeps nextCursor when a filtered skill fills the lookahead row", async () => {
+    const hiddenName = "@team/sample-skill";
+    const packages = Object.fromEntries(
+      [
+        ...Array.from({ length: 101 }, (_, index) => {
+          const name = `@catalog/skill-${String(index).padStart(3, "0")}`;
+          return [name, index] as const;
+        }),
+        [hiddenName, -1] as const,
+      ].map(([name, index]) => [
+        name,
+        {
+          "1.0.0": {
+            manifest: {
+              schemaVersion: "0.1",
+              name,
+              version: "1.0.0",
+              type: "skill",
+              description: `Catalog skill ${name}`,
+              entry: "SKILL.md",
+              targets: ["*"],
+            },
+            integrity: `sha256-${index}`,
+            blob_path: `${index}.tgz`,
+            size_bytes: 100,
+            created_at: new Date(Date.UTC(2026, 0, 1, 0, 0, 1_000 - index)).toISOString(),
+          },
+        },
+      ]),
+    );
+    await writeFile(join(currentDataDir, "package-index.json"), JSON.stringify({ packages }));
+
+    const first = await app!.inject({ method: "GET", url: "/v1/skills?limit=100" });
+    expect(first.statusCode).toBe(200);
+    const firstSkills = first.json().skills as Array<{ name: string }>;
+    expect(firstSkills).toHaveLength(100);
+    expect(firstSkills.map((skill) => skill.name)).not.toContain(hiddenName);
+
+    const offsetPage = await app!.inject({ method: "GET", url: "/v1/skills?limit=100&offset=100" });
+    expect(offsetPage.statusCode).toBe(200);
+    const firstNames = new Set(firstSkills.map((skill) => skill.name));
+    const laterPublic = (offsetPage.json().skills as Array<{ name: string }>).filter(
+      (skill) => skill.name !== hiddenName && !firstNames.has(skill.name),
+    );
+    expect(laterPublic.length).toBeGreaterThan(0);
+    expect(first.json().nextCursor).toEqual(expect.any(String));
+
+    const seen = new Set(firstNames);
+    let cursor = first.json().nextCursor as string | null;
+    for (let page = 0; page < 10 && cursor; page += 1) {
+      const response = await app!.inject({
+        method: "GET",
+        url: `/v1/skills?limit=100&cursor=${encodeURIComponent(cursor)}`,
+      });
+      expect(response.statusCode).toBe(200);
+      const skills = response.json().skills as Array<{ name: string }>;
+      expect(skills.map((skill) => skill.name)).not.toContain(hiddenName);
+      for (const skill of skills) seen.add(skill.name);
+      cursor = response.json().nextCursor;
+    }
+    expect([...seen]).toEqual(expect.arrayContaining(laterPublic.map((skill) => skill.name)));
+    expect(seen.has("@catalog/skill-100")).toBe(true);
+  });
+
   it("rejects invalid list cursors without leaking storage errors", async () => {
     const response = await app!.inject({ method: "GET", url: "/v1/skills?cursor=not-a-date" });
     expect(response.statusCode).toBe(400);
