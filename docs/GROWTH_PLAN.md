@@ -220,6 +220,9 @@ Week 4:
 
 ## 8. Grow the Skill Catalog to 10,000
 
+> **STATUS: PAUSED (October 2026)**
+> This growth initiative is paused. Do not continue generating toward the 10,000 target. The existing prompt and skill catalog remains live. Resume only after explicit approval.
+
 ### Goal and counting rule
 
 Target 10,000 **distinct, searchable skill records**, not 10,000 automatically mirrored packages. Show a separate count for packages that have passed licensing, validation, and security checks and are installable from AIPM. Count a source skill by canonical GitHub repository and directory; do not inflate the total with forks, duplicate copies, or versions.
