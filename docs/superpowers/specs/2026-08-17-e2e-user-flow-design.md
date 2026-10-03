@@ -93,7 +93,7 @@ Install dirs are temp prefixes so the machine’s global `aipm` is not overwritt
 6. **Token** — open `/dashboard/packages/<scope>/<name>`, click **Generate token**, read the token from the first token result `CodeBlock` (the raw token, not the `AIPM_TOKEN=...` command).
 7. **Publish** — in a temp folder, `aipm publish init --name <pkg> --version 0.0.<unixSeconds> --template blank --here`, then `aipm publish <dir> --registry <API_URL> --token <token>` (same one-shot publish the CLI already supports). Must finish within the 5-minute TTL.
 8. **Website** — GET the public package page; assert it is 200 and includes `aipm add <name>@<version>`.
-9. **Install** — temp Cursor project: `aipm init --registry <API_URL> --target cursor`, then `aipm add <name>@<version> --target cursor --ci`. Assert at least one markdown file under `.cursor/aipm/skills`.
+9. **Install** — temp Cursor project: `aipm init --registry <API_URL> --target cursor`, then `aipm add <name>@<version> --target cursor --ci`. Assert at least one markdown file under `.cursor/skills`.
 10. **Cleanup** — always, in `finally`.
 
 ### Cleanup

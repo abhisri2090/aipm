@@ -6,7 +6,7 @@
 
 ## Context
 
-AIPM can install skills into Cursor (`.cursor/aipm/skills/<short>.md`) and Claude (`.claude/aipm/skills/<short>/SKILL.md`). Codex is documented in product copy and the expansion plan but is not in `AiToolSchema`, has no adapter, and is rejected by CLI `--target`.
+AIPM can install skills into Cursor (`.cursor/skills/<short>/SKILL.md`) and Claude (`.claude/skills/<short>/SKILL.md`). Codex is documented in product copy and the expansion plan but is not in `AiToolSchema`, has no adapter, and is rejected by CLI `--target`.
 
 This pass is **core only**: schema, adapter, detection, engine wiring, CLI flags/prompts/errors, and tests. No web filters, docs/guides rewrite, or MCP config.
 
