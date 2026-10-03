@@ -34,7 +34,7 @@ export default function AboutPage() {
               "@type": "Organization",
               name: "AIPM",
               url: SITE_URL,
-              description: "A registry and CLI for installing reusable AI skills, prompts, rules, MCP setup, and tool files into supported assistants.",
+              description: "A registry and CLI for installing reusable AI skills and prompts into supported assistants.",
             },
           }),
         }}
