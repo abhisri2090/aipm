@@ -11,6 +11,8 @@
 [![license](https://img.shields.io/github/license/abhisri2090/aipm)](LICENSE)
 [![website](https://img.shields.io/badge/registry-aipm--registry.com-0969da)](https://www.aipm-registry.com)
 
+<a href="https://www.producthunt.com/products/aipm-2?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-aipm-2" target="_blank" rel="noopener noreferrer"><img alt="AIPM - Install reusable AI skills like packages | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1240343&amp;theme=light&amp;t=1791045314881"></a>
+
 Open-source **AI package manager** — publish and install AI skills into Cursor, Claude Code, and Codex project folders.
 
 ```bash
