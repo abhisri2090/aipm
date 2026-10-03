@@ -26,19 +26,17 @@ export default function PublishPage() {
     },
     {
       title: "Keep team setup in one place",
-      body: "Teams can reserve package names and share approved prompts, skills, and MCP setup without sending files through chat.",
+      body: "Teams can reserve package names and share approved skills without sending files through chat.",
     },
     {
       title: "Review every change",
-      body: "Each package has versions, so users can see when a skill or prompt changed.",
+      body: "Skills have versions, so users can see when a skill changed and review what is new.",
     },
   ];
 
   const useCases = [
     "Internal skills for code review, triage, release notes, and support work.",
-    "MCP server setup, tool instructions, and assistant config shared as packages.",
-    "Shared rules for Cursor, Claude, Codex, and future AI tools.",
-    "Public packages that help other developers install useful AI workflows.",
+    "Public skills that help other developers install useful AI workflows.",
   ];
 
   const publishingSteps = [
@@ -58,9 +56,9 @@ export default function PublishPage() {
         <p className={shell.eyebrow}>Publish with AIPM</p>
         <h1>Publish AI skills so others can install them.</h1>
         <p className={shell.lede}>
-          AIPM helps you package prompts, rules, MCP setup, and tool files once. Then other projects
-          can install the same setup from the registry. Publishing uses account ownership,
-          reserved package names, and short-lived CLI tokens.
+          AIPM helps you package skills once. Then other projects can install the same setup from
+          the registry. Publishing uses account ownership, reserved package names, and short-lived
+          CLI tokens.
         </p>
         <p>
           <strong>Short answer:</strong> create a skill folder, reserve its package name, check the

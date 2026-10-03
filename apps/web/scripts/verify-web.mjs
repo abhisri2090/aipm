@@ -79,7 +79,7 @@ const requiredPages = [
     title: "Publish an AI Agent Skill to the AIPM Registry",
     h1: "Publish AI skills so others can install them.",
     jsonLd: false,
-    includes: ["AI package distribution", "MCP setup", "What teams can share", "/publish/guide"],
+    includes: ["AI package distribution", "What teams can share", "/publish/guide"],
   },
   {
     path: "/publish/guide",
