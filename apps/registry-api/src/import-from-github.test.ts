@@ -300,6 +300,55 @@ describe("fetchGitHubFolder", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("streams the tarball to disk without buffering the entire archive in memory", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-gh-stream-"));
+    try {
+      const repoRoot = join(root, "large-repo-abc12345");
+      await mkdir(join(repoRoot, "skills/my-skill"), { recursive: true });
+      await writeFile(join(repoRoot, "skills/my-skill/SKILL.md"), "# My Skill\n", "utf8");
+      const tgzPath = join(root, "repo.tgz");
+      await execFileAsync("tar", ["-czf", tgzPath, "-C", root, "large-repo-abc12345"]);
+      const tarball = await readFile(tgzPath);
+
+      let arrayBufferCalled = false;
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        const url = String(input);
+        if (url.includes("/git/ref/heads/main")) {
+          return new Response(
+            JSON.stringify({ object: { sha: "abc12345abc12345abc12345abc12345abc12345" } }),
+            { status: 200 },
+          );
+        }
+        if (url.includes("codeload.github.com") && url.includes("/tar.gz/")) {
+          const response = new Response(tarball, { status: 200 });
+          const originalArrayBuffer = response.arrayBuffer.bind(response);
+          Object.defineProperty(response, "arrayBuffer", {
+            value: async () => {
+              arrayBufferCalled = true;
+              return originalArrayBuffer();
+            },
+            writable: true,
+            configurable: true,
+          });
+          return response;
+        }
+        return new Response("unexpected", { status: 500 });
+      });
+
+      const result = await githubImport.fetchGitHubFolder({
+        owner: "large-org",
+        repo: "large-repo",
+        branch: "main",
+        path: "skills/my-skill",
+      });
+
+      expect(result.files["SKILL.md"]!.toString("utf8")).toBe("# My Skill\n");
+      expect(arrayBufferCalled).toBe(false);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("listGitHubSubfolders", () => {

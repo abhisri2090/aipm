@@ -1,8 +1,11 @@
 import { createHash } from "node:crypto";
 import { execFile } from "node:child_process";
+import { createWriteStream } from "node:fs";
 import { mkdtemp, mkdir, readdir, readFile, rm, writeFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 import type pg from "pg";
 import { getLatestProvenance, listPackageVersionsForName, setPackageGithubStars } from "./db.js";
@@ -411,8 +414,12 @@ export async function fetchGitHubFolder(
       `GitHub archive download for ${resolved.owner}/${resolved.repo}@${commitSha} failed: ${response.status}`,
     );
   }
-  const tarball = Buffer.from(await response.arrayBuffer());
-  const files = await extractFilesFromGitHubTarball(tarball, resolved.path);
+  if (!response.body) {
+    throw new Error(
+      `GitHub archive download for ${resolved.owner}/${resolved.repo}@${commitSha} returned no body`,
+    );
+  }
+  const files = await extractFilesFromGitHubTarballStream(response.body, resolved.path);
   return { files, commitSha };
 }
 
@@ -424,40 +431,64 @@ export async function extractFilesFromGitHubTarball(
   const tgzPath = join(tempDir, "repo.tgz");
   try {
     await writeFile(tgzPath, tarball);
-    await execFileAsync("tar", ["-xzf", tgzPath, "-C", tempDir]);
-
-    async function walk(dir: string): Promise<string[]> {
-      const entries = await readdir(dir, { withFileTypes: true });
-      const paths: string[] = [];
-      for (const entry of entries) {
-        const full = join(dir, entry.name);
-        if (entry.isDirectory()) {
-          paths.push(...(await walk(full)));
-        } else if (entry.isFile()) {
-          paths.push(full);
-        }
-      }
-      return paths;
-    }
-
-    const allFiles = await walk(tempDir);
-    const files: Record<string, Buffer> = {};
-    for (const fullPath of allFiles) {
-      if (fullPath === tgzPath) continue;
-      const relativeFromTemp = fullPath.slice(tempDir.length + 1);
-      const slash = relativeFromTemp.indexOf("/");
-      if (slash === -1) continue;
-      const repoRelative = relativeFromTemp.slice(slash + 1);
-      const relativePath = folderBlobRelativePath(repoRelative, folderPath);
-      if (!relativePath) continue;
-      const fileStat = await stat(fullPath);
-      if (!fileStat.isFile()) continue;
-      files[relativePath] = await readFile(fullPath);
-    }
-    return files;
+    return await extractTarballFromDisk(tempDir, tgzPath, folderPath);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
+}
+
+export async function extractFilesFromGitHubTarballStream(
+  bodyStream: ReadableStream<Uint8Array>,
+  folderPath: string,
+): Promise<Record<string, Buffer>> {
+  const tempDir = await mkdtemp(join(tmpdir(), "aipm-gh-tar-"));
+  const tgzPath = join(tempDir, "repo.tgz");
+  try {
+    const nodeReadable = Readable.fromWeb(bodyStream as Parameters<typeof Readable.fromWeb>[0]);
+    const writeStream = createWriteStream(tgzPath);
+    await pipeline(nodeReadable, writeStream);
+    return await extractTarballFromDisk(tempDir, tgzPath, folderPath);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+}
+
+async function extractTarballFromDisk(
+  tempDir: string,
+  tgzPath: string,
+  folderPath: string,
+): Promise<Record<string, Buffer>> {
+  await execFileAsync("tar", ["-xzf", tgzPath, "-C", tempDir]);
+
+  async function walk(dir: string): Promise<string[]> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const paths: string[] = [];
+    for (const entry of entries) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        paths.push(...(await walk(full)));
+      } else if (entry.isFile()) {
+        paths.push(full);
+      }
+    }
+    return paths;
+  }
+
+  const allFiles = await walk(tempDir);
+  const files: Record<string, Buffer> = {};
+  for (const fullPath of allFiles) {
+    if (fullPath === tgzPath) continue;
+    const relativeFromTemp = fullPath.slice(tempDir.length + 1);
+    const slash = relativeFromTemp.indexOf("/");
+    if (slash === -1) continue;
+    const repoRelative = relativeFromTemp.slice(slash + 1);
+    const relativePath = folderBlobRelativePath(repoRelative, folderPath);
+    if (!relativePath) continue;
+    const fileStat = await stat(fullPath);
+    if (!fileStat.isFile()) continue;
+    files[relativePath] = await readFile(fullPath);
+  }
+  return files;
 }
 
 export function detectLicense(
