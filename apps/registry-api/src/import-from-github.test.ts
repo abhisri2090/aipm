@@ -323,10 +323,14 @@ describe("fetchGitHubFolder", () => {
         if (url.includes("codeload.github.com") && url.includes("/tar.gz/")) {
           const response = new Response(tarball, { status: 200 });
           const originalArrayBuffer = response.arrayBuffer.bind(response);
-          response.arrayBuffer = async () => {
-            arrayBufferCalled = true;
-            return originalArrayBuffer();
-          };
+          Object.defineProperty(response, "arrayBuffer", {
+            value: async () => {
+              arrayBufferCalled = true;
+              return originalArrayBuffer();
+            },
+            writable: true,
+            configurable: true,
+          });
           return response;
         }
         return new Response("unexpected", { status: 500 });
