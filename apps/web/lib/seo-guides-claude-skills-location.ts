@@ -26,7 +26,7 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
       "claude code commands folder",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     lastChecked: "2026-09-25",
     sections: [
       {
@@ -246,5 +246,33 @@ claude plugin validate ~/.claude/skills`,
       { label: "OpenAI Codex docs: Build skills", href: "https://learn.chatgpt.com/docs/build-skills" },
       { label: "Agent Skills specification", href: "https://agentskills.io/specification" },
     ],
+    nextSteps: [
+      {
+        label: "Browse Claude skills and agent skills",
+        href: "/skills",
+        description: "Ready-made skills you can add to Claude Code, Cursor or Codex. Each page shows what the skill does.",
+      },
+      {
+        label: "How to install Claude skills",
+        href: "/guides/how-to-install-claude-code-skills",
+        description: "Step by step for the Claude app, Claude Code, GitHub and the AIPM command-line tool.",
+      },
+      {
+        label: "Share Claude skills with your team",
+        href: "/guides/share-claude-skills-with-team",
+        description: "Ways to give everyone on your team the same skills, and keep them up to date.",
+      },
+      {
+        label: "SKILL.md frontmatter reference",
+        href: "/guides/skill-md-frontmatter-reference",
+        description: "What goes in the short header at the top of SKILL.md (called frontmatter), and how to fix errors.",
+      },
+      {
+        label: "Claude Code skills vs Codex skills",
+        href: "/guides/claude-code-skills-vs-codex-skills",
+        description: "Can Codex use your Claude skills? Where each tool looks for them.",
+      },
+    ],
+    featuredSkills: ["@anthropics/skill-creator", "@mattpocock/teach", "@mattpocock/grill-me"],
   },
 ];

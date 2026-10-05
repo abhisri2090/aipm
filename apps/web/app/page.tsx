@@ -71,9 +71,11 @@ function TagStatusIcon({ status }: { status: "done" | "pending" }) {
 }
 
 export const metadata = pageMetadata({
-  title: "Claude & Agent Skills Marketplace — Install with AIPM",
+  // The root layout's "%s | AIPM" template does not apply to this page, so the brand leads here.
+  // "Marketplace" is left to /skills so the two pages do not compete for the same searches.
+  title: "AIPM: Find and Install Claude & Agent Skills",
   description:
-    "A marketplace of Claude skills and agent skills for Claude Code, Cursor and Codex, plus AI prompts. Review the source, then install a pinned version with AIPM.",
+    "AIPM is a marketplace for Claude skills and agent skills. Find one for Claude Code, Cursor or Codex, see what it does, and install it with one command.",
   keywords: [
     "Claude skills marketplace",
     "Claude skills",

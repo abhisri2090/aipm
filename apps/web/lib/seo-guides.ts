@@ -41,6 +41,17 @@ export type SeoGuide = {
   }>;
   /** Optional comparison table rendered after the explanation sections. */
   comparison?: GuideTable;
+  /**
+   * Optional guide-specific "Where to go next" list. Each item is an internal page plus one plain
+   * sentence about what the reader gets there. Replaces the generic next-steps paragraph.
+   */
+  nextSteps?: Array<{
+    label: string;
+    href: string;
+    description: string;
+  }>;
+  /** Optional hand-picked skill pages shown as cards after the guide (names from lib/featured-skills.ts). */
+  featuredSkills?: string[];
 };
 
 export type GuideTable = {
@@ -906,10 +917,10 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "cursor-rules-vs-agents-md",
-    title: "Does Cursor Read AGENTS.md? Cursor Rules vs AGENTS.md",
+    title: "Cursor AGENTS.md: Does It Work? Rules vs AGENTS.md",
     h1: "Does Cursor read AGENTS.md, and should you use it or Cursor rules?",
     description:
-      "Yes, Cursor reads AGENTS.md, including nested files. See when to use AGENTS.md vs Cursor project rules (.cursor/rules/*.mdc), and how Claude Code reads AGENTS.md too.",
+      "Yes, Cursor reads AGENTS.md, even in subfolders. Learn when one plain AGENTS.md file is enough and when Cursor's own rules give you more control.",
     answer:
       "Yes. Cursor reads AGENTS.md in the project root and in subfolders. Use AGENTS.md for plain project instructions that Cursor, Codex, and (since v2.1.277) Claude Code can all read. Use Cursor project rules in .cursor/rules when you need Cursor-only control, such as rules that apply only to certain files. Many teams use both.",
     keywords: [
@@ -920,7 +931,7 @@ updatedAt: "2026-09-25",
       "AGENTS.md vs Cursor rules",
       "Cursor project rules",
     ],
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "Does Cursor support AGENTS.md?",
@@ -1391,7 +1402,7 @@ updatedAt: "2026-09-25",
       "where are Claude skills stored",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "First, which Claude are you using?",
@@ -1481,6 +1492,11 @@ updatedAt: "2026-09-25",
       { label: "anthropics/skills on GitHub", href: "https://github.com/anthropics/skills" },
       { label: "vercel-labs/skills (npx skills)", href: "https://github.com/vercel-labs/skills" },
       { label: "AIPM: Use skills", href: "https://www.aipm-registry.com/use" },
+    ],
+    featuredSkills: [
+      "@anthropics/algorithmic-art",
+      "@anthropics/frontend-design",
+      "@addyosmani/documentation-and-adrs",
     ],
   },
   {
@@ -1599,10 +1615,10 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: Differences and When to Use",
+    title: "Cursor Rules vs Skills: What's the Difference?",
     h1: "Cursor rules vs skills: what is the difference?",
     description:
-      "Cursor rules vs skills: rules stay on for a project or file pattern; skills (SKILL.md) load only when a task needs them. See the difference, examples, and /migrate-to-skills.",
+      "Rules are standing instructions Cursor follows as you work. Skills are step-by-step guides it loads only when a task needs one. See when to use each.",
     answer:
       "In Cursor, rules are standing instructions: they apply always, to matching files, or when the agent decides they are relevant. Skills are task packages (a folder with SKILL.md) that the agent loads only when a task matches, or when you type /skill-name. Use rules for how the project should always be worked on, and skills for repeatable jobs such as code review or release notes.",
     keywords: [
@@ -1614,7 +1630,7 @@ updatedAt: "2026-09-25",
       "Cursor SKILL.md",
     ],
     publishedAt: "2026-09-04",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "Rules: standing instructions for normal work",
@@ -1672,13 +1688,35 @@ updatedAt: "2026-09-25",
       { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
       { label: "Agent Skills standard", href: "https://agentskills.io" },
     ],
+    nextSteps: [
+      {
+        label: "Browse Cursor skills",
+        href: "/skills/cursor",
+        description: "Ready-made skills that work in Cursor. Each page shows the files and how to install it.",
+      },
+      {
+        label: "How to install Cursor skills",
+        href: "/guides/how-to-install-cursor-skills",
+        description: "Add a skill to your project so Cursor can find it.",
+      },
+      {
+        label: "Cursor rules vs AGENTS.md",
+        href: "/guides/cursor-rules-vs-agents-md",
+        description: "When one plain AGENTS.md file is enough, and when Cursor rules are the better fit.",
+      },
+    ],
+    featuredSkills: [
+      "@addyosmani/code-review-and-quality",
+      "@mxyhi/diagnosing-bugs",
+      "@addyosmani/documentation-and-adrs",
+    ],
   },
   {
     slug: "agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: Which File Does What?",
+    title: "AGENTS.md vs SKILL.md: What's the Difference?",
     h1: "AGENTS.md vs SKILL.md: what is the difference?",
     description:
-      "AGENTS.md is always-on project context; SKILL.md is a task skill loaded only when needed. Compare them with examples and see how Cursor, Claude Code, and Codex read each.",
+      "AGENTS.md (often typed agent.md) holds project notes the AI reads every time. SKILL.md holds the steps for one task and loads only when needed.",
     answer:
       "AGENTS.md is one Markdown file of project instructions (commands, code style, test rules) that a coding agent reads at the start of work. SKILL.md is the main file inside a skill folder and explains how to do one task; the agent loads it only when the task matches. Use AGENTS.md for project context and SKILL.md for focused, reusable workflows.",
     keywords: [
@@ -1690,7 +1728,7 @@ updatedAt: "2026-09-25",
       "SKILL.md format",
     ],
     publishedAt: "2026-09-04",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "AGENTS.md describes the project",
@@ -1749,6 +1787,28 @@ updatedAt: "2026-09-25",
       { label: "Claude Code documentation: CLAUDE.md and AGENTS.md", href: "https://code.claude.com/docs/en/memory" },
       { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
       { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
+    ],
+    nextSteps: [
+      {
+        label: "Browse agent skills",
+        href: "/skills",
+        description: "Ready-made skills you can install. Each one is a folder with its own SKILL.md.",
+      },
+      {
+        label: "How to create an agent skill",
+        href: "/guides/how-to-create-agent-skill",
+        description: "Write your own SKILL.md, one step at a time.",
+      },
+      {
+        label: "Does Claude Code read AGENTS.md?",
+        href: "/guides/does-claude-code-read-agents-md",
+        description: "When Claude Code picks up AGENTS.md, and what to do when it doesn't.",
+      },
+    ],
+    featuredSkills: [
+      "@anthropics/skill-creator",
+      "@addyosmani/code-review-and-quality",
+      "@mattpocock/grill-me",
     ],
   },
 ] as const;
