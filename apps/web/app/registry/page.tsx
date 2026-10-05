@@ -4,7 +4,7 @@ import { pageMetadata, paginatedPageMetadata } from "../../lib/seo";
 
 const registryMetadata = {
   title: "Search the AIPM Skills Registry",
-  description: "Search public AIPM skills by package name, supported AI tool, or description",
+  description: "Search public skills for Claude Code, Codex, and Cursor by package name or what they do.",
 };
 
 type SearchParams = { page?: string; q?: string; category?: string; target?: string; sort?: string };

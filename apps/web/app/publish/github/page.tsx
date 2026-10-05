@@ -6,7 +6,7 @@ import { shell, docs, cn } from "../../../lib/page-styles";
 export const metadata = pageMetadata({
   title: "Import AI Skills from GitHub - AIPM",
   description:
-    "Import a public GitHub skill you own into AIPM. Review package details, then publish under your org.",
+    "Import a GitHub skill for Claude Code, Codex, or Cursor into AIPM, then publish it.",
   path: "/publish/github",
   keywords: ["import GitHub skill", "AIPM GitHub import", "publish skill from GitHub"],
 });

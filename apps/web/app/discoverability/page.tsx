@@ -44,7 +44,7 @@ const pageChecklist = [
 export const metadata = pageMetadata({
   title: "AI Skill SEO and Discoverability Guide",
   description:
-    "Learn how to name and describe AIPM packages so users can find and trust them.",
+    "How to name and describe skills for Claude Code, Codex, and Cursor so people can find and trust them.",
   path: "/discoverability",
   keywords: [
     "AI skill SEO",

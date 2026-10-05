@@ -15,7 +15,7 @@ import { cn, shell } from "../../lib/page-styles";
 const publishersMetadata = {
   title: "AI Skill Publishers",
   description:
-    "Browse publishers on AIPM — organizations and creators who publish or import reusable AI agent skills",
+    "Browse publishers of agent skills for Claude Code, Codex, and Cursor on AIPM.",
   keywords: ["AI skill publishers", "AIPM publishers", "agent skill authors"],
 };
 

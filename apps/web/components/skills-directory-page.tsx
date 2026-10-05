@@ -100,9 +100,9 @@ export async function SkillsDirectoryPage({
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "Claude Skills & Agent Skills Marketplace",
+            name: "Agent Skills for Claude, Codex & Cursor",
             description:
-              "Browse Claude skills and agent skills for Claude Code, Cursor and Codex. Search by name, tool, or description.",
+              "Browse agent skills for Claude Code, Codex, and Cursor. Search by name, tool, or description.",
             url: `${SITE_URL}${filtered ? canonicalPath : directoryPagePath(canonicalPath, currentPage)}`,
             about: [
               "AI skills",
@@ -129,11 +129,11 @@ export async function SkillsDirectoryPage({
         }}
       />
       <section className={cn(shell.pageHeader, shell.compactPageHeader)}>
-        <p className={shell.eyebrow}>Claude skills &amp; agent skills</p>
-        <h1>Claude skills and agent skills marketplace</h1>
+        <p className={shell.eyebrow}>Claude Code, Codex, and Cursor</p>
+        <h1>Agent skills for Claude Code, Codex, and Cursor</h1>
         <p className={shell.lede}>
-          Find ready-made skills that teach your AI assistant a new job. See what each one
-          does, look at its files, then install it with one command.
+          Find skills that work in Claude Code, Codex, and Cursor. See what each one does, look at
+          its files, then install it with one command.
         </p>
         <div className={shell.actions}>
           <Link className={shell.button} href="/skills/claude">
@@ -163,9 +163,8 @@ export async function SkillsDirectoryPage({
               </p>
               <p>
                 Each skill is a folder with a file called <code>SKILL.md</code>. That is a
-                plain text file the AI reads. Skills work in Claude, Claude Code, Cursor,
-                Codex and other tools that follow the open Agent Skills standard. Learn
-                more in{" "}
+                plain text file the AI reads. The same skill works in Claude Code, Codex, and
+                Cursor. Learn more in{" "}
                 <Link href="/guides/what-are-claude-skills">what are Claude skills?</Link>{" "}
                 and{" "}
                 <Link href="/guides/where-are-claude-skills-stored">

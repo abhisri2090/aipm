@@ -13,7 +13,7 @@ import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
   title: "Install AIPM CLI on macOS, Linux, or Windows",
-  description: "Install the AIPM CLI with npm, Homebrew, macOS or Linux scripts, Windows PowerShell, or Scoop. Then check the installation in two commands.",
+  description: "Install the AIPM CLI with npm, Homebrew, or a script, then add skills for Claude Code, Codex, and Cursor.",
   path: "/install",
   keywords: [
     "install AIPM CLI",

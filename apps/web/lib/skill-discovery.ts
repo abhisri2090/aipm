@@ -146,7 +146,7 @@ export const SKILL_DISCOVERY_PAGES = [
     title: "Code Review AI Skills",
     h1: "Find AI skills for code review.",
     description:
-      "Browse AIPM skills that help AI assistants review pull requests, diffs, regressions, tests, and security risk.",
+      "Code review skills for Claude Code, Codex, and Cursor. Check pull requests, diffs, tests, and security risk.",
     answer:
       "Code review skills give an AI assistant a repeatable checklist and output format for reviewing changes. Review the skill source and test it on a small pull request before team use.",
     query: "code review",
@@ -164,7 +164,7 @@ export const SKILL_DISCOVERY_PAGES = [
     title: "Issue Summarizer AI Skills",
     h1: "Find AI skills for issue summaries and triage.",
     description:
-      "Browse AIPM skills that turn bugs, Sentry issues, tickets, logs, and user reports into clear engineering handoffs.",
+      "Issue summary skills for Claude Code, Codex, and Cursor. Turn bugs, tickets, and logs into a clear handoff.",
     answer:
       "Issue summarizer skills turn raw bug reports and logs into a consistent summary with impact, evidence, possible causes, and next steps.",
     query: "issue summarizer",
@@ -182,7 +182,7 @@ export const SKILL_DISCOVERY_PAGES = [
     title: "Testing AI Skills",
     h1: "Find AI skills for test writing and verification.",
     description:
-      "Browse AIPM skills that help assistants write tests, plan verification, and catch regressions before release.",
+      "Testing skills for Claude Code, Codex, and Cursor. Write tests, plan checks, and catch regressions.",
     answer:
       "Testing skills give an AI assistant repeatable steps for finding edge cases, writing focused tests, and checking a change before release.",
     query: "testing",
@@ -200,7 +200,7 @@ export const SKILL_DISCOVERY_PAGES = [
     title: "Documentation AI Skills",
     h1: "Find AI skills for documentation.",
     description:
-      "Browse AIPM skills for READMEs, changelogs, runbooks, onboarding guides, and docs maintenance.",
+      "Documentation skills for Claude Code, Codex, and Cursor: READMEs, changelogs, runbooks, and guides.",
     answer:
       "Documentation skills give an AI assistant a repeatable structure for writing and updating project documents such as READMEs, runbooks, and changelogs.",
     query: "documentation",

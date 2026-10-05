@@ -24,7 +24,7 @@ export const SKILL_MD_FRONTMATTER_GUIDES: SeoGuide[] = [
     title: "SKILL.md Frontmatter Reference: Every Field & Limit",
     h1: "SKILL.md frontmatter reference: every field, limit and error",
     description:
-      "Every SKILL.md frontmatter field: the Agent Skills spec (name, description, license…), Claude Code extras like when_to_use and paths, Cursor and Codex rules, and fixes.",
+      "Every SKILL.md frontmatter field for Claude Code, Codex, and Cursor, plus limits and how to fix errors.",
     answer:
       "A SKILL.md starts with YAML frontmatter between `---` lines. `name` and `description` are required: the open Agent Skills spec, Cursor and Codex all require them, and AIPM documents them as required. `name` is up to 64 lowercase letters, numbers and hyphens and matches the folder; `description` is up to 1,024 characters. Optional spec fields are `license`, `compatibility`, `metadata` and `allowed-tools`. Claude Code adds fields such as `when_to_use`, `disable-model-invocation`, `context` and `paths`. Need a starting file? Use a [SKILL.md template](/templates).",
     answerTable: {

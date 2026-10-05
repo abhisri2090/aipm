@@ -5,8 +5,8 @@ import { DocLayout } from "../../components/doc-layout";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Use AIPM - Install AI Skills Into Your Project",
-  description: "Install AIPM skills into a project and keep them with your code.",
+  title: "Install Skills for Claude, Codex & Cursor",
+  description: "Install AIPM skills into Claude Code, Codex, or Cursor and keep them with your project.",
   path: "/use",
   keywords: ["install AIPM skills", "add AI skills to project", "AIPM usage guide", "AI skill installation"],
 });

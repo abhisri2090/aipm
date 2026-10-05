@@ -44,7 +44,7 @@ const reportSteps = [
 export const metadata = pageMetadata({
   title: "AIPM Security Guide for Publishing AI Skills Safely",
   description:
-    "Learn how to publish AI skill packages with AIPM without leaking secrets, private prompts, tokens, or customer data.",
+    "Publish skills for Claude Code, Codex, and Cursor without leaking secrets, tokens, or private data.",
   path: "/security",
   keywords: [
     "AI skill security",
@@ -67,7 +67,7 @@ export default function SecurityPage() {
             "@type": "Article",
             headline: "AIPM Security and Privacy Guide",
             description:
-              "Learn how to publish AI skill packages with AIPM without leaking secrets, private prompts, tokens, or customer data.",
+              "Publish skills for Claude Code, Codex, and Cursor without leaking secrets, tokens, or private data.",
             author: { "@type": "Organization", name: "AIPM" },
             publisher: { "@type": "Organization", name: "AIPM" },
             mainEntityOfPage: `${SITE_URL}/security`,

@@ -49,7 +49,7 @@ const sections = [
 export const metadata = pageMetadata({
   title: "AIPM Roadmap for AI Package Manager Features",
   description:
-    "See planned AIPM features for AI skill installs, publishing, package trust, MCP bundles, and assistant targets.",
+    "Planned AIPM work for skills in Claude Code, Codex, and Cursor, plus publishing and package trust.",
   path: "/roadmap",
   keywords: [
     "AIPM roadmap",
@@ -71,7 +71,7 @@ export default function RoadmapPage() {
             "@type": "WebPage",
             name: "AIPM Product Roadmap",
             description:
-              "See planned AIPM features for AI skill installs, publishing, package trust, MCP bundles, and assistant targets.",
+              "Planned AIPM work for skills in Claude Code, Codex, and Cursor, plus publishing and package trust.",
             url: `${SITE_URL}/roadmap`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry" },
           }),

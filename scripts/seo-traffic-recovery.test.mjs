@@ -39,11 +39,11 @@ describe("search snippets", () => {
     }
   });
 
-  it("/skills leads with Claude skills and agent skills", async () => {
+  it("/skills names Claude Code, Codex, and Cursor", async () => {
     const meta = await skillsMetadata({ searchParams: Promise.resolve({}) });
-    expect(meta.title).toBe("Claude Skills & Agent Skills Marketplace");
+    expect(meta.title).toBe("Agent Skills for Claude, Codex & Cursor");
     expectSnippetFits(meta.title, meta.description);
-    expect(meta.description).toMatch(/^Browse Claude skills and agent skills/);
+    expect(meta.description).toMatch(/Claude Code, Codex, and Cursor/);
   });
 
   it("homepage carries the brand once (the layout template does not apply to it)", () => {
@@ -120,7 +120,7 @@ describe("/skills intro", () => {
     const html = renderToStaticMarkup(
       await SkillsDirectoryPage({ searchParams: Promise.resolve({}), canonicalPath: "/skills" }),
     );
-    expect(html).toContain("Claude skills and agent skills marketplace");
+    expect(html).toContain("Agent skills for Claude Code, Codex, and Cursor");
     expect(html).toContain("What is an agent skill?");
     expect(html).toContain("Install a skill in 3 steps");
     expect(html).toContain('href="/guides/how-to-install-claude-code-skills"');
@@ -136,6 +136,6 @@ describe("/skills intro", () => {
       await SkillsDirectoryPage({ searchParams: Promise.resolve({ q: "review" }), canonicalPath: "/skills" }),
     );
     expect(html).not.toContain("What is an agent skill?");
-    expect(html).toContain("Claude skills and agent skills marketplace");
+    expect(html).toContain("Agent skills for Claude Code, Codex, and Cursor");
   });
 });

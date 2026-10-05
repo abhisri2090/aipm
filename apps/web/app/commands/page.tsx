@@ -201,7 +201,7 @@ const publishCommands: CommandItem[] = [
 
 export const metadata = pageMetadata({
   title: "AIPM CLI Commands",
-  description: "A complete reference for AIPM install, use, and publish commands.",
+  description: "Commands to install skills for Claude Code, Codex, and Cursor, and to publish them.",
   path: "/commands",
   keywords: ["AIPM CLI commands", "aipm command reference", "AI package manager CLI", "publish AI skill command"],
 });

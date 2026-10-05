@@ -213,9 +213,9 @@ function ExampleSteps({ steps }: { steps: ExampleStep[] }) {
 }
 
 export const metadata = pageMetadata({
-  title: "Claude Code & Cursor Skill Examples",
+  title: "Skill Examples for Claude, Codex & Cursor",
   description:
-    "Copy-ready examples for publishing and installing Claude Code and Cursor agent skills with AIPM.",
+    "Copy-ready examples for publishing and installing skills in Claude Code, Codex, and Cursor.",
   path: "/examples",
   keywords: [
     "Claude Code skill examples",

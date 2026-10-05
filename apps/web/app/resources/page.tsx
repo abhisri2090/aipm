@@ -6,9 +6,9 @@ import { listDocSectionIndexes } from "../../lib/doc-section-index";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "AI Skill Resources",
+  title: "Skill Resources for Claude, Codex & Cursor",
   description:
-    "Guides for using, publishing, and understanding AIPM skills.",
+    "Guides for using and publishing skills that work in Claude Code, Codex, and Cursor.",
   path: "/resources",
   keywords: ["AI skill resources", "AI package manager", "AI publishing guide", "AI best practices"],
 });

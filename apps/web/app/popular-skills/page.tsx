@@ -226,9 +226,9 @@ const sources = [
 ];
 
 export const metadata = pageMetadata({
-  title: "Popular AI Skill Ideas",
+  title: "Popular Skills for Claude, Codex & Cursor",
   description:
-    "A curated starter catalog of popular AI skills to publish with AIPM, including code review, testing, docs, security, MCP setup, and release workflows.",
+    "Starter skill ideas for Claude Code, Codex, and Cursor: code review, testing, docs, security, and releases.",
   path: "/popular-skills",
   keywords: [
     "popular AI skills",
@@ -249,9 +249,9 @@ export default function PopularSkillsPage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "Popular AI Skill Ideas",
+            name: "Popular Skills for Claude, Codex & Cursor",
             description:
-              "A curated starter catalog of common AI skills users can publish with AIPM.",
+              "Starter skill ideas for Claude Code, Codex, and Cursor: code review, testing, docs, security, and releases.",
             url: `${SITE_URL}/popular-skills`,
             hasPart: popularSkills.map((skill) => ({
               "@type": "SoftwareSourceCode",
