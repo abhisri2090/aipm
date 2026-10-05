@@ -141,11 +141,12 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
           "For the whole organization: managed settings, or skills provisioned by an owner of your Claude organization.",
         ],
         paragraphs: [
-          "AIPM installs versioned skills from the registry into the folder each tool reads and records them, so you can list, update or remove them later. `--target claude` writes `.claude/skills/<name>/SKILL.md`, `--target codex` writes `.agents/skills/<name>/SKILL.md`, and `-g` installs under your home folder instead of the project. Using Cursor? Install with `--target claude` or `--target codex`; Cursor reads both folders. [Browse Claude skills](/skills/claude) or see [all commands](/commands).",
+          "AIPM installs versioned skills from the registry into the folder each tool reads and records them, so you can list, update or remove them later. `--target claude` writes `.claude/skills/<name>/SKILL.md`, `--target codex` writes `.agents/skills/<name>/SKILL.md`, and `-g` installs under your home folder instead of the project. Using Cursor? Run `aipm init --target cursor`. That writes `.cursor/skills/<skill>/SKILL.md`. Cursor also reads `.claude/skills` and `.agents/skills`. [Browse Claude skills](/skills/claude) or see [all commands](/commands).",
         ],
         code: [
           {
             code: `npm install -g @aipm-registry/cli
+aipm init --target cursor                    # -> .cursor/skills/<skill>/SKILL.md
 aipm add @scope/name@1.0.0 --target claude   # -> .claude/skills/name/SKILL.md
 aipm add @scope/name@1.0.0 --target codex    # -> .agents/skills/name/SKILL.md
 aipm list

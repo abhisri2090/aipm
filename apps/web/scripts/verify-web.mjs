@@ -244,6 +244,8 @@ const requiredPages = [
       "Where to go next",
       'href="/guides/share-claude-skills-with-team"',
       'href="/skills/anthropics/skill-creator/1.0.0"',
+      "aipm init --target cursor",
+      ".cursor/skills/&lt;skill&gt;/SKILL.md",
     ],
   },
   {
