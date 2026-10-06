@@ -20,7 +20,7 @@ export type SkillSerpInput = {
 export type SkillSerpFields = {
   humanName: string;
   packageId: string;
-  toolLabel: "Claude Code" | "Cursor" | "AI Agent";
+  toolLabel: string;
   title: string;
   metaDescription: string;
   outcomeLine: string;
@@ -41,15 +41,22 @@ export function resolveSkillHumanName(input: Pick<SkillSerpInput, "name" | "disp
   return humanizePackageSlug(shortName(input.name));
 }
 
-/** Pick a SERP tool label: primary Cursor/Claude, else multi-target "AI Agent". */
-export function resolveSkillToolLabel(targets: string[]): SkillSerpFields["toolLabel"] {
-  const concrete = targets.includes("*")
-    ? []
-    : targets.filter((target) => target === "cursor" || target === "claude");
-  if (concrete.length === 1) {
-    return concrete[0] === "claude" ? "Claude Code" : "Cursor";
-  }
-  return "AI Agent";
+const TOOL_LABELS = {
+  claude: "Claude Code",
+  codex: "Codex",
+  cursor: "Cursor",
+} as const;
+
+/** Pick a SERP tool label. One target keeps that tool; all three are named together. */
+export function resolveSkillToolLabel(targets: string[]): string {
+  if (targets.includes("*")) return "Claude, Codex & Cursor";
+  const concrete = [
+    ...new Set(targets.filter((target): target is keyof typeof TOOL_LABELS => target in TOOL_LABELS)),
+  ];
+  if (concrete.length === 0) return "AI Agent";
+  if (concrete.length === 1) return TOOL_LABELS[concrete[0]];
+  if (concrete.length === 3) return "Claude, Codex & Cursor";
+  return concrete.map((target) => TOOL_LABELS[target]).join(" & ");
 }
 
 /** Strip agent-trigger prose so meta/lede stay outcome-focused. */

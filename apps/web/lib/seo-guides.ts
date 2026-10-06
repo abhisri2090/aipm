@@ -41,6 +41,17 @@ export type SeoGuide = {
   }>;
   /** Optional comparison table rendered after the explanation sections. */
   comparison?: GuideTable;
+  /**
+   * Optional guide-specific "Where to go next" list. Each item is an internal page plus one plain
+   * sentence about what the reader gets there. Replaces the generic next-steps paragraph.
+   */
+  nextSteps?: Array<{
+    label: string;
+    href: string;
+    description: string;
+  }>;
+  /** Optional hand-picked skill pages shown as cards after the guide (names from lib/featured-skills.ts). */
+  featuredSkills?: string[];
 };
 
 export type GuideTable = {
@@ -55,7 +66,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     title: "Components of an AI Agent",
     h1: "What are the main components of an AI agent?",
     description:
-      "Learn the main components of an AI agent in plain English, including the model, instructions, context, memory, tools, actions, safety, and feedback.",
+      "The parts of an AI agent, in plain English, for people using Claude Code, Codex, or Cursor.",
     answer:
       "An AI agent needs a model to think, instructions to guide it, context and memory to understand the task, tools to get information, actions to do work, and safety checks to keep its work under control.",
     keywords: [
@@ -165,9 +176,9 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     title: "What Is an AI Package Manager?",
     h1: "What is an AI package manager?",
     description:
-      "Learn what an AI package manager does, why teams need one, and how AIPM installs versioned AI agent skills into Claude Code and Codex (which Cursor also reads).",
+      "What an AI package manager does, and how AIPM installs versioned skills for Claude Code, Codex, and Cursor.",
     answer:
-      "An AI package manager helps teams install, update, and share reusable AI setup the way npm does for code. AIPM installs versioned agent skills (SKILL.md folders) into Claude Code and Codex, which Cursor also reads, and tracks AI prompts as Markdown snapshots. Rules, MCP servers, and hooks are planned, not installable today.",
+      "An AI package manager helps teams install, update, and share reusable AI setup the way npm does for code. AIPM installs versioned agent skills (SKILL.md folders) for Claude Code, Codex, and Cursor, and tracks AI prompts as Markdown snapshots. Rules, MCP servers, and hooks are planned, not installable today.",
     keywords: ["AI package manager", "AIPM", "AI skills", "agent package manager", "AI skills package manager"],
     updatedAt: "2026-09-25",
     sections: [
@@ -232,7 +243,7 @@ const BASE_SEO_GUIDES: SeoGuide[] = [
     title: "How to Version AI Prompts in a Repo",
     h1: "How do you version AI prompts in a repo?",
     description:
-      "A simple guide for keeping AI prompts, rules, and skills in Git so teams can review changes.",
+      "Keep AI prompts in Git for Claude Code, Codex, and Cursor so a team can review changes.",
     answer:
       "Save important prompts in project files and record their changes with Git. Git history is the version record for a prompt; turn a prompt that has become a repeatable task into a versioned skill.",
     keywords: ["version AI prompts", "prompts in Git", "AI prompt versioning", "AIPM"],
@@ -373,7 +384,7 @@ updatedAt: "2026-09-25",
     title: "How to Manage AI Agent Instructions in Git",
     h1: "How do you manage AI agent instructions in Git?",
     description:
-      "A beginner-friendly guide to keeping AI agent instructions in Git so teams can review, reuse, and update them.",
+      "Keep agent instructions in Git for Claude Code, Codex, and Cursor so a team can review and reuse them.",
     answer:
       "Keep important AI agent instructions as files in the repo. Review them in pull requests and package shared instructions with AIPM.",
     keywords: ["AI agent instructions", "AI instructions in Git", "agent skills", "AIPM"],
@@ -419,7 +430,7 @@ updatedAt: "2026-09-25",
     title: "How to Share AI Prompts With a Team",
     h1: "How do you share AI prompts with a team?",
     description:
-      "A simple guide for sharing useful AI prompts with teammates without losing context or copying old versions.",
+      "Share AI prompts with a team using Claude Code, Codex, or Cursor, without losing the context around them.",
     answer:
       "Put important prompts in shared project files and explain when to use them. To share a prompt from the AIPM prompt library, run aipm add <prompt URL>: it saves a Markdown snapshot in .aipm/prompts/ and records the URL in aipm.package.json, so teammates restore it with aipm install.",
     keywords: ["share AI prompts", "team prompts", "prompt management", "AIPM prompts", "prompt package manager"],
@@ -569,7 +580,7 @@ updatedAt: "2026-09-25",
     title: "How to Package MCP Server Setup",
     h1: "How do you package MCP server setup?",
     description:
-      "Learn how to document MCP server setup so teams can install the same AI tool workflow without sharing secrets.",
+      "Document MCP server setup for Claude Code, Codex, and Cursor so a team can reuse it without sharing secrets.",
     answer:
       "Package the public MCP setup notes, usage rules, and examples. Keep private tokens and secret values outside the package.",
     keywords: ["package MCP server setup", "MCP server setup", "MCP config", "AIPM MCP"],
@@ -615,7 +626,7 @@ updatedAt: "2026-09-25",
     title: "AIPM vs Copying Prompts Manually",
     h1: "Why use AIPM instead of copying prompts manually?",
     description:
-      "Compare AIPM with manual prompt copying and learn when a package manager is worth using.",
+      "Compare AIPM with copying prompts by hand for Claude Code, Codex, and Cursor.",
     answer:
       "Manual copying is fine for one quick prompt. AIPM is better when a skill needs to be reused, pinned to a version, reviewed, and updated across projects, or when you want to track prompts from the AIPM prompt library.",
     keywords: ["AIPM vs prompts", "copy prompts manually", "AI prompt management", "AI package manager"],
@@ -662,7 +673,7 @@ updatedAt: "2026-09-25",
     title: "AI Agent Configuration Files Explained",
     h1: "What are AI agent configuration files?",
     description:
-      "A practical guide to AGENTS.md, CLAUDE.md, Cursor rules, MCP config, skills, and other files used by AI coding agents.",
+      "AGENTS.md, CLAUDE.md, Cursor rules, skills, and MCP files for Claude Code, Codex, and Cursor.",
     answer:
       "AI agent configuration files are project files that tell coding agents how to work in a repo. They can define rules, workflows, tools, memory, skills, and MCP server setup.",
     keywords: [
@@ -688,7 +699,7 @@ updatedAt: "2026-09-25",
       {
         title: "Why AIPM helps",
         body:
-          "AIPM handles the skills part: it installs versioned skills into Claude Code and Codex (which Cursor also reads) and records the version for the team. It does not install AGENTS.md, CLAUDE.md, Cursor rules, or MCP config today; those stay in Git.",
+          "AIPM handles the skills part: it installs versioned skills for Claude Code, Codex, and Cursor and records the version for the team. It does not install AGENTS.md, CLAUDE.md, Cursor rules, or MCP config today; those stay in Git.",
       },
     ],
     steps: [
@@ -716,7 +727,7 @@ updatedAt: "2026-09-25",
     title: "AGENTS.md vs CLAUDE.md vs Cursor Rules",
     h1: "What is the difference between AGENTS.md, CLAUDE.md, and Cursor rules?",
     description:
-      "Compare AGENTS.md, CLAUDE.md, and Cursor rules so developers can choose the right instruction files for AI coding agents.",
+      "Compare AGENTS.md, CLAUDE.md, and Cursor rules for Claude Code, Codex, and Cursor.",
     answer:
       "AGENTS.md is a shared instruction file for coding agents. CLAUDE.md is mainly for Claude Code. Cursor rules are mainly for Cursor. Teams often use one shared source plus small tool-specific files.",
     keywords: [
@@ -906,10 +917,10 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "cursor-rules-vs-agents-md",
-    title: "Does Cursor Read AGENTS.md? Cursor Rules vs AGENTS.md",
+    title: "Cursor AGENTS.md: Does It Work? Rules vs AGENTS.md",
     h1: "Does Cursor read AGENTS.md, and should you use it or Cursor rules?",
     description:
-      "Yes, Cursor reads AGENTS.md, including nested files. See when to use AGENTS.md vs Cursor project rules (.cursor/rules/*.mdc), and how Claude Code reads AGENTS.md too.",
+      "Yes, Cursor reads AGENTS.md, even in subfolders. Learn when one plain AGENTS.md file is enough and when Cursor's own rules give you more control.",
     answer:
       "Yes. Cursor reads AGENTS.md in the project root and in subfolders. Use AGENTS.md for plain project instructions that Cursor, Codex, and (since v2.1.277) Claude Code can all read. Use Cursor project rules in .cursor/rules when you need Cursor-only control, such as rules that apply only to certain files. Many teams use both.",
     keywords: [
@@ -920,7 +931,7 @@ updatedAt: "2026-09-25",
       "AGENTS.md vs Cursor rules",
       "Cursor project rules",
     ],
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "Does Cursor support AGENTS.md?",
@@ -1041,7 +1052,7 @@ updatedAt: "2026-09-25",
     title: "How to Share AI Coding Agent Instructions Across Repos",
     h1: "How do you share AI coding agent instructions across repos?",
     description:
-      "Learn how to share AI instructions across projects without keeping many different copies.",
+      "Share AI instructions across repos for Claude Code, Codex, and Cursor without many different copies.",
     answer:
       "Keep one reviewed source for shared instructions and keep repo-specific details in each repo. AIPM does not install AGENTS.md, CLAUDE.md, or Cursor rules, but shared task workflows can become skills that AIPM installs into every repo at the same pinned version.",
     keywords: [
@@ -1100,7 +1111,7 @@ updatedAt: "2026-09-25",
     title: "How to Manage AI Prompts in Git",
     h1: "What is the best way to manage AI prompts in Git?",
     description:
-      "Learn how to save, check, test, and share important AI prompts in a project folder.",
+      "Save and share important AI prompts in Git for Claude Code, Codex, and Cursor.",
     answer:
       "Store important prompts as named files, explain their input and output, and review changes in pull requests so Git keeps the history. When a prompt becomes a repeatable task used in several repos, turn it into a versioned skill.",
     keywords: ["manage AI prompts in Git", "prompt version control", "AI prompts GitHub", "version prompts"],
@@ -1147,7 +1158,7 @@ updatedAt: "2026-09-25",
     title: "MCP Server Configuration Best Practices",
     h1: "What are the best practices for MCP server configuration?",
     description:
-      "A simple checklist for setting up an MCP server safely and using the same setup in more than one project.",
+      "A checklist for MCP setup used by Claude Code, Codex, and Cursor, without sharing secrets.",
     answer:
       "Do not put passwords or private tokens in MCP settings files. Give each server only the access it needs. Write down the private settings people must add, test the connection, and review shared files in Git. Package only files that are safe to share.",
     keywords: [
@@ -1203,12 +1214,12 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "aipm-vs-skills-sh",
-    title: "AIPM vs Skills.sh — Skills.sh Alternative for Versioned Agent Skills",
+    title: "Skills.sh Alternative for Agent Skills",
     h1: "Looking for a skills.sh alternative? Here is how AIPM compares.",
     description:
-      "Honest AIPM vs skills.sh comparison: discovery vs versioned packages, install targets for Claude Code and Codex, and when a package-manager workflow fits better than a directory.",
+      "AIPM vs Skills.sh: versioned skills for Claude Code, Codex, and Cursor, and when pinned installs help.",
     answer:
-      "Both help people find and install Agent Skills. Skills.sh is a popular Agent Skills directory with its own install command. AIPM is a skills registry plus package-manager workflow for named, versioned packages and target-specific installs (Claude Code and Codex, which Cursor also reads). Use whichever has the skill you trust; AIPM is a strong skills.sh alternative when you need pinned versions and project-local installs.",
+      "Both help people find and install Agent Skills. Skills.sh is a popular Agent Skills directory with its own install command. AIPM is a skills registry plus package-manager workflow for named, versioned packages and installs for Claude Code, Codex, and Cursor. Use whichever has the skill you trust; AIPM is a strong skills.sh alternative when you need pinned versions and project-local installs.",
     keywords: [
       "skills.sh alternative",
       "AIPM vs Skills.sh",
@@ -1326,7 +1337,7 @@ updatedAt: "2026-09-25",
     title: "Agent Skills vs MCP",
     h1: "What is the difference between Agent Skills and MCP?",
     description:
-      "Learn when to use an Agent Skill and when to use MCP. Compare reusable instructions with connections to external tools and information.",
+      "When to use an Agent Skill or MCP in Claude Code, Codex, and Cursor. A skill teaches a task; MCP connects tools.",
     answer:
       "An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI application to tools and information. A skill explains the workflow; MCP provides capabilities the workflow may use.",
     keywords: ["Agent Skills vs MCP", "MCP vs skills", "AI agent skills", "Model Context Protocol tools"],
@@ -1391,7 +1402,7 @@ updatedAt: "2026-09-25",
       "where are Claude skills stored",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "First, which Claude are you using?",
@@ -1482,6 +1493,11 @@ updatedAt: "2026-09-25",
       { label: "vercel-labs/skills (npx skills)", href: "https://github.com/vercel-labs/skills" },
       { label: "AIPM: Use skills", href: "https://www.aipm-registry.com/use" },
     ],
+    featuredSkills: [
+      "@anthropics/algorithmic-art",
+      "@anthropics/frontend-design",
+      "@addyosmani/documentation-and-adrs",
+    ],
   },
   {
     slug: "how-to-install-cursor-skills",
@@ -1547,7 +1563,7 @@ updatedAt: "2026-09-25",
     title: "How to Create an Agent Skill",
     h1: "How do you create a reusable Agent Skill?",
     description:
-      "Create a focused Agent Skill with SKILL.md, clear instructions, examples, safety limits, and package metadata that a team can review and share.",
+      "Create an Agent Skill with SKILL.md for Claude Code, Codex, and Cursor, with steps a team can review.",
     answer:
       "Choose one repeated job, create a SKILL.md file that explains when and how to do it, add a small example, test it on real tasks, and publish it with a clear name, version, source, and license.",
     keywords: ["how to create Agent Skill", "create AI agent skill", "write SKILL.md", "build Claude skill"],
@@ -1599,10 +1615,10 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: Differences and When to Use",
+    title: "Cursor Rules vs Skills: What's the Difference?",
     h1: "Cursor rules vs skills: what is the difference?",
     description:
-      "Cursor rules vs skills: rules stay on for a project or file pattern; skills (SKILL.md) load only when a task needs them. See the difference, examples, and /migrate-to-skills.",
+      "Rules are standing instructions Cursor follows as you work. Skills are step-by-step guides it loads only when a task needs one. See when to use each.",
     answer:
       "In Cursor, rules are standing instructions: they apply always, to matching files, or when the agent decides they are relevant. Skills are task packages (a folder with SKILL.md) that the agent loads only when a task matches, or when you type /skill-name. Use rules for how the project should always be worked on, and skills for repeatable jobs such as code review or release notes.",
     keywords: [
@@ -1614,7 +1630,7 @@ updatedAt: "2026-09-25",
       "Cursor SKILL.md",
     ],
     publishedAt: "2026-09-04",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "Rules: standing instructions for normal work",
@@ -1672,13 +1688,35 @@ updatedAt: "2026-09-25",
       { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
       { label: "Agent Skills standard", href: "https://agentskills.io" },
     ],
+    nextSteps: [
+      {
+        label: "Browse Cursor skills",
+        href: "/skills/cursor",
+        description: "Ready-made skills that work in Cursor. Each page shows the files and how to install it.",
+      },
+      {
+        label: "How to install Cursor skills",
+        href: "/guides/how-to-install-cursor-skills",
+        description: "Add a skill to your project so Cursor can find it.",
+      },
+      {
+        label: "Cursor rules vs AGENTS.md",
+        href: "/guides/cursor-rules-vs-agents-md",
+        description: "When one plain AGENTS.md file is enough, and when Cursor rules are the better fit.",
+      },
+    ],
+    featuredSkills: [
+      "@addyosmani/code-review-and-quality",
+      "@mxyhi/diagnosing-bugs",
+      "@addyosmani/documentation-and-adrs",
+    ],
   },
   {
     slug: "agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: Which File Does What?",
+    title: "AGENTS.md vs SKILL.md: What's the Difference?",
     h1: "AGENTS.md vs SKILL.md: what is the difference?",
     description:
-      "AGENTS.md is always-on project context; SKILL.md is a task skill loaded only when needed. Compare them with examples and see how Cursor, Claude Code, and Codex read each.",
+      "AGENTS.md holds project notes. SKILL.md holds one task. How Claude Code, Codex, and Cursor use each.",
     answer:
       "AGENTS.md is one Markdown file of project instructions (commands, code style, test rules) that a coding agent reads at the start of work. SKILL.md is the main file inside a skill folder and explains how to do one task; the agent loads it only when the task matches. Use AGENTS.md for project context and SKILL.md for focused, reusable workflows.",
     keywords: [
@@ -1690,7 +1728,7 @@ updatedAt: "2026-09-25",
       "SKILL.md format",
     ],
     publishedAt: "2026-09-04",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "AGENTS.md describes the project",
@@ -1749,6 +1787,28 @@ updatedAt: "2026-09-25",
       { label: "Claude Code documentation: CLAUDE.md and AGENTS.md", href: "https://code.claude.com/docs/en/memory" },
       { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
       { label: "OpenAI Codex: Agent Skills", href: "https://developers.openai.com/codex/skills/" },
+    ],
+    nextSteps: [
+      {
+        label: "Browse agent skills",
+        href: "/skills",
+        description: "Ready-made skills you can install. Each one is a folder with its own SKILL.md.",
+      },
+      {
+        label: "How to create an agent skill",
+        href: "/guides/how-to-create-agent-skill",
+        description: "Write your own SKILL.md, one step at a time.",
+      },
+      {
+        label: "Does Claude Code read AGENTS.md?",
+        href: "/guides/does-claude-code-read-agents-md",
+        description: "When Claude Code picks up AGENTS.md, and what to do when it doesn't.",
+      },
+    ],
+    featuredSkills: [
+      "@anthropics/skill-creator",
+      "@addyosmani/code-review-and-quality",
+      "@mattpocock/grill-me",
     ],
   },
 ] as const;

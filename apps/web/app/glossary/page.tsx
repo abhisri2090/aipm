@@ -88,7 +88,7 @@ const terms: Array<{ term: string; definition: string; href?: string; linkLabel?
 export const metadata = pageMetadata({
   title: "AIPM Glossary — Agent Skills Terms",
   description:
-    "Plain definitions for agent skills, SKILL.md, manifests, targets, and AIPM registry terms.",
+    "Plain definitions for skills in Claude Code, Codex, and Cursor, plus SKILL.md, manifests, and targets.",
   path: "/glossary",
   keywords: [
     "AIPM glossary",

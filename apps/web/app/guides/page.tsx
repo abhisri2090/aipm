@@ -8,9 +8,9 @@ import { pageMetadata } from "../../lib/seo";
 const guides = listGuideIndexEntries();
 
 export const metadata = pageMetadata({
-  title: "Guides",
+  title: "Guides for Claude, Codex & Cursor",
   description:
-    "Every guide published on AIPM, with the title and description from that guide.",
+    "Guides for skills in Claude Code, Codex, and Cursor: what they are, where they live, and how to install them.",
   path: "/guides",
   keywords: ["AIPM guides", "AI agent guides", "Claude skills guides"],
 });
@@ -24,9 +24,9 @@ export default function GuidesIndexPage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "AIPM guides",
+            name: "Guides for Claude, Codex & Cursor",
             description:
-              "Every guide published on AIPM, with the title and description from that guide.",
+              "Guides for skills in Claude Code, Codex, and Cursor: what they are, where they live, and how to install them.",
             url: `${SITE_URL}/guides`,
             isPartOf: { "@type": "WebSite", name: "AIPM Registry", url: SITE_URL },
             mainEntity: {

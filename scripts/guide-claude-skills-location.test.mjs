@@ -40,7 +40,8 @@ describe(PATH, () => {
     expect(text).toContain("Claude Code does not read `.agents/skills/`");
     expect(text).not.toMatch(/Codex (also )?reads `?\.codex\/skills/);
     expect(text).not.toContain(".cursor/aipm");
-    expect(text).not.toContain("--target cursor");
+    expect(text).toContain("aipm init --target cursor");
+    expect(text).toContain(".cursor/skills/<skill>/SKILL.md");
     expect(text).not.toContain("(/install)");
     expect(text).not.toMatch(/Library\/Application Support\/ClaudeCode\/\.claude\/skills/);
   });

@@ -1,0 +1,49 @@
+/* Small layout helpers for the /skills intro and the "popular skills" / "next steps" blocks.
+   Colors, borders and card styles come from cards.module.css and page-shell.module.css. */
+
+.flushGrid {
+  margin-top: 0;
+}
+
+.sectionIntro {
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.introText {
+  max-width: 720px;
+}
+
+.introText p {
+  margin: 0 0 14px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.stepGrid {
+  margin-top: 22px;
+}
+
+.stepGrid p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.byline {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.nextList {
+  display: grid;
+  gap: 12px;
+  padding-left: 1.2em;
+}
+
+.nextList li {
+  line-height: 1.6;
+}

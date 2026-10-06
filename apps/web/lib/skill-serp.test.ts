@@ -12,12 +12,13 @@ describe("skill-serp", () => {
     expect(humanizePackageSlug("planning_with_files")).toBe("Planning With Files");
   });
 
-  it("resolveSkillToolLabel picks primary or AI Agent", () => {
+  it("resolveSkillToolLabel names Claude Code, Codex, and Cursor", () => {
     expect(resolveSkillToolLabel(["cursor"])).toBe("Cursor");
     expect(resolveSkillToolLabel(["claude"])).toBe("Claude Code");
-    expect(resolveSkillToolLabel(["*"])).toBe("AI Agent");
-    expect(resolveSkillToolLabel(["cursor", "claude"])).toBe("AI Agent");
-    expect(resolveSkillToolLabel(["codex"])).toBe("AI Agent");
+    expect(resolveSkillToolLabel(["codex"])).toBe("Codex");
+    expect(resolveSkillToolLabel(["*"])).toBe("Claude, Codex & Cursor");
+    expect(resolveSkillToolLabel(["claude", "codex", "cursor"])).toBe("Claude, Codex & Cursor");
+    expect(resolveSkillToolLabel(["cursor", "claude"])).toBe("Cursor & Claude Code");
   });
 
   it("skillOutcomeLine strips trigger prose", () => {
@@ -41,6 +42,15 @@ describe("skill-serp", () => {
     expect(fields.packageId).toBe("@acme/very-long-marketing-name-that-would-overflow@1.2.3");
     expect(fields.title).toBe("Product Photography — Cursor Skill | AIPM");
     expect(fields.title.length).toBeLessThanOrEqual(60);
+    const allTools = buildSkillSerpFields({
+      name: "@acme/product-photography",
+      version: "1.0.0",
+      description: "Ship reusable product photography prompts.",
+      targets: ["*"],
+      displayName: "Product Photography",
+    });
+    expect(allTools.title).toBe("Product Photography — Claude, Codex & Cursor Skill | AIPM");
+    expect(allTools.title.length).toBeLessThanOrEqual(60);
     expect(fields.metaDescription).toMatch(/Install with AIPM/);
     expect(fields.metaDescription).not.toMatch(/When the user wants/i);
   });

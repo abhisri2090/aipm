@@ -23,7 +23,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       "Anthropic skills",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-05",
     sections: [
       {
         title: "How a Claude skill works",
@@ -103,6 +103,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       { label: "anthropics/skills on GitHub", href: "https://github.com/anthropics/skills" },
       { label: "Agent Skills standard", href: "https://agentskills.io" },
     ],
+    featuredSkills: ["@anthropics/skill-creator", "@anthropics/frontend-design", "@coreyhaines31/seo-audit"],
   },
   {
     slug: "claude-code-plugins-vs-skills",

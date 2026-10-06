@@ -39,7 +39,7 @@ const templates = [
 export const metadata = pageMetadata({
   title: "SKILL.md Template and Examples for AI Agent Skills",
   description:
-    "Start with a plain SKILL.md template, then see AIPM examples for code review, issue summaries, and release notes.",
+    "SKILL.md templates for Claude Code, Codex, and Cursor, with examples for review, issues, and release notes.",
   path: "/templates",
   keywords: [
     "SKILL.md template",

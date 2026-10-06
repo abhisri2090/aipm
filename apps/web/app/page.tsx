@@ -71,14 +71,17 @@ function TagStatusIcon({ status }: { status: "done" | "pending" }) {
 }
 
 export const metadata = pageMetadata({
-  title: "Claude & Agent Skills Marketplace — Install with AIPM",
+  // The root layout's "%s | AIPM" template does not apply to this page, so the brand leads here.
+  // "Marketplace" is left to /skills so the two pages do not compete for the same searches.
+  title: "AIPM: Skills for Claude, Codex & Cursor",
   description:
-    "A marketplace of Claude skills and agent skills for Claude Code, Cursor and Codex, plus AI prompts. Review the source, then install a pinned version with AIPM.",
+    "Find and install agent skills for Claude Code, Codex, and Cursor. See what each skill does, then add it with one command.",
   keywords: [
     "Claude skills marketplace",
     "Claude skills",
     "agent skills marketplace",
     "Claude Code skills",
+    "Codex skills",
     "Cursor skills",
     "AI agent skills",
     "install Claude skills",
@@ -105,7 +108,7 @@ export default async function HomePage() {
                 alternateName: "AIPM",
                 url: SITE_URL,
                 description:
-                  "Claude and agent skills marketplace with versioned skills, AI prompts, and a CLI that installs skills like packages.",
+                  "Marketplace for skills that work in Claude Code, Codex, and Cursor, with versioned skills, prompt snapshots, and a CLI.",
                 publisher: {
                   "@id": `${SITE_URL}/#organization`,
                 },
@@ -148,7 +151,7 @@ export default async function HomePage() {
                 applicationCategory: "DeveloperApplication",
                 operatingSystem: "macOS, Linux, Windows",
                 description:
-                  "Command line tool that installs, updates, and publishes versioned AI agent skills for Claude Code and Codex (Cursor loads both skill folders) and tracks AI prompts in your project.",
+                  "Command line tool that installs versioned skills for Claude Code, Codex, and Cursor, and saves prompt snapshots in your project.",
                 url: `${SITE_URL}/commands`,
                 installUrl: "https://www.npmjs.com/package/@aipm-registry/cli",
                 softwareHelp: `${SITE_URL}/commands`,
@@ -168,8 +171,8 @@ export default async function HomePage() {
         }}
       />
       <section className={home.hero} aria-labelledby="hero-title">
-        <p className={shell.eyebrow}>Claude · Claude Code · Cursor · Codex skills marketplace</p>
-        <h1 id="hero-title">Claude and agent skills you can install like packages.</h1>
+        <p className={shell.eyebrow}>Skills for Claude Code, Codex, and Cursor</p>
+        <h1 id="hero-title">Install skills that work in Claude Code, Codex, and Cursor.</h1>
         <div className={home.heroManifestoRow}>
           <ul className={home.heroManifesto} aria-label="Why AIPM exists">
             <li>Software got npm.</li>
@@ -223,17 +226,16 @@ export default async function HomePage() {
           </aside>
         </div>
         <p className={shell.lede}>
-          Browse a marketplace of Claude skills, agent skills for Claude Code, Cursor, and Codex, and
-          AI prompts, then install a pinned version with the AIPM CLI. Review source and files first;
-          keep package-manager versioning as the way you share skills across repos and teammates.
+          Find a skill, see what it does, and install it into Claude Code, Codex, or Cursor with one
+          command. Skills have a version you can pin. Prompts are saved as a snapshot, not a version.
         </p>
         <dl className={home.answerGrid} aria-label="AIPM direct answers">
           <div>
             <dt>What is AIPM?</dt>
             <dd>
-              AIPM is a Claude and agent skills marketplace plus CLI: browse versioned agent
-              skills and install them into Claude Code or Codex like packages (Cursor loads both
-              folders). Prompts can be tracked in your project too.
+              AIPM is a marketplace and a small command-line tool. You browse skills, then
+              install them into Claude Code, Codex, or Cursor. Skills are versioned. Prompts are
+              snapshots.
             </dd>
           </div>
           <div>
@@ -247,9 +249,10 @@ export default async function HomePage() {
             <dt>How do you start?</dt>
             <dd>
               Install the CLI, then add a skill with{" "}
-              <code>aipm add @scope/name@version --target claude</code> (or{" "}
-              <code>--target codex</code>). Run <code>aipm init</code> first to pin versions in the
-              project, or pass <code>--no-init</code> to install once without project files.
+              <code>aipm add @scope/name@version --target claude</code>,{" "}
+              <code>--target codex</code>, or <code>--target cursor</code>. Run <code>aipm init</code>{" "}
+              first to pin the skill version in the project, or pass <code>--no-init</code> to install
+              once without project files.
             </dd>
           </div>
         </dl>
@@ -333,9 +336,8 @@ export default async function HomePage() {
               <h3>Initialize your project</h3>
             </div>
             <p>
-              Create an AIPM config file in the current project. Use <code>--target codex</code> for
-              Codex; Cursor loads skills from either folder. Skip this step and add{" "}
-              <code>--no-init</code> on the next command for a one-shot install.
+              Create a project file and choose Claude Code, Codex, or Cursor. Skip this step and add{" "}
+              <code>--no-init</code> on the next command to install once without project files.
             </p>
             <CodeBlock code="aipm init --target claude" trackingEvent="CLI Init Command Copied" />
           </article>
@@ -344,7 +346,10 @@ export default async function HomePage() {
               <span className={cards.stepNumber}>3</span>
               <h3>Add a skill</h3>
             </div>
-            <p>Install one exact skill version into .claude/skills (or .agents/skills for Codex).</p>
+            <p>
+              Install one exact skill version into the folder for that tool: .claude/skills, .agents/skills,
+              or .cursor/skills.
+            </p>
             <CodeBlock
               code="aipm add @scope/name@1.0.0 --target claude --ci"
               trackingEvent="Example Package Install Command Copied"

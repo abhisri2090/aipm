@@ -2,13 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DocLayout } from "../../../components/doc-layout";
 import { CodeBlock } from "../../../components/code-block";
+import { FeaturedSkillCards } from "../../../components/featured-skill-cards";
 import { GuideInline } from "../../../components/guide-inline";
+import { getFeaturedSkills } from "../../../lib/featured-skills";
 import { SEO_GUIDES, getSeoGuide, type GuideTable } from "../../../lib/seo-guides";
 import { guideSectionId, stripGuideInline } from "../../../lib/guide-inline";
 import { SITE_URL } from "../../../lib/registry";
 import { pageMetadata } from "../../../lib/seo";
 import { shell, cards, docs, cn } from "../../../lib/page-styles";
 import tableStyles from "../../compatibility/compatibility.module.css";
+import nextStyles from "../../../components/skills-intro.module.css";
 
 type GuideRouteProps = {
   params: Promise<{ slug: string }>;
@@ -123,6 +126,7 @@ export default async function GuidePage({ params }: GuideRouteProps) {
   if (!guide) notFound();
 
   const relatedGuides = findRelatedGuides(guide);
+  const featuredSkills = getFeaturedSkills(guide.featuredSkills ?? []);
   const guideText = JSON.stringify(guide);
   const terms = PLAIN_ENGLISH_TERMS.filter((item) => guideText.includes(item.match));
   const publishedAt = guide.publishedAt ?? GUIDE_PUBLISHED_AT;
@@ -295,15 +299,31 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           </ol>
         </section>
 
-        <section>
-          <h2>Where to go next</h2>
-          <p>
-            If you want to try this in a real project, start with{" "}
-            <Link href="/use">how to use AIPM</Link> and the{" "}
-            <Link href="/commands">command reference</Link>. If you want to share your own workflow, read
-            the <Link href="/publish">publishing guide</Link>.
-          </p>
-        </section>
+        {guide.nextSteps && guide.nextSteps.length > 0 ? (
+          <section aria-labelledby="next-steps-title">
+            <h2 id="next-steps-title">Where to go next</h2>
+            <ul className={nextStyles.nextList}>
+              {guide.nextSteps.map((step) => (
+                <li key={step.href}>
+                  <Link href={step.href}>
+                    <strong>{step.label}</strong>
+                  </Link>
+                  : {step.description}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : (
+          <section>
+            <h2>Where to go next</h2>
+            <p>
+              If you want to try this in a real project, start with{" "}
+              <Link href="/use">how to use AIPM</Link> and the{" "}
+              <Link href="/commands">command reference</Link>. If you want to share your own workflow, read
+              the <Link href="/publish">publishing guide</Link>.
+            </p>
+          </section>
+        )}
 
         <section>
           <h2>FAQ</h2>
@@ -332,6 +352,14 @@ export default async function GuidePage({ params }: GuideRouteProps) {
           </section>
         ) : null}
       </article>
+
+      <FeaturedSkillCards
+        id="guide-featured-skills-title"
+        eyebrow="Skills on AIPM"
+        title="Popular skills to try"
+        intro="Each skill page shows what the skill does, its files, and how to install it."
+        skills={featuredSkills}
+      />
 
       <section className={shell.panelSection} aria-labelledby="related-guides-title">
         <div className={shell.sectionHeading}>

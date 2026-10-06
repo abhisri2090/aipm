@@ -16,12 +16,13 @@ export const metadata: Metadata = {
     template: "%s | AIPM",
   },
   description:
-    "AIPM is a Claude and agent skills marketplace: browse, review, and install versioned skills, prompts, and tool files.",
+    "Find and install versioned skills for Claude Code, Codex, and Cursor, plus prompt snapshots.",
   keywords: [
     "Claude skills marketplace",
     "agent skills marketplace",
     "Claude skills",
     "Claude Code skills",
+    "Codex skills",
     "Cursor skills",
     "AI prompts",
   ],
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
     siteName: "AIPM",
     url: SITE_URL,
     title: "AIPM Registry",
-    description: "Claude and agent skills marketplace: browse and install versioned skills and prompts.",
+    description: "Skills for Claude Code, Codex, and Cursor. Browse and install versioned skills and prompt snapshots.",
     images: [
       {
         url: "/og.svg",
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "AIPM Registry",
-    description: "Claude and agent skills marketplace: browse and install versioned skills and prompts.",
+    description: "Skills for Claude Code, Codex, and Cursor. Browse and install versioned skills and prompt snapshots.",
     images: ["/og.svg"],
   },
 };

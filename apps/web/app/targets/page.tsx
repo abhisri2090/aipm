@@ -41,7 +41,7 @@ const targets = [
 ];
 
 export const metadata = pageMetadata({
-  title: "AIPM Supported Targets",
+  title: "Claude Code, Codex & Cursor Targets",
   description:
     "Learn where AIPM installs skills for Cursor, Claude Code, and Codex.",
   path: "/targets",
@@ -64,7 +64,7 @@ export default function TargetsPage() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "AIPM Supported Targets",
+            name: "Claude Code, Codex & Cursor Targets",
             description:
               "Learn where AIPM installs skills for Cursor, Claude Code, and Codex.",
             url: `${SITE_URL}/targets`,

@@ -14,8 +14,8 @@ const DOC_SECTION_INDEX_LASTMOD = new Date("2026-10-02T00:00:00.000Z");
 
 /** Per-path lastmod for static marketing pages (ISO date → Date). */
 const STATIC_PAGE_LASTMOD: Record<string, Date> = {
-  "/": new Date("2026-09-25T00:00:00.000Z"),
-  "/skills": new Date("2026-09-25T00:00:00.000Z"),
+  "/": new Date("2026-10-05T00:00:00.000Z"),
+  "/skills": new Date("2026-10-05T00:00:00.000Z"),
   "/prompts": new Date("2026-09-28T00:00:00.000Z"),
   "/install": HUB_SEO_REFRESH,
   "/use": new Date("2026-09-25T00:00:00.000Z"),

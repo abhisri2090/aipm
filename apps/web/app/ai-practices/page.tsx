@@ -83,7 +83,7 @@ const practices = [
 export const metadata = pageMetadata({
   title: "AI Skill Best Practices for Reusable Assistant Workflows",
   description:
-    "Write safe, testable, reusable AI skills for Cursor, Claude, Codex, and other assistants with AIPM.",
+    "Write safe, reusable skills for Claude Code, Codex, and Cursor with AIPM.",
   path: "/ai-practices",
   keywords: [
     "AI best practices",

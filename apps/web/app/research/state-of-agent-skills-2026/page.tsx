@@ -10,7 +10,7 @@ export const revalidate = 3600;
 export const metadata = pageMetadata({
   title: "State of AI Agent Skills 2026: Registry Data and Trust Signals",
   description:
-    "Explore current AIPM agent-skill registry data, target support, source coverage, licenses, integrity hashes, publisher verification, and test methodology.",
+    "Registry data for skills in Claude Code, Codex, and Cursor: sources, licenses, integrity, and how this report was built.",
   path: "/research/state-of-agent-skills-2026",
   keywords: [
     "State of Agent Skills 2026",

@@ -24,26 +24,35 @@ baseUrl.hash = "";
 const requiredPages = [
   {
     path: "/",
-    title: "Claude & Agent Skills Marketplace — Install with AIPM",
-    renderedTitle: "Claude &amp; Agent Skills Marketplace — Install with AIPM",
-    h1: "Claude and agent skills you can install like packages.",
+    title: "AIPM: Skills for Claude, Codex & Cursor",
+    renderedTitle: "AIPM: Skills for Claude, Codex &amp; Cursor",
+    h1: "Install skills that work in Claude Code, Codex, and Cursor.",
     jsonLd: true,
-    includes: ["What is AIPM?", "AIPM is a Claude and agent skills marketplace", "/best-claude-skills", "/guides/what-are-claude-skills", "Abhishek Srivastava", "aipm add @scope/name@version"],
+    includes: ["What is AIPM?", "AIPM is a marketplace and a small command-line tool", "/best-claude-skills", "/guides/what-are-claude-skills", "Abhishek Srivastava", "aipm add @scope/name@version"],
   },
   {
     path: "/registry",
     canonicalPath: "/skills",
     title: "Search the AIPM Skills Registry",
-    h1: "AI agent skills registry for Claude Code, Cursor, and more",
+    h1: "Agent skills for Claude Code, Codex, and Cursor",
     jsonLd: true,
   },
   {
     path: "/skills",
-    title: "Agent Skills Marketplace for Claude, Cursor & Codex",
-    renderedTitle: "Agent Skills Marketplace for Claude, Cursor &amp; Codex | AIPM",
-    h1: "AI agent skills registry for Claude Code, Cursor, and more",
+    title: "Agent Skills for Claude, Codex & Cursor",
+    renderedTitle: "Agent Skills for Claude, Codex &amp; Cursor | AIPM",
+    h1: "Agent skills for Claude Code, Codex, and Cursor",
     jsonLd: true,
-    includes: ["Claude Code", "Cursor"],
+    includes: [
+      "Claude Code",
+      "Cursor",
+      "What is an agent skill?",
+      "Install a skill in 3 steps",
+      "Popular skills to start with",
+      'href="/guides/how-to-install-claude-code-skills"',
+      'href="/guides/where-are-claude-skills-stored"',
+      'href="/skills/anthropics/skill-creator/1.0.0"',
+    ],
   },
   {
     path: "/prompts",
@@ -90,7 +99,8 @@ const requiredPages = [
   },
   {
     path: "/use",
-    title: "Use AIPM - Install AI Skills Into Your Project",
+    title: "Install Skills for Claude, Codex & Cursor",
+    renderedTitle: "Install Skills for Claude, Codex &amp; Cursor | AIPM",
     h1: "Install AI skills into your project.",
     jsonLd: false,
   },
@@ -110,7 +120,8 @@ const requiredPages = [
   },
   {
     path: "/targets",
-    title: "AIPM Supported Targets",
+    title: "Claude Code, Codex & Cursor Targets",
+    renderedTitle: "Claude Code, Codex &amp; Cursor Targets | AIPM",
     h1: "Choose where AIPM should install a skill.",
     jsonLd: true,
     includes: [".cursor/skills/&lt;skill&gt;/SKILL.md", ".claude/skills/&lt;skill&gt;/SKILL.md", "--target claude", "--shared"],
@@ -119,7 +130,8 @@ const requiredPages = [
   },
   {
     path: "/resources",
-    title: "AI Skill Resources",
+    title: "Skill Resources for Claude, Codex & Cursor",
+    renderedTitle: "Skill Resources for Claude, Codex &amp; Cursor | AIPM",
     h1: "Find the guide you need.",
     jsonLd: false,
   },
@@ -132,14 +144,15 @@ const requiredPages = [
   },
   {
     path: "/guides/cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: Differences and When to Use",
+    title: "Cursor Rules vs Skills: What's the Difference?",
+    renderedTitle: "Cursor Rules vs Skills: What&#x27;s the Difference? | AIPM",
     h1: "Cursor rules vs skills: what is the difference?",
     jsonLd: true,
-    includes: ["Short answer", "/migrate-to-skills", ".cursor/skills"],
+    includes: ["Short answer", "/migrate-to-skills", ".cursor/skills", "Popular skills to try", 'href="/skills/cursor"'],
   },
   {
     path: "/guides/cursor-rules-vs-agents-md",
-    title: "Does Cursor Read AGENTS.md? Cursor Rules vs AGENTS.md",
+    title: "Cursor AGENTS.md: Does It Work? Rules vs AGENTS.md",
     h1: "Does Cursor read AGENTS.md, and should you use it or Cursor rules?",
     jsonLd: true,
     includes: ["Short answer", "Does Claude Code read AGENTS.md?", "v2.1.277", "/guides/does-claude-code-read-agents-md"],
@@ -161,10 +174,11 @@ const requiredPages = [
   },
   {
     path: "/guides/agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: Which File Does What?",
+    title: "AGENTS.md vs SKILL.md: What's the Difference?",
+    renderedTitle: "AGENTS.md vs SKILL.md: What&#x27;s the Difference? | AIPM",
     h1: "AGENTS.md vs SKILL.md: what is the difference?",
     jsonLd: true,
-    includes: ["Short answer", "Which tools read which file", ".agents/skills"],
+    includes: ["Short answer", "Which tools read which file", ".agents/skills", "Where to go next"],
   },
   {
     path: "/guides/components-of-an-ai-agent",
@@ -175,7 +189,7 @@ const requiredPages = [
   },
   {
     path: "/guides/aipm-vs-skills-sh",
-    title: "AIPM vs Skills.sh — Skills.sh Alternative for Versioned Agent Skills",
+    title: "Skills.sh Alternative for Agent Skills",
     h1: "Looking for a skills.sh alternative? Here is how AIPM compares.",
     jsonLd: true,
     includes: ["Short answer", "Where they overlap", "How AIPM is different"],
@@ -230,6 +244,11 @@ const requiredPages = [
       "%USERPROFILE%",
       "/etc/codex/skills",
       '"@type":"FAQPage"',
+      "Where to go next",
+      'href="/guides/share-claude-skills-with-team"',
+      'href="/skills/anthropics/skill-creator/1.0.0"',
+      "aipm init --target cursor",
+      ".cursor/skills/&lt;skill&gt;/SKILL.md",
     ],
   },
   {
@@ -328,8 +347,8 @@ const requiredPages = [
   },
   {
     path: "/examples",
-    title: "Claude Code & Cursor Skill Examples",
-    renderedTitle: "Claude Code &amp; Cursor Skill Examples | AIPM",
+    title: "Skill Examples for Claude, Codex & Cursor",
+    renderedTitle: "Skill Examples for Claude, Codex &amp; Cursor | AIPM",
     h1: "Skill publishing examples.",
     jsonLd: true,
     includes: [
@@ -421,8 +440,8 @@ const requiredPages = [
   },
   {
     path: "/faq",
-    title: "AIPM FAQ — Install Claude Code & Cursor Skills",
-    renderedTitle: "AIPM FAQ — Install Claude Code &amp; Cursor Skills | AIPM",
+    title: "FAQ: Claude, Codex & Cursor Skills",
+    renderedTitle: "FAQ: Claude, Codex &amp; Cursor Skills | AIPM",
     h1: "Common questions and fixes.",
     jsonLd: false,
   },
@@ -957,7 +976,7 @@ if (!/\[.+\]\(.+\)/.test(llms.text)) {
 if (llms.text.length < 50) {
   fail("/llms.txt is suspiciously short.");
 }
-assertIncludes("/llms.txt", llms.text, "AIPM is a Claude and agent skills marketplace plus a command line tool");
+assertIncludes("/llms.txt", llms.text, "AIPM is a marketplace and command line tool for agent skills");
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/security`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/privacy`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/terms`);

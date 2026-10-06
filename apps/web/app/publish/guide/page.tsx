@@ -5,7 +5,7 @@ import { pageMetadata } from "../../../lib/seo";
 
 export const metadata = pageMetadata({
   title: "AIPM Publishing Guide - Create and Publish AI Skills",
-  description: "Create, check, and publish AIPM skills for supported AI tools.",
+  description: "Create, check, and publish AIPM skills for Claude Code, Codex, and Cursor.",
   path: "/publish/guide",
   keywords: ["publish AI skills", "AIPM publishing", "create AI skill package", "AI skill authoring"],
 });

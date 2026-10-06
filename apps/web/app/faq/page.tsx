@@ -6,9 +6,9 @@ import { SITE_URL } from "../../lib/registry";
 import { pageMetadata } from "../../lib/seo";
 
 export const metadata = pageMetadata({
-  title: "AIPM FAQ — Install Claude Code & Cursor Skills",
+  title: "FAQ: Claude, Codex & Cursor Skills",
   description:
-    "Answers for installing Claude Code and Cursor skills with AIPM, publishing to the registry, and common troubleshooting.",
+    "Answers for installing skills in Claude Code, Codex, and Cursor, plus publishing and troubleshooting.",
   path: "/faq",
   keywords: [
     "AIPM FAQ",
