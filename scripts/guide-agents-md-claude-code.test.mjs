@@ -12,7 +12,7 @@ const text = JSON.stringify(guide);
 describe(PATH, () => {
   it("exists with the brief's title, dates and sources", () => {
     expect(guide).not.toBeNull();
-    expect(guide.title).toBe("Does Claude Code Read AGENTS.md? Rules, Setup & Fixes");
+    expect(guide.title).toBe("Does Claude Code Read AGENTS.md? Setup & Fixes");
     expect(guide.publishedAt).toBe("2026-09-25");
     expect(guide.lastChecked).toBe("2026-09-25");
     const hrefs = guide.sources.map((source) => source.href);

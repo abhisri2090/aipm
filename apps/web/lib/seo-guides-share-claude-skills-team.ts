@@ -12,7 +12,7 @@ import type { SeoGuide } from "./seo-guides";
 export const SHARE_CLAUDE_SKILLS_TEAM_GUIDES: SeoGuide[] = [
   {
     slug: "share-claude-skills-with-team",
-    title: "Share Claude Skills With Your Team (Git, Plugin, or Registry)",
+    title: "Share Claude Skills: Git, Plugin, or Registry",
     h1: "Share Claude skills with your team: Git, plugin, or registry",
     description:
       "Share Claude skills by committing them to Git, shipping a plugin, or installing a pinned version from a registry. Compare how updates reach your team.",

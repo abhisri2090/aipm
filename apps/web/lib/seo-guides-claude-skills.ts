@@ -202,7 +202,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
     title: "Claude Skills Marketplaces Compared (2026)",
     h1: "Claude skills marketplaces compared",
     description:
-      "Compare Claude skills marketplaces: the Claude app, plugin catalogs, GitHub, skills.sh, SkillsMP, and AIPM. See how you install, how updates work, and what to review.",
+      "Compare Claude skills marketplaces: the Claude app, plugins, GitHub, skills.sh, SkillsMP, and AIPM. Install method, updates, and review.",
     answer:
       "There is no single Claude skills store. Compare them by where you use Claude and how you want updates. The Claude app uses Customize > Skills. Claude Code installs plugins with /plugin, starting with Anthropic's official marketplace. GitHub repos are indexed by skills.sh (npx skills), SkillsMP, and AIPM. AIPM is the option when you want a pinned version for Claude Code, Codex, and Cursor.",
     keywords: [

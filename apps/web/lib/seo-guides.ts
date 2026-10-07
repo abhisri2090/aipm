@@ -1214,7 +1214,7 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "aipm-vs-skills-sh",
-    title: "Skills.sh Alternative: Versioned Agent Skills (Claude, Codex, Cursor)",
+    title: "Skills.sh Alternative: Versioned Agent Skills",
     h1: "Skills.sh alternative: versioned agent skills for Claude, Codex, and Cursor",
     description:
       "A skills.sh alternative when you want a pinned version. Compare directory install vs AIPM for Claude Code, Codex, and Cursor.",
@@ -1405,10 +1405,10 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "how-to-install-claude-code-skills",
-    title: "How to Install Claude Skills (2026 Guide) — App, Code, GitHub, npx, AIPM",
+    title: "Install Claude Skills: App, Code, GitHub, npx",
     h1: "How to install Claude skills: app, Code, GitHub, npx, or AIPM",
     description:
-      "Install Claude skills in the app, in Claude Code, from GitHub, with npx skills add, or as a pinned AIPM version. Pick the path that matches where you use Claude.",
+      "Install Claude skills in the app, Claude Code, GitHub, npx, or a pinned version. Pick the path that matches where you use Claude.",
     answer:
       "Pick where you use Claude, then install there. In the Claude app, turn on code execution and upload a ZIP in Customize > Skills. In Claude Code, put the folder that contains SKILL.md in ~/.claude/skills/ (every project) or .claude/skills/ (one project). You can also install from GitHub, with npx skills add owner/repo, or pin a version with aipm add @scope/name@version --target claude.",
     keywords: [
@@ -1521,7 +1521,7 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "how-to-install-cursor-skills",
-    title: "How to Install Cursor Skills (.cursor/skills + SKILL.md) (2026)",
+    title: "How to Install Cursor Skills (.cursor/skills)",
     h1: "How to install Cursor skills (.cursor/skills and SKILL.md)",
     description:
       "Install a Cursor skill into .cursor/skills/<skill>/SKILL.md with aipm add --target cursor, then review the files before the team uses them.",
@@ -1635,8 +1635,8 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: Keep Rules Short, Put Workflows in Skills",
-    h1: "Cursor rules vs skills: keep rules short, put workflows in skills",
+    title: "Cursor Rules vs Skills: When to Use Each",
+    h1: "Cursor rules vs skills: when to use each",
     description:
       "Keep Cursor rules short. Put repeatable workflows in skills (a folder with SKILL.md). Compare when each one loads.",
     answer:
@@ -1743,7 +1743,7 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: Always-On Notes vs On-Demand Skills",
+    title: "AGENTS.md vs SKILL.md: Always-On vs On-Demand",
     h1: "AGENTS.md vs SKILL.md: always-on notes vs on-demand skills",
     description:
       "AGENTS.md is always-on project notes. SKILL.md is an on-demand skill. Compare how Claude Code, Codex, and Cursor load each file.",

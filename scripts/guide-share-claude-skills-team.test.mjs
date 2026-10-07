@@ -14,7 +14,7 @@ const read = (path) => readFileSync(new URL(`../apps/web/${path}`, import.meta.u
 describe(PATH, () => {
   it("exists with the brief's title, comparison table, FAQs and sources", () => {
     expect(guide).not.toBeNull();
-    expect(guide.title).toBe("Share Claude Skills With Your Team (Git, Plugin, or Registry)");
+    expect(guide.title).toBe("Share Claude Skills: Git, Plugin, or Registry");
     expect(guide.lastChecked).toBe("2026-09-25");
     expect(guide.answerTable.rows).toHaveLength(5);
     expect(guide.faqs).toHaveLength(7);

@@ -173,7 +173,7 @@ const requiredPages = [
   },
   {
     path: "/guides/cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: Keep Rules Short, Put Workflows in Skills",
+    title: "Cursor Rules vs Skills: When to Use Each",
     h1: "Cursor rules vs skills: keep rules short, put workflows in skills",
     jsonLd: true,
     includes: ["Short answer", "/migrate-to-skills", ".cursor/skills", "Popular skills to try", 'href="/skills/cursor"'],
@@ -187,7 +187,7 @@ const requiredPages = [
   },
   {
     path: "/guides/does-claude-code-read-agents-md",
-    title: "Does Claude Code Read AGENTS.md? Rules, Setup &amp; Fixes",
+    title: "Does Claude Code Read AGENTS.md? Setup &amp; Fixes",
     h1: "Does Claude Code read AGENTS.md?",
     jsonLd: true,
     includes: [
@@ -202,7 +202,7 @@ const requiredPages = [
   },
   {
     path: "/guides/agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: Always-On Notes vs On-Demand Skills",
+    title: "AGENTS.md vs SKILL.md: Always-On vs On-Demand",
     h1: "AGENTS.md vs SKILL.md: always-on notes vs on-demand skills",
     jsonLd: true,
     includes: ["Short answer", "Which tools read which file", ".agents/skills", "Where to go next"],
@@ -216,7 +216,7 @@ const requiredPages = [
   },
   {
     path: "/guides/aipm-vs-skills-sh",
-    title: "Skills.sh Alternative: Versioned Agent Skills (Claude, Codex, Cursor)",
+    title: "Skills.sh Alternative: Versioned Agent Skills",
     h1: "Skills.sh alternative: versioned agent skills for Claude, Codex, and Cursor",
     jsonLd: true,
     includes: ["Short answer", "Where they overlap", "How AIPM is different"],
@@ -253,7 +253,7 @@ const requiredPages = [
   },
   {
     path: "/guides/how-to-install-claude-code-skills",
-    title: "How to Install Claude Skills (2026 Guide) — App, Code, GitHub, npx, AIPM",
+    title: "Install Claude Skills: App, Code, GitHub, npx",
     h1: "How to install Claude skills: app, Code, GitHub, npx, or AIPM",
     jsonLd: true,
     includes: ["Short answer", "Customize &gt; Skills", "~/.claude/skills/", "npx skills add", "aipm init --target claude", "/guides/where-are-claude-skills-stored"],
@@ -280,7 +280,7 @@ const requiredPages = [
   },
   {
     path: "/guides/how-to-install-cursor-skills",
-    title: "How to Install Cursor Skills (.cursor/skills + SKILL.md) (2026)",
+    title: "How to Install Cursor Skills (.cursor/skills)",
     h1: "How to install Cursor skills (.cursor/skills and SKILL.md)",
     jsonLd: true,
     includes: ["Short answer", "aipm init --target cursor", "Where Cursor finds the skill", ".cursor/skills/"],
@@ -502,7 +502,7 @@ const requiredPages = [
   },
   {
     path: "/guides/share-claude-skills-with-team",
-    title: "Share Claude Skills With Your Team (Git, Plugin, or Registry)",
+    title: "Share Claude Skills: Git, Plugin, or Registry",
     h1: "Share Claude skills with your team: Git, plugin, or registry",
     jsonLd: true,
     includes: [

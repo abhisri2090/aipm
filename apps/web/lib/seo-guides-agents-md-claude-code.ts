@@ -8,7 +8,7 @@ import type { SeoGuide } from "./seo-guides";
 export const AGENTS_MD_CLAUDE_CODE_GUIDES: SeoGuide[] = [
   {
     slug: "does-claude-code-read-agents-md",
-    title: "Does Claude Code Read AGENTS.md? Rules, Setup & Fixes",
+    title: "Does Claude Code Read AGENTS.md? Setup & Fixes",
     h1: "Does Claude Code read AGENTS.md?",
     description:
       "Yes, since v2.1.277. Claude Code reads AGENTS.md only when no CLAUDE.md exists. See how to load both, check it loaded, and fix AGENTS.md not loading.",
