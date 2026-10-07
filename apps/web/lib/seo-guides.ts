@@ -1214,12 +1214,22 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "aipm-vs-skills-sh",
-    title: "Skills.sh Alternative for Agent Skills",
-    h1: "Looking for a skills.sh alternative? Here is how AIPM compares.",
+    title: "Skills.sh Alternative: Versioned Agent Skills (Claude, Codex, Cursor)",
+    h1: "Skills.sh alternative: versioned agent skills for Claude, Codex, and Cursor",
     description:
-      "AIPM vs Skills.sh: versioned skills for Claude Code, Codex, and Cursor, and when pinned installs help.",
+      "A skills.sh alternative when you want a pinned version. Compare directory install vs AIPM for Claude Code, Codex, and Cursor.",
     answer:
-      "Both help people find and install Agent Skills. Skills.sh is a popular Agent Skills directory with its own install command. AIPM is a skills registry plus package-manager workflow for named, versioned packages and installs for Claude Code, Codex, and Cursor. Use whichever has the skill you trust; AIPM is a strong skills.sh alternative when you need pinned versions and project-local installs.",
+      "Use AIPM instead of skills.sh when you want a named version you can pin. Skills.sh is a directory with its own install command. AIPM is a registry that installs the same skill for Claude Code, Codex, and Cursor and records the version in the project. Use whichever has the skill you trust.",
+    answerTable: {
+      caption: "Skills.sh vs AIPM, in short.",
+      columns: ["", "Skills.sh", "AIPM"],
+      rows: [
+        ["What it is", "A directory plus an install command", "A registry plus versioned installs"],
+        ["Version you get", "Whatever the repo serves when you install", "The version you name, such as @1.2.0"],
+        ["Tools", "Many agents, including Claude Code", "Claude Code, Codex, and Cursor"],
+        ["Team repeat", "Re-run the install command", "Commit aipm.package.json and run aipm install"],
+      ],
+    },
     keywords: [
       "skills.sh alternative",
       "AIPM vs Skills.sh",
@@ -1229,7 +1239,7 @@ updatedAt: "2026-09-25",
       "AI skill package manager",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-07",
     sections: [
       {
         title: "Where they overlap",
@@ -1282,15 +1292,25 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "claude-code-skills-vs-codex-skills",
-    title: "Claude Code Skills vs Codex Skills",
-    h1: "What is the difference between Claude Code skills and Codex skills?",
+    title: "Can Codex Use Claude Skills? Paths That Work (2026)",
+    h1: "Can Codex use Claude skills? Paths that work",
     description:
-      "Compare Claude Code skills and Codex skills, including SKILL.md, storage locations, automatic selection, commands, and team sharing.",
+      "Codex does not read .claude/skills. The same SKILL.md works in .agents/skills. See the paths and the AIPM install for each tool.",
     answer:
-      "Claude Code and Codex can both use reusable skills built around a SKILL.md file. The main differences are where each tool stores and discovers skills, how users start them, and which product-specific features surround the shared instructions.",
-    keywords: ["Claude Code skills vs Codex skills", "Codex SKILL.md", "Claude SKILL.md", "Agent Skills comparison"],
+      "Codex can use a Claude skill, but not from Claude's folder. Codex does not read `.claude/skills`. Put the same SKILL.md in `.agents/skills/<name>/SKILL.md`, or run `aipm add @scope/name@version --target codex`. Claude Code uses `--target claude`, which writes `.claude/skills/<name>/SKILL.md`.",
+    answerTable: {
+      caption: "Paths that work in Claude Code and Codex.",
+      columns: ["", "Claude Code", "Codex"],
+      rows: [
+        ["Project skill path", "`.claude/skills/<name>/SKILL.md`", "`.agents/skills/<name>/SKILL.md`"],
+        ["Reads the other tool's folder?", "No", "No"],
+        ["AIPM install", "`aipm add @scope/name@version --target claude`", "`aipm add @scope/name@version --target codex`"],
+        ["Same SKILL.md?", "Yes, after you install it into this path", "Yes, after you install it into this path"],
+      ],
+    },
+    keywords: ["Claude Code skills vs Codex skills", "Codex SKILL.md", "Claude SKILL.md", "Agent Skills comparison", "can Codex use Claude skills"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-07",
     sections: [
       {
         title: "The shared idea",
@@ -1385,12 +1405,12 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "how-to-install-claude-code-skills",
-    title: "How to Install Claude Skills (App, Code, GitHub, npx)",
-    h1: "How do you install Claude skills?",
+    title: "How to Install Claude Skills (2026 Guide) — App, Code, GitHub, npx, AIPM",
+    h1: "How to install Claude skills: app, Code, GitHub, npx, or AIPM",
     description:
-      "Install Claude skills in the Claude app (upload a ZIP in Customize > Skills), in Claude Code (~/.claude/skills), from GitHub, with npx skills add, or with AIPM.",
+      "Install Claude skills in the app, in Claude Code, from GitHub, with npx skills add, or as a pinned AIPM version. Pick the path that matches where you use Claude.",
     answer:
-      "It depends on where you use Claude. In the Claude app (claude.ai or Claude Desktop), turn on Code execution and file creation, then go to Customize > Skills and upload the skill folder as a ZIP. In Claude Code, put the skill folder (the one that contains SKILL.md) in ~/.claude/skills/ for all projects or .claude/skills/ for one project. You can also install from a plugin marketplace with /plugin, from GitHub with npx skills add owner/repo, or as a pinned version with aipm add --target claude.",
+      "Pick where you use Claude, then install there. In the Claude app, turn on code execution and upload a ZIP in Customize > Skills. In Claude Code, put the folder that contains SKILL.md in ~/.claude/skills/ (every project) or .claude/skills/ (one project). You can also install from GitHub, with npx skills add owner/repo, or pin a version with aipm add @scope/name@version --target claude.",
     keywords: [
       "how to install Claude skills",
       "install Claude skills",
@@ -1402,7 +1422,7 @@ updatedAt: "2026-09-25",
       "where are Claude skills stored",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-10-05",
+    updatedAt: "2026-10-07",
     sections: [
       {
         title: "First, which Claude are you using?",
@@ -1501,15 +1521,15 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "how-to-install-cursor-skills",
-    title: "How to Install Cursor AI Skills",
-    h1: "How do you install an AI skill for Cursor?",
+    title: "How to Install Cursor Skills (.cursor/skills + SKILL.md) (2026)",
+    h1: "How to install Cursor skills (.cursor/skills and SKILL.md)",
     description:
-      "Install a reusable AI skill for Cursor with AIPM: use --target cursor so the skill lands in .cursor/skills, then review and test it.",
+      "Install a Cursor skill into .cursor/skills/<skill>/SKILL.md with aipm add --target cursor, then review the files before the team uses them.",
     answer:
-      "Cursor loads skills from .cursor/skills/<skill>/SKILL.md, and also reads .agents/skills, .claude/skills, and .codex/skills. Install the AIPM CLI, then run aipm add @scope/name@version --target cursor. Review the installed files before using them.",
-    keywords: ["install Cursor skills", "Cursor AI skills", "add Cursor skill", "Cursor project skill"],
+      "Install the skill folder at .cursor/skills/<skill>/SKILL.md. Cursor also reads .agents/skills, .claude/skills, and .codex/skills. With AIPM, run aipm add @scope/name@version --target cursor, then review the installed files before you use them.",
+    keywords: ["install Cursor skills", "Cursor AI skills", "add Cursor skill", "Cursor project skill", ".cursor/skills"],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-07",
     sections: [
       {
         title: "Start from the public package page",
@@ -1615,12 +1635,22 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: What's the Difference?",
-    h1: "Cursor rules vs skills: what is the difference?",
+    title: "Cursor Rules vs Skills: Keep Rules Short, Put Workflows in Skills",
+    h1: "Cursor rules vs skills: keep rules short, put workflows in skills",
     description:
-      "Rules are standing instructions Cursor follows as you work. Skills are step-by-step guides it loads only when a task needs one. See when to use each.",
+      "Keep Cursor rules short. Put repeatable workflows in skills (a folder with SKILL.md). Compare when each one loads.",
     answer:
-      "In Cursor, rules are standing instructions: they apply always, to matching files, or when the agent decides they are relevant. Skills are task packages (a folder with SKILL.md) that the agent loads only when a task matches, or when you type /skill-name. Use rules for how the project should always be worked on, and skills for repeatable jobs such as code review or release notes.",
+      "Keep Cursor rules short. Put workflows in skills. Rules are standing instructions: they apply always, to matching files, or when the agent decides they are relevant. Skills are a folder with SKILL.md that Cursor loads only when a task matches, or when you type /skill-name. Rules say how the project should always be worked on. Skills hold jobs such as code review or release notes.",
+    answerTable: {
+      caption: "Cursor rules vs skills.",
+      columns: ["", "Rules", "Skills"],
+      rows: [
+        ["What it is", "Standing instructions", "One workflow, loaded when needed"],
+        ["Where it lives", "`.cursor/rules/*.mdc`", "`.cursor/skills/<name>/SKILL.md`"],
+        ["When it loads", "Always, matching files, or when relevant", "When the task matches, or /skill-name"],
+        ["Keep it", "Short", "The steps for one job"],
+      ],
+    },
     keywords: [
       "Cursor rules vs skills",
       "Cursor skills vs rules",
@@ -1630,7 +1660,7 @@ updatedAt: "2026-09-25",
       "Cursor SKILL.md",
     ],
     publishedAt: "2026-09-04",
-    updatedAt: "2026-10-05",
+    updatedAt: "2026-10-07",
     sections: [
       {
         title: "Rules: standing instructions for normal work",
@@ -1713,12 +1743,22 @@ updatedAt: "2026-09-25",
   },
   {
     slug: "agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: What's the Difference?",
-    h1: "AGENTS.md vs SKILL.md: what is the difference?",
+    title: "AGENTS.md vs SKILL.md: Always-On Notes vs On-Demand Skills",
+    h1: "AGENTS.md vs SKILL.md: always-on notes vs on-demand skills",
     description:
-      "AGENTS.md holds project notes. SKILL.md holds one task. How Claude Code, Codex, and Cursor use each.",
+      "AGENTS.md is always-on project notes. SKILL.md is an on-demand skill. Compare how Claude Code, Codex, and Cursor load each file.",
     answer:
-      "AGENTS.md is one Markdown file of project instructions (commands, code style, test rules) that a coding agent reads at the start of work. SKILL.md is the main file inside a skill folder and explains how to do one task; the agent loads it only when the task matches. Use AGENTS.md for project context and SKILL.md for focused, reusable workflows.",
+      "AGENTS.md is always-on project notes: commands, code style, and test rules that a coding agent reads at the start of work. SKILL.md is an on-demand skill: the main file in a skill folder, loaded only when the task matches. Keep project facts in AGENTS.md. Put one reusable workflow in SKILL.md.",
+    answerTable: {
+      caption: "Always-on notes vs on-demand skills.",
+      columns: ["", "AGENTS.md", "SKILL.md"],
+      rows: [
+        ["What it is", "Project notes for every session", "Steps for one job"],
+        ["When it loads", "At the start of work", "When the task matches"],
+        ["Typical path", "`AGENTS.md` at the repo root", "`.claude/skills`, `.cursor/skills`, or `.agents/skills`"],
+        ["Keep it", "Short, because it is always in context", "As long as the job needs"],
+      ],
+    },
     keywords: [
       "AGENTS.md vs SKILL.md",
       "agents.md vs skills.md",
@@ -1728,7 +1768,7 @@ updatedAt: "2026-09-25",
       "SKILL.md format",
     ],
     publishedAt: "2026-09-04",
-    updatedAt: "2026-10-05",
+    updatedAt: "2026-10-07",
     sections: [
       {
         title: "AGENTS.md describes the project",

@@ -12,9 +12,9 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
     title: "Where Are Claude Skills Stored? Folder Paths (2026)",
     h1: "Where are Claude skills stored?",
     description:
-      "Claude Code keeps skills in ~/.claude/skills (personal) and .claude/skills (project). See plugin, enterprise, synced and Claude app locations, plus Windows paths.",
+      "Official docs list every Claude skills folder. This page is the short map, plus how AIPM installs into .claude/skills for Claude Code.",
     answer:
-      "Claude Code loads personal skills from `~/.claude/skills/<name>/SKILL.md` (every project on your machine) and project skills from `.claude/skills/<name>/SKILL.md` (commit it to share). Plugin skills live in the plugin's `skills/` folder, with installed copies under `~/.claude/plugins/cache/`. Skills you add in the Claude app live in your claude.ai account, and Claude Code v2.1.273 or later downloads them to `~/.claude/skills/synced/` when you sign in with that account. On Windows, `~` is `%USERPROFILE%`, so personal skills are in `%USERPROFILE%\\.claude\\skills\\`.",
+      "Official docs list paths; here's the short map and how AIPM installs. Claude Code loads personal skills from `~/.claude/skills/<name>/SKILL.md` and project skills from `.claude/skills/<name>/SKILL.md`. AIPM writes the project folder with `aipm add @scope/name@version --target claude`. Plugin copies live under `~/.claude/plugins/cache/`. Claude app skills sync to `~/.claude/skills/synced/` (Claude Code v2.1.273 or later). On Windows, personal skills are in `%USERPROFILE%\\.claude\\skills\\`. To install, see [how to install Claude skills](/guides/how-to-install-claude-code-skills). To compare tools, see [skills for Claude Code, Cursor, and Codex](/for).",
     keywords: [
       "where are claude skills stored",
       "claude skills folder",
@@ -26,7 +26,7 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
       "claude code commands folder",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-10-05",
+    updatedAt: "2026-10-07",
     lastChecked: "2026-09-25",
     sections: [
       {

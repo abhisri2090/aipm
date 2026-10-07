@@ -1,3 +1,12 @@
+import { FOR_TOOLS } from "./for-tool-landings";
+import { SEO_GUIDES } from "./seo-guides";
+import {
+  LLMS_MIRROR_GUIDE_SLUGS,
+  forIndexMarkdownPath,
+  forToolMarkdownPath,
+  guideMarkdownPath,
+} from "./llms-mirrors";
+
 export type LlmsTxtInput = {
   siteUrl: string;
   cliVersion: string;
@@ -11,6 +20,24 @@ export type LlmsTxtInput = {
 
 export function buildLlmsTxt(input: LlmsTxtInput): string {
   const site = input.siteUrl.replace(/\/$/, "");
+  const forLinks = [
+    `- [Skills for Claude Code, Cursor, and Codex](${site}/for)`,
+    ...FOR_TOOLS.map((tool) => `- [${tool.h1}](${site}/for/${tool.slug})`),
+  ].join("\n");
+  const targetCommands = [
+    "- `--target claude` writes `.claude/skills/<name>/SKILL.md`. Command: `aipm add @scope/name@version --target claude`",
+    "- `--target cursor` writes `.cursor/skills/<name>/SKILL.md`. Command: `aipm add @scope/name@version --target cursor`",
+    "- `--target codex` writes `.agents/skills/<name>/SKILL.md`. Command: `aipm add @scope/name@version --target codex`",
+  ].join("\n");
+  const mirrorLinks = [
+    `- [Skills index (markdown)](${site}${forIndexMarkdownPath()})`,
+    ...FOR_TOOLS.map((tool) => `- [${tool.h1} (markdown)](${site}${forToolMarkdownPath(tool.slug)})`),
+    ...LLMS_MIRROR_GUIDE_SLUGS.map((slug) => {
+      const guide = SEO_GUIDES.find((item) => item.slug === slug);
+      const label = guide?.title ?? slug;
+      return `- [${label} (markdown)](${site}${guideMarkdownPath(slug)})`;
+    }),
+  ].join("\n");
 
   return `# AIPM Registry
 
@@ -28,6 +55,8 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 - [Examples](${site}/examples)
 - [Glossary](${site}/glossary)
 - [Supported targets](${site}/targets)
+- [Full text for agents](${site}/llms-full.txt)
+${forLinks}
 - [AI best practices](${site}/ai-practices)
 - [Security and privacy](${site}/security)
 - [Privacy notice](${site}/privacy)
@@ -80,6 +109,16 @@ An Agent Skill teaches an AI how to complete a repeated task. MCP connects an AI
 ### How do you install a Claude Code or Cursor skill?
 
 Install the AIPM CLI and run aipm add @scope/name@version --target claude (writes .claude/skills/<skill>/SKILL.md) or --target codex (writes .agents/skills/<skill>/SKILL.md). For Cursor, use --target cursor (writes .cursor/skills/<skill>/SKILL.md). Review the installed files before use. See [How to install Claude skills](${site}/guides/how-to-install-claude-code-skills) and [Install Cursor skills](${site}/guides/how-to-install-cursor-skills).
+
+## Per-target install
+
+${targetCommands}
+
+Cursor's project skill folder is \`.cursor/skills/<name>/SKILL.md\`.
+
+## Markdown mirrors
+
+${mirrorLinks}
 
 ## Install
 

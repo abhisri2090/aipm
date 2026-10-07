@@ -13,7 +13,7 @@ export const AGENTS_MD_CLAUDE_CODE_GUIDES: SeoGuide[] = [
     description:
       "Yes, since v2.1.277. Claude Code reads AGENTS.md only when no CLAUDE.md exists. See how to load both, check it loaded, and fix AGENTS.md not loading.",
     answer:
-      "Yes. Since v2.1.277 (September 18, 2026), Claude Code reads `AGENTS.md` on its own, but only when no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists in your working directory or any folder above it. If one does, Claude reads your CLAUDE.md files only. To load both, set Project instructions to `claude-md-and-agents-md` in `/config`, or start your CLAUDE.md with `@AGENTS.md`. Since v2.1.281 this also works on Amazon Bedrock, Google Vertex AI, Microsoft Foundry and LLM gateways.",
+      "Yes. Since v2.1.277 (September 18, 2026), Claude Code reads `AGENTS.md` on its own, but only when no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists in your working directory or any folder above it. If one does, Claude reads your CLAUDE.md files only. To load both, set Project instructions to `claude-md-and-agents-md` in `/config`, or start your CLAUDE.md with `@AGENTS.md`. Since v2.1.281 this also works on Amazon Bedrock, Google Vertex AI, Microsoft Foundry and LLM gateways. AGENTS.md is always-on project notes; a one-task workflow belongs in SKILL.md. Compare them in [AGENTS.md vs SKILL.md](/guides/agents-md-vs-skill-md).",
     answerTable: {
       caption: "What Claude Code reads by default. Source: Claude Code memory docs, checked 25 September 2026 (latest release 2.1.282).",
       columns: ["Your repository has", "Claude Code reads"],
@@ -33,7 +33,7 @@ export const AGENTS_MD_CLAUDE_CODE_GUIDES: SeoGuide[] = [
       "claude-md-and-agents-md",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-07",
     lastChecked: "2026-09-25",
     sections: [
       {

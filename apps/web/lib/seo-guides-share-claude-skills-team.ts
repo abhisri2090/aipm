@@ -12,12 +12,12 @@ import type { SeoGuide } from "./seo-guides";
 export const SHARE_CLAUDE_SKILLS_TEAM_GUIDES: SeoGuide[] = [
   {
     slug: "share-claude-skills-with-team",
-    title: "How to Share Claude Skills With Your Team (2026 Guide)",
-    h1: "How to share Claude skills with your team: repo, plugin marketplace, Claude app, or a registry",
+    title: "Share Claude Skills With Your Team (Git, Plugin, or Registry)",
+    h1: "Share Claude skills with your team: Git, plugin, or registry",
     description:
-      "Four ways to share Claude skills with a team: commit .claude/skills, a plugin marketplace, Claude Team/Enterprise sharing, or a registry, plus how to pin versions.",
+      "Share Claude skills by committing them to Git, shipping a plugin, or installing a pinned version from a registry. Compare how updates reach your team.",
     answer:
-      "To share Claude skills with a team, commit them to the repo's `.claude/skills/` folder so everyone who clones it gets them, package them as a Claude Code plugin in a team marketplace for use across repos, or, on Claude Team and Enterprise plans, share, publish or provision them in the Claude app so they also sync to Claude Code. To pin exact versions across many repos, and for Codex too, install them from a package registry such as AIPM.",
+      "Share Claude skills in one of three ways: commit them to Git in the repo's `.claude/skills/` folder, ship them as a Claude Code plugin, or install a pinned version from a registry such as AIPM. On Claude Team and Enterprise plans you can also share, publish, or provision skills in the Claude app so they sync to Claude Code. The table shows which option fits one repo, many repos, or a pinned version.",
     answerTable: {
       caption: "Ways to share Claude skills, from the Claude Code docs and Claude Help Center (checked 25 September 2026).",
       columns: ["Option", "Works in", "Scope", "How updates reach people", "Version pinning", "Plan needed"],
@@ -41,7 +41,7 @@ export const SHARE_CLAUDE_SKILLS_TEAM_GUIDES: SeoGuide[] = [
       "claude skill registry",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-09-25",
+    updatedAt: "2026-10-07",
     lastChecked: "2026-09-25",
     sections: [
       {
