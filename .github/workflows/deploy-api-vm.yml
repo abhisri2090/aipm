@@ -35,7 +35,7 @@ jobs:
       AIPM_PUBLISH_TOKEN: ${{ secrets.AIPM_PUBLISH_TOKEN }}
       AIPM_PUBLISH_TOKEN_SHA256: ${{ secrets.AIPM_PUBLISH_TOKEN_SHA256 }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: pnpm/action-setup@v4
         with:
