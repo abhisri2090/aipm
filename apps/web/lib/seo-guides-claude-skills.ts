@@ -199,12 +199,12 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
   },
   {
     slug: "claude-skills-marketplaces",
-    title: "Claude Skills Marketplaces Compared: Where to Get Skills",
-    h1: "Where can you find Claude skills? Marketplaces compared",
+    title: "Claude Skills Marketplaces Compared (2026)",
+    h1: "Claude skills marketplaces compared",
     description:
-      "Compare places to get Claude skills: the Claude app skills directory, Claude Code plugin marketplaces, GitHub, skills.sh, SkillsMP, and AIPM. Install method, updates, and trust.",
+      "Compare Claude skills marketplaces: the Claude app, plugins, GitHub, skills.sh, SkillsMP, and AIPM. Install method, updates, and review.",
     answer:
-      "There is no single Claude skills store. Claude app users enable Anthropic's skills and upload or install their own in Customize > Skills. Claude Code users install plugins from marketplaces with /plugin, starting with Anthropic's official one. Beyond Anthropic, skills live in GitHub repositories and are indexed by directories such as skills.sh (with the npx skills CLI), SkillsMP, and AIPM. Pick based on where you use Claude, how you want updates, and how much review you need.",
+      "There is no single Claude skills store. Compare them by where you use Claude and how you want updates. The Claude app uses Customize > Skills. Claude Code installs plugins with /plugin, starting with Anthropic's official marketplace. GitHub repos are indexed by skills.sh (npx skills), SkillsMP, and AIPM. AIPM is the option when you want a pinned version for Claude Code, Codex, and Cursor.",
     keywords: [
       "Claude skills marketplace",
       "Claude Code skills marketplace",
@@ -216,9 +216,9 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       "where to find Claude skills",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-09-25",
-    comparison: {
-      caption: "Where to get Claude skills (checked 25 September 2026; details come from each source's own docs or site)",
+    updatedAt: "2026-10-07",
+    answerTable: {
+      caption: "Comparison table: where to get Claude skills (checked 25 September 2026; details come from each source's own docs or site)",
       columns: ["Source", "What it is", "How you install", "Versions and updates", "Review signals"],
       rows: [
         [

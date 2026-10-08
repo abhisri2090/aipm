@@ -35,7 +35,8 @@ describe("search snippets", () => {
     for (const slug of CTR_GUIDES) {
       const guide = getSeoGuide(slug);
       expectSnippetFits(guide.title, guide.description);
-      expect(guide.updatedAt).toBe("2026-10-05");
+      // Traffic-recovery refresh (2026-10-05) plus /for landings snippet pass (2026-10-07).
+      expect(["2026-10-05", "2026-10-07"]).toContain(guide.updatedAt);
     }
   });
 

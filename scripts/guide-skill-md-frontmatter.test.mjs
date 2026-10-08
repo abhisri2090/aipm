@@ -15,7 +15,7 @@ const read = (path) => readFileSync(new URL(`../apps/web/${path}`, import.meta.u
 describe(PATH, () => {
   it("exists with the brief's title, anchors the /templates page links to, and sources", () => {
     expect(guide).not.toBeNull();
-    expect(guide.title).toBe("SKILL.md Frontmatter Reference: Every Field & Limit");
+    expect(guide.title).toBe("Fix: SKILL.md Must Start With YAML Frontmatter (---)");
     expect(guide.lastChecked).toBe("2026-09-25");
     const ids = guide.sections.map((section) => guideSectionId(section.title));
     expect(ids).toContain("one-table-which-fields-work-where");

@@ -269,9 +269,29 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "See which instruction, skill, and MCP files work with Cursor, Claude Code, Codex, and other AI tools.",
       },
       {
+        href: "/for",
+        label: "Skills by tool",
+        body: "Short pages for Claude Code, Cursor, and Codex: compare skill paths and install with AIPM.",
+      },
+      {
+        href: "/for/claude-code",
+        label: "Skills for Claude Code",
+        body: "What Claude Code skills are, the .claude/skills path, and the AIPM install command.",
+      },
+      {
+        href: "/for/cursor",
+        label: "Skills for Cursor",
+        body: "What Cursor skills are, the .cursor/skills path, and the AIPM install command.",
+      },
+      {
+        href: "/for/codex",
+        label: "Skills for Codex",
+        body: "What Codex skills are, the .agents/skills path, and the AIPM install command.",
+      },
+      {
         href: "/targets",
         label: "Supported targets",
-        body: "See where AIPM installs files for Cursor and Claude.",
+        body: "See where AIPM installs files for Cursor, Claude Code, and Codex.",
       },
       {
         href: "/glossary",

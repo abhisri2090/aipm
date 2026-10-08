@@ -129,6 +129,35 @@ const requiredPages = [
     excludes: [".claude/aipm/skills"],
   },
   {
+    path: "/for",
+    title: "Skills for Claude Code, Cursor, and Codex",
+    h1: "Skills for Claude Code, Cursor, and Codex",
+    jsonLd: true,
+    includes: ["/for/claude-code", "/for/cursor", "/for/codex", ".claude/skills/", ".cursor/skills/", ".agents/skills/"],
+  },
+  {
+    path: "/for/claude-code",
+    title: "Skills for Claude Code — Install with AIPM (2026)",
+    h1: "Skills for Claude Code",
+    jsonLd: true,
+    includes: ["Short answer", "--target claude", ".claude/skills/&lt;name&gt;/SKILL.md", '"@type":"FAQPage"', 'href="/for/cursor"'],
+  },
+  {
+    path: "/for/cursor",
+    title: "Skills for Cursor — Install with AIPM (2026)",
+    h1: "Skills for Cursor",
+    jsonLd: true,
+    includes: ["Short answer", "--target cursor", ".cursor/skills/&lt;name&gt;/SKILL.md", '"@type":"FAQPage"'],
+    excludes: [".cursor/aipm/skills"],
+  },
+  {
+    path: "/for/codex",
+    title: "Skills for Codex — Install with AIPM (2026)",
+    h1: "Skills for Codex",
+    jsonLd: true,
+    includes: ["Short answer", "--target codex", ".agents/skills/&lt;name&gt;/SKILL.md", '"@type":"FAQPage"'],
+  },
+  {
     path: "/resources",
     title: "Skill Resources for Claude, Codex & Cursor",
     renderedTitle: "Skill Resources for Claude, Codex &amp; Cursor | AIPM",
@@ -144,9 +173,8 @@ const requiredPages = [
   },
   {
     path: "/guides/cursor-rules-vs-agent-skills",
-    title: "Cursor Rules vs Skills: What's the Difference?",
-    renderedTitle: "Cursor Rules vs Skills: What&#x27;s the Difference? | AIPM",
-    h1: "Cursor rules vs skills: what is the difference?",
+    title: "Cursor Rules vs Skills: When to Use Each",
+    h1: "Cursor rules vs skills: when to use each",
     jsonLd: true,
     includes: ["Short answer", "/migrate-to-skills", ".cursor/skills", "Popular skills to try", 'href="/skills/cursor"'],
   },
@@ -159,7 +187,7 @@ const requiredPages = [
   },
   {
     path: "/guides/does-claude-code-read-agents-md",
-    title: "Does Claude Code Read AGENTS.md? Rules, Setup &amp; Fixes",
+    title: "Does Claude Code Read AGENTS.md? Setup &amp; Fixes",
     h1: "Does Claude Code read AGENTS.md?",
     jsonLd: true,
     includes: [
@@ -174,9 +202,8 @@ const requiredPages = [
   },
   {
     path: "/guides/agents-md-vs-skill-md",
-    title: "AGENTS.md vs SKILL.md: What's the Difference?",
-    renderedTitle: "AGENTS.md vs SKILL.md: What&#x27;s the Difference? | AIPM",
-    h1: "AGENTS.md vs SKILL.md: what is the difference?",
+    title: "AGENTS.md vs SKILL.md: Always-On vs On-Demand",
+    h1: "AGENTS.md vs SKILL.md: always-on notes vs on-demand skills",
     jsonLd: true,
     includes: ["Short answer", "Which tools read which file", ".agents/skills", "Where to go next"],
   },
@@ -189,15 +216,15 @@ const requiredPages = [
   },
   {
     path: "/guides/aipm-vs-skills-sh",
-    title: "Skills.sh Alternative for Agent Skills",
-    h1: "Looking for a skills.sh alternative? Here is how AIPM compares.",
+    title: "Skills.sh Alternative: Versioned Agent Skills",
+    h1: "Skills.sh alternative: versioned agent skills for Claude, Codex, and Cursor",
     jsonLd: true,
     includes: ["Short answer", "Where they overlap", "How AIPM is different"],
   },
   {
     path: "/guides/claude-code-skills-vs-codex-skills",
-    title: "Claude Code Skills vs Codex Skills",
-    h1: "What is the difference between Claude Code skills and Codex skills?",
+    title: "Can Codex Use Claude Skills? Paths That Work (2026)",
+    h1: "Can Codex use Claude skills? Paths that work",
     jsonLd: true,
     includes: ["Short answer", "The shared idea", "Sharing across a team"],
   },
@@ -226,8 +253,8 @@ const requiredPages = [
   },
   {
     path: "/guides/how-to-install-claude-code-skills",
-    title: "How to Install Claude Skills (App, Code, GitHub, npx)",
-    h1: "How do you install Claude skills?",
+    title: "Install Claude Skills: App, Code, GitHub, npx",
+    h1: "How to install Claude skills: app, Code, GitHub, npx, or AIPM",
     jsonLd: true,
     includes: ["Short answer", "Customize &gt; Skills", "~/.claude/skills/", "npx skills add", "aipm init --target claude", "/guides/where-are-claude-skills-stored"],
   },
@@ -253,8 +280,8 @@ const requiredPages = [
   },
   {
     path: "/guides/how-to-install-cursor-skills",
-    title: "How to Install Cursor AI Skills",
-    h1: "How do you install an AI skill for Cursor?",
+    title: "How to Install Cursor Skills (.cursor/skills)",
+    h1: "How to install Cursor skills (.cursor/skills and SKILL.md)",
     jsonLd: true,
     includes: ["Short answer", "aipm init --target cursor", "Where Cursor finds the skill", ".cursor/skills/"],
   },
@@ -267,8 +294,8 @@ const requiredPages = [
   },
   {
     path: "/guides/skill-md-frontmatter-reference",
-    title: "SKILL.md Frontmatter Reference: Every Field &amp; Limit",
-    h1: "SKILL.md frontmatter reference: every field, limit and error",
+    title: "Fix: SKILL.md Must Start With YAML Frontmatter (---)",
+    h1: "Fix: SKILL.md must start with YAML frontmatter (---)",
     jsonLd: true,
     includes: [
       "Short answer",
@@ -475,8 +502,8 @@ const requiredPages = [
   },
   {
     path: "/guides/share-claude-skills-with-team",
-    title: "How to Share Claude Skills With Your Team (2026 Guide)",
-    h1: "How to share Claude skills with your team: repo, plugin marketplace, Claude app, or a registry",
+    title: "Share Claude Skills: Git, Plugin, or Registry",
+    h1: "Share Claude skills with your team: Git, plugin, or registry",
     jsonLd: true,
     includes: [
       "Short answer",
@@ -511,8 +538,8 @@ const requiredPages = [
   },
   {
     path: "/guides/claude-skills-marketplaces",
-    title: "Claude Skills Marketplaces Compared: Where to Get Skills",
-    h1: "Where can you find Claude skills? Marketplaces compared",
+    title: "Claude Skills Marketplaces Compared (2026)",
+    h1: "Claude skills marketplaces compared",
     jsonLd: true,
     includes: ["Comparison table", "SkillsMP", "skills.sh", "claude-plugins-official"],
   },
@@ -760,6 +787,10 @@ for (const path of [
   "/use",
   "/commands",
   "/targets",
+  "/for",
+  "/for/claude-code",
+  "/for/cursor",
+  "/for/codex",
   "/resources",
   "/skills/cursor",
   "/skills/claude",
@@ -995,6 +1026,28 @@ assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/ai-agent-
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/components-of-an-ai-agent`);
 assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/compatibility`);
 assertIncludes("/llms.txt", llms.text, "What are the main components of an AI agent?");
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/llms-full.txt`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/for/claude-code`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/for/cursor`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/for/codex`);
+assertIncludes("/llms.txt", llms.text, "aipm add @scope/name@version --target claude");
+assertIncludes("/llms.txt", llms.text, "aipm add @scope/name@version --target cursor");
+assertIncludes("/llms.txt", llms.text, "aipm add @scope/name@version --target codex");
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/guides/how-to-install-claude-code-skills/md`);
+assertIncludes("/llms.txt", llms.text, `${expectedCanonicalUrl}/for/claude-code/md`);
+
+const llmsFull = await fetchText("/llms-full.txt");
+assertStatus("/llms-full.txt", llmsFull.response);
+if (!String(llmsFull.response.headers.get("content-type") ?? "").includes("text/plain")) {
+  fail("/llms-full.txt content-type is not text/plain");
+}
+assertIncludes("/llms-full.txt", llmsFull.text, "/for/claude-code");
+assertIncludes("/llms-full.txt", llmsFull.text, ".claude/skills/<name>/SKILL.md");
+assertIncludes("/llms-full.txt", llmsFull.text, ".cursor/skills/<name>/SKILL.md");
+assertIncludes("/llms-full.txt", llmsFull.text, ".agents/skills/<name>/SKILL.md");
+assertIncludes("/llms-full.txt", llmsFull.text, "--target claude");
+assertIncludes("/llms-full.txt", llmsFull.text, "--target cursor");
+assertIncludes("/llms-full.txt", llmsFull.text, "--target codex");
 
 const securityPolicy = await readFile(resolve(repoRoot, "SECURITY.md"), "utf8");
 assertIncludes("SECURITY.md", securityPolicy, "aipm publish preview");
