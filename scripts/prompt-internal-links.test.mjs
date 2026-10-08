@@ -75,6 +75,16 @@ describe("prompt internal link graph", () => {
     expect(indexablePrompts.length).toBeGreaterThan(900);
   });
 
+  it("keeps every curated topic hub slug in the committed snapshot", () => {
+    const paths = new Set(snapshot.prompts.map((prompt) => prompt.path));
+    const missing = PROMPT_TOPIC_HUBS.flatMap((hub) =>
+      hub.promptSlugs
+        .filter((slug) => !paths.has(`/prompts/${hub.publisher}/${slug}`))
+        .map((slug) => `${hub.slug}/${slug}`),
+    );
+    expect(missing).toEqual([]);
+  });
+
   it("never links to a noindexed prompt (from any page, including noindexed ones)", () => {
     for (const [from, targets] of edges) {
       for (const to of targets) {

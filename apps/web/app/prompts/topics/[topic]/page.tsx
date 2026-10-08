@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPrompt, promptPath, type PromptSummary } from "../../../../lib/prompts";
 import { PROMPT_TOPIC_HUBS, getPromptTopicHub } from "../../../../lib/prompt-topics";
 import {
   getGeneratedSeriesHub,
   getSeriesForTopicHub,
+  getSnapshotPrompt,
   listSeriesWithHubs,
   listGeneratedSeriesHubs,
 } from "../../../../lib/prompt-links";
@@ -22,8 +22,8 @@ type PromptTopicRouteProps = {
   params: Promise<{ topic: string }>;
 };
 
-// ISR (matches getPrompt's fetch revalidate): hubs are prerendered and a
-// failed revalidation keeps the last good page.
+// Hub bodies come from the committed snapshot, so revalidate only matters if a
+// future caller adds live data back to this route.
 export const revalidate = 60;
 
 // Curated topic hubs (lib/prompt-topics.ts) plus generated series hubs (lib/prompt-series.ts).
@@ -57,25 +57,20 @@ export async function generateMetadata({ params }: PromptTopicRouteProps) {
   });
 }
 
-async function loadHubPrompts(hub: NonNullable<ReturnType<typeof getPromptTopicHub>>): Promise<PromptSummary[]> {
-  const failures: unknown[] = [];
-  const results = await Promise.all(
-    hub.promptSlugs.map((slug) =>
-      getPrompt(hub.publisher, slug).catch((error: unknown) => {
-        console.error(`[prompt-hub] ${hub.publisher}/${slug}:`, error);
-        failures.push(error);
-        return null;
-      }),
-    ),
-  );
-  // At runtime the hub was already prerendered, so throwing makes ISR keep the
-  // last good page instead of caching a hub with missing cards. During the
-  // build there is no previous page, so degrade (drop failed cards; the page
-  // renders a fallback when none load) rather than failing the deploy.
-  if (failures.length > 0 && process.env.NEXT_PHASE !== "phase-production-build") {
-    throw failures[0];
-  }
-  return results.filter((prompt): prompt is NonNullable<typeof prompt> => Boolean(prompt));
+type HubPromptCard = {
+  path: string;
+  title: string;
+  summary: string;
+};
+
+function loadHubPrompts(hub: NonNullable<ReturnType<typeof getPromptTopicHub>>): HubPromptCard[] {
+  // Curated hubs use the committed snapshot, same as generated series hubs.
+  // That keeps `/prompts/topics/*` renderable in CI when the registry API is
+  // unreachable, and avoids dropping cards on a single failed fetch.
+  return hub.promptSlugs.flatMap((slug) => {
+    const record = getSnapshotPrompt(hub.publisher, slug);
+    return record ? [{ path: record.path, title: record.title, summary: record.summary }] : [];
+  });
 }
 
 function capitalize(value: string): string {
@@ -204,7 +199,7 @@ export default async function PromptTopicHubPage({ params }: PromptTopicRoutePro
     notFound();
   }
 
-  const prompts = await loadHubPrompts(hub);
+  const prompts = loadHubPrompts(hub);
   const canonicalUrl = `${SITE_URL}/prompts/topics/${hub.slug}`;
   const otherHubs = PROMPT_TOPIC_HUBS.filter((item) => item.slug !== hub.slug);
   // Curated hubs that double as a series hub list the rest of the series from the snapshot.
@@ -237,7 +232,7 @@ export default async function PromptTopicHubPage({ params }: PromptTopicRoutePro
                     "@type": "ListItem",
                     position: index + 1,
                     name: prompt.title,
-                    url: `${SITE_URL}${promptPath(prompt)}`,
+                    url: `${SITE_URL}${prompt.path}`,
                   })),
                 },
               },
@@ -288,13 +283,13 @@ export default async function PromptTopicHubPage({ params }: PromptTopicRoutePro
         {prompts.length > 0 ? (
           <div className={cards.results}>
             {prompts.map((prompt) => (
-              <article className={cn(shell.panel, cards.stepCard)} key={prompt.id}>
+              <article className={cn(shell.panel, cards.stepCard)} key={prompt.path}>
                 <h3>
-                  <Link href={promptPath(prompt)}>{prompt.title}</Link>
+                  <Link href={prompt.path}>{prompt.title}</Link>
                 </h3>
                 <p>{prompt.summary}</p>
                 <p className={shell.muted}>
-                  <Link href={promptPath(prompt)}>/prompts/{prompt.publisher.scope}/{prompt.slug}</Link>
+                  <Link href={prompt.path}>{prompt.path}</Link>
                 </p>
               </article>
             ))}
