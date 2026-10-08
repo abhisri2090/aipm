@@ -61,4 +61,10 @@ export function getSeriesForTopicHub(topicSlug: string): PromptSeries | undefine
   return series?.curatedHub ? series : undefined;
 }
 
+/** Look up a curated hub member in the committed snapshot (no registry API). */
+export function getSnapshotPrompt(publisher: string, slug: string): PromptLinkRecord | undefined {
+  const path = `/prompts/${publisher}/${slug}`;
+  return (snapshot.prompts as PromptLinkRecord[]).find((prompt) => prompt.path === path);
+}
+
 export const PROMPT_LINK_SNAPSHOT_DATE = snapshot.generatedAt;
