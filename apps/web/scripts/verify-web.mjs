@@ -174,7 +174,7 @@ const requiredPages = [
   {
     path: "/guides/cursor-rules-vs-agent-skills",
     title: "Cursor Rules vs Skills: When to Use Each",
-    h1: "Cursor rules vs skills: keep rules short, put workflows in skills",
+    h1: "Cursor rules vs skills: when to use each",
     jsonLd: true,
     includes: ["Short answer", "/migrate-to-skills", ".cursor/skills", "Popular skills to try", 'href="/skills/cursor"'],
   },
