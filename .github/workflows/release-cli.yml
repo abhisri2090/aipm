@@ -58,7 +58,7 @@ jobs:
           AIPM_CLI_BINARY_TARGET: ${{ matrix.target }}
           AIPM_CLI_BINARY_NAME: ${{ matrix.asset }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.asset }}
           path: |
