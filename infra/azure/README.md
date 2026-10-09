@@ -84,7 +84,7 @@ AIPM_EMAIL_FROM_NAME=AIPM Registry
 Email is enabled automatically when the VM loads `aipm-email-connection-string` and
 `aipm-email-sender-address` from Key Vault.
 
-`AZURE_CREDENTIALS` is the JSON credentials object consumed by `azure/login@v2`.
+`AZURE_CREDENTIALS` is the JSON credentials object consumed by `azure/login@v3`.
 If Key Vault already stores `aipm-publish-token-sha256`, `AIPM_PUBLISH_TOKEN`
 and `AIPM_PUBLISH_TOKEN_SHA256` can be omitted.
 
