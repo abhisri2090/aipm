@@ -907,10 +907,20 @@ if (promptList.response.ok) {
   }
 }
 
-const packageList = await fetchText("/v1/skills?limit=1");
+const packageList = await fetchText("/v1/skills?limit=100");
 if (packageList.response.ok) {
   const data = JSON.parse(packageList.text);
-  const pkg = (data.skills ?? data.packages)?.[0];
+  // Same rule as apps/web/lib/registry.ts isIndexablePackage — thin/no-source
+  // skills are omitted from /ai-skills-sitemap.xml, so the first list hit is
+  // not a valid sitemap sample.
+  const pkg = (data.skills ?? data.packages ?? []).find((item) => {
+    const description = String(item?.description ?? "").trim();
+    const sourceUrl = item?.sourceUrl ?? item?.import?.sourceUrl ?? null;
+    return item?.name && item?.version && description.length >= 40 && (Boolean(sourceUrl) || description.length >= 80);
+  });
+  if (!pkg) {
+    fail("/v1/skills returned no indexable skills to cross-check against /ai-skills-sitemap.xml");
+  }
   if (pkg?.name && pkg?.version) {
     const path = packagePath(pkg.name, pkg.version);
     assertIncludes("/ai-skills-sitemap.xml", skillsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
