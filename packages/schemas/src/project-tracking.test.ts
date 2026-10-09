@@ -42,4 +42,22 @@ describe("project prompt tracking schemas", () => {
     });
     expect(lock.prompts.summary.publisher).toBe("aipm");
   });
+
+  it("accepts lockfile package entries that only list some installed tools", () => {
+    const lock = LockfileSchema.parse({
+      schemaVersion: "0.1",
+      packages: {
+        "@scope/skill": {
+          version: "1.0.0",
+          integrity: "sha256-abc",
+          registry: "https://api.aipm-registry.com",
+          resolvedTools: ["claude"],
+          installed: { claude: [".claude/skills/skill.md"] },
+        },
+      },
+    });
+    expect(lock.packages["@scope/skill"].installed).toEqual({
+      claude: [".claude/skills/skill.md"],
+    });
+  });
 });
