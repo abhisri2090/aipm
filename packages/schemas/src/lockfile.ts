@@ -4,7 +4,7 @@ import { AiToolSchema } from "./manifest.js";
 
 const scopedPackageKey = z.string().regex(SCOPE_NAME_REGEX);
 
-const InstalledPathsSchema = z.record(AiToolSchema, z.array(z.string()));
+const InstalledPathsSchema = z.partialRecord(AiToolSchema, z.array(z.string()));
 
 export const LockfilePromptEntrySchema = z.object({
   id: z.string().min(1),
