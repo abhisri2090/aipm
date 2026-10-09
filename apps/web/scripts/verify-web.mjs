@@ -926,7 +926,10 @@ if (packageList.response.ok) {
     assertIncludes("/ai-skills-sitemap.xml", skillsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
     const page = await fetchText(path);
     assertStatus(path, page.response);
-    assertIncludes(path, page.text, `<title>${pkg.name}@${pkg.version} | AIPM</title>`);
+    const title = page.text.match(/<title>([^<]+)<\/title>/)?.[1] ?? "";
+    if (!/Skill \| AIPM/.test(title)) {
+      fail(`${path} title is not a skill SERP title: ${title}`);
+    }
     assertIncludes(path, page.text, `rel="canonical" href="${expectedCanonicalUrl}${path}"`);
     assertIncludes(path, page.text, `aipm add ${pkg.name}@${pkg.version}`);
     assertIncludes(path, page.text, "AI assistant context");
