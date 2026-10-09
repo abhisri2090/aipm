@@ -36,7 +36,7 @@ describe("complete prompt sitemap", () => {
     expect(xml).toContain("/prompts/team/prompt-0");
     expect(xml).toContain("/prompts/team/prompt-108");
     expect(xml).toContain("<lastmod>2026-09-14T00:00:00.000Z</lastmod>");
-    expect(fetch.mock.calls[1][0]).toContain("cursor=page-two");
+    expect(fetch.mock.calls[1][0]).toContain("offset=100");
   });
 
   it("keeps individual prompt URLs out of the static /sitemap.xml", async () => {
@@ -73,18 +73,31 @@ describe("complete prompt sitemap", () => {
       "fetch",
       vi
         .fn()
-        .mockResolvedValueOnce(Response.json({ prompts: [prompt(0)], total: 2, nextCursor: "next" }))
+        .mockResolvedValueOnce(
+          Response.json({
+            prompts: Array.from({ length: 100 }, (_, i) => prompt(i)),
+            total: 109,
+            nextCursor: "page-two",
+          }),
+        )
         .mockResolvedValueOnce(new Response(null, { status: 429 })),
     );
     await expect(buildPromptSitemapXml()).rejects.toThrow("Prompt listing failed (429)");
   });
 
-  it("stops repeated cursors", async () => {
+  it("stops when a remaining offset page is empty", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation(async () =>
-        Response.json({ prompts: [prompt(0)], nextCursor: "same", total: 2 }),
-      ),
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          Response.json({
+            prompts: Array.from({ length: 100 }, (_, i) => prompt(i)),
+            total: 109,
+            nextCursor: "page-two",
+          }),
+        )
+        .mockResolvedValueOnce(Response.json({ prompts: [], total: 109, nextCursor: null })),
     );
     await expect(listAllPrompts()).rejects.toThrow("did not advance");
   });
@@ -107,12 +120,18 @@ describe("complete prompt sitemap", () => {
       "fetch",
       vi
         .fn()
-        .mockResolvedValueOnce(Response.json({ prompts: [prompt(0)], total: 2, nextCursor: "next" }))
         .mockResolvedValueOnce(
-          Response.json({ prompts: [prompt(0), prompt(1)], total: 2, nextCursor: null }),
+          Response.json({
+            prompts: Array.from({ length: 100 }, (_, i) => prompt(i)),
+            total: 101,
+            nextCursor: "next",
+          }),
+        )
+        .mockResolvedValueOnce(
+          Response.json({ prompts: [prompt(0), prompt(100)], total: 101, nextCursor: null }),
         ),
     );
-    await expect(listAllPrompts()).resolves.toHaveLength(2);
+    await expect(listAllPrompts()).resolves.toHaveLength(101);
   });
 
   it("allows an empty registry and retains graceful failures for normal directory reads", async () => {

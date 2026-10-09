@@ -107,22 +107,33 @@ export async function listPrompts(query = ""): Promise<PromptSummary[]> {
   return page.prompts;
 }
 
+const PROMPT_LIST_PAGE_SIZE = 100;
+
 /** Prompt sitemap generation must include every page or fail instead of publishing a partial list. */
 export async function listAllPrompts(): Promise<PromptSummary[]> {
   const prompts = new Map<string, PromptSummary>();
-  const seenCursors = new Set<string>();
-  let cursor: string | null = null;
-  let expectedTotal = 0;
-  do {
-    const page = await listPromptsPage({ limit: 100, cursor, throwOnError: true });
-    expectedTotal = Math.max(expectedTotal, page.total);
-    for (const prompt of page.prompts) prompts.set(prompt.id, prompt);
-    cursor = page.nextCursor;
-    if (cursor && (seenCursors.has(cursor) || page.prompts.length === 0)) {
+  const first = await listPromptsPage({ limit: PROMPT_LIST_PAGE_SIZE, throwOnError: true });
+  for (const prompt of first.prompts) prompts.set(prompt.id, prompt);
+
+  const expectedTotal = first.total;
+  if (expectedTotal > 0 && first.prompts.length === 0) {
+    throw new Error("Prompt pagination did not advance");
+  }
+
+  const offsets: number[] = [];
+  for (let offset = PROMPT_LIST_PAGE_SIZE; offset < expectedTotal; offset += PROMPT_LIST_PAGE_SIZE) {
+    offsets.push(offset);
+  }
+  const pages = await Promise.all(
+    offsets.map((offset) => listPromptsPage({ limit: PROMPT_LIST_PAGE_SIZE, offset, throwOnError: true })),
+  );
+  for (const page of pages) {
+    if (page.failed || page.prompts.length === 0) {
       throw new Error("Prompt pagination did not advance");
     }
-    if (cursor) seenCursors.add(cursor);
-  } while (cursor);
+    for (const prompt of page.prompts) prompts.set(prompt.id, prompt);
+  }
+
   if (prompts.size < expectedTotal) throw new Error("Prompt listing is incomplete");
   return [...prompts.values()];
 }
