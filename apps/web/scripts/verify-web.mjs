@@ -3,6 +3,7 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveCheckUrl } from "./resolve-check-url.mjs";
 
 const DEFAULT_URL = "https://www.aipm-registry.com";
 const positionalUrl = process.argv.find((arg, index) => index > 1 && !arg.startsWith("--"));
@@ -556,9 +557,7 @@ const requiredHeaders = [
 ];
 
 function urlFor(path) {
-  const url = new URL(baseUrl.href);
-  url.pathname = `${baseUrl.pathname}${path}`.replace(/\/{2,}/g, "/");
-  return url;
+  return resolveCheckUrl(baseUrl, path);
 }
 
 function fail(message) {
