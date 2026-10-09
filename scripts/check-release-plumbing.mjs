@@ -57,7 +57,7 @@ const fileChecks = [
     file: ".github/workflows/deploy-api-vm.yml",
     patterns: [
       /tags:\s*\n\s+- "api-v\*"/,
-      /azure\/login@v2/,
+      /azure\/login@v3/,
       /AZURE_CREDENTIALS/,
       /release:version-from-tag apps\/registry-api\/package\.json api-v/,
       /infra\/azure\/deploy-registry-vm\.sh/,
