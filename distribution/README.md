@@ -68,7 +68,7 @@ commands shorter and more conventional later.
 2. GitHub Actions sets `apps/cli/package.json` to the tag version in the
    runner, builds standalone binaries, and creates checksums.
 3. GitHub Actions uploads binaries, installer scripts, and package-manager
-   manifests to the GitHub release.
+   manifests to the GitHub release with `softprops/action-gh-release@v3`.
 4. GitHub Actions publishes `@aipm-registry/cli` to npm with `NPM_TOKEN`.
 5. If `HOMEBREW_TAP_REPO` and `PACKAGE_REPO_TOKEN` are set, GitHub Actions
    updates `Formula/aipm.rb` in the Homebrew tap repo.
