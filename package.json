@@ -55,7 +55,7 @@
     "playwright": "^1.62.1",
     "prettier": "^3.4.2",
     "turbo": "^2.3.3",
-    "typescript": "^5.7.2",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.18.1",
     "vite": "^8.3.4",
     "vitest": "^4.1.11"
