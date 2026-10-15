@@ -77,6 +77,7 @@ import {
   listPublicPackagePublishers,
   listPublicPublishers,
   listUserImportedPackages,
+  listUserOwnedPackageReservations,
   listUserOrgs,
   listPackageVersionsForName,
   reservePackageName,
@@ -221,6 +222,49 @@ const CLI_CODE_CHALLENGE_REGEX = /^[A-Za-z0-9_-]{43,128}$/;
 
 function normalizeOrgSlug(value: string): string {
   return value.trim().toLowerCase();
+}
+
+async function serializeSkillReservations(
+  pool: Parameters<typeof countPackageVersions>[0],
+  packages: Array<{
+    name: string;
+    created_at: Date;
+    visibility: string;
+    deprecated_at: Date | null;
+    deprecation_message: string | null;
+    install_count: number | string;
+    org_slug?: string;
+    owner_name?: string | null;
+    owner_username?: string;
+    owner_github_login?: string | null;
+  }>,
+) {
+  const versionCounts = await Promise.all(
+    packages.map(async (pkg) => ({
+      name: pkg.name,
+      count: await countPackageVersions(pool, pkg.name),
+    })),
+  );
+  const versionCountByName = new Map(versionCounts.map((row) => [row.name, row.count]));
+  return packages.map((pkg) => ({
+    name: pkg.name,
+    orgSlug: pkg.org_slug,
+    createdAt: pkg.created_at,
+    visibility: pkg.visibility,
+    deprecatedAt: pkg.deprecated_at,
+    deprecationMessage: pkg.deprecation_message,
+    publishedVersionCount: versionCountByName.get(pkg.name) ?? 0,
+    installCount: Number(pkg.install_count),
+    ...(pkg.owner_username
+      ? {
+          owner: {
+            name: pkg.owner_name ?? null,
+            username: pkg.owner_username,
+            githubLogin: pkg.owner_github_login ?? null,
+          },
+        }
+      : {}),
+  }));
 }
 
 function normalizePackageNameForOrg(org: string, value: string): string {
@@ -1239,6 +1283,13 @@ export async function createApp(): Promise<FastifyInstance> {
     };
   });
 
+  app.get("/v1/me/skills", async (request, reply) => {
+    const user = await requireCurrentUser(accountAuth, request, reply);
+    if (!user || !accountAuth) return;
+    const packages = await listUserOwnedPackageReservations(accountAuth.pool, user.id);
+    return { skills: await serializeSkillReservations(accountAuth.pool, packages) };
+  });
+
   app.post<{ Body: { email?: string } }>("/v1/me/email/verify-request", async (request, reply) => {
     const user = await requireCurrentUser(accountAuth, request, reply);
     if (!user || !accountAuth) return;
@@ -1523,24 +1574,7 @@ export async function createApp(): Promise<FastifyInstance> {
     const org = await getOrgBySlugForMember(accountAuth.pool, normalizeOrgSlug(request.params.org), user.id);
     if (!org) return reply.status(404).send({ error: "Org not found" });
     const packages = await listOrgPackageReservations(accountAuth.pool, org.id);
-    const versionCounts = await Promise.all(
-      packages.map(async (pkg) => ({
-        name: pkg.name,
-        count: await countPackageVersions(accountAuth.pool, pkg.name),
-      })),
-    );
-    const versionCountByName = new Map(versionCounts.map((row) => [row.name, row.count]));
-    return {
-      skills: packages.map((pkg) => ({
-        name: pkg.name,
-        createdAt: pkg.created_at,
-        visibility: pkg.visibility,
-        deprecatedAt: pkg.deprecated_at,
-        deprecationMessage: pkg.deprecation_message,
-        publishedVersionCount: versionCountByName.get(pkg.name) ?? 0,
-        installCount: Number(pkg.install_count),
-      })),
-    };
+    return { skills: await serializeSkillReservations(accountAuth.pool, packages) };
   });
 
   app.delete<{ Params: { org: string; name: string } }>("/v1/orgs/:org/skills/:name", async (request, reply) => {
@@ -1607,6 +1641,11 @@ export async function createApp(): Promise<FastifyInstance> {
           name: pkg.name,
           createdAt: pkg.created_at,
           visibility: pkg.visibility,
+          owner: {
+            name: user.name,
+            username: user.username,
+            githubLogin: user.github_login,
+          },
         });
       } catch (error) {
         const pgErr = error as { code?: string };

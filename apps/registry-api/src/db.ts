@@ -1274,13 +1274,41 @@ export async function reservePackageName(
 export async function listOrgPackageReservations(
   pool: pg.Pool,
   orgId: string,
-): Promise<PackageReservationRow[]> {
-  const result = await pool.query<PackageReservationRow>(
-    `SELECT ${PACKAGE_RESERVATION_FIELDS}
+): Promise<Array<PackageReservationRow & { owner_name: string | null; owner_username: string; owner_github_login: string | null }>> {
+  const fields = PACKAGE_RESERVATION_FIELDS.split(", ")
+    .map((field) => `package_reservations.${field}`)
+    .join(", ");
+  const result = await pool.query<
+    PackageReservationRow & { owner_name: string | null; owner_username: string; owner_github_login: string | null }
+  >(
+    `SELECT ${fields},
+            users.name AS owner_name,
+            users.username AS owner_username,
+            users.github_login AS owner_github_login
      FROM package_reservations
-     WHERE org_id = $1
-     ORDER BY created_at DESC`,
+     JOIN users ON users.id = package_reservations.owner_user_id
+     WHERE package_reservations.org_id = $1
+     ORDER BY package_reservations.created_at DESC`,
     [orgId],
+  );
+  return result.rows;
+}
+
+export async function listUserOwnedPackageReservations(
+  pool: pg.Pool,
+  userId: string,
+): Promise<Array<PackageReservationRow & { org_slug: string }>> {
+  const fields = PACKAGE_RESERVATION_FIELDS.split(", ")
+    .map((field) => `package_reservations.${field}`)
+    .join(", ");
+  const result = await pool.query<PackageReservationRow & { org_slug: string }>(
+    `SELECT ${fields}, orgs.slug AS org_slug
+     FROM package_reservations
+     JOIN orgs ON orgs.id = package_reservations.org_id
+     WHERE package_reservations.owner_user_id = $1
+       AND orgs.deleted_at IS NULL
+     ORDER BY package_reservations.created_at DESC`,
+    [userId],
   );
   return result.rows;
 }

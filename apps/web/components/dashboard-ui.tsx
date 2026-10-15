@@ -61,10 +61,16 @@ type Org = {
 type ReservedPackage = {
   name: string;
   createdAt: string;
+  orgSlug?: string;
   visibility?: "public" | "private";
   deprecatedAt?: string | null;
   deprecationMessage?: string | null;
   publishedVersionCount?: number;
+  owner?: {
+    name: string | null;
+    username: string;
+    githubLogin: string | null;
+  };
 };
 
 type InstallToken = {
@@ -268,7 +274,17 @@ function DashboardShell({
   intro,
   title,
 }: {
-  active: "overview" | "orgs" | "members" | "skills" | "prompts" | "tokens" | "activity" | "settings" | "profile";
+  active:
+    | "orgs"
+    | "members"
+    | "skills"
+    | "prompts"
+    | "tokens"
+    | "activity"
+    | "settings"
+    | "profile"
+    | "my-skills"
+    | "my-prompts";
   children: (context: { me: Me; orgs: Org[]; activeOrg: Org | null; setActiveOrgSlug: (slug: string) => void }) => ReactNode;
   intro?: string;
   title: string;
@@ -308,80 +324,83 @@ function DashboardShell({
     window.localStorage.setItem(activeOrgStorageKey(me.id), slug);
   };
 
-  const navItems = [
-    { href: "/dashboard", id: "overview", label: "Overview" },
-    { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
-    { href: "/dashboard/members", id: "members", label: "Members" },
+  const yours = active === "my-skills" || active === "my-prompts" || active === "profile" || active === "orgs";
+  const orgNav = [
     { href: "/dashboard/skills", id: "skills", label: "Skills" },
     { href: "/dashboard/prompts", id: "prompts", label: "Prompts" },
+    { href: "/dashboard/members", id: "members", label: "Members" },
     { href: "/dashboard/tokens", id: "tokens", label: "Tokens" },
     { href: "/dashboard/activity", id: "activity", label: "Activity" },
     { href: "/dashboard/settings", id: "settings", label: "Settings" },
+  ];
+  const userNav = [
+    { href: "/dashboard/me/skills", id: "my-skills", label: "Skills" },
+    { href: "/dashboard/me/prompts", id: "my-prompts", label: "Prompts" },
     { href: "/dashboard/profile", id: "profile", label: "Profile" },
+    { href: "/dashboard/orgs", id: "orgs", label: "Organizations" },
   ];
 
   return (
     <main className={dash.dashboardPage}>
       <aside className={dash.dashboardSidebar}>
-        <Link className={dash.dashboardLogo} href="/dashboard">
+        <Link className={dash.dashboardLogo} href="/dashboard/skills">
           <img alt="" height={28} src="/aipm-logo.svg" width={28} />
           <span>AIPM</span>
         </Link>
-        <div className={cn(dash.accountCard, dash.accountCardCompact)}>
-          <Avatar user={me} />
-          <div>
-            <strong>{me.name ?? me.username}</strong>
-            <span>{me.username}</span>
+        <div className={dash.sidebarSection}>
+          <div className={dash.orgSwitcher}>
+            <label htmlFor="dashboard-org-switcher">Organization</label>
+            {orgs.length > 0 ? (
+              <select
+                id="dashboard-org-switcher"
+                value={activeOrg?.slug ?? ""}
+                onChange={(event) => setActiveOrgSlug(event.target.value)}
+              >
+                {orgs.map((org) => (
+                  <option key={org.slug} value={org.slug}>
+                    @{org.slug}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Link href="/dashboard/orgs">Create first org</Link>
+            )}
+            <span className={dash.orgRole}>
+              {activeOrg ? `${roleLabel(activeOrg.role)} access` : "Create an org to start publishing."}
+            </span>
           </div>
+          <DashboardNav active={active} items={orgNav} label="Organization" />
         </div>
-        <div className={dash.orgSwitcher}>
-          <label htmlFor="dashboard-org-switcher">Workspace</label>
-          {orgs.length > 0 ? (
-            <select
-              id="dashboard-org-switcher"
-              value={activeOrg?.slug ?? ""}
-              onChange={(event) => setActiveOrgSlug(event.target.value)}
-            >
-              {orgs.map((org) => (
-                <option key={org.slug} value={org.slug}>
-                  @{org.slug}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <Link href="/dashboard/orgs">Create first org</Link>
-          )}
+        <div className={cn(dash.sidebarSection, dash.sidebarSectionSplit)}>
+          <p className={dash.sidebarLabel}>You</p>
+          <div className={cn(dash.accountCard, dash.accountCardCompact)}>
+            <Avatar user={me} />
+            <div>
+              <strong>{me.name ?? me.username}</strong>
+              <span>{me.username}</span>
+            </div>
+          </div>
+          <DashboardNav active={active} items={userNav} label="You" />
+          <button
+            className={cn(dash.secondaryButton, dash.sidebarSignOut)}
+            type="button"
+            onClick={async () => {
+              try {
+                await api<void>("/v1/auth/logout", { method: "POST", body: "{}" });
+              } finally {
+                window.location.href = "/login";
+              }
+            }}
+          >
+            Sign out
+          </button>
         </div>
-        <nav className={dash.dashboardNav} aria-label="Dashboard">
-          {navItems.map((item) => (
-            <Link aria-current={active === item.id ? "page" : undefined} href={item.href} key={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className={dash.sidebarHelp}>
-          <strong>{activeOrg ? `@${activeOrg.slug}` : "No workspace yet"}</strong>
-          <span>{activeOrg ? `${roleLabel(activeOrg.role)} access` : "Create an org to start publishing."}</span>
-        </div>
-        <button
-          className={cn(dash.secondaryButton, dash.sidebarSignOut)}
-          type="button"
-          onClick={async () => {
-            try {
-              await api<void>("/v1/auth/logout", { method: "POST", body: "{}" });
-            } finally {
-              window.location.href = "/login";
-            }
-          }}
-        >
-          Sign out
-        </button>
       </aside>
 
       <section className={dash.dashboardWorkspace}>
         <header className={dash.dashboardHero}>
           <div>
-            <p className={shell.eyebrow}>Publisher console</p>
+            <p className={shell.eyebrow}>{yours ? "Your account" : activeOrg ? `@${activeOrg.slug}` : "Organization"}</p>
             <h1>{title}</h1>
             {intro ? <p className={shell.lede}>{intro}</p> : null}
           </div>
@@ -389,15 +408,33 @@ function DashboardShell({
             <Link className={cn(shell.button, shell.secondary)} href="/publish">
               Docs
             </Link>
-            <Link className={shell.button} href="/dashboard/orgs">
-              New org
-            </Link>
           </div>
         </header>
+        <InviteAcceptBanner />
         <OrgJoinBanner />
         {children({ me, orgs, activeOrg, setActiveOrgSlug })}
       </section>
     </main>
+  );
+}
+
+function DashboardNav({
+  active,
+  items,
+  label,
+}: {
+  active: string;
+  items: Array<{ href: string; id: string; label: string }>;
+  label: string;
+}) {
+  return (
+    <nav className={dash.dashboardNav} aria-label={label}>
+      {items.map((item) => (
+        <Link aria-current={active === item.id ? "page" : undefined} href={item.href} key={item.href}>
+          {item.label}
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -758,130 +795,6 @@ function OrgJoinBanner() {
   );
 }
 
-export function DashboardHome() {
-  return (
-    <DashboardShell
-      active="overview"
-      intro="Manage publisher profile, organization namespaces, skill reservations, and token-based releases."
-      title="Your publishing workspace"
-    >
-      {({ me, orgs }) => {
-        const packageCount = orgs.length;
-        const nextAction = !me.name
-          ? { href: "/dashboard/profile", label: "Complete profile" }
-          : orgs.length === 0
-            ? { href: "/dashboard/orgs", label: "Create org" }
-            : { href: "/dashboard/skills", label: "Manage skills" };
-        return (
-          <>
-            <InviteAcceptBanner />
-            <section className={dash.metricGrid}>
-              <article className={dash.metricCard}>
-                <span>Profile</span>
-                <strong>{me.name ? "Complete" : "Needs name"}</strong>
-                <p>{me.name ?? "Add a display name so published skills feel trustworthy."}</p>
-              </article>
-              <article className={dash.metricCard}>
-                <span>Organizations</span>
-                <strong>{orgs.length}</strong>
-                <p>Create scopes for teams, products, or projects.</p>
-              </article>
-              <article className={dash.metricCard}>
-                <span>Next release</span>
-                <strong>{packageCount > 0 ? "Ready" : "Setup"}</strong>
-                <p>{packageCount > 0 ? "Open a skill to generate a publish token." : "Create an org first."}</p>
-              </article>
-            </section>
-
-            <section className={dash.nextActionPanel}>
-              <div>
-                <p className={shell.eyebrow}>Next best action</p>
-                <h2>Move one step closer to publishing.</h2>
-                <p>
-                  AIPM keeps publishing gated by identity, namespace ownership, skill reservation,
-                  and short-lived CLI tokens.
-                </p>
-              </div>
-              <Link className={cn(shell.button, dash.nextActionButton)} href={nextAction.href}>
-                {nextAction.label}
-              </Link>
-            </section>
-
-            <section className={dash.dashboardGrid}>
-              <article className={dash.dashboardPanel}>
-                <div className={shell.sectionHeading}>
-                  <div>
-                    <p className={shell.eyebrow}>Start here</p>
-                    <h2>Publishing checklist</h2>
-                  </div>
-                </div>
-                <ol className={dash.workflowList}>
-                  <li>
-                    <strong>1. Complete profile</strong>
-                    <span>Add name and avatar for publisher trust.</span>
-                  </li>
-                  <li>
-                    <strong>2. Create org</strong>
-                    <span>Reserve your npm-style skill scope.</span>
-                  </li>
-                  <li>
-                    <strong>3. Reserve skill</strong>
-                    <span>Lock a skill name before publishing.</span>
-                  </li>
-                  <li>
-                    <strong>4. Push from CLI</strong>
-                    <span>Generate token, then publish the staged skill.</span>
-                  </li>
-                </ol>
-              </article>
-
-              <article className={dash.dashboardPanel}>
-                <div className={shell.sectionHeading}>
-                  <div>
-                    <p className={shell.eyebrow}>Namespaces</p>
-                    <h2>Your orgs</h2>
-                  </div>
-                  <Link className={shell.textLink} href="/dashboard/orgs">
-                    Create org
-                  </Link>
-                </div>
-                {orgs.length > 0 ? (
-                  <div className={dash.resourceList}>
-                    {orgs.map((org) => (
-                      <button
-                        className={dash.resourceButton}
-                        type="button"
-                        onClick={() => {
-                          window.localStorage.setItem(activeOrgStorageKey(me.id), org.slug);
-                          window.location.href = "/dashboard/orgs";
-                        }}
-                        key={org.slug}
-                      >
-                        <span>
-                          <strong>@{org.slug}</strong>
-                          <small>
-                            {org.name}
-                            {org.role ? ` · ${roleLabel(org.role)}` : ""}
-                          </small>
-                        </span>
-                        <small>{shortDate(org.createdAt)}</small>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={shell.empty}>
-                    No orgs yet. Create one to reserve your first skill name and unlock publish tokens.
-                  </div>
-                )}
-              </article>
-            </section>
-          </>
-        );
-      }}
-    </DashboardShell>
-  );
-}
-
 function NoActiveOrg({ action = "Create organization" }: { action?: string }) {
   return (
     <section className={dash.dashboardPanel}>
@@ -1068,6 +981,7 @@ function PackagesContent({ org, me }: { org: Org; me: Me }) {
                   <span>
                     <strong>{pkg.name}</strong>
                     <small>
+                      {pkg.owner ? `${pkg.owner.name ?? `@${pkg.owner.username}`} · ` : ""}
                       {pkg.visibility === "private" ? "Private · " : ""}
                       {pkg.publishedVersionCount ? `${pkg.publishedVersionCount} published` : "Reserved only"}
                     </small>
@@ -1152,7 +1066,7 @@ export function PackagesDashboard() {
   return (
     <DashboardShell
       active="skills"
-      intro="Reserve and manage skill names for the selected workspace."
+      intro="Every skill reserved in this organization."
       title="Skills"
     >
       {({ activeOrg, me }) =>
@@ -1164,7 +1078,147 @@ export function PackagesDashboard() {
 
 type OwnedPrompt = PromptSummary & { status: "draft" | "published" | "hidden" | "archived" };
 
+function promptAuthor(prompt: PromptSummary): string {
+  return prompt.publisher.user.name ?? `@${prompt.publisher.user.username}`;
+}
+
+function PromptRows<T extends PromptSummary>({
+  prompts,
+  empty,
+  detail,
+}: {
+  prompts: T[];
+  empty: string;
+  detail: (prompt: T) => string;
+}) {
+  if (!prompts.length) return <div className={shell.empty}>{empty}</div>;
+  return (
+    <div className={dash.resourceList}>
+      {prompts.map((prompt) => (
+        <Link className={dash.resourceRow} href={prompt.path} key={prompt.id}>
+          <span>
+            <strong>{prompt.title}</strong>
+            <small>{detail(prompt)}</small>
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function OrgPromptsContent({ org }: { org: Org }) {
+  const [prompts, setPrompts] = useState<PromptSummary[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api<{ prompts: PromptSummary[] }>(`/v1/orgs/${encodeURIComponent(org.slug)}/prompts`)
+      .then((data) => setPrompts(data.prompts))
+      .catch((err: unknown) => setError(publicApiError(err)));
+  }, [org.slug]);
+
+  return (
+    <section className={dash.dashboardGrid}>
+      <article className={dash.dashboardPanel}>
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>@{org.slug}</p>
+            <h2>Published prompts</h2>
+          </div>
+        </div>
+        {error ? <p className={shell.notice}>{error}</p> : null}
+        <PromptRows
+          empty={`No published prompts in @${org.slug} yet.`}
+          prompts={prompts}
+          detail={(prompt) =>
+            `${promptAuthor(prompt)} · ${formatCopyCount(prompt.copyCount)} · Updated ${formatPromptDate(prompt.updatedAt)}`
+          }
+        />
+      </article>
+      <article className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>Create</p>
+        <h2>Share a prompt</h2>
+        <p className={shell.muted}>Publish a prompt into @{org.slug}. Teammates see it here once it is published.</p>
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/prompts/new">
+            List a prompt
+          </Link>
+        </div>
+      </article>
+    </section>
+  );
+}
+
 export function PromptsDashboard() {
+  return (
+    <DashboardShell active="prompts" intro="Published prompts in this organization." title="Prompts">
+      {({ activeOrg }) => (activeOrg ? <OrgPromptsContent org={activeOrg} /> : <NoActiveOrg />)}
+    </DashboardShell>
+  );
+}
+
+function MySkillsContent() {
+  const [packages, setPackages] = useState<ReservedPackage[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api<{ skills: ReservedPackage[] }>("/v1/me/skills")
+      .then((data) => setPackages(data.skills))
+      .catch((err: unknown) => setError(publicApiError(err)));
+  }, []);
+
+  return (
+    <section className={dash.dashboardGrid}>
+      <article className={dash.dashboardPanel}>
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>Your publishing</p>
+            <h2>Skills you own</h2>
+          </div>
+        </div>
+        {error ? <p className={shell.notice}>{error}</p> : null}
+        {packages.length > 0 ? (
+          <div className={dash.resourceList}>
+            {packages.map((pkg) => (
+              <Link className={dash.resourceRow} href={packageHref(pkg.name)} key={pkg.name}>
+                <span>
+                  <strong>{pkg.name}</strong>
+                  <small>
+                    {pkg.orgSlug ? `@${pkg.orgSlug} · ` : ""}
+                    {pkg.visibility === "private" ? "Private · " : ""}
+                    {pkg.publishedVersionCount ? `${pkg.publishedVersionCount} published` : "Reserved only"}
+                  </small>
+                </span>
+                <small>{shortDate(pkg.createdAt)}</small>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={shell.empty}>You have not reserved a skill yet.</div>
+        )}
+      </article>
+      <article className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>Organization</p>
+        <h2>Reserve a skill name</h2>
+        <p className={shell.muted}>Skill names belong to an organization. Reserve one from the organization skills page.</p>
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/dashboard/skills">
+            Open organization skills
+          </Link>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+export function MySkillsDashboard() {
+  return (
+    <DashboardShell active="my-skills" intro="Skills you reserved or published, including ones in other organizations." title="Your skills">
+      {() => <MySkillsContent />}
+    </DashboardShell>
+  );
+}
+
+function MyPromptsContent() {
   const [prompts, setPrompts] = useState<OwnedPrompt[]>([]);
   const [error, setError] = useState("");
 
@@ -1175,52 +1229,47 @@ export function PromptsDashboard() {
   }, []);
 
   return (
+    <section className={dash.dashboardGrid}>
+      <article className={dash.dashboardPanel}>
+        <div className={shell.sectionHeading}>
+          <div>
+            <p className={shell.eyebrow}>Your publishing</p>
+            <h2>Your prompts</h2>
+          </div>
+        </div>
+        {error ? <p className={shell.notice}>{error}</p> : null}
+        <PromptRows
+          empty="You have not published a prompt yet."
+          prompts={prompts}
+          detail={(prompt) =>
+            `${prompt.status} · ${formatCopyCount(prompt.copyCount)} · Updated ${formatPromptDate(prompt.updatedAt)}`
+          }
+        />
+      </article>
+      <article className={dash.dashboardPanel}>
+        <p className={shell.eyebrow}>Create</p>
+        <h2>Share a prompt</h2>
+        <p className={shell.muted}>
+          Add the prompt, its inputs and outputs, the models you tested, and a sample image when it produces images.
+        </p>
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/prompts/new">
+            List a prompt
+          </Link>
+        </div>
+      </article>
+    </section>
+  );
+}
+
+export function MyPromptsDashboard() {
+  return (
     <DashboardShell
-      active="prompts"
-      intro="Publish and review the prompts connected to your publisher identity."
-      title="Prompts"
+      active="my-prompts"
+      intro="Prompts you published. Drafts stay here until you publish them."
+      title="Your prompts"
     >
-      {() => (
-        <section className={dash.dashboardGrid}>
-          <article className={dash.dashboardPanel}>
-            <div className={shell.sectionHeading}>
-              <div>
-                <p className={shell.eyebrow}>Your publishing</p>
-                <h2>Listed prompts</h2>
-              </div>
-            </div>
-            {error ? <p className={shell.notice}>{error}</p> : null}
-            {prompts.length ? (
-              <div className={dash.resourceList}>
-                {prompts.map((prompt) => (
-                  <Link className={dash.resourceRow} href={prompt.path} key={prompt.id}>
-                    <span>
-                      <strong>{prompt.title}</strong>
-                      <small>
-                        {prompt.status} · {formatCopyCount(prompt.copyCount)} · Updated {formatPromptDate(prompt.updatedAt)}
-                      </small>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className={shell.empty}>You have not published a prompt yet.</div>
-            )}
-          </article>
-          <article className={dash.dashboardPanel}>
-            <p className={shell.eyebrow}>Create</p>
-            <h2>Share a prompt</h2>
-            <p className={shell.muted}>
-              Add the prompt, its inputs and outputs, the models you tested, and a sample image when it produces images.
-            </p>
-            <div className={shell.actions}>
-              <Link className={shell.button} href="/prompts/new">
-                List a prompt
-              </Link>
-            </div>
-          </article>
-        </section>
-      )}
+      {() => <MyPromptsContent />}
     </DashboardShell>
   );
 }

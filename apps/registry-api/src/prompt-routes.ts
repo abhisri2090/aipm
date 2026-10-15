@@ -728,6 +728,34 @@ export async function registerPromptRoutes(
     };
   });
 
+  app.get<{ Params: { org: string } }>("/v1/orgs/:org/prompts", async (request, reply) => {
+    const user = await requireCurrentUser(options.accountAuth, request, reply);
+    if (!user || !options.accountAuth) return;
+    const org = await getOrgBySlugForMember(
+      options.accountAuth.pool,
+      request.params.org.trim().toLowerCase(),
+      user.id,
+    );
+    if (!org) return reply.status(404).send({ error: "Org not found" });
+    const result = await options.accountAuth.pool.query<PromptRow>(
+      `SELECT ${PROMPT_SELECT}
+       FROM prompts
+       JOIN users ON users.id = prompts.owner_user_id
+       LEFT JOIN orgs ON orgs.id = prompts.org_id
+       WHERE prompts.org_id = $1 AND prompts.status = 'published'
+       ORDER BY prompts.published_at DESC NULLS LAST, prompts.updated_at DESC`,
+      [org.id],
+    );
+    const editableOrgIds = await listEditableOrgIds(options.accountAuth.pool, user.id);
+    return {
+      prompts: result.rows.map((row) =>
+        serializeSummary(row, {
+          canEdit: userCanEditPrompt(user.id, row, editableOrgIds),
+        }),
+      ),
+    };
+  });
+
   app.post("/v1/prompts", async (request, reply) => {
     const user = await requireCurrentUser(options.accountAuth, request, reply);
     if (!user || !options.accountAuth) return;
