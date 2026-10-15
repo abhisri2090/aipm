@@ -40,7 +40,7 @@ const fileChecks = [
       /release:version-from-tag apps\/cli\/package\.json cli-v/,
       /pnpm release:cli:binaries/,
       /pnpm release:cli:templates/,
-      /softprops\/action-gh-release@v2/,
+      /softprops\/action-gh-release@v3/,
       /id-token:\s*write/,
       /node-version:\s*24/,
       /npm install --global npm@11\.19\.1/,
