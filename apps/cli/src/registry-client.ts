@@ -45,6 +45,10 @@ function privateInstallHint(name: string, status: number, token?: string): strin
   return `Package not found: ${name} (${status}). If @org/pkg is private, run ${recommendCmd("aipm login")}, or set AIPM_TOKEN for CI.`;
 }
 
+function bufferToBlobPart(bytes: Buffer): Uint8Array<ArrayBuffer> {
+  return new Uint8Array(bytes);
+}
+
 function publishTokenHint(name: string, error: string): string {
   if (error === "Publish token required") {
     return [
@@ -82,7 +86,7 @@ export async function publishPackage(
   const base = registry.replace(/\/$/, "");
   const url = `${base}/v1/skills/${encodePackageName(name)}/versions`;
   const form = new FormData();
-  form.append("tarball", new Blob([tarball]), "package.tgz");
+  form.append("tarball", new Blob([bufferToBlobPart(tarball)]), "package.tgz");
   const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
   const res = await registryFetch(url, base, { method: "POST", body: form, headers });
@@ -361,7 +365,7 @@ export async function publishPrompt(
   if (sampleImage) {
     form.append(
       "sampleImage",
-      new Blob([sampleImage.data], { type: sampleImage.contentType }),
+      new Blob([bufferToBlobPart(sampleImage.data)], { type: sampleImage.contentType }),
       sampleImage.filename,
     );
   }
