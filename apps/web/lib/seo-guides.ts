@@ -1239,7 +1239,7 @@ updatedAt: "2026-09-25",
       "AI skill package manager",
     ],
     publishedAt: "2026-09-01",
-    updatedAt: "2026-10-07",
+    updatedAt: "2026-10-21",
     sections: [
       {
         title: "Where they overlap",
@@ -1249,7 +1249,7 @@ updatedAt: "2026-09-25",
       {
         title: "How AIPM is different",
         body:
-          "AIPM treats a skill as a named package with a publisher, version, manifest, install command, integrity value, source details, and target list. It can install files for supported tools and keep the selected package version clear. How pinning and updates compare across Git, Claude Code plugins, the Claude app and AIPM: [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
+          "AIPM treats a skill as a named package with a publisher, version, manifest, install command, integrity value, source details, and target list. It can install files for supported tools and keep the selected package version clear. The short comparison is on the [skills.sh alternative](/skills-sh-alternative) page. How pinning and updates compare across Git, Claude Code plugins, the Claude app and AIPM: [how to share Claude skills with your team](/guides/share-claude-skills-with-team).",
       },
       {
         title: "How to choose",

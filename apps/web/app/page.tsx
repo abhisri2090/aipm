@@ -396,9 +396,9 @@ export default async function HomePage() {
           <h2>Cursor skills registry</h2>
           <p>Find Cursor agent skills with clear versions, files, and install commands.</p>
         </Link>
-        <Link className={cards.guideCard} href="/guides/aipm-vs-skills-sh">
+        <Link className={cards.guideCard} href="/skills-sh-alternative">
           <h2>AIPM vs skills.sh</h2>
-          <p>Honest comparison for anyone searching a skills.sh alternative or directory.</p>
+          <p>Pin a version for Claude Code, Codex, and Cursor. skills.sh stays the big directory.</p>
         </Link>
         <Link className={cards.guideCard} href="/guides/how-to-install-claude-code-skills">
           <h2>How to install Claude skills</h2>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import nextConfig from "../apps/web/next.config";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import { SEO_GUIDES } from "../apps/web/lib/seo-guides";
 import { DOC_NAV_SECTIONS } from "../apps/web/lib/docs-nav";
 import { SKILL_DISCOVERY_PAGES } from "../apps/web/lib/skill-discovery";

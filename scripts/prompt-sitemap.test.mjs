@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import { buildPromptSitemapXml } from "../apps/web/lib/prompt-sitemap";
 import { listAllPrompts, listPromptsPage } from "../apps/web/lib/prompts";
 import { PROMPT_TOPIC_HUBS } from "../apps/web/lib/prompt-topics";

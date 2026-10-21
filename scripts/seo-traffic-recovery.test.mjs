@@ -6,7 +6,7 @@ vi.mock("../apps/web/components/registry-search", () => ({
   RegistrySearch: () => React.createElement("div"),
 }));
 
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import { metadata as homeMetadata } from "../apps/web/app/page";
 import { generateMetadata as skillsMetadata } from "../apps/web/app/skills/page";
 import { SkillsDirectoryPage } from "../apps/web/components/skills-directory-page";

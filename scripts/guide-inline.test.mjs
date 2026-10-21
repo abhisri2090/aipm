@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import { SEO_GUIDES } from "../apps/web/lib/seo-guides";
 import {
   guideSectionId,

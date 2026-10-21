@@ -12,19 +12,29 @@ function sitemapUrls(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]?.trim()).filter(Boolean);
 }
 
+async function collectPageUrls(site) {
+  const indexResponse = await fetch(`${site}/sitemap.xml`, { signal: AbortSignal.timeout(15000) });
+  if (!indexResponse.ok) throw new Error(`Could not read /sitemap.xml: ${indexResponse.status}`);
+  const indexXml = await indexResponse.text();
+  const locs = sitemapUrls(indexXml);
+  const childXml = indexXml.includes("<sitemapindex")
+    ? await Promise.all(
+        locs
+          .filter((loc) => loc.endsWith(".xml"))
+          .map(async (loc) => {
+            const response = await fetch(loc, { signal: AbortSignal.timeout(15000) });
+            if (!response.ok) throw new Error(`Could not read ${loc}: ${response.status}`);
+            return response.text();
+          }),
+      )
+    : [indexXml];
+  return [...new Set(childXml.flatMap(sitemapUrls).filter((loc) => !loc.endsWith(".xml")))];
+}
+
 async function main() {
   const site = siteUrl();
   const host = new URL(site).hostname;
-  const sitemapPaths = ["/sitemap.xml", "/ai-skills-sitemap.xml", "/prompt-sitemap.xml"];
-  const sitemapResponses = await Promise.all(
-    sitemapPaths.map(async (path) => {
-      const response = await fetch(`${site}${path}`, { signal: AbortSignal.timeout(15000) });
-      if (!response.ok) throw new Error(`Could not read ${path}: ${response.status}`);
-      return response.text();
-    }),
-  );
-
-  const urls = [...new Set(sitemapResponses.flatMap(sitemapUrls))];
+  const urls = await collectPageUrls(site);
   if (!urls.length) throw new Error("The sitemaps did not contain any URLs.");
 
   const response = await fetch(INDEXNOW_ENDPOINT, {
