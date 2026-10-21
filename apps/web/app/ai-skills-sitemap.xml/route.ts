@@ -1,95 +1,33 @@
-import {
-  isIndexablePackage,
-  packagePath,
-  publisherPath,
-  REGISTRY_API_BASE_URL,
-  SITE_URL,
-  skillListFromResponse,
-  type PackageSummary,
-} from "../../lib/registry";
+import { FEATURED_SKILLS } from "../../lib/featured-skills";
+import { packagePath, SITE_URL } from "../../lib/registry";
+import { selectSkillsForSitemap, skillSitemapLastmod } from "../../lib/skill-sitemap-gate";
+import { listSitemapSkills } from "../../lib/sitemap-skills";
+import { urlSetXml, xmlResponse } from "../../lib/sitemap-xml";
 
 export const dynamic = "force-dynamic";
 
-type PackageListResponse = {
-  skills?: PackageSummary[];
-  packages?: PackageSummary[];
-  nextCursor?: string | null;
-};
-
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
-
-async function listPackageUrls(): Promise<PackageSummary[]> {
-  const packages: PackageSummary[] = [];
-  let cursor: string | undefined;
-
-  for (let page = 0; page < 10; page += 1) {
-    const params = new URLSearchParams({ limit: "100" });
-    if (cursor) params.set("cursor", cursor);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
-    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/skills?${params}`, {
-      cache: "no-store",
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
-    if (!response.ok) break;
-    const data = (await response.json()) as PackageListResponse;
-    packages.push(...skillListFromResponse(data));
-    if (!data.nextCursor) break;
-    cursor = data.nextCursor;
-  }
-
-  return packages;
-}
+const CURATED_SKILL_NAMES = new Set<string>(FEATURED_SKILLS.map((skill) => skill.name));
 
 export async function GET(): Promise<Response> {
-  let packages: PackageSummary[];
   try {
-    packages = await listPackageUrls();
-  } catch {
-    packages = [];
-  }
-
-  const indexablePackages = packages.filter(isIndexablePackage);
-  const packageUrls = indexablePackages
-    .map((pkg) => {
-      const loc = `${SITE_URL}${packagePath(pkg.name, pkg.version)}`;
-      const lastmod = new Date(pkg.createdAt).toISOString();
-      return `<url><loc>${escapeXml(loc)}</loc><lastmod>${lastmod}</lastmod></url>`;
-    })
-    .join("");
-
-  // Every publisher with at least one published skill has a live, self-canonical
-  // /publishers/{slug} page, even when all of its skill pages are noindexed as thin.
-  // Derive the list from published skills (not /v1/publishers, which also counts orgs that
-  // only hold a name reservation and whose publisher page 404s).
-  const publisherDates = new Map<string, string>();
-  for (const pkg of packages) {
-    const slug = pkg.publisher?.org.slug;
-    if (!slug) continue;
-    const current = publisherDates.get(slug);
-    if (!current || new Date(pkg.createdAt) > new Date(current)) publisherDates.set(slug, pkg.createdAt);
-  }
-
-  const publisherUrls = [...publisherDates]
-    .map(([slug, createdAt]) => {
-      const loc = `${SITE_URL}${publisherPath(slug)}`;
-      return `<url><loc>${escapeXml(loc)}</loc><lastmod>${new Date(createdAt).toISOString()}</lastmod></url>`;
-    })
-    .join("");
-
-  return new Response(
-    `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${packageUrls}${publisherUrls}</urlset>`,
-    {
+    const skills = selectSkillsForSitemap(await listSitemapSkills(), CURATED_SKILL_NAMES);
+    return xmlResponse(
+      urlSetXml(
+        skills.map((skill) => ({
+          loc: `${SITE_URL}${packagePath(skill.name, skill.version)}`,
+          lastmod: skillSitemapLastmod(skill),
+        })),
+      ),
+    );
+  } catch (error) {
+    console.error("ai-skills-sitemap.xml unavailable:", error instanceof Error ? error.message : error);
+    return new Response("Skill sitemap temporarily unavailable", {
+      status: 503,
       headers: {
-        "content-type": "application/xml; charset=utf-8",
+        "content-type": "text/plain; charset=utf-8",
+        "retry-after": "120",
+        "cache-control": "no-store",
       },
-    },
-  );
+    });
+  }
 }

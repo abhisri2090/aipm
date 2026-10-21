@@ -97,6 +97,7 @@ export const AIPM_DIFFERENCES: string[] = [
 
 const SHARED_LINKS: ForToolLink[] = [
   { href: "/skills", label: "Browse skills" },
+  { href: "/skills-sh-alternative", label: "skills.sh alternative" },
   { href: "/install", label: "Install the AIPM CLI" },
   { href: "/targets", label: "All install targets" },
   { href: "/for", label: "Skills for Claude Code, Cursor, and Codex" },

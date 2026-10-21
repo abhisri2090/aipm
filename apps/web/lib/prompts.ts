@@ -1,4 +1,7 @@
 import { REGISTRY_API_BASE_URL, type ScanInfo } from "./registry";
+import { isRegistryNotFound, RegistryUnavailableError } from "./registry-unavailable";
+
+export { RegistryUnavailableError };
 
 export const PROMPT_CATEGORIES = [
   "All",
@@ -203,16 +206,6 @@ export async function listPromptsPage(options: {
  */
 export const PROMPT_DETAIL_REVALIDATE_SECONDS = 60;
 
-/** Thrown when the registry could not be read (network error, timeout, 429, 5xx). */
-export class RegistryUnavailableError extends Error {
-  readonly status?: number;
-  constructor(message: string, status?: number) {
-    super(message);
-    this.name = "RegistryUnavailableError";
-    this.status = status;
-  }
-}
-
 /**
  * Fetch a single prompt.
  *
@@ -236,9 +229,7 @@ export async function getPrompt(
     const reason = error instanceof Error ? error.message : String(error);
     throw new RegistryUnavailableError(`Prompt fetch failed: ${reason}`);
   }
-  if (response.status === 404 || response.status === 410 || response.status === 400) {
-    return null;
-  }
+  if (isRegistryNotFound(response.status)) return null;
   if (!response.ok) {
     throw new RegistryUnavailableError(`Prompt fetch failed (${response.status})`, response.status);
   }

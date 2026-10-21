@@ -164,6 +164,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Configure MCP servers safely and reuse setup across projects.",
       },
       {
+        href: "/skills-sh-alternative",
+        label: "skills.sh alternative",
+        body: "Pin a skill version for Claude Code, Codex, and Cursor. skills.sh stays the place to discover skills.",
+      },
+      {
         href: "/guides/aipm-vs-skills-sh",
         label: "AIPM vs Skills.sh",
         body: "Compare two ways to discover and install reusable Agent Skills.",

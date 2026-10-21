@@ -2793,12 +2793,11 @@ export async function createApp(): Promise<FastifyInstance> {
             : (scanCursor ?? null)
           : null;
       const nextOffset = !useCursor && hasMore ? offset + page.length : null;
-      const publishers = accountAuth
-        ? await listPublicPackagePublishers(accountAuth.pool, [...new Set(page.map((row) => row.name))])
-        : [];
+      const names = [...new Set(page.map((row) => row.name))];
+      const publishers = accountAuth ? await listPublicPackagePublishers(accountAuth.pool, names) : [];
       const publisherByName = new Map(publishers.map((publisher) => [publisher.package_name, publisher]));
       const provenanceByName = accountAuth
-        ? await getProvenanceByPackageNames(accountAuth.pool, [...publisherByName.keys()])
+        ? await getProvenanceByPackageNames(accountAuth.pool, names)
         : new Map();
       const installCountByName = accountAuth
         ? await getPackageInstallCountMap(accountAuth.pool, [...new Set(page.map((row) => row.name))])
@@ -2830,7 +2829,11 @@ export async function createApp(): Promise<FastifyInstance> {
             scan: serializePackageScan(row),
             publisher: serializePublisher(publisherByName.get(row.name) ?? null),
             import: provenance
-              ? { imported: true, sourceUrl: provenance.source_url }
+              ? {
+                  imported: true,
+                  sourceUrl: provenance.source_url,
+                  ...(provenance.version === row.version ? { contentHash: provenance.content_hash } : {}),
+                }
               : { imported: false, sourceUrl: null },
           };
         }),

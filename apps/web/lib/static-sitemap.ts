@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "../lib/registry";
-import { SEO_GUIDES } from "../lib/seo-guides";
-import { SKILL_DISCOVERY_PAGES } from "../lib/skill-discovery";
-import { PROMPT_TOPIC_HUBS } from "../lib/prompt-topics";
-import { PROMPT_LINK_SNAPSHOT_DATE, listGeneratedSeriesHubs } from "../lib/prompt-links";
-import { listDocSectionIndexes } from "../lib/doc-section-index";
+import { SITE_URL } from "./registry";
+import { SEO_GUIDES } from "./seo-guides";
+import { SKILL_DISCOVERY_PAGES } from "./skill-discovery";
+import { PROMPT_TOPIC_HUBS } from "./prompt-topics";
+import { PROMPT_LINK_SNAPSHOT_DATE, listGeneratedSeriesHubs } from "./prompt-links";
+import { listDocSectionIndexes } from "./doc-section-index";
 
 /** Fallback when a path has no content-specific date (hub SEO refresh). */
 const HUB_SEO_REFRESH = new Date("2026-09-23T00:00:00.000Z");
@@ -49,13 +49,18 @@ const STATIC_PAGE_LASTMOD: Record<string, Date> = {
   "/thanks": new Date("2026-09-04T00:00:00.000Z"),
   "/compatibility": new Date("2026-09-25T00:00:00.000Z"),
   "/best-claude-skills": new Date("2026-09-25T00:00:00.000Z"),
+  "/skills-sh-alternative": new Date("2026-10-21T00:00:00.000Z"),
 };
 
 function dateFromIsoDay(day: string): Date {
   return new Date(`${day}T00:00:00.000Z`);
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export function sitemapSection(path: string): "guides" | "hubs" {
+  return path === "/guides" || path.startsWith("/guides/") ? "guides" : "hubs";
+}
+
+export function staticSitemapEntries(): { path: string; lastModified: Date }[] {
   const staticPaths = [
     "/",
     "/skills",
@@ -92,6 +97,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/thanks",
     "/compatibility",
     "/best-claude-skills",
+    "/skills-sh-alternative",
     ...listDocSectionIndexes().map((section) => section.path),
     ...SEO_GUIDES.map((guide) => `/guides/${guide.slug}`),
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
@@ -125,18 +131,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     listDocSectionIndexes().map((section) => [section.path, DOC_SECTION_INDEX_LASTMOD]),
   );
 
-  return staticPaths.map((path) => {
-    const lastModified =
+  return staticPaths.map((path) => ({
+    path,
+    lastModified:
       docSectionUpdatedAt.get(path) ??
       guideUpdatedAt.get(path) ??
       discoveryUpdatedAt.get(path) ??
       topicUpdatedAt.get(path) ??
       STATIC_PAGE_LASTMOD[path] ??
-      HUB_SEO_REFRESH;
+      HUB_SEO_REFRESH,
+  }));
+}
 
-    return {
-      url: `${SITE_URL}${path}`,
-      lastModified,
-    };
-  });
+export function hubSitemapEntries() {
+  return staticSitemapEntries().filter((entry) => sitemapSection(entry.path) === "hubs");
+}
+
+export function guideSitemapEntries() {
+  return staticSitemapEntries().filter((entry) => sitemapSection(entry.path) === "guides");
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  return staticSitemapEntries().map((entry) => ({
+    url: `${SITE_URL}${entry.path}`,
+    lastModified: entry.lastModified,
+  }));
 }

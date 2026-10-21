@@ -8,12 +8,15 @@ import {
   commandTargets,
   displayTargets,
   getPackage,
+  getSkillFirstPublishedAt,
+  getSkillMarkdown,
   installCommand,
   installCommandForTarget,
   installCommandNoInit,
   isIndexablePackage,
   listPackages,
   packagePath,
+  RegistryUnavailableError,
   resolveSkillInvokeCommand,
   SITE_URL,
   type PackageSummary,
@@ -23,6 +26,19 @@ import { buildSkillSerpFields } from "../../../../../lib/skill-serp";
 type PackagePageProps = {
   params: Promise<{ slug: string; name: string; version: string }>;
 };
+
+function packageNameFromParams(slug: string, name: string): string {
+  return `@${decodeURIComponent(slug)}/${decodeURIComponent(name)}`;
+}
+
+async function loadPackage(name: string, version: string) {
+  try {
+    return { pkg: await getPackage(name, version), unavailable: false as const };
+  } catch (error) {
+    if (error instanceof RegistryUnavailableError) return { pkg: null, unavailable: true as const };
+    throw error;
+  }
+}
 
 function toSummary(pkg: Awaited<ReturnType<typeof getPackage>>): PackageSummary {
   if (!pkg) throw new Error("Package is required");
@@ -68,8 +84,10 @@ function packageKeywords(pkg: PackageSummary): string[] {
 
 export async function generateMetadata({ params }: PackagePageProps): Promise<Metadata> {
   const { slug, name, version } = await params;
-  const packageName = `@${decodeURIComponent(slug)}/${decodeURIComponent(name)}`;
-  const pkg = await getPackage(packageName, decodeURIComponent(version));
+  const packageName = packageNameFromParams(slug, name);
+  const loaded = await loadPackage(packageName, decodeURIComponent(version));
+  if (loaded.unavailable) return { title: { absolute: "Skill temporarily unavailable | AIPM" } };
+  const pkg = loaded.pkg;
   if (!pkg) return { title: "Package not found | AIPM" };
   const summary = toSummary(pkg);
   const serp = buildSkillSerpFields({
@@ -149,13 +167,18 @@ export async function generateMetadata({ params }: PackagePageProps): Promise<Me
 }
 
 export default async function PackagePage({ params }: PackagePageProps) {
-  const { slug, name, version } = await params;
-  const packageName = `@${decodeURIComponent(slug)}/${decodeURIComponent(name)}`;
-  const [pkg, allPackages] = await Promise.all([
-    getPackage(packageName, decodeURIComponent(version)),
-    listPackages("", 100),
-  ]);
+  const { slug, name, version: versionParam } = await params;
+  const packageName = packageNameFromParams(slug, name);
+  const version = decodeURIComponent(versionParam);
+  const loaded = await loadPackage(packageName, version);
+  if (loaded.unavailable) throw new RegistryUnavailableError("Skill lookup failed");
+  const pkg = loaded.pkg;
   if (!pkg) notFound();
+  const [allPackages, skillMarkdown, firstPublishedAt] = await Promise.all([
+    listPackages("", 100),
+    getSkillMarkdown(packageName, version),
+    getSkillFirstPublishedAt(packageName),
+  ]);
 
   const summary = toSummary(pkg);
   const serp = buildSkillSerpFields({
@@ -328,7 +351,12 @@ export default async function PackagePage({ params }: PackagePageProps) {
         type="application/json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(aiContext) }}
       />
-      <PackageDetailView canonicalUrl={canonicalUrl} pkg={pkg} />
+      <PackageDetailView
+        canonicalUrl={canonicalUrl}
+        firstPublishedAt={firstPublishedAt}
+        pkg={pkg}
+        skillMarkdown={skillMarkdown}
+      />
 
       {relatedPackages.length > 0 ? (
         <section className={shell.panelSection} aria-labelledby="related-skills-title">

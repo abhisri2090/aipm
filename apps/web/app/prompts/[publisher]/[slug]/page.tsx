@@ -14,6 +14,7 @@ import {
   getPrompt,
 } from "../../../../lib/prompts";
 import { isNearDuplicatePrompt } from "../../../../lib/prompt-noindex";
+import { redirectPathForMissingPrompt } from "../../../../lib/prompt-variant-redirect";
 import { getPromptInternalLinks } from "../../../../lib/prompt-links";
 import { SITE_URL, scanBadgeLabel } from "../../../../lib/registry";
 import { cn, shell } from "../../../../lib/page-styles";
@@ -91,7 +92,14 @@ function PublisherAvatar({
 export default async function PromptDetailPage({ params }: PromptPageProps) {
   const { publisher, slug } = await params;
   const prompt = await getPrompt(publisher, slug);
-  if (!prompt) notFound();
+  if (!prompt) {
+    const target = await redirectPathForMissingPrompt(publisher, slug, async (scope, variant) => {
+      const found = await getPrompt(scope, variant);
+      return found ? { path: found.path } : null;
+    });
+    if (target) permanentRedirect(target);
+    notFound();
+  }
   if (
     publisher.toLowerCase() !== prompt.publisher.scope.toLowerCase() ||
     slug.toLowerCase() !== prompt.slug.toLowerCase()
