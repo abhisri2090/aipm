@@ -5,7 +5,7 @@ export function normalizeUrl(value) {
 }
 
 export async function loadDotEnv(filePath, env = process.env) {
-  let text = "";
+  let text;
   try {
     text = await readFile(filePath, "utf8");
   } catch (error) {

@@ -49,7 +49,7 @@ async function listPackageUrls(): Promise<PackageSummary[]> {
 }
 
 export async function GET(): Promise<Response> {
-  let packages: PackageSummary[] = [];
+  let packages: PackageSummary[];
   try {
     packages = await listPackageUrls();
   } catch {

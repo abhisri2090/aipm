@@ -90,7 +90,7 @@ function parseDatabaseUrl(value, label) {
     }
     return url;
   } catch (error) {
-    throw new Error(`${label} is not a valid Postgres URL: ${error.message}`);
+    throw new Error(`${label} is not a valid Postgres URL: ${error.message}`, { cause: error });
   }
 }
 
