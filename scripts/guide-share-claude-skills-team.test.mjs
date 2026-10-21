@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import { SEO_GUIDES, getSeoGuide } from "../apps/web/lib/seo-guides";
 import { DOC_NAV_SECTIONS } from "../apps/web/lib/docs-nav";
 import { buildLlmsTxt } from "../apps/web/lib/llms-txt";

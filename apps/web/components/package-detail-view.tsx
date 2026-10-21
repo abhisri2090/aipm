@@ -6,6 +6,7 @@ import { PackageFilesExplorer } from "./package-files-explorer";
 import { PackageReadmePreview } from "./package-readme-preview";
 import { PackageShareButtons } from "./package-share-buttons";
 import { ScanBadge } from "./scan-badge";
+import { SkillDocument } from "./skill-document";
 import {
   commandTargets,
   displayTargets,
@@ -27,6 +28,7 @@ import {
   type PackageDetail,
   type PackageSummary,
 } from "../lib/registry";
+import { formatSkillAge, formatUtcDate } from "../lib/skill-trust";
 import { buildSkillSerpFields } from "../lib/skill-serp";
 
 function toSummary(pkg: PackageDetail): PackageSummary {
@@ -56,9 +58,17 @@ type PackageDetailViewProps = {
   pkg: PackageDetail;
   canonicalUrl: string;
   showHeader?: boolean;
+  skillMarkdown?: string | null;
+  firstPublishedAt?: string | null;
 };
 
-export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: PackageDetailViewProps) {
+export function PackageDetailView({
+  pkg,
+  canonicalUrl,
+  showHeader = true,
+  skillMarkdown = null,
+  firstPublishedAt = null,
+}: PackageDetailViewProps) {
   const summary = toSummary(pkg);
   const serp = buildSkillSerpFields({
     name: summary.name,
@@ -97,7 +107,22 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
             <code>{serp.packageId}</code>
           </p>
           <p className={shell.lede}>{serp.outcomeLine}</p>
-          <ScanBadge status={pkg.scan?.status} />
+          <p>
+            <ScanBadge status={pkg.scan?.status} />
+            {pkg.scan?.scannedAt && formatUtcDate(pkg.scan.scannedAt)
+              ? ` · ${formatUtcDate(pkg.scan.scannedAt)}`
+              : null}
+          </p>
+          {typeof summary.githubStars === "number" ? (
+            <p>
+              GitHub stars: <strong>{formatGithubStars(summary.githubStars)}</strong>
+            </p>
+          ) : null}
+          {summary.installCount && summary.installCount > 0 ? (
+            <p>
+              Installs: <strong>{formatInstallCount(summary.installCount)}</strong>
+            </p>
+          ) : null}
           <PackageShareButtons
             packageName={summary.name}
             title={serp.title}
@@ -255,17 +280,18 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
               <dt>Security scan</dt>
               <dd>
                 <Link href="/security#automated-registry-checks">{scanBadgeLabel(pkg.scan?.status)}</Link>
+                {pkg.scan?.scannedAt && formatUtcDate(pkg.scan.scannedAt)
+                  ? ` · ${formatUtcDate(pkg.scan.scannedAt)}`
+                  : null}
                 {pkg.scan?.findings.length ? (
                   <> — {pkg.scan.findings.length} pattern {pkg.scan.findings.length === 1 ? "match" : "matches"} found</>
                 ) : null}
               </dd>
             </div>
-            {pkg.scan?.scannedAt ? (
-              <div className={shell.packageDetailItem}>
-                <dt>Scanned at</dt>
-                <dd>{new Date(pkg.scan.scannedAt).toLocaleString()}</dd>
-              </div>
-            ) : null}
+            <div className={shell.packageDetailItem}>
+              <dt>{firstPublishedAt ? "First published" : "Published"}</dt>
+              <dd>{formatSkillAge(firstPublishedAt ?? summary.createdAt) ?? "Date unavailable"}</dd>
+            </div>
             <div className={shell.packageDetailItem}>
               <dt>Check limits</dt>
               <dd>
@@ -273,10 +299,12 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
                 filesystem actions; behavior is not sandboxed or approved.
               </dd>
             </div>
-            <div className={shell.packageDetailItem}>
-              <dt>Version published</dt>
-              <dd>{new Date(summary.createdAt).toLocaleString()}</dd>
-            </div>
+            {firstPublishedAt && Date.parse(firstPublishedAt) !== Date.parse(summary.createdAt) ? (
+              <div className={shell.packageDetailItem}>
+                <dt>This version</dt>
+                <dd>{formatSkillAge(summary.createdAt) ?? summary.createdAt}</dd>
+              </div>
+            ) : null}
             <div className={shell.packageDetailItem}>
               <dt>Entry</dt>
               <dd>{pkg.manifest.entry ?? "Not specified"}</dd>
@@ -295,6 +323,7 @@ export function PackageDetailView({ pkg, canonicalUrl, showHeader = true }: Pack
           <p className={shell.muted}>
             Preview every file this package writes on install before you run the command above.
           </p>
+          <SkillDocument description={summary.description} markdown={skillMarkdown} />
           <PackageFilesExplorer
             entryPath={pkg.manifest.entry}
             packageName={summary.name}

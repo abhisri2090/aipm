@@ -83,6 +83,7 @@ ${forLinks}
 - [Publish reusable Claude skills](${site}/guides/reusable-claude-skills)
 - [Manage AI agent instructions in Git](${site}/guides/ai-agent-instructions-git)
 - [AIPM vs Skills.sh](${site}/guides/aipm-vs-skills-sh)
+- [skills.sh alternative for teams](${site}/skills-sh-alternative)
 - [Claude Code skills vs Codex skills](${site}/guides/claude-code-skills-vs-codex-skills)
 - [Claude Code skills vs MCP vs subagents vs hooks](${site}/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks)
 - [Agent Skills vs MCP](${site}/guides/agent-skills-vs-mcp)

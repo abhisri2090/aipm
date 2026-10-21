@@ -212,7 +212,7 @@ await check("website headers and key routes", async () => {
   const robots = await fetchResponse(url(webUrl, "/robots.txt"), { redirect: "follow" });
   assertIncludes(robots.text, "Sitemap:", "robots.txt");
   const sitemap = await fetchResponse(url(webUrl, "/sitemap.xml"), { redirect: "follow" });
-  assertIncludes(sitemap.text, "<urlset", "sitemap.xml");
+  assertIncludes(sitemap.text, "<sitemapindex", "sitemap.xml");
 });
 
 await check("API health, readiness, and auth config", async () => {

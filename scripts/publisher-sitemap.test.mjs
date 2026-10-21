@@ -17,8 +17,9 @@ vi.mock("../apps/web/components/publishers-directory", () => ({
 }));
 
 import PublishersPage from "../apps/web/app/publishers/page";
+import { GET as hubsSitemap } from "../apps/web/app/sitemap-hubs.xml/route";
 import { GET as aiSkillsSitemap } from "../apps/web/app/ai-skills-sitemap.xml/route";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import { filterPublishedPublishers, listPublishedPublisherSlugs } from "../apps/web/lib/registry";
 
 beforeEach(() => {
@@ -44,7 +45,10 @@ const skill = (org, name, overrides = {}) => ({
   description: "A reusable agent skill with a long enough description to be indexable on AIPM.",
   sourceUrl: `https://github.com/${org}/skills`,
   createdAt: "2026-09-10T00:00:00.000Z",
+  githubStars: 10,
+  installCount: 0,
   publisher: { org: { slug: org, name: org }, user: { verified: false } },
+  scan: { status: "clean", scannedAt: "2026-09-11T00:00:00.000Z" },
   ...overrides,
 });
 
@@ -118,16 +122,25 @@ describe("publishers without published skills", () => {
   });
 });
 
-describe("publisher URLs in /ai-skills-sitemap.xml", () => {
-  it("lists every publisher with a published skill, even if all its skill pages are noindexed", async () => {
+describe("publisher URLs in /sitemap-hubs.xml", () => {
+  it("lists every publisher with a published skill, even if its skill pages miss the sitemap gate", async () => {
     vi.stubGlobal("fetch", registryFetch());
-    const xml = await (await aiSkillsSitemap()).text();
+    const xml = await (await hubsSitemap()).text();
     expect(xml).toContain("<loc>https://www.aipm-registry.com/publishers/antfu</loc><lastmod>2026-09-12T00:00:00.000Z</lastmod>");
     expect(xml).toContain("<loc>https://www.aipm-registry.com/publishers/thin</loc>");
     expect(xml).not.toContain("/publishers/aipm");
-    // Thin skill pages stay out of the sitemap.
+    expect(xml).toContain("<loc>https://www.aipm-registry.com/skills</loc>");
+  });
+});
+
+describe("gated skills in /ai-skills-sitemap.xml", () => {
+  it("keeps scanned skills with a trust signal and leaves the rest out", async () => {
+    vi.stubGlobal("fetch", registryFetch());
+    const xml = await (await aiSkillsSitemap()).text();
     expect(xml).toContain("/skills/antfu/vitest/1.0.0");
+    expect(xml).toContain("<lastmod>2026-09-11T00:00:00.000Z</lastmod>");
     expect(xml).not.toContain("/skills/thin/tiny/1.0.0");
+    expect(xml).not.toContain("/publishers/");
   });
 });
 

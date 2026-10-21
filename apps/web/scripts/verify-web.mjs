@@ -29,7 +29,7 @@ const requiredPages = [
     renderedTitle: "AIPM: Skills for Claude, Codex &amp; Cursor",
     h1: "Install skills that work in Claude Code, Codex, and Cursor.",
     jsonLd: true,
-    includes: ["What is AIPM?", "AIPM is a marketplace and a small command-line tool", "/best-claude-skills", "/guides/what-are-claude-skills", "Abhishek Srivastava", "aipm add @scope/name@version"],
+    includes: ["What is AIPM?", "AIPM is a marketplace and a small command-line tool", "/best-claude-skills", "/guides/what-are-claude-skills", "/skills-sh-alternative", "Abhishek Srivastava", "aipm add @scope/name@version"],
   },
   {
     path: "/registry",
@@ -53,6 +53,21 @@ const requiredPages = [
       'href="/guides/how-to-install-claude-code-skills"',
       'href="/guides/where-are-claude-skills-stored"',
       'href="/skills/anthropics/skill-creator/1.0.0"',
+    ],
+  },
+  {
+    path: "/skills-sh-alternative",
+    title: "skills.sh Alternative for Teams",
+    h1: "Pin one skill version for the whole team",
+    jsonLd: true,
+    includes: [
+      "Claude Code, Codex, and Cursor",
+      "aipm add @scope/name@1.0.0",
+      "aipm.package.json",
+      "Side by side",
+      "skills.sh",
+      '"@type":"FAQPage"',
+      "Is AIPM a replacement for skills.sh?",
     ],
   },
   {
@@ -631,11 +646,6 @@ function extractJsonLd(html) {
   return Array.from(matches, (match) => match[1]?.trim()).filter(Boolean);
 }
 
-function packagePath(packageName, version) {
-  const [scope, name] = packageName.replace(/^@/, "").split("/");
-  return `/skills/${encodeURIComponent(scope ?? "")}/${encodeURIComponent(name ?? "")}/${encodeURIComponent(version)}`;
-}
-
 console.log(`Verifying web app: ${baseUrl.href.replace(/\/$/, "")}`);
 
 const homeHead = await fetchText("/", { method: "HEAD" });
@@ -764,17 +774,35 @@ for (const [from, to] of [
 const robots = await fetchText("/robots.txt");
 assertStatus("/robots.txt", robots.response);
 assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/sitemap.xml`);
-assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/ai-skills-sitemap.xml`);
-assertIncludes("/robots.txt", robots.text, `Sitemap: ${expectedCanonicalUrl}/prompt-sitemap.xml`);
 assertIncludes("/robots.txt", robots.text, "Disallow: /dashboard");
+if (robots.text.includes("/ai-skills-sitemap.xml") || robots.text.includes("/prompt-sitemap.xml")) {
+  fail("/robots.txt should point only at the sitemap index");
+}
 
 const sitemap = await fetchText("/sitemap.xml");
 assertStatus("/sitemap.xml", sitemap.response);
 assertCanonicalSitemapHosts("/sitemap.xml", sitemap.text);
+assertIncludes("/sitemap.xml", sitemap.text, "<sitemapindex");
+for (const child of ["/sitemap-hubs.xml", "/sitemap-guides.xml", "/ai-skills-sitemap.xml", "/prompt-sitemap.xml"]) {
+  assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${child}</loc>`);
+}
 if (sitemap.text.includes("/dashboard/packages") || /<loc>[^<]*\/packages\//.test(sitemap.text)) {
   fail("/sitemap.xml still contains /packages URLs");
 }
-for (const path of [
+assertIncludes("/sitemap.xml", sitemap.text, "<lastmod>");
+if (sitemap.text.includes(`<loc>${expectedCanonicalUrl}/registry</loc>`)) {
+  fail("/sitemap.xml contains the duplicate /registry landing page.");
+}
+
+const hubsSitemap = await fetchText("/sitemap-hubs.xml");
+assertStatus("/sitemap-hubs.xml", hubsSitemap.response);
+assertCanonicalSitemapHosts("/sitemap-hubs.xml", hubsSitemap.text);
+const guidesSitemap = await fetchText("/sitemap-guides.xml");
+assertStatus("/sitemap-guides.xml", guidesSitemap.response);
+assertCanonicalSitemapHosts("/sitemap-guides.xml", guidesSitemap.text);
+
+const hubPaths = [
+  "/",
   "/skills",
   "/prompts",
   "/publishers",
@@ -797,6 +825,21 @@ for (const path of [
   "/skills/issue-summarizer",
   "/skills/testing",
   "/skills/documentation",
+  "/skills-sh-alternative",
+  "/research/state-of-agent-skills-2026",
+  "/examples",
+  "/glossary",
+  "/discoverability",
+  "/security",
+  "/privacy",
+  "/terms",
+  "/status",
+  "/roadmap",
+  "/changelog",
+  "/templates",
+  "/thanks",
+];
+const guidePaths = [
   "/guides/ai-package-manager",
   "/guides/version-ai-prompts",
   "/guides/share-claude-skills-with-team",
@@ -811,29 +854,17 @@ for (const path of [
   "/guides/claude-code-plugins-vs-skills",
   "/guides/claude-skills-marketplaces",
   "/guides/claude-code-skills-vs-mcp-vs-subagents-vs-hooks",
-  "/research/state-of-agent-skills-2026",
-  "/examples",
-  "/glossary",
-  "/discoverability",
-  "/security",
-  "/privacy",
-  "/terms",
-  "/status",
-  "/roadmap",
-  "/changelog",
-  "/templates",
   "/guides/skill-md-frontmatter-reference",
-  "/thanks",
-]) {
-  assertIncludes("/sitemap.xml", sitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
+];
+for (const path of hubPaths) {
+  assertIncludes("/sitemap-hubs.xml", hubsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
-assertIncludes("/sitemap.xml", sitemap.text, "<lastmod>");
-if (sitemap.text.includes(`<loc>${expectedCanonicalUrl}/registry</loc>`)) {
-  fail("/sitemap.xml contains the duplicate /registry landing page.");
+for (const path of guidePaths) {
+  assertIncludes("/sitemap-guides.xml", guidesSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
 for (const retired of ["agent-package-manager", "prompt-package-manager", "mcp-package-manager"]) {
-  if (sitemap.text.includes(`/guides/${retired}</loc>`)) {
-    fail(`/sitemap.xml still lists the redirected /guides/${retired} guide.`);
+  if (guidesSitemap.text.includes(`/guides/${retired}</loc>`) || sitemap.text.includes(`/guides/${retired}</loc>`)) {
+    fail(`/sitemap still lists the redirected /guides/${retired} guide.`);
   }
 }
 
@@ -907,23 +938,19 @@ if (promptList.response.ok) {
   }
 }
 
-const packageList = await fetchText("/v1/skills?limit=100");
-if (packageList.response.ok) {
-  const data = JSON.parse(packageList.text);
-  // Same rule as apps/web/lib/registry.ts isIndexablePackage — thin/no-source
-  // skills are omitted from /ai-skills-sitemap.xml, so the first list hit is
-  // not a valid sitemap sample.
-  const pkg = (data.skills ?? data.packages ?? []).find((item) => {
-    const description = String(item?.description ?? "").trim();
-    const sourceUrl = item?.sourceUrl ?? item?.import?.sourceUrl ?? null;
-    return item?.name && item?.version && description.length >= 40 && (Boolean(sourceUrl) || description.length >= 80);
-  });
-  if (!pkg) {
-    fail("/v1/skills returned no indexable skills to cross-check against /ai-skills-sitemap.xml");
-  }
-  if (pkg?.name && pkg?.version) {
-    const path = packagePath(pkg.name, pkg.version);
-    assertIncludes("/ai-skills-sitemap.xml", skillsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
+const gatedSkill = skillsSitemap.text.match(
+  /<loc>[^<]*(\/skills\/([^/<]+)\/([^/<]+)\/([^/<]+))<\/loc>/,
+);
+if (!gatedSkill) {
+  fail("/ai-skills-sitemap.xml has no gated skill URLs");
+}
+{
+  const path = gatedSkill[1];
+  const pkg = {
+    name: `@${decodeURIComponent(gatedSkill[2])}/${decodeURIComponent(gatedSkill[3])}`,
+    version: decodeURIComponent(gatedSkill[4]),
+  };
+  if (pkg.name && pkg.version) {
     const page = await fetchText(path);
     assertStatus(path, page.response);
     const title = page.text.match(/<title>([^<]+)<\/title>/)?.[1] ?? "";
@@ -938,6 +965,43 @@ if (packageList.response.ok) {
     assertIncludes(path, page.text, "Copy link");
     assertIncludes(path, page.text, "LinkedIn");
     assertIncludes(path, page.text, 'id="aipm-package-context"');
+    assertIncludes(path, page.text, 'id="skill-document"');
+    assertIncludes(path, page.text, 'id="skill-summary"');
+    if (/(^|[^0-9])0 installs/.test(page.text)) {
+      fail(`${path} shows a zero install count`);
+    }
+    const skillFiles = await fetchText(
+      `/v1/skills/${encodeURIComponent(pkg.name)}/versions/${encodeURIComponent(pkg.version)}/files`,
+    );
+    if (skillFiles.response.ok) {
+      const listing = JSON.parse(skillFiles.text);
+      const skillFile = (listing.files ?? []).find((file) => String(file.path).toLowerCase() === "skill.md");
+      if (skillFile) {
+        const skillBody = await fetchText(
+          `/v1/skills/${encodeURIComponent(pkg.name)}/versions/${encodeURIComponent(pkg.version)}/files/content?path=${encodeURIComponent(skillFile.path)}`,
+        );
+        if (skillBody.response.ok) {
+          const markdown = JSON.parse(skillBody.text).content ?? "";
+          const line = markdown
+            .replace(/^---[\s\S]*?---\s*/, "")
+            .split("\n")
+            .map((item) => item.trim())
+            .find(
+              (item) =>
+                item.length > 24 &&
+                !item.startsWith("#") &&
+                !item.startsWith("|") &&
+                !item.startsWith("-") &&
+                !item.startsWith("*") &&
+                !/[[\]`'"<>&]/.test(item),
+            );
+          const snippet = line?.slice(0, 48);
+          if (snippet && /^[A-Za-z0-9 ,.;:]+$/.test(snippet)) {
+            assertIncludes(path, page.text, snippet);
+          }
+        }
+      }
+    }
     const jsonLd = extractJsonLd(page.text).join("\n");
     assertIncludes(path, jsonLd, '"@type":"WebPage"');
     assertIncludes(path, jsonLd, '"@type":"SoftwareSourceCode"');
@@ -974,7 +1038,7 @@ async function assertPublisherDetail(slug, name) {
 }
 
 const publisherCandidateSlugs = Array.from(
-  skillsSitemap.text.matchAll(/<loc>[^<]*\/publishers\/([^/<]+)<\/loc>/g),
+  hubsSitemap.text.matchAll(/<loc>[^<]*\/publishers\/([^/<]+)<\/loc>/g),
   (match) => decodeURIComponent(match[1]),
 );
 
