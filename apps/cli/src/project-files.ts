@@ -9,6 +9,7 @@ import {
   type LockfilePromptEntry,
   type ProjectPackageJson,
 } from "@aipm-registry/schemas";
+import { relativizeLockfile } from "./lock-paths.js";
 
 export type { ProjectPackageJson };
 
@@ -47,7 +48,8 @@ export async function readLockfile(projectRoot: string): Promise<Lockfile | null
 }
 
 export async function writeLockfile(projectRoot: string, data: Lockfile): Promise<void> {
-  await writeFile(join(projectRoot, LOCKFILE), JSON.stringify(data, null, 2) + "\n", "utf8");
+  const relative = relativizeLockfile(projectRoot, data);
+  await writeFile(join(projectRoot, LOCKFILE), JSON.stringify(relative, null, 2) + "\n", "utf8");
 }
 
 export function upsertLockEntry(

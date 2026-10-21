@@ -6,6 +6,17 @@ import { SITE_URL } from "../../lib/registry";
 
 const entries = [
   {
+    date: "October 21, 2026",
+    title: "CLI 0.4.11 — failed add, preferredTools, and portable lockfiles",
+    items: [
+      "aipm add no longer pins a version in aipm.package.json when the install fails (for example a missing package or version).",
+      "aipm install and aipm update honor preferredTools when several AI tool folders exist, instead of requiring --target or installing to every folder.",
+      "aipm-lock.json stores project-relative paths so the lockfile can be committed and used on another machine.",
+      "aipm remove reports an error when the package is not installed.",
+      "Install docs now say Node.js 20+, and the add --ci examples show aipm init first.",
+    ],
+  },
+  {
     date: "September 30, 2026",
     title: "CLI 0.4.10 — shared .ai skill install",
     items: [

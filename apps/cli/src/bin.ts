@@ -68,6 +68,7 @@ import {
   resolveTrackedPrompt,
 } from "./prompt-install.js";
 import { removeInstalledPackageFiles } from "./remove-package.js";
+import { fromLockfilePath } from "./lock-paths.js";
 import { removeUntrackedPackage, resolveNoInitMode } from "./no-init.js";
 import { createProjectPackageJson, ensureProjectOrOffer } from "./ensure-project.js";
 import {
@@ -239,7 +240,8 @@ async function showInstalledPrompt(configRoot: string, packageArg: string): Prom
   if (entry.postInstall.status === "cleaned") {
     throw new Error(`Setup helper files were cleaned for ${name}. Reinstall the package to restore them.`);
   }
-  const content = await readFile(entry.postInstall.promptFile, "utf8").catch(() => {
+  const promptFile = fromLockfilePath(configRoot, entry.postInstall.promptFile);
+  const content = await readFile(promptFile, "utf8").catch(() => {
     throw new Error(`Setup prompt file is missing: ${entry.postInstall?.promptFile}`);
   });
   console.log(`Prompt file: ${entry.postInstall.promptFile}`);
@@ -276,13 +278,15 @@ async function cleanupInstalledHelpers(options: {
 
   const roots = new Set(
     entry.installedAssets.helper
-      .map((path) => helperRootFromTrackedPath(path))
+      .map((path) => helperRootFromTrackedPath(fromLockfilePath(options.configRoot, path)))
       .filter((path): path is string => Boolean(path)),
   );
   if (roots.size > 0) {
     for (const root of roots) await rm(root, { recursive: true, force: true });
   } else {
-    for (const helperPath of entry.installedAssets.helper) await rm(helperPath, { force: true });
+    for (const helperPath of entry.installedAssets.helper) {
+      await rm(fromLockfilePath(options.configRoot, helperPath), { force: true });
+    }
   }
 
   await writeLockfile(options.configRoot, {
@@ -1015,24 +1019,27 @@ program
     const version = requestedVersion ?? project.packages[name] ?? (await latestVersionForPackage(registry, name, token));
     if (!version) throw new Error(`Specify version: ${recommendCmd("aipm add <@scope/pkg>@<version>")}`);
 
-    project = {
+    const pinnedVersion = version.replace(/^\^/, "");
+    const nextProject = {
       ...project,
-      packages: { ...project.packages, [name]: version.replace(/^\^/, "") },
+      packages: { ...project.packages, [name]: pinnedVersion },
     };
-    await writeProjectPackageJson(configRoot, project);
 
     await installOnePackageWithRecovery({
       configRoot,
       installRoot,
       registry,
       name,
-      version: version.replace(/^\^/, ""),
-      project,
+      version: pinnedVersion,
+      project: nextProject,
       explicitTarget: parseTargetFlag(opts.target),
       shared: opts.shared,
       ci: opts.ci,
       token,
     });
+
+    project = nextProject;
+    await writeProjectPackageJson(configRoot, project);
 
     try {
       await recordPackageInstall(registry, name, token);
@@ -1634,6 +1641,10 @@ program
     const { name } = parsePackageArg(pkgArg);
     const lock = await readLockfile(configRoot);
     const lockEntry = lock?.packages[name];
+    const tracked = Object.hasOwn(project.packages, name);
+    if (!lockEntry && !tracked) {
+      throw new Error(`Package is not installed: ${name}`);
+    }
     if (lockEntry) {
       const otherEntries = Object.entries(lock.packages)
         .filter(([packageName]) => packageName !== name)
@@ -1762,36 +1773,38 @@ program
 
     const token = await tokenForRead(registry, opts.token);
     const names = pkgArg ? [parsePackageArg(pkgArg).name] : Object.keys(project.packages);
+    let current: ProjectPackageJson = project;
 
     for (const name of names) {
       const version = await latestVersionForPackage(registry, name, token);
-      project = {
-        ...project,
-        packages: { ...project.packages, [name]: version },
+      current = {
+        ...current,
+        packages: { ...current.packages, [name]: version },
       };
-      await writeProjectPackageJson(configRoot, project);
       await installOnePackageWithRecovery({
         configRoot,
         installRoot,
         registry,
         name,
         version,
-        project,
+        project: current,
         explicitTarget: parseTargetFlag(opts.target),
         shared: opts.shared,
         ci: opts.ci,
         token,
       });
+      project = current;
+      await writeProjectPackageJson(configRoot, current);
     }
 
     if (!pkgArg) {
-      for (const [alias, url] of Object.entries(project.prompts)) {
+      for (const [alias, url] of Object.entries(current.prompts)) {
         const reference = parsePromptUrl(url);
         if (!reference) throw new Error(`Invalid tracked prompt URL for ${alias}: ${url}`);
         const result = await installTrackedPrompt({
           configRoot,
           registry,
-          project,
+          project: current,
           reference: { ...reference, alias },
           track: false,
           updateOnly: true,
@@ -1800,7 +1813,7 @@ program
         console.log(result.changed ? `Updated prompt ${result.prompt.title} → ${result.path}` : `Prompt unchanged: ${result.prompt.title}`);
       }
     }
-    if (names.length === 0 && Object.keys(project.prompts).length === 0) {
+    if (names.length === 0 && Object.keys(current.prompts).length === 0) {
       console.log("No skills or prompts configured.");
     }
   });

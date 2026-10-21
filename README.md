@@ -187,8 +187,8 @@ in the repository.
 
 - Skill packages only (`type: skill`)
 - Registry: public read/search/install APIs and token-gated publish
-- CLI: `init`, `add`, `install`, `publish`, `list`, `doctor`
-- Tools: `cursor`, `claude` (auto-detect or prompt)
+- CLI: `init`, `add`, `install`, `update`, `remove`, `search`, `list`, `login`, `publish`, `doctor`
+- Tools: `cursor`, `claude`, `codex` (detect folders, `preferredTools`, or `--target`)
 - Publisher accounts: GitHub sign-in, profile, org namespaces, package reservations, and 5-minute publish tokens
 - Public website: search, package pages, dashboard, docs, SEO pages, security/privacy/terms/status, and roadmap
 - Monorepo + CI + repo secret scanning + local Postgres dev stack + Azure/Vercel deployment paths
@@ -203,7 +203,7 @@ Work is ordered so each step is usable on its own. Full plan: `InitialDesignPlan
 
 - **Production verification** — keep HTTPS, headers, `/health`, `/ready`, search, install, and publish-auth checks automated
 - **Hardening** — publish consistency, rollback, backup/restore drills, stronger scan coverage, golden-file adapter tests, E2E publish → install
-- **CLI lifecycle** — `update`, `remove`, `verify`, `clean`, `pack`
+- **CLI lifecycle** — `verify`, `clean`, `pack` (`update` and `remove` already ship)
 - **Dashboard polish** — clearer failed-publish feedback, package version history, token expiry states, and profile completeness
 - **Distribution** — clearer Windows/macOS install story and release checklist
 

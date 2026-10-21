@@ -96,7 +96,10 @@ export default function UsePage() {
             Install and manage
           </p>
           <h2>Install a skill</h2>
-          <p>Choose a package from the registry and install it for the AI tool you use.</p>
+          <p>
+            After <code>aipm init</code>, choose a package from the registry and install it for the
+            AI tool you use. Skip init and add <code>--no-init</code> for a one-shot install.
+          </p>
           <p>
             To install for one tool, choose a target like <code>claude</code>, <code>codex</code>, or{" "}
             <code>cursor</code>. Private org packages work the same way after <code>aipm login</code>. See{" "}

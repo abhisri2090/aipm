@@ -37,6 +37,27 @@ describe("resolveInstallLayout", () => {
     })).rejects.toThrow(/Pass --target cursor\|claude\|codex or --shared/);
   });
 
+  it("uses preferredTools in CI when several tool folders exist", async () => {
+    const root = await projectWith(".cursor", ".claude");
+    await expect(resolveInstallLayout({
+      projectRoot: root,
+      manifest,
+      preferredTools: ["cursor"],
+      ci: true,
+    })).resolves.toEqual({ mode: "copy", tool: "cursor" });
+  });
+
+  it("does not prompt when preferredTools already names the detected tools", async () => {
+    const root = await projectWith(".cursor", ".claude");
+    vi.mocked(promptForInstallLayout).mockClear();
+    await expect(resolveInstallLayout({
+      projectRoot: root,
+      manifest,
+      preferredTools: ["cursor", "claude"],
+    })).resolves.toEqual({ mode: "default" });
+    expect(promptForInstallLayout).not.toHaveBeenCalled();
+  });
+
   it("uses --shared for every detected tool the package allows", async () => {
     const root = await projectWith(".cursor", ".codex");
     await expect(resolveInstallLayout({

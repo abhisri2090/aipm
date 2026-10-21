@@ -866,10 +866,11 @@ describe("CLI publish commands", () => {
         packages: {
           "@team/free-skill": {
             version: "1.0.0",
-            installed: { cursor: [newPath] },
+            installed: { cursor: [".cursor/skills/free-skill/SKILL.md"] },
           },
         },
       });
+      expect(JSON.stringify(lock)).not.toContain(realRoot);
       expect(await readJson(join(root, "aipm.package.json"))).toMatchObject({
         packages: { "@team/free-skill": "1.0.0" },
       });
@@ -940,6 +941,12 @@ describe("CLI publish commands", () => {
 
     try {
       await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      const initialized = (await readJson(join(root, "aipm.package.json"))) as {
+        preferredTools?: string[];
+        [key: string]: unknown;
+      };
+      delete initialized.preferredTools;
+      await writeFile(join(root, "aipm.package.json"), JSON.stringify(initialized, null, 2) + "\n");
       await expect(runCli(root, ["add", "@team/free-skill@1.0.0", "--ci"])).rejects.toMatchObject({
         stderr: expect.stringContaining("Pass --target"),
       });
@@ -955,11 +962,12 @@ describe("CLI publish commands", () => {
       expect(lock).toMatchObject({
         packages: {
           "@team/free-skill": {
-            shared: { files: [skillPath] },
-            installed: { cursor: [cursorLink], claude: [claudeLink] },
+            shared: { root: ".ai/skills/free-skill", files: [".ai/skills/free-skill/SKILL.md"] },
+            installed: { cursor: [".cursor/skills/free-skill"], claude: [".claude/skills/free-skill"] },
           },
         },
       });
+      expect(JSON.stringify(lock)).not.toContain(realRoot);
 
       const remove = await runCli(root, ["remove", "@team/free-skill", "--ci"]);
       expect(remove.stdout).toContain("Deleted");
@@ -1097,6 +1105,138 @@ describe("CLI publish commands", () => {
       runCli(root, ["add", "@team/free-skill@1.0.0", "--no-init", "--ci", "--target", "cursor"]),
     ).rejects.toMatchObject({
       stderr: expect.stringContaining("already initialized"),
+    });
+  });
+
+  it("does not pin a package when add fails", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      response.writeHead(404, { "content-type": "application/json" });
+      response.end(JSON.stringify({ error: "not found" }));
+    });
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+
+    try {
+      await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      await expect(runCli(root, ["add", "@someorg/somepkg@9.9.9", "--ci"])).rejects.toMatchObject({
+        stderr: expect.stringContaining("Failed to install @someorg/somepkg@9.9.9"),
+      });
+      expect(await readJson(join(root, "aipm.package.json"))).toMatchObject({ packages: {} });
+      await expect(stat(join(root, "aipm-lock.json"))).rejects.toThrow();
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("install and update honor preferredTools when several tool folders exist", async () => {
+    const root = await tempWorkspace();
+    await mkdir(join(root, ".cursor"));
+    await mkdir(join(root, ".claude"));
+    const packageRoot = await tempWorkspace();
+    const manifest = {
+      schemaVersion: "0.1",
+      name: "@team/free-skill",
+      version: "1.0.0",
+      type: "skill",
+      description: "Preferred tool skill",
+      entry: "SKILL.md",
+      targets: ["cursor", "claude"],
+    };
+    await writeFile(join(packageRoot, "aipm.manifest.json"), JSON.stringify(manifest, null, 2));
+    await writeFile(join(packageRoot, "SKILL.md"), "# Free skill v1\n");
+    const tarball = await packDirectory(packageRoot);
+    const encoded = encodeURIComponent("@team/free-skill");
+
+    const server = createServer((request, response) => {
+      if (request.url === "/health") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ ok: true }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0` || request.url?.startsWith(`/v1/skills?`)) {
+        if (request.url?.startsWith(`/v1/skills?`)) {
+          response.writeHead(200, { "content-type": "application/json" });
+          response.end(
+            JSON.stringify({
+              skills: [{ name: "@team/free-skill", version: "1.0.0", targets: ["cursor", "claude"] }],
+            }),
+          );
+          return;
+        }
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ manifest, integrity: "sha256-test" }));
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/versions/1.0.0/tarball`) {
+        response.writeHead(200, { "content-type": "application/gzip" });
+        response.end(tarball);
+        return;
+      }
+      if (request.url === `/v1/skills/${encoded}/installs`) {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ installCount: 1 }));
+        return;
+      }
+      response.writeHead(404);
+      response.end();
+    });
+
+    await new Promise<void>((resolveServer) => server.listen(0, "127.0.0.1", resolveServer));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Expected test server port");
+    const registry = `http://127.0.0.1:${address.port}`;
+
+    try {
+      await runCli(root, ["init", "--registry", registry, "--target", "cursor"]);
+      await writeFile(
+        join(root, "aipm.package.json"),
+        JSON.stringify(
+          {
+            schemaVersion: "0.1",
+            registry,
+            preferredTools: ["cursor"],
+            packages: { "@team/free-skill": "1.0.0" },
+            prompts: {},
+          },
+          null,
+          2,
+        ),
+      );
+
+      const install = await runCli(root, ["install", "--ci"]);
+      expect(install.stdout).toContain("Installed @team/free-skill@1.0.0 → cursor");
+      await expect(readFile(join(root, ".cursor", "skills", "free-skill", "SKILL.md"), "utf8")).resolves.toContain(
+        "Free skill v1",
+      );
+      await expect(stat(join(root, ".claude", "skills", "free-skill", "SKILL.md"))).rejects.toThrow();
+
+      const update = await runCli(root, ["update", "--ci"]);
+      expect(update.stdout).toContain("Installed @team/free-skill@1.0.0 → cursor");
+      await expect(stat(join(root, ".claude", "skills", "free-skill", "SKILL.md"))).rejects.toThrow();
+    } finally {
+      await new Promise<void>((resolveClose, rejectClose) =>
+        server.close((error) => (error ? rejectClose(error) : resolveClose())),
+      );
+    }
+  });
+
+  it("reports an error when removing a package that is not installed", async () => {
+    const root = await tempWorkspace();
+    await runCli(root, ["init", "--registry", "https://api.example.test", "--target", "cursor"]);
+
+    await expect(runCli(root, ["remove", "@someorg/not-installed", "--ci"])).rejects.toMatchObject({
+      stderr: expect.stringContaining("Package is not installed: @someorg/not-installed"),
     });
   });
 
