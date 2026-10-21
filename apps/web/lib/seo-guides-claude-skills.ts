@@ -216,7 +216,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       "where to find Claude skills",
     ],
     publishedAt: "2026-09-25",
-    updatedAt: "2026-10-07",
+    updatedAt: "2026-10-21",
     answerTable: {
       caption: "Comparison table: where to get Claude skills (checked 25 September 2026; details come from each source's own docs or site)",
       columns: ["Source", "What it is", "How you install", "Versions and updates", "Review signals"],
@@ -324,7 +324,7 @@ export const CLAUDE_SKILLS_GUIDES: SeoGuide[] = [
       {
         question: "How is AIPM different from skills.sh?",
         answer:
-          "Both help you install skills from the command line. AIPM installs named, versioned packages and records them in the project; skills.sh installs from Git sources and ranks skills by installs. See the AIPM vs skills.sh guide for details.",
+          "Both help you install skills from the command line. AIPM installs named, versioned packages and records them in the project; skills.sh installs from Git sources and ranks skills by installs. See the [skills.sh alternative](/skills-sh-alternative) page and the AIPM vs skills.sh guide for details.",
       },
     ],
     sources: [

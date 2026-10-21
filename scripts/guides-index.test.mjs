@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 import robots from "../apps/web/app/robots";
 import { listGuideIndexEntries } from "../apps/web/lib/guide-index";
 import { SEO_GUIDES } from "../apps/web/lib/seo-guides";

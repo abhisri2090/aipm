@@ -72,6 +72,7 @@ export const SKILL_DISCOVERY_PAGES = [
       { label: "Claude Code skills hub", href: "/skills/claude" },
       { label: "All agent skills", href: "/skills" },
       { label: "AIPM vs skills.sh", href: "/guides/aipm-vs-skills-sh" },
+      { label: "Pin versions instead of skills.sh", href: "/skills-sh-alternative" },
     ],
     sources: [
       { label: "Cursor documentation: Agent Skills", href: "https://cursor.com/docs/skills" },
@@ -133,6 +134,7 @@ export const SKILL_DISCOVERY_PAGES = [
       { label: "Cursor skills hub", href: "/skills/cursor" },
       { label: "All agent skills", href: "/skills" },
       { label: "AIPM vs skills.sh", href: "/guides/aipm-vs-skills-sh" },
+      { label: "Pin versions instead of skills.sh", href: "/skills-sh-alternative" },
       { label: "What are Claude skills?", href: "/guides/what-are-claude-skills" },
       { label: "Claude Code plugins vs skills", href: "/guides/claude-code-plugins-vs-skills" },
       { label: "Claude skills marketplaces compared", href: "/guides/claude-skills-marketplaces" },

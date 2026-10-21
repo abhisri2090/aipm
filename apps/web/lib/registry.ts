@@ -1,4 +1,8 @@
 import cliPackage from "../../cli/package.json";
+import { rememberPackageLookup, readPackageLookup } from "./package-lookup-cache";
+import { isRegistryNotFound, RegistryUnavailableError } from "./registry-unavailable";
+
+export { RegistryUnavailableError };
 
 export type PackagePublisher = {
   org: {
@@ -492,14 +496,85 @@ export function filterPublishedPublishers<T extends { slug: string }>(
   return publishers.filter((publisher) => set.has(publisher.slug));
 }
 
-export async function getPackage(name: string, version: string): Promise<PackageDetail | null> {
+export function packageVersionUrl(name: string, version: string): string {
+  return `${REGISTRY_API_BASE_URL}/v1/skills/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`;
+}
+
+function packageFromLookup(status: number, body: string): PackageDetail | null {
+  if (isRegistryNotFound(status)) return null;
+  if (!status || status >= 400) {
+    throw new RegistryUnavailableError(`Skill fetch failed (${status})`, status);
+  }
   try {
-    const response = await fetch(
-      `${REGISTRY_API_BASE_URL}/v1/skills/${encodeURIComponent(name)}/versions/${encodeURIComponent(version)}`,
-      { next: { revalidate: 120 }, signal: AbortSignal.timeout(3000) },
-    );
+    return JSON.parse(body) as PackageDetail;
+  } catch {
+    throw new RegistryUnavailableError("Skill response was not valid JSON");
+  }
+}
+
+/**
+ * Returns null only when the registry says the skill does not exist.
+ * Timeouts, network errors, 429, and 5xx throw so callers do not turn them into a 404.
+ */
+export async function getPackage(name: string, version: string): Promise<PackageDetail | null> {
+  const url = packageVersionUrl(name, version);
+  const cached = readPackageLookup(url);
+  if (cached) return packageFromLookup(cached.status, cached.body);
+
+  let response: Response;
+  try {
+    response = await fetch(url, { next: { revalidate: 120 }, signal: AbortSignal.timeout(3000) });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new RegistryUnavailableError(`Skill fetch failed: ${reason}`);
+  }
+  const body = await response.text();
+  if (response.ok || isRegistryNotFound(response.status)) {
+    rememberPackageLookup(url, response.status, body);
+  }
+  return packageFromLookup(response.status, body);
+}
+
+export async function getSkillMarkdown(name: string, version: string): Promise<string | null> {
+  try {
+    const filesUrl = `${packageVersionUrl(name, version)}/files`;
+    const listResponse = await fetch(filesUrl, { next: { revalidate: 120 }, signal: AbortSignal.timeout(4000) });
+    if (!listResponse.ok) return null;
+    const listing = (await listResponse.json()) as { entry?: string | null; files?: { path: string }[] };
+    const files = listing.files ?? [];
+    const skillPath =
+      files.find((file) => file.path.toLowerCase() === "skill.md")?.path ??
+      files.find((file) => /(^|\/)skill\.md$/i.test(file.path))?.path ??
+      (listing.entry && /\.md$/i.test(listing.entry) ? listing.entry : null);
+    if (!skillPath) return null;
+    const params = new URLSearchParams({ path: skillPath });
+    const fileResponse = await fetch(`${filesUrl}/content?${params}`, {
+      next: { revalidate: 120 },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!fileResponse.ok) return null;
+    const file = (await fileResponse.json()) as { binary?: boolean; content?: string };
+    if (file.binary || !file.content?.trim()) return null;
+    return file.content;
+  } catch {
+    return null;
+  }
+}
+
+/** Oldest version timestamp. Null when the version list cannot be read. */
+export async function getSkillFirstPublishedAt(name: string): Promise<string | null> {
+  try {
+    const response = await fetch(`${REGISTRY_API_BASE_URL}/v1/skills/${encodeURIComponent(name)}/versions`, {
+      next: { revalidate: 120 },
+      signal: AbortSignal.timeout(3000),
+    });
     if (!response.ok) return null;
-    return (await response.json()) as PackageDetail;
+    const data = (await response.json()) as { versions?: { createdAt?: string }[] };
+    const times = (data.versions ?? [])
+      .map((version) => Date.parse(version.createdAt ?? ""))
+      .filter((value) => Number.isFinite(value));
+    if (times.length === 0) return null;
+    return new Date(Math.min(...times)).toISOString();
   } catch {
     return null;
   }

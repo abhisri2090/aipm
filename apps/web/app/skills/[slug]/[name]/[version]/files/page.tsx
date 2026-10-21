@@ -7,6 +7,7 @@ import {
   getPackage,
   packagePath,
   packageShortName,
+  RegistryUnavailableError,
   SITE_URL,
 } from "../../../../../../lib/registry";
 
@@ -17,7 +18,15 @@ type PackageFilesPageProps = {
 export async function generateMetadata({ params }: PackageFilesPageProps): Promise<Metadata> {
   const { slug, name, version } = await params;
   const packageName = `@${decodeURIComponent(slug)}/${decodeURIComponent(name)}`;
-  const pkg = await getPackage(packageName, decodeURIComponent(version));
+  let pkg;
+  try {
+    pkg = await getPackage(packageName, decodeURIComponent(version));
+  } catch (error) {
+    if (error instanceof RegistryUnavailableError) {
+      return { title: { absolute: "Skill temporarily unavailable | AIPM" } };
+    }
+    throw error;
+  }
   if (!pkg) return { title: "Package not found | AIPM" };
 
   const title = `${pkg.name}@${pkg.version} files`;

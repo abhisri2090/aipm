@@ -17,7 +17,7 @@ import {
   seriesHubDescription,
   seriesHubTitle,
 } from "../apps/web/lib/prompt-series";
-import sitemap from "../apps/web/app/sitemap";
+import sitemap from "../apps/web/lib/static-sitemap";
 
 const MIN_INBOUND = 3;
 const MAX_CLICKS_FROM_PROMPTS = 3;

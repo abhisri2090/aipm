@@ -9,6 +9,7 @@ const groups = [
       { href: "/prompts", label: "Prompt directory" },
       { href: "/publishers", label: "Publishers" },
       { href: "/use", label: "Use AIPM" },
+      { href: "/skills-sh-alternative", label: "skills.sh alternative" },
       { href: "/publish", label: "Publish" },
       { href: "/targets", label: "Targets" },
       { href: "/dashboard", label: "Dashboard" },
