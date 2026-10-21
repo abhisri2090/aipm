@@ -210,6 +210,7 @@ export async function readManifest(root: string): Promise<PackageManifest> {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
       throw new Error(
         `No aipm.manifest.json found. Run ${recommendCmd("aipm publish init --name <@org/skill>")}.`,
+        { cause: error },
       );
     }
     throw error;

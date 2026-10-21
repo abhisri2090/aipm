@@ -965,7 +965,6 @@ program
       const promptReference = parsePromptUrl(pkgArg);
       if (promptReference) {
         await resolvePromptRequiresTracking({ ci: opts.ci, command: "add" });
-        useNoInit = false;
         if (!project) {
           project = await createProjectPackageJson({
             scope,
@@ -1093,7 +1092,7 @@ program
     const scope: ScopedCommandOptions = { global: opts.global };
     const configRoot = resolveConfigRoot(scope);
     const installRoot = resolveInstallRoot(scope);
-    let project = await readProjectPackageJson(configRoot);
+    const project = await readProjectPackageJson(configRoot);
     if (!project) {
       const ensured = await ensureProjectOrOffer({
         scope,
@@ -1105,7 +1104,6 @@ program
         command: "install",
       });
       if (ensured.action !== "ready") throw new Error(initRequiredMessage(scope));
-      project = ensured.project;
       printNote({
         type: "info",
         title: "Initialized",
@@ -1603,7 +1601,6 @@ program
     if (useNoInit) {
       if (parsePromptUrl(pkgArg)) {
         await resolvePromptRequiresTracking({ ci: opts.ci, command: "remove" });
-        useNoInit = false;
         if (!project) {
           project = await createProjectPackageJson({
             scope,
@@ -1704,7 +1701,6 @@ program
       }
       if (parsePromptUrl(pkgArg)) {
         await resolvePromptRequiresTracking({ ci: opts.ci, command: "update" });
-        useNoInit = false;
         if (!project) {
           project = await createProjectPackageJson({
             scope,

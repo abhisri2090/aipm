@@ -1310,7 +1310,7 @@ export async function createApp(): Promise<FastifyInstance> {
       codeHash: sha256Hex(code),
       expiresAt,
     });
-    let emailResult: InviteEmailResult = { sent: false, provider: "disabled" };
+    let emailResult: InviteEmailResult;
     try {
       emailResult = await emailSender.sendVerificationEmail({ to: email, code, expiresAt });
     } catch (error) {
