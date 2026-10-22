@@ -755,6 +755,7 @@ for (const [from, to] of [
   ["/guides/agent-package-manager", "/guides/ai-package-manager"],
   ["/guides/prompt-package-manager", "/guides/share-ai-prompts-team"],
   ["/guides/mcp-package-manager", "/guides/mcp-json-guide-cursor-claude"],
+  ["/guides/agents-md-skill-md", "/guides/agents-md-vs-skill-md"],
 ]) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -763,6 +764,10 @@ for (const [from, to] of [
     const location = response.headers.get("location") ?? "";
     if (response.status !== 301 || !location.endsWith(to)) {
       fail(`${from} did not 301 to ${to} (status ${response.status}, location ${location})`);
+    }
+    const destination = await fetch(urlFor(to), { redirect: "manual", signal: controller.signal });
+    if (destination.status !== 200) {
+      fail(`${to} did not resolve (status ${destination.status}); ${from} would chain or loop`);
     }
   } catch (error) {
     fail(`${from} redirect check failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -862,7 +867,7 @@ for (const path of hubPaths) {
 for (const path of guidePaths) {
   assertIncludes("/sitemap-guides.xml", guidesSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
 }
-for (const retired of ["agent-package-manager", "prompt-package-manager", "mcp-package-manager"]) {
+for (const retired of ["agent-package-manager", "prompt-package-manager", "mcp-package-manager", "agents-md-skill-md"]) {
   if (guidesSitemap.text.includes(`/guides/${retired}</loc>`) || sitemap.text.includes(`/guides/${retired}</loc>`)) {
     fail(`/sitemap still lists the redirected /guides/${retired} guide.`);
   }
@@ -895,6 +900,21 @@ assertIncludes(
   skillsSitemap.text,
   '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
 );
+
+const gscAllowlist = JSON.parse(
+  await readFile(resolve(repoRoot, "apps/web/lib/gsc-sitemap-allowlist.json"), "utf8"),
+);
+const versionedSkillPath = /^\/skills\/[^/]+\/[^/]+\/[^/]+$/;
+for (const path of gscAllowlist) {
+  if (path.startsWith("/packages/")) {
+    fail(`GSC sitemap allowlist includes a redirecting /packages URL: ${path}`);
+  }
+  if (versionedSkillPath.test(path)) {
+    assertIncludes("/ai-skills-sitemap.xml", skillsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
+  } else {
+    assertIncludes("/sitemap-hubs.xml", hubsSitemap.text, `<loc>${expectedCanonicalUrl}${path}</loc>`);
+  }
+}
 
 const promptSitemap = await fetchText("/prompt-sitemap.xml");
 assertStatus("/prompt-sitemap.xml", promptSitemap.response);
