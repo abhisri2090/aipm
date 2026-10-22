@@ -74,7 +74,7 @@ export async function compressImage(file: File): Promise<File> {
     if (error instanceof Error && error.message.startsWith("Could not compress")) {
       throw error;
     }
-    throw new Error("Could not compress the sample image in this browser.");
+    throw new Error("Could not compress the sample image in this browser.", { cause: error });
   } finally {
     if (image && "close" in image) image.close();
   }

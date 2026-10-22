@@ -52,7 +52,7 @@ async function fetchImportMeta(registryUrl, packageName) {
 }
 
 async function appendAudit(entry) {
-  let existing = [];
+  let existing;
   try {
     await access(AUDIT_PATH);
     existing = JSON.parse(await readFile(AUDIT_PATH, "utf8"));

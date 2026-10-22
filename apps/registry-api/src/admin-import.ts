@@ -74,9 +74,9 @@ export async function ensureImportAccount(
     },
   });
 
-  let org = await getOrgBySlug(pool, orgSlug);
+  const org = await getOrgBySlug(pool, orgSlug);
   if (!org) {
-    org = await createOrg(pool, {
+    await createOrg(pool, {
       slug: orgSlug,
       name: author.name?.trim() || author.githubLogin,
       ownerUserId: user.id,

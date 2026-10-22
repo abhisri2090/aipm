@@ -36,6 +36,7 @@ async function sha256(asset) {
     if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
       throw new Error(
         `Missing ${asset}. Run all release binary builds first, or use GitHub Actions release-cli.yml.`,
+        { cause: error },
       );
     }
     throw error;

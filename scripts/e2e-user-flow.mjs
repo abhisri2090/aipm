@@ -78,7 +78,7 @@ async function command(cmd, args, options = {}) {
     });
   } catch (error) {
     const combined = `${error.stdout ?? ""}${error.stderr ?? ""}${error.message ?? ""}`;
-    throw new Error(redactSecrets(combined, secrets).slice(0, 1500));
+    throw new Error(redactSecrets(combined, secrets).slice(0, 1500), { cause: error });
   }
 }
 

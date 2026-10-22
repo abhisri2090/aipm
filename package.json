@@ -47,10 +47,11 @@
     "import-skill": "node scripts/import-skill.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.5",
     "@yao-pkg/pkg": "^6.20.0",
     "esbuild": "^0.28.2",
-    "eslint": "^9.17.0",
+    "eslint": "^10.13.0",
     "globals": "^17.6.0",
     "playwright": "^1.62.1",
     "prettier": "^3.4.2",

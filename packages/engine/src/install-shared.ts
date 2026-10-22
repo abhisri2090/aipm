@@ -42,6 +42,7 @@ async function linkSkillDir(linkPath: string, canonicalDir: string): Promise<voi
     if (code === "EPERM") {
       throw new Error(
         `Could not create a shortcut at ${linkPath}. On Windows, turn on Developer Mode or run an admin shell, then retry.`,
+        { cause: error },
       );
     }
     throw error;
