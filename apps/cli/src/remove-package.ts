@@ -1,6 +1,7 @@
 import { lstat, realpath, rm, rmdir, unlink } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import type { LockfilePackageEntry } from "@aipm-registry/schemas";
+import { fromLockfilePath } from "./lock-paths.js";
 
 function within(root: string, path: string): boolean {
   const rel = relative(resolve(root), resolve(path));
@@ -36,9 +37,13 @@ export async function removeInstalledPackageFiles(input: {
 }): Promise<{ removed: number; retainedShared: number }> {
   const roots = [...new Set([resolve(input.configRoot), resolve(input.installRoot)])];
   const realRoots = await Promise.all(roots.map((root) => realpath(root).catch(() => root)));
-  const requestedPaths = [...new Set(trackedInstalledPackagePaths(input.entry).map((path) => resolve(path)))];
+  const requestedPaths = [
+    ...new Set(trackedInstalledPackagePaths(input.entry).map((path) => fromLockfilePath(input.configRoot, path))),
+  ];
   const protectedPaths = new Set(
-    (input.otherEntries ?? []).flatMap(trackedInstalledPackagePaths).map((path) => resolve(path)),
+    (input.otherEntries ?? [])
+      .flatMap(trackedInstalledPackagePaths)
+      .map((path) => fromLockfilePath(input.configRoot, path)),
   );
   const paths = requestedPaths.filter((path) => !protectedPaths.has(path));
   const unsafe = paths.find((path) => !roots.some((root) => within(root, path)));

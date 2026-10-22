@@ -87,7 +87,7 @@ export default function InstallPage() {
           <h2>Choose an install method</h2>
           <p>
             Pick the option that matches your machine. All methods install the same <code>aipm</code> command.
-            The CLI works on macOS, Linux, and Windows. It requires Node.js 18 or later for the npm install,
+            The CLI works on macOS, Linux, and Windows. It requires Node.js 20 or later for the npm install,
             but the native installers bundle their own runtime.
           </p>
           {CLI_INSTALL_OPTIONS.map((option) => (

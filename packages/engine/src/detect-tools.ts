@@ -37,6 +37,7 @@ export interface ResolveToolsOptions {
 /**
  * Resolves which tools to install to.
  * - explicitTarget wins
+ * - else preferredTools ∩ detected ∩ manifest.targets (when both preferred and folders exist)
  * - else detected ∩ manifest.targets
  * - else preferredTools filtered to manifest.targets
  */
@@ -63,7 +64,14 @@ export async function resolveInstallTools(
   }
 
   const detected = await detectToolsInProject(options.projectRoot);
+  const preferred = expandTargets(options.preferredTools ?? []).filter((t) =>
+    manifestAllowsTool(manifest, t),
+  );
+
   if (detected.length > 0) {
+    const preferredDetected = preferred.filter((t) => detected.includes(t));
+    if (preferredDetected.length > 0) return preferredDetected;
+
     const intersection = detected.filter((t) => manifestAllowsTool(manifest, t));
     if (intersection.length === 0) {
       throw new Error(
@@ -73,9 +81,6 @@ export async function resolveInstallTools(
     return intersection;
   }
 
-  const preferred = expandTargets(options.preferredTools ?? []).filter((t) =>
-    manifestAllowsTool(manifest, t),
-  );
   if (preferred.length > 0) return preferred;
 
   // No folders / preferred tools: return empty so the CLI can prompt.

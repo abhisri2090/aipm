@@ -20,6 +20,7 @@ import {
   type ProjectPackageJson,
 } from "./project-files.js";
 import { removeInstalledPackageFiles, trackedInstalledPackagePaths } from "./remove-package.js";
+import { fromLockfilePath } from "./lock-paths.js";
 import { resolveInstallLayout } from "./install-layout.js";
 import { promptForTool } from "./prompt.js";
 import { offerChoices } from "./ui/recover.js";
@@ -252,8 +253,8 @@ async function installPackageAssets(options: {
   };
 }
 
-function pathsMissingFrom(previous: string[] | undefined, kept: Set<string>): string[] {
-  return (previous ?? []).filter((path) => !kept.has(resolve(path)));
+function pathsMissingFrom(previous: string[] | undefined, kept: Set<string>, configRoot: string): string[] {
+  return (previous ?? []).filter((path) => !kept.has(fromLockfilePath(configRoot, path)));
 }
 
 /** Drop lockfile paths that this install no longer writes, so a moved skill stays tracked. */
@@ -270,13 +271,13 @@ async function removeReplacedInstallPaths(input: {
   const kept = new Set(trackedInstalledPackagePaths(input.next).map((path) => resolve(path)));
   const installed: LockfilePackageEntry["installed"] = {};
   for (const [tool, paths] of Object.entries(previous.installed) as Array<[AiTool, string[]]>) {
-    const stale = pathsMissingFrom(paths, kept);
+    const stale = pathsMissingFrom(paths, kept, input.configRoot);
     if (stale.length > 0) installed[tool] = stale;
   }
   const staleAssets = previous.installedAssets
     ? {
-        main: pathsMissingFrom(previous.installedAssets.main, kept),
-        helper: pathsMissingFrom(previous.installedAssets.helper, kept),
+        main: pathsMissingFrom(previous.installedAssets.main, kept, input.configRoot),
+        helper: pathsMissingFrom(previous.installedAssets.helper, kept, input.configRoot),
       }
     : undefined;
   const hasStaleAssets = Boolean(staleAssets && (staleAssets.main.length > 0 || staleAssets.helper.length > 0));
@@ -341,6 +342,7 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
       projectRoot: installRoot,
       manifest,
       explicitTarget,
+      preferredTools,
       shared: options.shared,
       ci: options.ci,
     });
@@ -383,18 +385,21 @@ export async function installOnePackage(options: InstallOneOptions): Promise<voi
       });
       spinner.start(`Installing ${options.name}@${options.version}`);
     } else if (layout.mode === "default" && tools.length > 1 && !explicitTarget && !options.ci) {
-      // Multiple matches — ask instead of installing into every tool silently.
-      spinner.stop();
-      printNote({
-        type: "info",
-        title: "Multiple AI tools found",
-        message: `Detected: ${tools.join(", ")}`,
-      });
-      const choice = await promptForTool(tools);
-      explicitTarget = choice;
-      preferredTools = [choice];
-      tools = [choice];
-      spinner.start(`Installing ${options.name}@${options.version}`);
+      const preferredResolved = (preferredTools ?? []).filter((tool) => tool === "*" || tools.includes(tool));
+      if (preferredResolved.length === 0) {
+        // Multiple matches — ask instead of installing into every tool silently.
+        spinner.stop();
+        printNote({
+          type: "info",
+          title: "Multiple AI tools found",
+          message: `Detected: ${tools.join(", ")}`,
+        });
+        const choice = await promptForTool(tools);
+        explicitTarget = choice;
+        preferredTools = [choice];
+        tools = [choice];
+        spinner.start(`Installing ${options.name}@${options.version}`);
+      }
     }
 
     spinner.update(`Downloading ${options.name}@${options.version}`);

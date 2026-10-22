@@ -1,5 +1,5 @@
 import { detectToolsInProject } from "@aipm-registry/engine";
-import type { AiTool, ConcreteAiTool, PackageManifest } from "@aipm-registry/schemas";
+import { expandTargets, type AiTool, type ConcreteAiTool, type PackageManifest } from "@aipm-registry/schemas";
 import { promptForInstallLayout } from "./prompt.js";
 
 export type InstallLayout =
@@ -15,6 +15,7 @@ export async function resolveInstallLayout(input: {
   projectRoot: string;
   manifest: PackageManifest;
   explicitTarget?: AiTool;
+  preferredTools?: AiTool[];
   shared?: boolean;
   ci?: boolean;
 }): Promise<InstallLayout> {
@@ -30,6 +31,11 @@ export async function resolveInstallLayout(input: {
     return { mode: "shared", tools: detected };
   }
   if (input.explicitTarget || detected.length < 2) return { mode: "default" };
+
+  const preferred = expandTargets(input.preferredTools ?? []).filter((tool) => detected.includes(tool));
+  if (preferred.length === 1) return { mode: "copy", tool: preferred[0]! };
+  if (preferred.length > 1) return { mode: "default" };
+
   if (input.ci) {
     throw new Error("Several AI tool folders found. Pass --target cursor|claude|codex or --shared.");
   }

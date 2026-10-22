@@ -32,6 +32,18 @@ const privatePackageCommands: CommandItem[] = [
 
 const useCommands: CommandItem[] = [
   {
+    title: "Initialize a project",
+    description: "Creates aipm.package.json in the current project and records the registry URL. Run this before a tracked `aipm add` / `aipm install`.",
+    code: "aipm init --target claude",
+    options: ["--target <tool>: set cursor, claude, codex, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
+  },
+  {
+    title: "Install one package",
+    description: "Adds a package to aipm.package.json and writes target-specific files into the project. Initialize the project first unless you pass --no-init.",
+    code: "aipm init --target claude\naipm add @scope/name@1.0.0 --target claude --ci",
+    options: ["--target <tool>: cursor, claude, codex, or *", "--no-init: install without creating or updating aipm.package.json or aipm-lock.json", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
+  },
+  {
     title: "Install configured packages",
     description: "Installs every package already listed in aipm.package.json.",
     code: "aipm install",
@@ -42,18 +54,6 @@ const useCommands: CommandItem[] = [
     description: "Finds newer registry versions and reinstalls one package or all configured packages.",
     code: "aipm update",
     options: ["aipm update @scope/name: update one package", "--target <tool>: update for one target", "--no-init: update one package to latest without reading or writing aipm.package.json or aipm-lock.json", "--token <token>: override stored login for CI", "--ci: do not prompt interactively"],
-  },
-  {
-    title: "Initialize a project",
-    description: "Creates aipm.package.json in the current project and records the registry URL.",
-    code: "aipm init --target claude",
-    options: ["--target <tool>: set cursor, claude, codex, or * without prompting", "--registry <url>: set a custom registry", "--global: create global config instead of project config"],
-  },
-  {
-    title: "Install one package",
-    description: "Adds a package to aipm.package.json and writes target-specific files into the project.",
-    code: "aipm add @scope/name@1.0.0 --target claude --ci",
-    options: ["--target <tool>: cursor, claude, codex, or *", "--no-init: install without creating or updating aipm.package.json or aipm-lock.json", "--ci: do not prompt interactively", "--token <token>: override stored login for CI", "--global: install globally"],
   },
   {
     title: "Search packages",

@@ -90,4 +90,27 @@ describe("resolveInstallTools", () => {
     });
     expect(tools).toEqual([]);
   });
+
+  it("uses preferredTools when several tool folders exist", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    await mkdir(join(root, ".cursor"));
+    await mkdir(join(root, ".claude"));
+    const tools = await resolveInstallTools({
+      projectRoot: root,
+      manifest: baseManifest,
+      preferredTools: ["claude"],
+    });
+    expect(tools).toEqual(["claude"]);
+  });
+
+  it("falls back to detected tools when preferredTools matches none of them", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-"));
+    await mkdir(join(root, ".cursor"));
+    const tools = await resolveInstallTools({
+      projectRoot: root,
+      manifest: baseManifest,
+      preferredTools: ["claude"],
+    });
+    expect(tools).toEqual(["cursor"]);
+  });
 });

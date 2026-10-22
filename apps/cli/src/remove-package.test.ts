@@ -23,6 +23,22 @@ const entry = (
 };
 
 describe("removeInstalledPackageFiles", () => {
+  it("deletes files recorded as project-relative lockfile paths", async () => {
+    const root = await mkdtemp(join(tmpdir(), "aipm-remove-rel-"));
+    const skill = join(root, ".claude", "skills", "review", "SKILL.md");
+    await mkdir(join(root, ".claude", "skills", "review"), { recursive: true });
+    await writeFile(skill, "# Review\n");
+
+    await expect(
+      removeInstalledPackageFiles({
+        configRoot: root,
+        installRoot: root,
+        entry: entry([".claude/skills/review/SKILL.md"]),
+      }),
+    ).resolves.toEqual({ removed: 1, retainedShared: 0 });
+    await expect(stat(skill)).rejects.toThrow();
+  });
+
   it("deletes tracked adapter and package files and prunes their empty directories", async () => {
     const root = await mkdtemp(join(tmpdir(), "aipm-remove-"));
     const skill = join(root, ".claude", "skills", "review", "SKILL.md");
