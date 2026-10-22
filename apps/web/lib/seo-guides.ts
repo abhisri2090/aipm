@@ -4,6 +4,7 @@ import { CLAUDE_CODE_FEATURE_COMPARISON_GUIDES } from "./seo-guides-claude-code-
 import { CLAUDE_SKILLS_LOCATION_GUIDES } from "./seo-guides-claude-skills-location";
 import { SKILL_MD_FRONTMATTER_GUIDES } from "./seo-guides-skill-md-frontmatter";
 import { SHARE_CLAUDE_SKILLS_TEAM_GUIDES } from "./seo-guides-share-claude-skills-team";
+import { ONE_AI_FOLDER_GUIDES } from "./seo-guides-one-ai-folder";
 
 export type SeoGuide = {
   slug: string;
@@ -1865,4 +1866,5 @@ export const SEO_GUIDES: SeoGuide[] = [
   ...CLAUDE_SKILLS_LOCATION_GUIDES,
   ...SKILL_MD_FRONTMATTER_GUIDES,
   ...SHARE_CLAUDE_SKILLS_TEAM_GUIDES,
+  ...ONE_AI_FOLDER_GUIDES,
 ];
