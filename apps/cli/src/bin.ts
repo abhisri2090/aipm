@@ -1789,7 +1789,6 @@ program
         ci: opts.ci,
         token,
       });
-      project = current;
       await writeProjectPackageJson(configRoot, current);
     }
 
