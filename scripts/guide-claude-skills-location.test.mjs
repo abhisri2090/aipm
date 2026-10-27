@@ -24,6 +24,14 @@ describe(PATH, () => {
     expect(hrefs).toContain("https://cursor.com/docs/skills");
   });
 
+  it("keeps on-page title/h1 and uses shorter SERP meta overrides", () => {
+    expect(guide.metaTitle).toBe("Where Are Claude Skills Stored? Mac & Windows Paths");
+    expect(`${guide.metaTitle} | AIPM`.length).toBeLessThan(60);
+    expect(guide.metaDescription.length).toBeLessThanOrEqual(155);
+    expect(guide.title).toBe("Where Are Claude Skills Stored? Folder Paths (2026)");
+    expect(guide.h1).toBe("Where are Claude skills stored?");
+  });
+
   it("lists the documented paths and avoids the brief's do-not-claim list", () => {
     for (const path of [
       "~/.claude/skills/<name>/SKILL.md",

@@ -88,6 +88,12 @@ const nextConfig: NextConfig = {
         destination: "/guides/mcp-json-guide-cursor-claude",
         statusCode: 301,
       },
+      // Mistyped/legacy slug that 404s in GSC (2026-10-28) -> canonical comparison guide.
+      {
+        source: "/guides/agents-md-skill-md",
+        destination: "/guides/agents-md-vs-skill-md",
+        statusCode: 301,
+      },
       {
         source: "/dashboard/packages",
         destination: "/dashboard/skills",
