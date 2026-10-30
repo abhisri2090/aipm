@@ -140,6 +140,9 @@ describe("gated skills in /ai-skills-sitemap.xml", () => {
     expect(xml).toContain("/skills/antfu/vitest/1.0.0");
     expect(xml).toContain("<lastmod>2026-09-11T00:00:00.000Z</lastmod>");
     expect(xml).not.toContain("/skills/thin/tiny/1.0.0");
+    expect(xml).toContain("/skills/coreyhaines31/competitor-profiling/1.0.0");
+    expect(xml).toContain("/skills/mattpocock/teach/1.0.1");
+    expect(xml).not.toContain("/skills/claude</loc>");
     expect(xml).not.toContain("/publishers/");
   });
 });
