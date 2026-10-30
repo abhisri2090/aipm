@@ -10,6 +10,7 @@ const RETIRED = {
   "/guides/agent-package-manager": "/guides/ai-package-manager",
   "/guides/prompt-package-manager": "/guides/share-ai-prompts-team",
   "/guides/mcp-package-manager": "/guides/mcp-json-guide-cursor-claude",
+  "/guides/agents-md-skill-md": "/guides/agents-md-vs-skill-md",
 };
 
 const llms = buildLlmsTxt({

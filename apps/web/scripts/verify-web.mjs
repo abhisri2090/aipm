@@ -276,7 +276,7 @@ const requiredPages = [
   },
   {
     path: "/guides/where-are-claude-skills-stored",
-    title: "Where Are Claude Skills Stored? Folder Paths (2026)",
+    title: "Where Are Claude Skills Stored? Mac &amp; Windows Paths",
     h1: "Where are Claude skills stored?",
     jsonLd: true,
     includes: [
@@ -755,6 +755,7 @@ for (const [from, to] of [
   ["/guides/agent-package-manager", "/guides/ai-package-manager"],
   ["/guides/prompt-package-manager", "/guides/share-ai-prompts-team"],
   ["/guides/mcp-package-manager", "/guides/mcp-json-guide-cursor-claude"],
+  ["/guides/agents-md-skill-md", "/guides/agents-md-vs-skill-md"],
 ]) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
