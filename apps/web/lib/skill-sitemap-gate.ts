@@ -1,5 +1,6 @@
+import { isVersionedSkillSitemapPath } from "./gsc-sitemap-allowlist";
 import { humanizePackageSlug } from "./skill-serp";
-import { packageShortName } from "./registry";
+import { packagePath, packageShortName } from "./registry";
 
 const MIN_DESCRIPTION_LENGTH = 40;
 const YAML_ARTIFACTS = new Set([">", ">-", "|", "|-", "''", '""']);
@@ -73,11 +74,12 @@ function isBetterOriginal(candidate: SkillSitemapCandidate, current: SkillSitema
 
 /**
  * Skills that belong in the sitemap. Pages that fail stay live and linked;
- * they are only left out of the sitemap.
+ * they are only left out of the sitemap, unless their URL is on the GSC allowlist.
  */
 export function selectSkillsForSitemap<T extends SkillSitemapCandidate>(
   skills: readonly T[],
   curatedNames: ReadonlySet<string>,
+  allowlistPaths: ReadonlySet<string> = new Set(),
 ): T[] {
   const eligible = skills.filter(
     (skill) => hasRealDescription(skill) && hasScanResult(skill) && hasTrustSignal(skill, curatedNames),
@@ -93,7 +95,16 @@ export function selectSkillsForSitemap<T extends SkillSitemapCandidate>(
     const current = winners.get(hash);
     if (!current || isBetterOriginal(skill, current)) winners.set(hash, skill);
   }
-  return [...unique, ...winners.values()];
+  const selected = [...unique, ...winners.values()];
+  if (allowlistPaths.size === 0) return selected;
+  const included = new Set(selected);
+  for (const skill of skills) {
+    if (included.has(skill)) continue;
+    if (!allowlistPaths.has(packagePath(skill.name, skill.version))) continue;
+    selected.push(skill);
+    included.add(skill);
+  }
+  return selected;
 }
 
 /** Later of version publish time and scan time. Null when neither is a real timestamp. */
@@ -104,4 +115,24 @@ export function skillSitemapLastmod(skill: {
   const times = [time(skill.createdAt), time(skill.scan?.scannedAt)].filter((value): value is number => value != null);
   if (times.length === 0) return null;
   return new Date(Math.max(...times)).toISOString();
+}
+
+/** Gated skills, plus any allowlisted version URL the gate or the listing omitted. */
+export function skillSitemapLocs(
+  skills: readonly SkillSitemapCandidate[],
+  curatedNames: ReadonlySet<string>,
+  allowlistPaths: readonly string[],
+): { path: string; lastmod: string | null }[] {
+  const selected = selectSkillsForSitemap(skills, curatedNames, new Set(allowlistPaths));
+  const entries = selected.map((skill) => ({
+    path: packagePath(skill.name, skill.version),
+    lastmod: skillSitemapLastmod(skill),
+  }));
+  const present = new Set(entries.map((entry) => entry.path));
+  for (const path of allowlistPaths) {
+    if (!isVersionedSkillSitemapPath(path) || present.has(path)) continue;
+    entries.push({ path, lastmod: null });
+    present.add(path);
+  }
+  return entries;
 }

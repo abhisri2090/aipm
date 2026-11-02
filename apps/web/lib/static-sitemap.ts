@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { GSC_SITEMAP_ALLOWLIST, isVersionedSkillSitemapPath } from "./gsc-sitemap-allowlist";
 import { SITE_URL } from "./registry";
 import { SEO_GUIDES } from "./seo-guides";
 import { SKILL_DISCOVERY_PAGES } from "./skill-discovery";
@@ -103,7 +104,9 @@ export function staticSitemapEntries(): { path: string; lastModified: Date }[] {
     ...SKILL_DISCOVERY_PAGES.map((page) => `/skills/${page.slug}`),
     ...PROMPT_TOPIC_HUBS.map((hub) => `/prompts/topics/${hub.slug}`),
     ...listGeneratedSeriesHubs().map((series) => `/prompts/topics/${series.slug}`),
+    ...GSC_SITEMAP_ALLOWLIST.filter((path) => !isVersionedSkillSitemapPath(path)),
   ];
+  const uniqueStaticPaths = [...new Set(staticPaths)];
 
   const guideUpdatedAt = new Map(
     SEO_GUIDES.map((guide) => [
@@ -131,7 +134,7 @@ export function staticSitemapEntries(): { path: string; lastModified: Date }[] {
     listDocSectionIndexes().map((section) => [section.path, DOC_SECTION_INDEX_LASTMOD]),
   );
 
-  return staticPaths.map((path) => ({
+  return uniqueStaticPaths.map((path) => ({
     path,
     lastModified:
       docSectionUpdatedAt.get(path) ??
