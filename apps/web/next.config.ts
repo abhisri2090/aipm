@@ -89,6 +89,7 @@ const nextConfig: NextConfig = {
         statusCode: 301,
       },
       // Mistyped/legacy slug that 404s in GSC (2026-10-28) -> canonical comparison guide.
+      // Old URL (no "vs") 404s. 301, not Next's default 308.
       {
         source: "/guides/agents-md-skill-md",
         destination: "/guides/agents-md-vs-skill-md",
