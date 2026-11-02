@@ -13,6 +13,9 @@ export const CLAUDE_SKILLS_LOCATION_GUIDES: SeoGuide[] = [
     h1: "Where are Claude skills stored?",
     description:
       "Official docs list every Claude skills folder. This page is the short map, plus how AIPM installs into .claude/skills for Claude Code.",
+    metaTitle: "Where Are Claude Skills Stored? Mac & Windows Paths",
+    metaDescription:
+      "Your Claude skills live in ~/.claude/skills (just you) or .claude/skills (one project). See every folder for Mac, Windows, plugins and synced app skills.",
     answer:
       "Official docs list paths; here's the short map and how AIPM installs. Claude Code loads personal skills from `~/.claude/skills/<name>/SKILL.md` and project skills from `.claude/skills/<name>/SKILL.md`. AIPM writes the project folder with `aipm add @scope/name@version --target claude`. Plugin copies live under `~/.claude/plugins/cache/`. Claude app skills sync to `~/.claude/skills/synced/` (Claude Code v2.1.273 or later). On Windows, personal skills are in `%USERPROFILE%\\.claude\\skills\\`. To install, see [how to install Claude skills](/guides/how-to-install-claude-code-skills). To compare tools, see [skills for Claude Code, Cursor, and Codex](/for).",
     keywords: [

@@ -113,8 +113,8 @@ export async function generateMetadata({ params }: GuideRouteProps) {
   const guide = getSeoGuide(slug);
   if (!guide) return pageMetadata({ title: "Guide not found", description: "AIPM guide not found." });
   return pageMetadata({
-    title: guide.title,
-    description: guide.description,
+    title: guide.metaTitle ?? guide.title,
+    description: guide.metaDescription ?? guide.description,
     path: `/guides/${guide.slug}`,
     keywords: guide.keywords,
   });

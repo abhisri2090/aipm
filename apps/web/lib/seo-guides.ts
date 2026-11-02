@@ -10,6 +10,10 @@ export type SeoGuide = {
   title: string;
   h1: string;
   description: string;
+  /** Optional <title> override (metadata only). Falls back to `title`. Headline, breadcrumbs and cards keep `title`. */
+  metaTitle?: string;
+  /** Optional meta description override (metadata only). Falls back to `description`. On-page lede and JSON-LD keep `description`. */
+  metaDescription?: string;
   answer: string;
   keywords: string[];
   publishedAt?: string;

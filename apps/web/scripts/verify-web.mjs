@@ -276,7 +276,7 @@ const requiredPages = [
   },
   {
     path: "/guides/where-are-claude-skills-stored",
-    title: "Where Are Claude Skills Stored? Folder Paths (2026)",
+    title: "Where Are Claude Skills Stored? Mac &amp; Windows Paths",
     h1: "Where are Claude skills stored?",
     jsonLd: true,
     includes: [
