@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, join, normalize, relative, resolve, sep } from "node:path";
 import { PackageManifestSchema, type PackageManifest } from "@aipm-registry/schemas";
+import { parse as parseYaml } from "yaml";
 import { recommendCmd } from "./recommend-cmd.js";
 
 export type PublishStateEntry = {
@@ -33,19 +34,25 @@ const SECRET_PATTERNS = [
 export function parseSkillFrontmatter(content: string): Record<string, string> {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) return {};
+
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(match[1] ?? "");
+  } catch {
+    return {};
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return {};
+  }
+
   const fields: Record<string, string> = {};
-  for (const line of match[1]!.split("\n")) {
-    const separator = line.indexOf(":");
-    if (separator === -1) continue;
-    const key = line.slice(0, separator).trim();
-    let value = line.slice(separator + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
+  for (const [key, value] of Object.entries(parsed)) {
+    if (typeof value === "string") {
+      fields[key] = value;
+    } else if (typeof value === "number" || typeof value === "boolean") {
+      fields[key] = String(value);
     }
-    fields[key] = value;
   }
   return fields;
 }

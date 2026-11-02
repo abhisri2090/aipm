@@ -14,6 +14,7 @@ import {
   folderBlobRelativePath,
   nextPatchVersion,
   parseGitHubFolderUrl,
+  parseFrontmatter,
   resolveAgentDescription,
   resolveGitHubSkillImport,
   resolveImportVersion,
@@ -523,5 +524,155 @@ describe("resolveGitHubSkillImport", () => {
         path: "",
       },
     });
+  });
+});
+
+describe("parseFrontmatter", () => {
+  it("parses simple key-value pairs", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+description: A simple skill
+---
+# Content`);
+    expect(result).toEqual({
+      name: "my-skill",
+      description: "A simple skill",
+    });
+  });
+
+  it("parses folded block scalar (>)", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+description: >
+  This is a multi-line
+  description that gets
+  folded into one line.
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe(
+      "This is a multi-line description that gets folded into one line.\n",
+    );
+  });
+
+  it("parses literal block scalar (|)", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+description: |
+  Line one.
+  Line two.
+  Line three.
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("Line one.\nLine two.\nLine three.\n");
+  });
+
+  it("parses folded block scalar with chomping (>-)", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+description: >-
+  This is a multi-line
+  description that gets
+  folded without trailing newline.
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe(
+      "This is a multi-line description that gets folded without trailing newline.",
+    );
+  });
+
+  it("parses literal block scalar with chomping (|-)", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+description: |-
+  Line one.
+  Line two.
+  Line three.
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("Line one.\nLine two.\nLine three.");
+  });
+
+  it("parses double-quoted values", () => {
+    const result = parseFrontmatter(`---
+name: "my-skill"
+description: "A skill with: colons and special chars"
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("A skill with: colons and special chars");
+  });
+
+  it("parses single-quoted values", () => {
+    const result = parseFrontmatter(`---
+name: 'my-skill'
+description: 'A skill with: colons'
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("A skill with: colons");
+  });
+
+  it("converts numeric values to strings", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+version: 1.0
+priority: 42
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.version).toBe("1");
+    expect(result.priority).toBe("42");
+  });
+
+  it("converts boolean values to strings", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+enabled: true
+hidden: false
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.enabled).toBe("true");
+    expect(result.hidden).toBe("false");
+  });
+
+  it("returns empty object for content without frontmatter", () => {
+    const result = parseFrontmatter(`# Just markdown
+No frontmatter here.`);
+    expect(result).toEqual({});
+  });
+
+  it("returns empty object for invalid YAML", () => {
+    const result = parseFrontmatter(`---
+name: [invalid: yaml: syntax
+---
+# Content`);
+    expect(result).toEqual({});
+  });
+
+  it("returns empty object when frontmatter is not a mapping", () => {
+    const result = parseFrontmatter(`---
+- item1
+- item2
+---
+# Content`);
+    expect(result).toEqual({});
+  });
+
+  it("skips non-scalar values (objects, arrays)", () => {
+    const result = parseFrontmatter(`---
+name: my-skill
+tags:
+  - tag1
+  - tag2
+metadata:
+  key: value
+---
+# Content`);
+    expect(result).toEqual({ name: "my-skill" });
   });
 });

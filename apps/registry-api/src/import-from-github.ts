@@ -7,6 +7,7 @@ import { join, dirname } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
+import { parse as parseYaml } from "yaml";
 import type pg from "pg";
 import { getLatestProvenance, listPackageVersionsForName, setPackageGithubStars } from "./db.js";
 import {
@@ -174,19 +175,25 @@ export function buildPackageName(owner: string, folderName: string): string {
 export function parseFrontmatter(content: string): Record<string, string> {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) return {};
+
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(match[1] ?? "");
+  } catch {
+    return {};
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return {};
+  }
+
   const fields: Record<string, string> = {};
-  for (const line of match[1]!.split("\n")) {
-    const separator = line.indexOf(":");
-    if (separator === -1) continue;
-    const key = line.slice(0, separator).trim();
-    let value = line.slice(separator + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
+  for (const [key, value] of Object.entries(parsed)) {
+    if (typeof value === "string") {
+      fields[key] = value;
+    } else if (typeof value === "number" || typeof value === "boolean") {
+      fields[key] = String(value);
     }
-    fields[key] = value;
   }
   return fields;
 }

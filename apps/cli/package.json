@@ -48,6 +48,7 @@
   "devDependencies": {
     "@aipm-registry/engine": "workspace:^",
     "@aipm-registry/schemas": "workspace:^",
-    "commander": "^15.0.0"
+    "commander": "^15.0.0",
+    "yaml": "^2.9.1"
   }
 }

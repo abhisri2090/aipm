@@ -25,6 +25,7 @@
     "pg": "^8.23.1"
   },
   "devDependencies": {
-    "@types/pg": "^8.23.1"
+    "@types/pg": "^8.23.1",
+    "yaml": "^2.9.1"
   }
 }
