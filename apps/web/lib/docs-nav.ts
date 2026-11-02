@@ -64,6 +64,11 @@ export const DOC_NAV_SECTIONS: DocNavSection[] = [
         body: "Repo, plugin marketplace, Claude app or registry, and how to pin and update versions.",
       },
       {
+        href: "/guides/one-ai-folder-for-every-ai-tool",
+        label: "One .ai folder for every AI tool",
+        body: "Store each skill once in .ai/skills and symlink it into Cursor, Claude Code and Codex.",
+      },
+      {
         href: "/guides/manage-cursor-rules-git",
         label: "Cursor rules in Git",
         body: "Keep Cursor rules in Git so teams can review, update, and reuse them.",
