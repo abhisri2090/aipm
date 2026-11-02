@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { selectSkillsForSitemap, skillSitemapLastmod } from "../apps/web/lib/skill-sitemap-gate.ts";
+import { GSC_SITEMAP_ALLOWLIST, isVersionedSkillSitemapPath } from "../apps/web/lib/gsc-sitemap-allowlist.ts";
+import { selectSkillsForSitemap, skillSitemapLastmod, skillSitemapLocs } from "../apps/web/lib/skill-sitemap-gate.ts";
+import sitemap from "../apps/web/lib/static-sitemap";
 
 const curated = new Set(["@hub/picked"]);
 
@@ -101,6 +103,77 @@ describe("selectSkillsForSitemap", () => {
     expect(skillSitemapLastmod({ createdAt: "2026-09-01T00:00:00.000Z", scan: { scannedAt: "nope" } })).toBe(
       "2026-09-01T00:00:00.000Z",
     );
+  });
+
+  it("keeps allowlisted URLs that fail the quality gate, including a duplicate loser", () => {
+    const quiet = skill({
+      name: "@coreyhaines31/competitor-profiling",
+      version: "1.0.0",
+      description: "short",
+      githubStars: 0,
+      installCount: 0,
+      scan: { status: "not_scanned", scannedAt: null },
+    });
+    const allow = new Set(["/skills/coreyhaines31/competitor-profiling/1.0.0"]);
+    expect(selectSkillsForSitemap([quiet], curated)).toEqual([]);
+    expect(selectSkillsForSitemap([quiet], curated, allow).map((item) => item.name)).toEqual([
+      "@coreyhaines31/competitor-profiling",
+    ]);
+
+    const copy = skill({
+      name: "@mattpocock/teach",
+      version: "1.0.1",
+      description: "short",
+      githubStars: 0,
+      installCount: 0,
+      import: { contentHash: "same" },
+      createdAt: "2026-10-01T00:00:00.000Z",
+    });
+    const original = skill({
+      name: "@other/teach",
+      version: "1.0.0",
+      githubStars: 4,
+      import: { contentHash: "same" },
+      createdAt: "2026-08-01T00:00:00.000Z",
+    });
+    const names = selectSkillsForSitemap([copy, original], curated, new Set(["/skills/mattpocock/teach/1.0.1"])).map(
+      (item) => item.name,
+    );
+    expect(names).toContain("@other/teach");
+    expect(names).toContain("@mattpocock/teach");
+  });
+
+  it("emits every allowlisted skill version once, even when the listing omits it", () => {
+    expect(GSC_SITEMAP_ALLOWLIST.some((path) => path.startsWith("/packages/"))).toBe(false);
+    expect(GSC_SITEMAP_ALLOWLIST).toContain("/skills/coreyhaines31/competitor-profiling/1.0.0");
+    expect(GSC_SITEMAP_ALLOWLIST).toContain("/skills/mattpocock/teach/1.0.1");
+
+    const dropped = skill({
+      name: "@coreyhaines31/competitor-profiling",
+      version: "1.0.0",
+      description: "short",
+      githubStars: 0,
+      installCount: 0,
+      scan: undefined,
+    });
+    const locs = skillSitemapLocs([dropped], curated, GSC_SITEMAP_ALLOWLIST);
+    const paths = locs.map((entry) => entry.path);
+    expect(paths.filter((path) => path === "/skills/coreyhaines31/competitor-profiling/1.0.0")).toHaveLength(1);
+    for (const path of GSC_SITEMAP_ALLOWLIST) {
+      if (isVersionedSkillSitemapPath(path)) expect(paths, path).toContain(path);
+      else expect(paths, path).not.toContain(path);
+    }
+    const missing = skillSitemapLocs([], curated, ["/skills/mattpocock/teach/1.0.1", "/skills/claude"]);
+    expect(missing).toEqual([{ path: "/skills/mattpocock/teach/1.0.1", lastmod: null }]);
+  });
+
+  it("keeps allowlisted discovery hubs on the static sitemap", async () => {
+    const paths = new Set((await sitemap()).map((entry) => new URL(entry.url).pathname));
+    for (const path of ["/skills/claude", "/skills/cursor", "/skills/code-review"]) {
+      expect(paths.has(path), path).toBe(true);
+    }
+    expect(paths.has("/skills/mattpocock/teach/1.0.1")).toBe(false);
+    expect(paths.has("/packages/mattpocock/teach/1.0.1")).toBe(false);
   });
 
   it("does not treat missing hashes as duplicates", () => {

@@ -5,12 +5,29 @@ import { SEO_GUIDES } from "../apps/web/lib/seo-guides";
 import { DOC_NAV_SECTIONS } from "../apps/web/lib/docs-nav";
 import { SKILL_DISCOVERY_PAGES } from "../apps/web/lib/skill-discovery";
 import { buildLlmsTxt } from "../apps/web/lib/llms-txt";
+import { pageMetadata } from "../apps/web/lib/seo";
 
 const RETIRED = {
   "/guides/agent-package-manager": "/guides/ai-package-manager",
   "/guides/prompt-package-manager": "/guides/share-ai-prompts-team",
   "/guides/mcp-package-manager": "/guides/mcp-json-guide-cursor-claude",
+  "/guides/agents-md-skill-md": "/guides/agents-md-vs-skill-md",
 };
+
+function followRedirect(redirects, start) {
+  const hops = [];
+  const seen = new Set();
+  let current = start;
+  while (true) {
+    const rule = redirects.find((item) => item.source === current);
+    if (!rule) return { final: current, hops };
+    if (seen.has(current)) throw new Error(`redirect loop at ${current}`);
+    seen.add(current);
+    hops.push({ from: current, to: rule.destination, statusCode: rule.statusCode });
+    if (hops.length > 4) throw new Error(`redirect chain from ${start}`);
+    current = rule.destination;
+  }
+}
 
 const llms = buildLlmsTxt({
   siteUrl: "https://www.aipm-registry.com",
@@ -25,7 +42,7 @@ const llms = buildLlmsTxt({
 
 const guideText = (guide) => JSON.stringify(guide);
 
-describe("retired package-manager guides", () => {
+describe("retired guide URLs", () => {
   it("301 to existing, product-accurate guides", async () => {
     const redirects = await nextConfig.redirects();
     const slugs = new Set(SEO_GUIDES.map((guide) => `/guides/${guide.slug}`));
@@ -35,7 +52,32 @@ describe("retired package-manager guides", () => {
       expect(rule.permanent, from).toBeUndefined();
       expect(slugs.has(to), to).toBe(true);
       expect(slugs.has(from), from).toBe(false);
+      const followed = followRedirect(redirects, from);
+      expect(followed.hops, from).toEqual([{ from, to, statusCode: 301 }]);
+      expect(followed.final, from).toBe(to);
+      expect(followRedirect(redirects, to).hops, `${to} must not redirect`).toEqual([]);
     }
+    expect(redirects.find((item) => item.source === "/guides/ai-package-manager")).toBeUndefined();
+    expect(followRedirect(redirects, "/guides/ai-package-manager").final).toBe("/guides/ai-package-manager");
+  });
+
+  it("keeps /guides/ai-package-manager as the only package-manager URL in the sitemap, with a self canonical", async () => {
+    const guide = SEO_GUIDES.find((item) => item.slug === "ai-package-manager");
+    expect(guide).toBeDefined();
+    expect(SEO_GUIDES.some((item) => item.slug === "agent-package-manager")).toBe(false);
+    const meta = pageMetadata({
+      title: guide.title,
+      description: guide.description,
+      path: `/guides/${guide.slug}`,
+    });
+    expect(meta.alternates.canonical).toBe("https://www.aipm-registry.com/guides/ai-package-manager");
+    expect(meta.robots).toBeUndefined();
+
+    const paths = (await sitemap()).map((entry) => new URL(entry.url).pathname);
+    expect(paths.filter((path) => path === "/guides/ai-package-manager")).toEqual(["/guides/ai-package-manager"]);
+    expect(paths).not.toContain("/guides/agent-package-manager");
+    expect(paths).toContain("/guides/agents-md-vs-skill-md");
+    expect(paths).not.toContain("/guides/agents-md-skill-md");
   });
 
   it("are gone from the sitemap, docs nav, and llms.txt", async () => {

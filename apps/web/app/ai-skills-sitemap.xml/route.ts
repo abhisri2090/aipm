@@ -1,6 +1,7 @@
 import { FEATURED_SKILLS } from "../../lib/featured-skills";
-import { packagePath, SITE_URL } from "../../lib/registry";
-import { selectSkillsForSitemap, skillSitemapLastmod } from "../../lib/skill-sitemap-gate";
+import { GSC_SITEMAP_ALLOWLIST } from "../../lib/gsc-sitemap-allowlist";
+import { SITE_URL } from "../../lib/registry";
+import { skillSitemapLocs } from "../../lib/skill-sitemap-gate";
 import { listSitemapSkills } from "../../lib/sitemap-skills";
 import { urlSetXml, xmlResponse } from "../../lib/sitemap-xml";
 
@@ -10,12 +11,12 @@ const CURATED_SKILL_NAMES = new Set<string>(FEATURED_SKILLS.map((skill) => skill
 
 export async function GET(): Promise<Response> {
   try {
-    const skills = selectSkillsForSitemap(await listSitemapSkills(), CURATED_SKILL_NAMES);
+    const skills = skillSitemapLocs(await listSitemapSkills(), CURATED_SKILL_NAMES, GSC_SITEMAP_ALLOWLIST);
     return xmlResponse(
       urlSetXml(
         skills.map((skill) => ({
-          loc: `${SITE_URL}${packagePath(skill.name, skill.version)}`,
-          lastmod: skillSitemapLastmod(skill),
+          loc: `${SITE_URL}${skill.path}`,
+          lastmod: skill.lastmod,
         })),
       ),
     );

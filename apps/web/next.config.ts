@@ -88,6 +88,12 @@ const nextConfig: NextConfig = {
         destination: "/guides/mcp-json-guide-cursor-claude",
         statusCode: 301,
       },
+      // Old URL (no "vs") 404s. 301, not Next's default 308.
+      {
+        source: "/guides/agents-md-skill-md",
+        destination: "/guides/agents-md-vs-skill-md",
+        statusCode: 301,
+      },
       {
         source: "/dashboard/packages",
         destination: "/dashboard/skills",
