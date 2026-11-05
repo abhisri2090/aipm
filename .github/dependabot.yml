@@ -1,4 +1,8 @@
 version: 2
+
+# Policy: Only open PRs for MAJOR version updates.
+# Minor and patch bumps are ignored to reduce noise.
+
 updates:
   - package-ecosystem: "npm"
     directory: "/"
@@ -6,7 +10,9 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-minor"]
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -14,4 +20,6 @@ updates:
       interval: "weekly"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-minor"]
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
