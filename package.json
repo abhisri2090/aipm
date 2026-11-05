@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@yao-pkg/pkg": "^6.20.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
