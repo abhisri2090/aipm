@@ -4,7 +4,7 @@ import { selectSkillsForSitemap, skillSitemapLastmod } from "../../lib/skill-sit
 import { listSitemapSkills } from "../../lib/sitemap-skills";
 import { urlSetXml, xmlResponse } from "../../lib/sitemap-xml";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const CURATED_SKILL_NAMES = new Set<string>(FEATURED_SKILLS.map((skill) => skill.name));
 

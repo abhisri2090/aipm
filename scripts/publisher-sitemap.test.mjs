@@ -21,12 +21,16 @@ import { GET as hubsSitemap } from "../apps/web/app/sitemap-hubs.xml/route";
 import { GET as aiSkillsSitemap } from "../apps/web/app/ai-skills-sitemap.xml/route";
 import sitemap from "../apps/web/lib/static-sitemap";
 import { filterPublishedPublishers, listPublishedPublisherSlugs } from "../apps/web/lib/registry";
+import { listSitemapPublishers, listSitemapSkills } from "../apps/web/lib/sitemap-skills";
 
 beforeEach(() => {
   vi.stubGlobal("React", React);
   directoryProps.current = null;
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 const publisher = (slug, packageCount = 1) => ({
   slug,
@@ -52,7 +56,8 @@ const skill = (org, name, overrides = {}) => ({
   ...overrides,
 });
 
-// `aipm` holds only a name reservation (counted by /v1/publishers, absent from /v1/skills).
+// `aipm` is reservation-only. Production `/v1/publishers` excludes it; this mock still
+// includes it so /publishers tests can cover the skills-listing fallback.
 // `thin` publishes only skills that fail the indexability gate, but its page still resolves.
 const PUBLISHERS = [publisher("antfu", 2), publisher("aipm", 1), publisher("thin", 1)];
 const SKILLS = [
@@ -61,15 +66,21 @@ const SKILLS = [
   skill("thin", "tiny", { description: "short", sourceUrl: null }),
 ];
 
-function registryFetch({ skillsStatus = 200 } = {}) {
+function registryFetch({ skillsStatus = 200, publishers = PUBLISHERS } = {}) {
   return vi.fn(async (input) => {
     const url = new URL(String(input));
     if (url.pathname === "/v1/publishers") {
-      return Response.json({ publishers: PUBLISHERS, nextCursor: null, nextOffset: null });
+      return Response.json({ publishers, nextCursor: null, nextOffset: null });
     }
     if (url.pathname === "/v1/skills") {
       if (skillsStatus !== 200) return new Response(null, { status: skillsStatus });
-      return Response.json({ skills: SKILLS, nextCursor: null, nextOffset: null });
+      const offset = Math.max(0, Number(url.searchParams.get("offset") ?? 0) || 0);
+      const page = SKILLS.slice(offset, offset + 100);
+      return Response.json({
+        skills: page,
+        nextCursor: null,
+        nextOffset: offset + page.length < SKILLS.length ? offset + page.length : null,
+      });
     }
     return new Response(null, { status: 404 });
   });
@@ -123,13 +134,71 @@ describe("publishers without published skills", () => {
 });
 
 describe("publisher URLs in /sitemap-hubs.xml", () => {
-  it("lists every publisher with a published skill, even if its skill pages miss the sitemap gate", async () => {
-    vi.stubGlobal("fetch", registryFetch());
+  it("lists every publisher from /v1/publishers, even if its skill pages miss the sitemap gate", async () => {
+    const fetch = registryFetch({ publishers: PUBLISHERS.filter((row) => row.slug !== "aipm") });
+    vi.stubGlobal("fetch", fetch);
     const xml = await (await hubsSitemap()).text();
-    expect(xml).toContain("<loc>https://www.aipm-registry.com/publishers/antfu</loc><lastmod>2026-09-12T00:00:00.000Z</lastmod>");
+    expect(xml).toContain("<loc>https://www.aipm-registry.com/publishers/antfu</loc><lastmod>2026-09-01T00:00:00.000Z</lastmod>");
     expect(xml).toContain("<loc>https://www.aipm-registry.com/publishers/thin</loc>");
     expect(xml).not.toContain("/publishers/aipm");
     expect(xml).toContain("<loc>https://www.aipm-registry.com/skills</loc>");
+    expect(fetch.mock.calls.some(([url]) => String(url).includes("/v1/publishers"))).toBe(true);
+    expect(fetch.mock.calls.every(([url]) => !String(url).includes("/v1/skills"))).toBe(true);
+  });
+
+  it("omits publishers when the publishers listing cannot be read", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 503 })));
+    const xml = await (await hubsSitemap()).text();
+    expect(xml).toContain("<loc>https://www.aipm-registry.com/skills</loc>");
+    expect(xml).not.toContain("/publishers/antfu");
+  });
+});
+
+describe("sitemap listings", () => {
+  it("caches skill and publisher fetches with ISR instead of no-store", async () => {
+    const fetch = registryFetch({ publishers: PUBLISHERS.filter((row) => row.slug !== "aipm") });
+    vi.stubGlobal("fetch", fetch);
+    await listSitemapSkills();
+    await listSitemapPublishers();
+    expect(fetch.mock.calls.length).toBeGreaterThan(0);
+    for (const [, init] of fetch.mock.calls) {
+      expect(init.cache).toBeUndefined();
+      expect(init.next).toEqual({ revalidate: 3600 });
+    }
+  });
+
+  it("walks publisher pages until nextCursor is empty", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json({ publishers: [publisher("one")], nextCursor: "two" }))
+      .mockResolvedValueOnce(Response.json({ publishers: [publisher("two")], nextCursor: null }));
+    vi.stubGlobal("fetch", fetch);
+    await expect(listSitemapPublishers()).resolves.toEqual([
+      { slug: "one", lastmod: "2026-09-01T00:00:00.000Z" },
+      { slug: "two", lastmod: "2026-09-01T00:00:00.000Z" },
+    ]);
+    expect(String(fetch.mock.calls[1][0])).toContain("cursor=two");
+  });
+
+  it("loads remaining skill pages in parallel by offset", async () => {
+    const page = (start, full = true) =>
+      Response.json({
+        skills: Array.from({ length: full ? 100 : 2 }, (_, index) => skill("org", `s${start + index}`)),
+        nextCursor: null,
+        nextOffset: full ? start + 100 : null,
+      });
+    const fetch = vi.fn(async (input) => {
+      const offset = Number(new URL(String(input)).searchParams.get("offset") ?? 0);
+      if (offset === 0 || offset === 100) return page(offset);
+      return page(offset, false);
+    });
+    vi.stubGlobal("fetch", fetch);
+    const skills = await listSitemapSkills();
+    expect(skills).toHaveLength(202);
+    const offsets = fetch.mock.calls.map(([url]) => Number(new URL(String(url)).searchParams.get("offset") ?? 0));
+    expect(offsets[0]).toBe(0);
+    expect([...offsets.slice(1)].sort((a, b) => a - b)).toEqual([100, 200, 300, 400, 500, 600, 700, 800]);
   });
 });
 
