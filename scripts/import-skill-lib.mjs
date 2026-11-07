@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { parse as parseYaml } from "yaml";
 
 function normalizeGitHubFolderPath(path) {
   const cleaned = path.replace(/\/$/, "");
@@ -86,19 +87,25 @@ export function buildPackageName(owner, folderName) {
 export function parseFrontmatter(content) {
   const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
   if (!match) return {};
+
+  let parsed;
+  try {
+    parsed = parseYaml(match[1] ?? "");
+  } catch {
+    return {};
+  }
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return {};
+  }
+
   const fields = {};
-  for (const line of match[1].split("\n")) {
-    const separator = line.indexOf(":");
-    if (separator === -1) continue;
-    const key = line.slice(0, separator).trim();
-    let value = line.slice(separator + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
+  for (const [key, value] of Object.entries(parsed)) {
+    if (typeof value === "string") {
+      fields[key] = value;
+    } else if (typeof value === "number" || typeof value === "boolean") {
+      fields[key] = String(value);
     }
-    fields[key] = value;
   }
   return fields;
 }

@@ -66,6 +66,62 @@ describe("frontmatter + version logic", () => {
     ).toBe("Stress test a plan");
   });
 
+  it("parses folded block scalar (>)", () => {
+    const frontmatter = parseFrontmatter(`---
+name: my-skill
+description: >
+  This is a multi-line
+  description that gets folded.
+---
+# Content`);
+    expect(frontmatter.name).toBe("my-skill");
+    expect(frontmatter.description).toBe("This is a multi-line description that gets folded.\n");
+  });
+
+  it("parses literal block scalar (|)", () => {
+    const frontmatter = parseFrontmatter(`---
+name: my-skill
+description: |
+  Line one.
+  Line two.
+---
+# Content`);
+    expect(frontmatter.name).toBe("my-skill");
+    expect(frontmatter.description).toBe("Line one.\nLine two.\n");
+  });
+
+  it("parses folded block scalar with chomping (>-)", () => {
+    const frontmatter = parseFrontmatter(`---
+name: my-skill
+description: >-
+  Multi-line folded
+  without trailing newline.
+---
+# Content`);
+    expect(frontmatter.description).toBe("Multi-line folded without trailing newline.");
+  });
+
+  it("parses literal block scalar with chomping (|-)", () => {
+    const frontmatter = parseFrontmatter(`---
+name: my-skill
+description: |-
+  Line one.
+  Line two.
+---
+# Content`);
+    expect(frontmatter.description).toBe("Line one.\nLine two.");
+  });
+
+  it("parses quoted values", () => {
+    const frontmatter = parseFrontmatter(`---
+name: "my-skill"
+description: 'A skill with: colons'
+---
+# Content`);
+    expect(frontmatter.name).toBe("my-skill");
+    expect(frontmatter.description).toBe("A skill with: colons");
+  });
+
   it("bumps version when content hash changes", () => {
     expect(nextPatchVersion("1.0.0")).toBe("1.0.1");
     expect(
