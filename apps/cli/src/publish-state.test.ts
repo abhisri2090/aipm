@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   addPublishFiles,
+  parseSkillFrontmatter,
   readPublishState,
   removePublishFiles,
   resetPublishState,
@@ -150,5 +151,83 @@ describe("publish state", () => {
     ]);
     await resetPublishState(root);
     await expect(readFile(join(root, ".aipm", "publish-state.json"), "utf8")).rejects.toThrow();
+  });
+});
+
+describe("parseSkillFrontmatter", () => {
+  it("parses simple key-value pairs", () => {
+    const result = parseSkillFrontmatter(`---
+name: my-skill
+description: A simple skill
+---
+# Content`);
+    expect(result).toEqual({
+      name: "my-skill",
+      description: "A simple skill",
+    });
+  });
+
+  it("parses folded block scalar (>)", () => {
+    const result = parseSkillFrontmatter(`---
+name: my-skill
+description: >
+  This is a multi-line
+  description that gets folded.
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("This is a multi-line description that gets folded.\n");
+  });
+
+  it("parses literal block scalar (|)", () => {
+    const result = parseSkillFrontmatter(`---
+name: my-skill
+description: |
+  Line one.
+  Line two.
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("Line one.\nLine two.\n");
+  });
+
+  it("parses folded block scalar with chomping (>-)", () => {
+    const result = parseSkillFrontmatter(`---
+name: my-skill
+description: >-
+  Multi-line folded
+  without trailing newline.
+---
+# Content`);
+    expect(result.description).toBe("Multi-line folded without trailing newline.");
+  });
+
+  it("parses literal block scalar with chomping (|-)", () => {
+    const result = parseSkillFrontmatter(`---
+name: my-skill
+description: |-
+  Line one.
+  Line two.
+---
+# Content`);
+    expect(result.description).toBe("Line one.\nLine two.");
+  });
+
+  it("parses quoted values", () => {
+    const result = parseSkillFrontmatter(`---
+name: "my-skill"
+description: 'A skill with: colons'
+---
+# Content`);
+    expect(result.name).toBe("my-skill");
+    expect(result.description).toBe("A skill with: colons");
+  });
+
+  it("returns empty object for invalid YAML", () => {
+    const result = parseSkillFrontmatter(`---
+name: [invalid: yaml
+---
+# Content`);
+    expect(result).toEqual({});
   });
 });
