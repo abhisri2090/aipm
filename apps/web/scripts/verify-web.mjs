@@ -269,7 +269,7 @@ const requiredPages = [
   },
   {
     path: "/guides/how-to-install-claude-code-skills",
-    title: "Install Claude Skills: App, Code, GitHub, npx",
+    title: "How to Install Claude Code Skills: Step by Step",
     h1: "How to install Claude skills: app, Code, GitHub, npx, or AIPM",
     jsonLd: true,
     includes: ["Short answer", "Customize &gt; Skills", "~/.claude/skills/", "npx skills add", "aipm init --target claude", "/guides/where-are-claude-skills-stored"],
