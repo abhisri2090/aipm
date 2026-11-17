@@ -1414,6 +1414,9 @@ updatedAt: "2026-09-25",
     h1: "How to install Claude skills: app, Code, GitHub, npx, or AIPM",
     description:
       "Install Claude skills in the app, Claude Code, GitHub, npx, or a pinned version. Pick the path that matches where you use Claude.",
+    metaTitle: "How to Install Claude Code Skills: Step by Step",
+    metaDescription:
+      "Put a skill folder in ~/.claude/skills, add it from a plugin, or run one command with npx or AIPM. Steps for Claude Code and the Claude app, plus fixes.",
     answer:
       "Pick where you use Claude, then install there. In the Claude app, turn on code execution and upload a ZIP in Customize > Skills. In Claude Code, put the folder that contains SKILL.md in ~/.claude/skills/ (every project) or .claude/skills/ (one project). You can also install from GitHub, with npx skills add owner/repo, or pin a version with aipm add @scope/name@version --target claude.",
     keywords: [
