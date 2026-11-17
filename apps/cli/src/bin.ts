@@ -22,6 +22,7 @@ import {
   recordPackageInstall,
   refreshCliAuth,
   searchPackages,
+  skillNotFoundMessage,
   type PromptPublishInput,
 } from "./registry-client.js";
 import {
@@ -192,7 +193,7 @@ async function copySourceIntoSkillRoot(source: string, root: string, sourceLabel
 async function latestVersionForPackage(registry: string, name: string, token?: string): Promise<string> {
   const packages = await searchPackages(registry, name, 20, token);
   const exact = packages.find((pkg) => pkg.name === name);
-  if (!exact) throw new Error(`Package not found in registry: ${name}`);
+  if (!exact) throw new Error(skillNotFoundMessage(name));
   return exact.version;
 }
 
