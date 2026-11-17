@@ -22,7 +22,7 @@ describe(PATH, () => {
     expect(ids).toContain("frontmatter-errors-and-how-to-fix-them");
     const matrix = guide.sections.find((section) => section.title === "One table: which fields work where");
     expect(matrix.table.columns).toEqual(["Field", "Agent Skills spec", "Claude Code", "claude.ai upload / Skills API", "Cursor", "Codex"]);
-    expect(guide.faqs).toHaveLength(7);
+    expect(guide.faqs).toHaveLength(8);
     const hrefs = guide.sources.map((source) => source.href);
     expect(hrefs).toContain("https://agentskills.io/specification");
     expect(hrefs).toContain("https://learn.chatgpt.com/docs/build-skills");

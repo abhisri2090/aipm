@@ -25,6 +25,8 @@ export const SKILL_MD_FRONTMATTER_GUIDES: SeoGuide[] = [
     h1: "Fix: SKILL.md must start with YAML frontmatter (---)",
     description:
       "If a skill is ignored, SKILL.md must open with --- YAML. Required fields, limits, and the fix for Claude Code, Codex, and Cursor.",
+    metaDescription:
+      "Seeing \"SKILL.md must start with YAML frontmatter\" or \"does not contain frontmatter\"? Add ---, name and description. Fix for Claude Code, Codex, Cursor.",
     answer:
       "If a skill is ignored, the usual fix is the first lines of the file: SKILL.md must start with YAML frontmatter between `---` lines. `name` and `description` are required: the open Agent Skills spec, Cursor and Codex all require them, and AIPM documents them as required. `name` is up to 64 lowercase letters, numbers and hyphens and matches the folder; `description` is up to 1,024 characters. Optional spec fields are `license`, `compatibility`, `metadata` and `allowed-tools`. Claude Code adds fields such as `when_to_use`, `disable-model-invocation`, `context` and `paths`. Need a starting file? Use a [SKILL.md template](/templates).",
     answerTable: {
@@ -328,6 +330,11 @@ aipm publish validate`,
       "Close the block with --- and write the instructions below it.",
     ],
     faqs: [
+      {
+        question: "What does \"skill markdown does not contain frontmatter\" mean?",
+        answer:
+          "It means the tool didn't find the YAML block it expects at the very top of SKILL.md. Either the file has no `---` block, or something such as a blank line, a hidden BOM character or a heading comes before it. Make `---` the first line, add `name:` and `description:`, then close the block with `---`.",
+      },
       {
         question: "What fields are required in SKILL.md frontmatter?",
         answer:
