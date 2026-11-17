@@ -38,11 +38,17 @@ async function registryFetch(url: string, registry: string, init?: RequestInit):
   }
 }
 
-function privateInstallHint(name: string, status: number, token?: string): string {
-  if (status !== 404 || !name.startsWith("@") || token) {
+/** Missing skill. Login hint sits two blank lines under the error. */
+export function skillNotFoundMessage(name: string, stream: NodeJS.WriteStream = process.stderr): string {
+  const hint = `If the skill is private you might need to do ${recommendCmd("aipm login", stream)}`;
+  return `Not able to find the skill: ${name}\n\n\n${hint}`;
+}
+
+function privateInstallHint(name: string, status: number): string {
+  if (status !== 404) {
     return `Package not found: ${name} (${status})`;
   }
-  return `Package not found: ${name} (${status}). If @org/pkg is private, run ${recommendCmd("aipm login")}, or set AIPM_TOKEN for CI.`;
+  return skillNotFoundMessage(name);
 }
 
 function bufferToBlobPart(bytes: Buffer): Uint8Array<ArrayBuffer> {
@@ -232,7 +238,7 @@ export async function fetchPackageMetadata(
   const base = registry.replace(/\/$/, "");
   const url = `${base}/v1/skills/${encodePackageName(name)}/versions/${version}`;
   const res = await registryFetch(url, base, { headers: registryAuthHeaders(token) });
-  if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status, token));
+  if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status));
   const data = (await res.json()) as {
     manifest: PackageManifest;
     integrity: string;
@@ -250,7 +256,7 @@ export async function fetchPackageTarball(
   const base = registry.replace(/\/$/, "");
   const url = `${base}/v1/skills/${encodePackageName(name)}/versions/${version}/tarball`;
   const res = await registryFetch(url, base, { headers: registryAuthHeaders(token) });
-  if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status, token));
+  if (!res.ok) throw new Error(privateInstallHint(`${name}@${version}`, res.status));
   const ab = await res.arrayBuffer();
   return Buffer.from(ab);
 }

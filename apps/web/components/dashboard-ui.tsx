@@ -235,7 +235,7 @@ function Avatar({ user, size = "normal" }: { user: Me | null; size?: "normal" | 
 
 function LoadingShell() {
   return (
-    <main className={dash.dashboardPage}>
+    <main className={cn(dash.dashboardPage, dash.dashboardPageFull)}>
       <section className={dash.dashboardEmptyState}>
         <p className={shell.eyebrow}>Dashboard</p>
         <h1>Loading your workspace.</h1>
@@ -248,20 +248,18 @@ function LoadingShell() {
 function LoginRequired({ message }: { message: string }) {
   const apiOffline = message.includes("API") || message.includes("abort") || message.includes("unreachable");
   return (
-    <main className={dash.dashboardPage}>
-      <section className={dash.loginScreen}>
-        <div>
-          <p className={shell.eyebrow}>Dashboard</p>
-          <h1>{apiOffline ? "Publisher services are not reachable." : "Sign in to manage AIPM publishing."}</h1>
-          <p className={shell.lede}>{message}</p>
-          <div className={shell.actions}>
-            <Link className={shell.button} href="/login">
-              Sign in
-            </Link>
-            <Link className={cn(shell.button, shell.secondary)} href="/publish">
-              Publishing guide
-            </Link>
-          </div>
+    <main className={cn(dash.dashboardPage, dash.dashboardPageFull)}>
+      <section className={dash.dashboardEmptyState}>
+        <p className={shell.eyebrow}>Dashboard</p>
+        <h1>{apiOffline ? "Publisher services are not reachable." : "Sign in to manage AIPM publishing."}</h1>
+        <p className={shell.lede}>{message}</p>
+        <div className={shell.actions}>
+          <Link className={shell.button} href="/login">
+            Sign in
+          </Link>
+          <Link className={cn(shell.button, shell.secondary)} href="/publish">
+            Publishing guide
+          </Link>
         </div>
       </section>
     </main>
